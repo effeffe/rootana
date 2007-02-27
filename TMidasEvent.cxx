@@ -108,11 +108,11 @@ void TMidasEvent::Clear()
 {
   if (fBankList)
     free(fBankList);
-  fBankList = (char*)0xdeadbeef;
+  fBankList = NULL;
 
   if (fData && fAllocated)
     free(fData);
-  fData = (char*)0xdeadbeef;
+  fData = NULL;
 
   fAllocated = false;
   fBanksN = 0;
