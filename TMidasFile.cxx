@@ -38,7 +38,7 @@ bool TMidasFile::Open(const char *filename)
 
   fFile = open(filename, O_RDONLY | O_LARGEFILE);
 
-  if (fFile != 0)
+  if (fFile <= 0)
     {
       fLastErrno = errno;
       fLastError = strerror(errno);
