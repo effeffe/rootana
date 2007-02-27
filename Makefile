@@ -1,30 +1,35 @@
 # Makefile
 
-#MIDASSYS=/home1/midas/midas
-#MIDASSYS=/home/midas/midas
-MIDASSYS=/home/olchansk/daq/midas/midas
-
-# MIDAS library
-MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a
-
 # ROOT
 ifndef ROOTSYS
-export ROOTSYS := /triumfcs/trshare/olchansk/root/root_v5.12.00_SL42_amd64
+export ROOTSYS := $(HOME)/packages/root
 endif
 
 # ROOT library
 ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread -Wl,-rpath,$(ROOTSYS)/lib
 ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread -Wl,-rpath,$(ROOTSYS)/lib
 
-CXXFLAGS = -DOS_LINUX -Dextname -g -O2 -Wall -Wuninitialized -I$(MIDASSYS)/include -I$(ROOTSYS)/include
+# ROOTANA library
+OBJS = midasServer.o TMidasFile.o TMidasEvent.o XmlOdb.o
 
-all: analyzer.exe
+CXXFLAGS = -g -O2 -Wall -Wuninitialized -I$(ROOTSYS)/include
 
-analyzer.exe: %.exe: %.o midasServer.o TMidasOnline.o TMidasFile.o TMidasEvent.o XmlOdb.o $(MIDASLIBS)
+ifdef MIDASSYS
+CXXFLAGS += -DOS_LINUX -Dextname -I$(MIDASSYS)/include
+MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a
+OBJS     += TMidasOnline.o
+endif
+
+all: librootana.a analyzer.exe
+
+librootana.a: $(OBJS)
+	ar -rv $@ $^
+
+analyzer.exe: %.exe: %.o librootana.a $(MIDASLIBS)
 	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lutil -lnsl -lpthread 
 
 %.o: %.cxx
-	$(CXX) $(CXXFLAGS) -I$(ROOTSYS)/include $(OSFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) -c $<
 
 dox:
 	doxygen
