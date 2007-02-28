@@ -216,12 +216,6 @@ void eventHandler(const void*pheader,const void*pdata,int size)
   HandleMidasEvent(event);
 }
 
-void MidasPollHandler()
-{
-  if (!(TMidasOnline::instance()->poll(0)))
-    gSystem->ExitLoop();
-}
-
 int ProcessMidasFile(TApplication*app,const char*fname)
 {
   TMidasFile f;
@@ -295,6 +289,13 @@ int ProcessMidasFile(TApplication*app,const char*fname)
   return 0;
 }
 
+#ifdef HAVE_MIDAS
+
+void MidasPollHandler()
+{
+  if (!(TMidasOnline::instance()->poll(0)))
+    gSystem->ExitLoop();
+}
 
 int ProcessMidasOnline(TApplication*app)
 {
@@ -337,6 +338,8 @@ int ProcessMidasOnline(TApplication*app)
 
    return 0;
 }
+
+#endif
 
 #include <TGMenu.h>
 
@@ -547,7 +550,9 @@ int main(int argc, char *argv[])
 	   
    gIsOffline = false;
    //gEnableGraphics = true;
+#ifdef HAVE_MIDAS
    ProcessMidasOnline(app);
+#endif
    
    return 0;
 }
