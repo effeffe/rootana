@@ -1,18 +1,20 @@
 # Makefile
 
-# ROOT
-ifndef ROOTSYS
-export ROOTSYS := $(HOME)/packages/root
-endif
-
-# ROOT library
-ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread -Wl,-rpath,$(ROOTSYS)/lib
-ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread -Wl,-rpath,$(ROOTSYS)/lib
-
 # ROOTANA library
-OBJS = midasServer.o TMidasFile.o TMidasEvent.o XmlOdb.o
+OBJS = TMidasFile.o TMidasEvent.o
 
 CXXFLAGS = -g -O2 -Wall -Wuninitialized -I$(ROOTSYS)/include
+
+# optional ROOT libraries
+
+ifdef ROOTSYS
+ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread -Wl,-rpath,$(ROOTSYS)/lib
+ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread -Wl,-rpath,$(ROOTSYS)/lib
+OBJS     +=  XmlOdb.o midasServer.o
+CXXFLAGS += -DHAVE_ROOT -I$(ROOTSYS)/include
+endif
+
+# optional MIDAS libraries
 
 ifdef MIDASSYS
 CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include

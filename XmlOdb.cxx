@@ -14,6 +14,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <assert.h>
 
 #include "XmlOdb.h"
 

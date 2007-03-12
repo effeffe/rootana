@@ -51,7 +51,7 @@
 ///
 /// \section starting_sec Getting started
 ///
-/// - "get" the sources: svn checkout rootana
+/// - "get" the sources: svn checkout svn://ladd00.triumf.ca/rootana/trunk rootana
 /// - cd rootana
 /// - make
 /// - make dox (generate this documentation); cd html; mozilla index.html
@@ -60,6 +60,8 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include <iostream>
+#include <assert.h>
+#include <signal.h>
 
 #include "TMidasOnline.h"
 #include "TMidasEvent.h"
