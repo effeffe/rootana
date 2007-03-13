@@ -10,6 +10,7 @@
 
 \********************************************************************/
 
+#include <stdio.h>
 #include <assert.h>
 
 #include "midasServer.h"
@@ -23,6 +24,10 @@
 #if defined( OS_WINNT )
 #define THREADRETURN 0
 #define THREADTYPE DWORD WINAPI
+#endif
+#ifndef THREADTYPE
+#define THREADTYPE int
+#define THREADRETURN 0
 #endif
 
 #include <TFolder.h>

@@ -36,6 +36,10 @@ bool TMidasFile::Open(const char *filename)
 
   fFilename = filename;
 
+#ifndef O_LARGEFILE
+#define O_LARGEFILE 0
+#endif
+
   fFile = open(filename, O_RDONLY | O_LARGEFILE);
 
   if (fFile <= 0)
