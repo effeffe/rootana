@@ -3,7 +3,7 @@
 # ROOTANA library
 OBJS = TMidasFile.o TMidasEvent.o
 
-CXXFLAGS = -g -O2 -Wall -Wuninitialized -I$(ROOTSYS)/include
+CXXFLAGS = -g -O2 -Wall -Wuninitialized
 
 # optional ROOT libraries
 
@@ -22,7 +22,13 @@ MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a
 OBJS     += TMidasOnline.o
 endif
 
-all: librootana.a analyzer.exe
+ALL:= librootana.a
+
+ifdef ROOTSYS
+ALL+= analyzer.exe
+endif
+
+all: $(ALL)
 
 librootana.a: $(OBJS)
 	-rm -f $@
@@ -38,6 +44,6 @@ dox:
 	doxygen
 
 clean::
-	-rm -f *.o *.exe
+	-rm -f *.o *.exe $(ALL)
 
 # end
