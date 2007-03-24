@@ -257,6 +257,9 @@ int TMidasEvent::SwapBytes(bool force)
   if (pbh->fFlags < 0x10000 && ! force)
     return 0;
 
+  if (pbh->fDataSize == 0x3c3f786d) // string "<xml..."
+    return 1;
+
   //
   // swap bank header
   //

@@ -111,6 +111,9 @@ bool TMidasFile::Read(TMidasEvent *midasEvent)
       return false;
     }
 
+  if (fDoByteSwap)
+    midasEvent->SwapBytes(true);
+
   return true;
 }
 
