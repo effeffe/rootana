@@ -258,6 +258,11 @@ int ProcessMidasFile(TApplication*app,const char*fname)
 
 	  startRun(0,event.GetSerialNumber(),0);
 	}
+      else if ((eventId & 0xFFFF) == 0x8001)
+	{
+	  // end run
+	  //event.Print();
+	}
       else
 	{
 	  event.SetBankList();
