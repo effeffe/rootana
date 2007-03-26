@@ -215,11 +215,14 @@ void TMidasEvent::Print(const char *option) const
   /// \param [in] option If 'a' (for "all") then the raw data will be
   /// printed out too.
   ///
+  
+  time_t t = (time_t)fEventHeader.fTimeStamp;
+
   printf("Event start:\n");
   printf("  event id:       0x%04x\n", fEventHeader.fEventId);
   printf("  trigger mask:   0x%04x\n", fEventHeader.fTriggerMask);
   printf("  serial number:%8d\n", fEventHeader.fSerialNumber);
-  printf("  time stamp:     %d, %s", fEventHeader.fTimeStamp, ctime((time_t*)&fEventHeader.fTimeStamp));
+  printf("  time stamp:     %d, %s", fEventHeader.fTimeStamp, ctime(&t));
   printf("  data size:    %8d\n", fEventHeader.fDataSize);
   if ((fEventHeader.fEventId & 0xffff) == 0x8000)
     {
