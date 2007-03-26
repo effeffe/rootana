@@ -211,9 +211,8 @@ void HandleMidasEvent(TMidasEvent& event)
 void eventHandler(const void*pheader,const void*pdata,int size)
 {
   TMidasEvent event;
-  memcpy(event.GetEventHeader(),pheader,sizeof(EventHeader_t));
-  event.SetDataSize(size);
-  event.SetData((Char_t*)pdata);
+  memcpy(event.GetEventHeader(), pheader, sizeof(EventHeader_t));
+  event.SetData(size, (char*)pdata);
   event.SetBankList();
   HandleMidasEvent(event);
 }
@@ -242,7 +241,7 @@ int ProcessMidasFile(TApplication*app,const char*fname)
       if ((eventId & 0xFFFF) == 0x8000)
 	{
 	  // begin run
-	  //event.Print();
+	  event.Print();
 
 	  //char buf[256];
 	  //memset(buf,0,sizeof(buf));
@@ -261,7 +260,7 @@ int ProcessMidasFile(TApplication*app,const char*fname)
       else if ((eventId & 0xFFFF) == 0x8001)
 	{
 	  // end run
-	  //event.Print();
+	  event.Print();
 	}
       else
 	{
