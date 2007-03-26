@@ -21,171 +21,56 @@
 class TMidasEvent
 {
  public:
+
+  // houskeeping functions
+
   TMidasEvent(); ///< default constructor
   TMidasEvent(const TMidasEvent &); ///< copy constructor
   ~TMidasEvent(); ///< destructor
   TMidasEvent& operator=(const TMidasEvent &); ///< assignement operator
-  void Clear(); ///< prepare object for destruction
-  void Print(const char* = "") const;
-  int FindBank(BankHeader_t*, const char* bankName, int* bankLength, int* bankType, void **) const;
-  int LocateBank(void *event, const char* bankName, void **pdata) const;
-  int SwapBytes(bool);
-  char* GetData() const;
-  const char* GetBankList() const;
-  uint16_t GetEventId() const;
-  uint16_t GetTriggerMask() const;
-  uint32_t GetSerialNumber() const;
-  uint32_t GetTimeStamp() const;
-  uint32_t GetDataSize() const;
-  EventHeader_t* GetEventHeader();
-  void AllocateData();
-  int SetBankList();
-  void SetData(char* dataBuffer);
-  void SetEventId(uint16_t eventId);
-  void SetTriggerMask(uint16_t triggerMask);
-  void SetSerialNumber(uint32_t serial);
-  void SetTimeStamp(uint32_t timestamp);
-  void SetDataSize(uint32_t dataSize);
-  bool IsGoodSize() const;
-  void SwapBytesEventHeader();
+  void Clear(); ///< clear event for reuse
+  void Copy(const TMidasEvent &); ///< copy helper
+  void Print(const char* option = "") const; ///< show all event information
+
+  // get event information
+
+  uint16_t GetEventId() const;      ///< return the event id
+  uint16_t GetTriggerMask() const;     ///< return the triger mask
+  uint32_t GetSerialNumber() const; ///< return the serial number
+  uint32_t GetTimeStamp() const; ///< return the time stamp (unix time in seconds)
+  uint32_t GetDataSize() const; ///< return the event size
+
+  // get data banks
+
+  const char* GetBankList() const; ///< return a list of data banks
+  int FindBank(const char* bankName, int* bankLength, int* bankType, void **bankPtr) const;
+  int LocateBank(const void *unused, const char* bankName, void **bankPtr) const;
+
+  bool IsBank32() const; ///< returns "true" if event uses 32-bit banks
+  int IterateBank(Bank_t **, char **pdata) const; ///< iterate through 16-bit data banks
+  int IterateBank32(Bank32_t **, char **pdata) const; ///< iterate through 32-bit data banks
+
+  // helpers for event creation
+
+  EventHeader_t* GetEventHeader(); ///< return pointer to the event header
+  char* GetData(); ///< return pointer to the data buffer
+
+  void AllocateData(); ///< allocate data buffer using the existing event header
+  void SetData(uint32_t dataSize, char* dataBuffer); ///< set an externally allocated data buffer
+
+  int SetBankList(); ///< create the list of data banks, return number of banks
+  bool IsGoodSize() const; ///< validate the event length
+
+  void SwapBytesEventHeader(); ///< convert event header between little-endian (Linux-x86) and big endian (MacOS-PPC) 
+  int  SwapBytes(bool); ///< convert event data between little-endian (Linux-x86) and big endian (MacOS-PPC) 
 
 protected:
-  const int fBankListMax; ///< maximum number of banks allowed in an event, currently 64
-  const int fStringBankListMax; ///< maximum bank string size allowed in an event
 
-  char* fData;     ///< event data buffer
-  char* fBankList; ///< pointer to the event bank list
-  int  fBanksN;    ///< number of banks in this event
-  bool fAllocated; ///< "true" if we own and should delete the data buffer
   EventHeader_t fEventHeader; ///< event header
-
-private:
-  void Copy(const TMidasEvent &); ///< copy helper
-  int IterateBank(void *event, Bank_t **, char **pdata);
-  int IterateBank32(void *event, Bank32_t **, char **pdata);
+  char* fData;     ///< event data buffer
+  int  fBanksN;    ///< number of banks in this event
+  char* fBankList; ///< list of bank names in this event
+  bool fAllocatedByUs; ///< "true" if we own the data buffer
 };
-
-inline void TMidasEvent::SetEventId(uint16_t eventId)
-{ 
-  /// Set the event identification-number.
-  /// \param [in] eventId The event identification number.
-  ///
-  fEventHeader.fEventId = eventId;
-}
-
-inline void TMidasEvent::SetTriggerMask(uint16_t triggerMask)
-{
-  /// Set the event trigger-mask.
-  /// \param [in] triggerMask The event trigger mask.
-  ///
-  fEventHeader.fTriggerMask = triggerMask;
-}
-
-inline void TMidasEvent::SetSerialNumber(uint32_t serialNumber)
-{
-  /// Set the event serial-number.
-  /// \param [in] serialNumber The event serial number.
-  ///
-  fEventHeader.fSerialNumber = serialNumber;
-}
-
-inline void TMidasEvent::SetTimeStamp(uint32_t timeStamp)
-{
-  /// Set the event time-stamp.
-  /// \param [in] timeStamp The event time stamp.
-  ///
-  fEventHeader.fTimeStamp = timeStamp;
-}
-
-inline void TMidasEvent::SetDataSize(uint32_t dataSize)
-{
-  /// Set the event data-size.
-  /// \param [in] dataSize The size of the event in bytes.
-  ///
-  fEventHeader.fDataSize = dataSize;
-}
-
-inline void TMidasEvent::SetData(char* data)
-{
-  /// Set the event data - useful for online sorting when the data
-  /// does not need to be copied into the class.
-  /// \param [in] data A pointer to the event data.
-  ///
-  fData = data;
-  fAllocated = false;
-}
-
-inline const char* TMidasEvent::GetBankList() const
-{
-  /// Get a list of the banks within the event.
-  /// \returns A pointer to the list of banks.
-  ///
-  return fBankList;
-}
-
-inline uint16_t TMidasEvent::GetEventId() const
-{
-  /// Get the event identification number.
-  /// \returns The event identification number.
-  ///
-  return fEventHeader.fEventId;
-}
-
-inline uint16_t TMidasEvent::GetTriggerMask() const
-{
-  /// Get the event trigger mask.
-  /// \returns The event trigger mask.
-  ///
-  return fEventHeader.fTriggerMask;
-}
-
-inline uint32_t TMidasEvent::GetSerialNumber() const
-{
-  /// Get the event serial number (incremented separately for each
-  /// type of event).
-  /// \returns The event serial number.
-  ///
-  return fEventHeader.fSerialNumber;
-}
-
-inline uint32_t TMidasEvent::GetTimeStamp() const
-{
-  /// Get the event time stamp.
-  /// \returns The event time stamp.
-  ///
-  return fEventHeader.fTimeStamp;
-}
-
-inline uint32_t TMidasEvent::GetDataSize() const
-{
-  /// Get the event data-size.
-  /// \returns The event data-size in bytes.
-  ///
-  return fEventHeader.fDataSize;
-}
-
-inline char* TMidasEvent::GetData() const
-{
-  /// Get the event data.
-  /// \returns A pointer to the data.
-  ///
-  return fData;
-}
-
-inline EventHeader_t * TMidasEvent::GetEventHeader()
-{
-  /// Get the event header (usually to fill in the fields).
-  /// \returns The event header.
-  ///
-  return &fEventHeader;
-}
-
-inline bool TMidasEvent::IsGoodSize() const
-{
-  /// Check if the event is a good size.
-  /// \returns True if the data has a sensible size, false otherwise.
-  ///
-  return fEventHeader.fDataSize > 0 || fEventHeader.fDataSize <= 1024 * 1024;
-}
 
 #endif // TMidasEvent.h
