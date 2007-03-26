@@ -8,17 +8,18 @@ CXXFLAGS = -g -O2 -Wall -Wuninitialized
 # optional ROOT libraries
 
 ifdef ROOTSYS
-ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread -Wl,-rpath,$(ROOTSYS)/lib
-ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread -Wl,-rpath,$(ROOTSYS)/lib
-OBJS     +=  XmlOdb.o midasServer.o
+ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread
+ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread
+RPATH    += -Wl,-rpath,$(ROOTSYS)/lib
 CXXFLAGS += -DHAVE_ROOT -I$(ROOTSYS)/include
+OBJS     +=  XmlOdb.o midasServer.o
 endif
 
 # optional MIDAS libraries
 
 ifdef MIDASSYS
+MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil
 CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
-MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a
 OBJS     += TMidasOnline.o
 endif
 
@@ -34,8 +35,8 @@ librootana.a: $(OBJS)
 	-rm -f $@
 	ar -rv $@ $^
 
-analyzer.exe: %.exe: %.o librootana.a $(MIDASLIBS)
-	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lutil -lnsl -lpthread 
+analyzer.exe: %.exe: %.o librootana.a
+	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
 
 %.o: %.cxx
 	$(CXX) $(CXXFLAGS) -c $<
