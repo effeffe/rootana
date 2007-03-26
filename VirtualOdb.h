@@ -24,6 +24,8 @@ struct VirtualOdb
   virtual uint32_t odbReadUint32(const char*name, int index = 0, uint32_t defaultValue = 0) = 0;
   /// Read a boolean value, midas type TID_BOOL
   virtual bool     odbReadBool(  const char*name, int index = 0, bool     defaultValue = false) = 0;
+  /// Destructor has to be virtual
+  virtual ~VirtualOdb() { /* empty */ }; // dtor
 };
 
 #endif
