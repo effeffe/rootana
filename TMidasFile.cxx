@@ -101,8 +101,6 @@ bool TMidasFile::Read(TMidasEvent *midasEvent)
       return false;
     }
 
-  midasEvent->AllocateData();
-
   rd = readpipe(fFile, midasEvent->GetData(), midasEvent->GetDataSize());
   if (rd != midasEvent->GetDataSize())
     {
