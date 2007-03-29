@@ -286,7 +286,7 @@ uint32_t TMidasOnline::odbReadUint32(const char*name,int index,uint32_t defaultV
 
 bool     TMidasOnline::odbReadBool(const char*name,int index,bool defaultValue)
 {
-  bool value = defaultValue;
+  uint32_t value = defaultValue;
   if (odbReadAny(name,index,TID_BOOL,&value) == 0)
     return value;
   else
