@@ -307,7 +307,7 @@ int ProcessMidasOnline(TApplication*app)
 {
    TMidasOnline *midas = TMidasOnline::instance();
 
-   int err = midas->connect(NULL,NULL,"alpharoot");
+   int err = midas->connect(NULL,NULL,"rootana");
    assert(err == 0);
 
    gOdb = midas;
@@ -353,7 +353,7 @@ class MainWindow: public TGMainFrame {
 
 private:
   TGPopupMenu*		menuFile;
-  TGPopupMenu* 		menuControls;
+  //TGPopupMenu* 		menuControls;
   TGMenuBar*		menuBar;
   TGLayoutHints*	menuBarLayout;
   TGLayoutHints*	menuBarItemLayout;
@@ -413,7 +413,7 @@ MainWindow::MainWindow(const TGWindow*w,int s1,int s2) // ctor
    menuBarItemLayout = new TGLayoutHints(kLHintsTop|kLHintsLeft, 0, 4, 0, 0);
 
    menuFile->Associate(this);
-   menuControls->Associate(this);
+   //menuControls->Associate(this);
 
    menuBar = new TGMenuBar(this, 1, 1, kRaisedFrame);
    menuBar->AddPopup("&File",     menuFile,     menuBarItemLayout);
@@ -431,7 +431,7 @@ MainWindow::MainWindow(const TGWindow*w,int s1,int s2) // ctor
 MainWindow::~MainWindow()
 {
     delete menuFile;
-    delete menuControls;
+    //delete menuControls;
     delete menuBar;
     delete menuBarLayout;
     delete menuBarItemLayout;
@@ -467,16 +467,16 @@ int ShowMem(const char* label)
 
 void help()
 {
-  printf("\nALPHA ROOT usage:\n");
-  printf("\n./alpharoot.exe [-eMaxEvents] [-iInitFile] [-m] [-g] [file1 file2 ...]\n");
+  printf("\nUsage:\n");
+  printf("\n./analyzer.exe [-h] [-eMaxEvents] [-m] [-g] [file1 file2 ...]\n");
   printf("\n");
-  printf("\t-i: Specifies a initialization file other than alpharoot.ini\n");
-  printf("\t-e: Number of events to be read (only works in offline mode\n");
+  printf("\t-h: Print this help message\n");
+  printf("\t-e: Number of events to read from input data files\n");
   printf("\t-m: Enable memory leak debugging\n");
   printf("\t-g: Enable graphics display when processing data files\n");
   printf("\n");
-  printf("Example1: analyze online data: alpharoot.exe\n");
-  printf("Example2: analyze existing data: alpharoot.exe /data/alpha/current/run00500.mid\n");
+  printf("Example1: analyze online data: ./analyzer.exe\n");
+  printf("Example2: analyze existing data: ./analyzer.exe /data/alpha/current/run00500.mid\n");
   exit(1);
 }
 
@@ -501,7 +501,7 @@ int main(int argc, char *argv[])
 	 help();
      }
 
-   TApplication *app = new TApplication("alpharoot", &argc, argv);
+   TApplication *app = new TApplication("rootana", &argc, argv);
 
    if(gROOT->IsBatch()) {
    	printf("Cannot run in batch mode\n");
@@ -522,15 +522,15 @@ int main(int argc, char *argv[])
 	 gEnableShowMem = true;
        else if (strncmp(arg,"-p",2)==0) // Set the histogram server port
 	 tcpPort = atoi(arg+2);
-       else if (strncmp(arg,"-commands",9)==0)
-	 help(); // does not return
        else if (strcmp(arg,"-g")==0)  
 	 forceEnableGraphics = true;
+       else if (strcmp(arg,"-h")==0)  
+	 help(); // does not return
        else if (arg[0] == '-')
 	 help(); // does not return
     }
     
-   //MainWindow mainWindow(gClient->GetRoot(), 200, 300);
+   MainWindow mainWindow(gClient->GetRoot(), 200, 300);
 
    StartMidasServer(tcpPort);
 	 
