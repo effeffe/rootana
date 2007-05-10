@@ -67,6 +67,7 @@
 #include "TMidasEvent.h"
 #include "TMidasFile.h"
 #include "XmlOdb.h"
+#include "midasServer.h"
 
 #include <TSystem.h>
 #include <TApplication.h>
@@ -75,6 +76,7 @@
 #include <TDirectory.h>
 #include <TGClient.h>
 #include <TGFrame.h>
+#include <TFolder.h>
 
 #include "Globals.h"
 
@@ -149,8 +151,9 @@ void startRun(int transition,int run,int time)
     
   if(gOutputFile!=NULL)
   {
-	gOutputFile->Close();
-	gOutputFile=NULL;
+    gOutputFile->Write();
+    gOutputFile->Close();
+    gOutputFile=NULL;
   }  
 
   char filename[1024];
@@ -163,8 +166,12 @@ void endRun(int transition,int run,int time)
   gIsRunning = false;
   gRunNumber = run;
 
+  if (gManaHistosFolder)
+    gManaHistosFolder->Clear();
+
   if (gOutputFile)
     {
+      gOutputFile->Write();
       gOutputFile->Close();		//close the histogram file
       gOutputFile = NULL;
     }
@@ -172,10 +179,49 @@ void endRun(int transition,int run,int time)
   printf("End of run %d\n",run);
 }
 
+#include <TH1D.h>
+
+void HandleSample(int ichan, void* ptr, int wsize)
+{
+  uint16_t *samples = (uint16_t*) ptr;
+  int numSamples = wsize;
+
+  if (numSamples != 512)
+    return;
+
+  char name[256];
+  sprintf(name, "channel%d", ichan);
+
+  if (gOutputFile)
+    gOutputFile->cd();
+
+  TH1D* samplePlot = (TH1D*)gDirectory->Get(name);
+
+  if (!samplePlot)
+    {
+      printf("Create [%s]\n", name);
+      samplePlot = new TH1D(name, name, numSamples, 0, numSamples);
+      //samplePlot->SetMinimum(0);
+      if (gManaHistosFolder)
+        gManaHistosFolder->Add(samplePlot);
+    }
+
+  for(int ti=0; ti<numSamples; ti++)
+    samplePlot->SetBinContent(ti, samples[ti]);
+}
+
+
 void HandleMidasEvent(TMidasEvent& event)
 {
   int eventId = event.GetEventId();
- 
+
+  if (false&&(eventId == 1))
+    {
+      void *ptr;
+      int size = event.LocateBank(NULL, "CHA3", &ptr);
+      if (ptr)
+	HandleSample(3, ptr, size);
+    }
   if (false&&(eventId == 1)&&(gIsRunning==true)&&(gIsPedestalsRun==false)) // SIS data
     {
       //printf("SIS event\n");
@@ -468,21 +514,20 @@ int ShowMem(const char* label)
 void help()
 {
   printf("\nUsage:\n");
-  printf("\n./analyzer.exe [-h] [-eMaxEvents] [-m] [-g] [file1 file2 ...]\n");
+  printf("\n./analyzer.exe [-h] [-eMaxEvents] [-pTcpPort] [-m] [-g] [file1 file2 ...]\n");
   printf("\n");
   printf("\t-h: Print this help message\n");
+  printf("\t-p: Start the midas histogram server on specified tcp port (for use with roody)\n");
   printf("\t-e: Number of events to read from input data files\n");
   printf("\t-m: Enable memory leak debugging\n");
   printf("\t-g: Enable graphics display when processing data files\n");
   printf("\n");
-  printf("Example1: analyze online data: ./analyzer.exe\n");
+  printf("Example1: analyze online data: ./analyzer.exe -p9090\n");
   printf("Example2: analyze existing data: ./analyzer.exe /data/alpha/current/run00500.mid\n");
   exit(1);
 }
 
 // Main function call
-
-#include "midasServer.h"
 
 int main(int argc, char *argv[])
 {
@@ -509,7 +554,7 @@ int main(int argc, char *argv[])
    }
 
    bool forceEnableGraphics = false;
-   int  tcpPort = 9090;
+   int  tcpPort = 0;
 
    for (unsigned int i=1; i<args.size(); i++) // loop over the commandline options
      {
@@ -532,7 +577,8 @@ int main(int argc, char *argv[])
     
    MainWindow mainWindow(gClient->GetRoot(), 200, 300);
 
-   StartMidasServer(tcpPort);
+   if (tcpPort)
+     StartMidasServer(tcpPort);
 	 
    gIsOffline = false;
 
