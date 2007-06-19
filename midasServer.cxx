@@ -174,7 +174,8 @@ THREADTYPE root_server_thread(void *arg)
 
             //write pointer
             message->Reset(kMESS_ANY);
-            int p = (int) obj;
+            int p;
+            memcpy(&p, &obj, 4);
             *message << p;
             sock->Send(*message);
 
@@ -239,6 +240,11 @@ THREADTYPE root_socket_server(void *arg)
 
    do {
       TSocket *sock = lsock->Accept();
+
+      if (sock==NULL) {
+        printf("Root server accept() error\n");
+        break;
+      }
 
       // printf("Established connection to %s\n", sock->GetInetAddress().GetHostName());
 
