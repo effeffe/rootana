@@ -36,6 +36,7 @@ protected:
   bool fDoByteSwap; ///< "true" if file has to be byteswapped
 
   int         fFile; ///< open file descriptor
+  void*       fGzFile; ///< zlib compressed file reader
 };
 
 #endif // TMidasFile.h

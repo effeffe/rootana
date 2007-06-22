@@ -23,6 +23,10 @@ CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 OBJS     += TMidasOnline.o
 endif
 
+# optional ZLIB library
+
+CXXFLAGS += -DHAVE_ZLIB
+
 ALL:= librootana.a
 
 ifdef ROOTSYS
