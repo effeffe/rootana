@@ -78,7 +78,7 @@ int TMidasOnline::connect(const char*hostname,const char*exptname,const char*pro
   fHostname = xhostname;
   fExptname = xexptname;
 
-  printf("TMidasOnline::connect: Connecting to experiment \"%s\" on host \"%s\"\n", fExptname.c_str(), fHostname.c_str());
+  fprintf(stderr, "TMidasOnline::connect: Connecting to experiment \"%s\" on host \"%s\"\n", fExptname.c_str(), fHostname.c_str());
   
   //int watchdog = DEFAULT_WATCHDOG_TIMEOUT;
   int watchdog = 60*1000;
@@ -87,12 +87,12 @@ int TMidasOnline::connect(const char*hostname,const char*exptname,const char*pro
   
   if (status == CM_UNDEF_EXP)
     {
-      printf("Error: experiment \"%s\" not defined.\n", fExptname.c_str());
+      fprintf(stderr, "TMidasOnline::connect: Error: experiment \"%s\" not defined.\n", fExptname.c_str());
       return -1;
     }
   else if (status != CM_SUCCESS)
     {
-      printf("Error %d connecting to MIDAS.\n", status);
+      fprintf(stderr, "TMidasOnline::connect: Cannot connect to MIDAS, status %d.\n", status);
       return -1;
     }
   
@@ -108,7 +108,7 @@ int TMidasOnline::disconnect()
 {
   if (fDB)
     {
-      printf("TMidasOnline::disconnect: Disconnecting from experiment \"%s\" on host \"%s\"\n", fExptname.c_str(), fHostname.c_str());
+      fprintf(stderr, "TMidasOnline::disconnect: Disconnecting from experiment \"%s\" on host \"%s\"\n", fExptname.c_str(), fHostname.c_str());
       cm_disconnect_experiment();
       fDB = 0;
     }
@@ -182,7 +182,7 @@ bool TMidasOnline::poll(int mdelay)
   int status = cm_yield(mdelay);
   if (status == RPC_SHUTDOWN || status == SS_ABORT)
     {
-      printf("TMidasOnline: poll: cm_yield(%d) status %d, shutting down.\n",mdelay,status);
+      fprintf(stderr, "TMidasOnline::poll: cm_yield(%d) status %d, shutting down.\n",mdelay,status);
       disconnect();
       return false;
     }
@@ -234,7 +234,7 @@ int TMidasOnline::eventRequest(const char* bufferName,int eventId,int triggerMas
   status = bm_open_buffer((char*)bufferName, EVENT_BUFFER_SIZE, &r->fBufferHandle);
   if (status != SUCCESS)
     {
-      printf("TMidasOnline::eventRequest: Cannot find data buffer \"%s\", bm_open_buffer() error %d\n", bufferName, status);
+      fprintf(stderr, "TMidasOnline::eventRequest: Cannot find data buffer \"%s\", bm_open_buffer() error %d\n", bufferName, status);
       return -1;
     }
   
@@ -245,7 +245,7 @@ int TMidasOnline::eventRequest(const char* bufferName,int eventId,int triggerMas
   status = bm_request_event(r->fBufferHandle, r->fEventId, r->fTriggerMask, r->fSamplingType, &r->fRequestId, eventCallback);
   assert(status == BM_SUCCESS);
   
-  printf("Event request: buffer \"%s\" (%d), event id 0x%x, trigger mask 0x%x, sample %d, request id: %d\n",bufferName,r->fBufferHandle,r->fEventId,r->fTriggerMask,r->fSamplingType,r->fRequestId);
+  fprintf(stderr, "TMidasOnline::eventRequest: Event request: buffer \"%s\" (%d), event id 0x%x, trigger mask 0x%x, sample %d, request id: %d\n",bufferName,r->fBufferHandle,r->fEventId,r->fTriggerMask,r->fSamplingType,r->fRequestId);
   
   r->fNext = fEventRequests;
   fEventRequests = r;

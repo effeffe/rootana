@@ -354,7 +354,11 @@ int ProcessMidasOnline(TApplication*app)
    TMidasOnline *midas = TMidasOnline::instance();
 
    int err = midas->connect(NULL,NULL,"rootana");
-   assert(err == 0);
+   if (err != 0)
+     {
+       fprintf(stderr,"Cannot connect to MIDAS, error %d\n", err);
+       return -1;
+     }
 
    gOdb = midas;
 
