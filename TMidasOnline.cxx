@@ -232,7 +232,7 @@ int TMidasOnline::eventRequest(const char* bufferName,int eventId,int triggerMas
   
   /*---- open event buffer ---------------------------------------*/
   status = bm_open_buffer((char*)bufferName, EVENT_BUFFER_SIZE, &r->fBufferHandle);
-  if (status != SUCCESS)
+  if (status!=SUCCESS && status!=BM_CREATED)
     {
       fprintf(stderr, "TMidasOnline::eventRequest: Cannot find data buffer \"%s\", bm_open_buffer() error %d\n", bufferName, status);
       return -1;
