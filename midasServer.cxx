@@ -30,6 +30,7 @@
 #define THREADRETURN 0
 #endif
 
+#include <TSemaphore.h>
 #include <TFolder.h>
 #include <TSocket.h>
 #include <TServerSocket.h>
@@ -39,9 +40,97 @@
 #include <TH1.h>
 #include <TCutG.h>
 
-typedef void* POINTER_T;
+static TSemaphore gRootSema(0);
+static TSemaphore gWaitSema(0);
+
+static bool gDebugLock = false;
+
+static void LockRoot()
+{
+  if (gDebugLock)
+    printf("Try Lock ROOT!\n");
+  gWaitSema.Post();
+  gRootSema.Wait();
+  if (gDebugLock)
+    printf("Lock ROOT!\n");
+}
+
+static void UnlockRoot()
+{
+  if (gDebugLock)
+    printf("Unlock ROOT!\n");
+  gRootSema.Post();
+}
+
+struct LockRootGuard
+{
+  bool fLocked;
+
+  LockRootGuard()
+  {
+    fLocked = true;
+    LockRoot();
+  }
+
+  ~LockRootGuard()
+  {
+    if (fLocked)
+      Unlock();
+  }
+
+  void Unlock()
+  {
+    UnlockRoot();
+    fLocked = false;
+  }
+};
+
+class MidasServer : public TTimer
+{
+public:
+
+  MidasServer()
+  {
+    //int period_msec = 100;
+    //Start(period_msec,kTRUE);
+  }
+
+  Bool_t Notify()
+  {
+    //fprintf(stderr, "midasServer::Notify!!\n");
+
+    int notWaiting = gWaitSema.TryWait();
+    if (!notWaiting)
+      {
+        if (gDebugLock)
+          printf("Yeld root sema!\n");
+        gRootSema.Post();
+        TThread::Self()->Sleep(0, 1000000); // sleep in ns
+        gRootSema.Wait();
+        if (gDebugLock)
+          printf("Recapture root sema!\n");
+      }
+
+    Reset();
+    return kTRUE;
+  }
+
+  ~MidasServer()
+  {
+    //TurnOff();
+  }
+};
+
+static MidasServer gTimer;
 
 /*------------------------------------------------------------------*/
+
+#include <map>
+#include <string>
+
+static std::map<uint32_t,std::string> gPointers;
+static std::map<std::string,uint32_t> gRevPointers;
+static uint32_t gLastPointer = 0;
 
 TFolder *ReadFolderPointer(TSocket * fSocket)
 {
@@ -50,7 +139,16 @@ TFolder *ReadFolderPointer(TSocket * fSocket)
    fSocket->Recv(m);
    uint32_t p;
    *m >> p;
-   return (TFolder *) p;
+
+   const char* name = gPointers[p].c_str();
+   printf("converted %d to \'%s\'\n", p, name);
+
+   TObject* obj = gROOT->FindObjectAny(name);
+
+   if (!obj)
+     obj = gManaHistosFolder;
+
+   return (TFolder*) obj;
 }
 
 /*------------------------------------------------------------------*/
@@ -63,163 +161,169 @@ THREADTYPE root_server_thread(void *arg)
    char request[256];
 
    TSocket *sock = (TSocket *) arg;
+   TMessage message(kMESS_OBJECT);
 
    do {
 
       /* close connection if client has disconnected */
-      if (sock->Recv(request, sizeof(request)) <= 0) {
+      int rd = sock->Recv(request, sizeof(request));
+      if (rd <= 0) {
          // printf("Closed connection to %s\n", sock->GetInetAddress().GetHostName());
          sock->Close();
          delete sock;
          return THREADRETURN;
-
-      } else {
-
-         TMessage *message = new TMessage(kMESS_OBJECT);
-
-         if (strcmp(request, "GetListOfFolders") == 0) {
-
-            TFolder *folder = ReadFolderPointer(sock);
-            if (folder == NULL) {
-               message->Reset(kMESS_OBJECT);
-               message->WriteObject(NULL);
-               sock->Send(*message);
-               delete message;
-               continue;
-            }
-            //get folder names
-            TObject *obj;
-            TObjArray *names = new TObjArray(100);
-
-            TCollection *folders = folder->GetListOfFolders();
-            TIterator *iterFolders = folders->MakeIterator();
-            while ((obj = iterFolders->Next()) != NULL)
-               names->Add(new TObjString(obj->GetName()));
-
-            //write folder names
-            message->Reset(kMESS_OBJECT);
-            message->WriteObject(names);
-            sock->Send(*message);
-
-            for (int i = 0; i < names->GetLast() + 1; i++)
-               delete(TObjString *) names->At(i);
-
-            delete names;
-
-            delete message;
-
-         } else if (strncmp(request, "FindObject", 10) == 0) {
-
-            TFolder *folder = ReadFolderPointer(sock);
-
-            //get object
-            TObject *obj;
-            if (strncmp(request + 10, "Any", 3) == 0)
-               obj = folder->FindObjectAny(request + 14);
-            else
-               obj = folder->FindObject(request + 11);
-
-            //write object
-            if (!obj)
-               sock->Send("Error");
-            else {
-               message->Reset(kMESS_OBJECT);
-               message->WriteObject(obj);
-               sock->Send(*message);
-            }
-            delete message;
-
-         } else if (strncmp(request, "FindFullPathName", 16) == 0) {
-
-            TFolder *folder = ReadFolderPointer(sock);
-
-            //find path
-            const char *path = folder->FindFullPathName(request + 17);
-
-            //write path
-            if (!path) {
-               sock->Send("Error");
-            } else {
-               TObjString *obj = new TObjString(path);
-               message->Reset(kMESS_OBJECT);
-               message->WriteObject(obj);
-               sock->Send(*message);
-               delete obj;
-            }
-            delete message;
-
-         } else if (strncmp(request, "Occurence", 9) == 0) {
-
-            TFolder *folder = ReadFolderPointer(sock);
-
-            //read object
-            TMessage *m = 0;
-            sock->Recv(m);
-            TObject *obj = ((TObject *) m->ReadObject(m->GetClass()));
-
-            //get occurence
-            Int_t retValue = folder->Occurence(obj);
-
-            //write occurence
-            message->Reset(kMESS_OBJECT);
-            *message << retValue;
-            sock->Send(*message);
-
-            delete message;
-
-         } else if (strncmp(request, "GetPointer", 10) == 0) {
-
-            //find object
-            TObject *obj = gROOT->FindObjectAny(request + 11);
-
-            //write pointer
-            message->Reset(kMESS_ANY);
-            int p;
-            memcpy(&p, &obj, 4);
-            *message << p;
-            sock->Send(*message);
-
-            delete message;
-
-         } else if (strncmp(request, "Command", 7) == 0) {
-            char objName[100], method[100];
-            sock->Recv(objName, sizeof(objName));
-            sock->Recv(method, sizeof(method));
-            TObject *object = gROOT->FindObjectAny(objName);
-            if (object && object->InheritsFrom(TH1::Class())
-                && strcmp(method, "Reset") == 0)
-               static_cast < TH1 * >(object)->Reset();
-
-         } else if (strncmp(request, "SetCut", 6) == 0) {
-
-            //read new settings for a cut
-            char name[256];
-            sock->Recv(name, sizeof(name));
-            TCutG *cut = (TCutG *) gManaHistosFolder->FindObjectAny(name);
-
-            TMessage *m = 0;
-            sock->Recv(m);
-            TCutG *newc = ((TCutG *) m->ReadObject(m->GetClass()));
-
-            if (cut) {
-	       fprintf(stderr, "root server thread: changing cut %s\n", newc->GetName());
-               newc->TAttMarker::Copy(*cut);
-               newc->TAttFill::Copy(*cut);
-               newc->TAttLine::Copy(*cut);
-               newc->TNamed::Copy(*cut);
-               cut->Set(newc->GetN());
-               for (int i = 0; i < cut->GetN(); ++i) {
-                  cut->SetPoint(i, newc->GetX()[i], newc->GetY()[i]);
-               }
-            } else {
-	      fprintf(stderr, "root server thread: ignoring receipt of unknown cut %s\n",
-                      newc->GetName());
-            }
-            delete newc;
-
-         } else
-	    fprintf(stderr, "SocketServer: Received unknown command \"%s\"\n", request);
       }
+
+      printf("Request %s\n", request);
+
+      if (strcmp(request, "GetListOfFolders") == 0) {
+
+        LockRootGuard lock;
+        
+        TFolder *folder = ReadFolderPointer(sock);
+        if (folder == NULL) {
+          message.Reset(kMESS_OBJECT);
+          message.WriteObject(NULL);
+          lock.Unlock();
+          sock->Send(message);
+          continue;
+        }
+        //get folder names
+        TObject *obj;
+        TObjArray *names = new TObjArray(100);
+        
+        TCollection *folders = folder->GetListOfFolders();
+        TIterator *iterFolders = folders->MakeIterator();
+        while ((obj = iterFolders->Next()) != NULL)
+          names->Add(new TObjString(obj->GetName()));
+        
+        //write folder names
+        message.Reset(kMESS_OBJECT);
+        message.WriteObject(names);
+        sock->Send(message);
+        
+        for (int i = 0; i < names->GetLast() + 1; i++)
+          delete(TObjString *) names->At(i);
+        
+        delete names;
+        
+      } else if (strncmp(request, "FindObject", 10) == 0) {
+        
+        LockRootGuard lock;
+
+        TFolder *folder = ReadFolderPointer(sock);
+        
+        //get object
+        TObject *obj;
+        if (strncmp(request + 10, "Any", 3) == 0)
+          obj = folder->FindObjectAny(request + 14);
+        else
+          obj = folder->FindObject(request + 11);
+        
+        //write object
+        if (!obj)
+          sock->Send("Error");
+        else {
+          message.Reset(kMESS_OBJECT);
+          message.WriteObject(obj);
+
+          lock.Unlock();
+          sock->Send(message);
+        }
+        
+      } else if (strncmp(request, "FindFullPathName", 16) == 0) {
+        
+        LockRootGuard lock;
+
+        TFolder *folder = ReadFolderPointer(sock);
+        
+        //find path
+        const char *path = folder->FindFullPathName(request + 17);
+        
+        //write path
+        if (!path) {
+          sock->Send("Error");
+        } else {
+          TObjString *obj = new TObjString(path);
+          message.Reset(kMESS_OBJECT);
+          message.WriteObject(obj);
+          lock.Unlock();
+          sock->Send(message);
+          delete obj;
+        }
+        
+      } else if (strncmp(request, "GetPointer", 10) == 0) {
+
+        //find object
+        uint32_t p = 0;
+        TObject *obj = gROOT->FindObjectAny(request + 11);
+        
+        //write pointer
+        message.Reset(kMESS_ANY);
+
+        if (obj)
+          {
+            const char* name = obj->GetName();
+            p = gRevPointers[name];
+            if (p==0)
+              {
+                p = ++gLastPointer;
+                gPointers[p] = name;
+                gRevPointers[name] = p;
+              }
+
+            printf("give %d for \'%s\'\n", p, name);
+          }
+
+        message << p;
+        sock->Send(message);
+        
+      } else if (strncmp(request, "Command", 7) == 0) {
+        char objName[100], method[100];
+        sock->Recv(objName, sizeof(objName));
+        sock->Recv(method, sizeof(method));
+
+        LockRootGuard lock;
+
+        TObject *object = gROOT->FindObjectAny(objName);
+        if (object && object->InheritsFrom(TH1::Class())
+            && strcmp(method, "Reset") == 0)
+          static_cast < TH1 * >(object)->Reset();
+        
+      } else if (strncmp(request, "SetCut", 6) == 0) {
+        
+        //read new settings for a cut
+        char name[256];
+        sock->Recv(name, sizeof(name));
+
+        LockRootGuard lock;
+
+        TCutG *cut = (TCutG *) gManaHistosFolder->FindObjectAny(name);
+        
+        TMessage *m = 0;
+        sock->Recv(m);
+        TCutG *newc = ((TCutG *) m->ReadObject(m->GetClass()));
+        
+        if (cut) {
+          fprintf(stderr, "root server thread: changing cut %s\n", newc->GetName());
+          newc->TAttMarker::Copy(*cut);
+          newc->TAttFill::Copy(*cut);
+          newc->TAttLine::Copy(*cut);
+          newc->TNamed::Copy(*cut);
+          cut->Set(newc->GetN());
+          for (int i = 0; i < cut->GetN(); ++i) {
+            cut->SetPoint(i, newc->GetX()[i], newc->GetY()[i]);
+          }
+        } else {
+          fprintf(stderr, "root server thread: ignoring receipt of unknown cut \'%s\'\n",
+                  newc->GetName());
+        }
+        delete newc;
+        
+      } else {
+        fprintf(stderr, "midasServer: Received unknown request \"%s\"\n", request);
+      }
+
    } while (1);
 
    return THREADRETURN;
@@ -270,9 +374,12 @@ void StartMidasServer(int port)
   /* create the folder for analyzer histograms */
   gManaHistosFolder = gROOT->GetRootFolder()->AddFolder("histos", "MIDAS Analyzer Histograms");
   gROOT->GetListOfBrowsables()->Add(gManaHistosFolder, "histos");
+
+  int period_msec = 100;
+  gTimer.Start(period_msec,kTRUE);
   
   static int pport = port;
-#if defined ( __linux__ )
+#if defined (OS_LINUX)
   TThread *thread = new TThread("server_loop", root_socket_server, &pport);
   thread->Run();
 #endif
