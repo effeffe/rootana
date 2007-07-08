@@ -61,19 +61,15 @@ int TMidasOnline::connect(const char*hostname,const char*exptname,const char*pro
   char xhostname[HOST_NAME_LENGTH];
   char xexptname[NAME_LENGTH];
   
-  if (hostname)
-    strlcpy(xhostname,hostname,sizeof(xhostname));
-  else
-    xhostname[0] = 0;
-  
-  if (exptname)
-    strlcpy(xexptname,exptname,sizeof(xexptname));
-  else
-    xexptname[0] = 0;
-  
   /* get default from environment */
   status = cm_get_environment(xhostname, sizeof(xhostname), xexptname, sizeof(xexptname));
   assert(status == CM_SUCCESS);
+  
+  if (hostname)
+    strlcpy(xhostname,hostname,sizeof(xhostname));
+  
+  if (exptname)
+    strlcpy(xexptname,exptname,sizeof(xexptname));
   
   fHostname = xhostname;
   fExptname = xexptname;
