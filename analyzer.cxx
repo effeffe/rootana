@@ -67,7 +67,12 @@
 #include "TMidasEvent.h"
 #include "TMidasFile.h"
 #include "XmlOdb.h"
+#ifdef OLD_SERVER
 #include "midasServer.h"
+#endif
+#ifdef HAVE_LIBNETDIRECTORY
+#include "libNetDirectory/netDirectoryServer.h"
+#endif
 
 #include <TSystem.h>
 #include <TApplication.h>
@@ -87,6 +92,7 @@ bool gIsPedestalsRun = false;
 bool gIsOffline = false;
 int  gEventCutoff = 0;
 
+TDirectory* gOnlineHistDir = NULL;
 TFile* gOutputFile = NULL;
 VirtualOdb* gOdb = NULL;
 
@@ -166,8 +172,10 @@ void endRun(int transition,int run,int time)
   gIsRunning = false;
   gRunNumber = run;
 
+#ifdef OLD_SERVER
   if (gManaHistosFolder)
     gManaHistosFolder->Clear();
+#endif
 
   if (gOutputFile)
     {
@@ -349,11 +357,11 @@ void MidasPollHandler()
     gSystem->ExitLoop();
 }
 
-int ProcessMidasOnline(TApplication*app)
+int ProcessMidasOnline(TApplication*app, const char* hostname, const char* exptname)
 {
    TMidasOnline *midas = TMidasOnline::instance();
 
-   int err = midas->connect(NULL,NULL,"rootana");
+   int err = midas->connect(hostname, exptname, "rootana");
    if (err != 0)
      {
        fprintf(stderr,"Cannot connect to MIDAS, error %d\n", err);
@@ -518,10 +526,14 @@ int ShowMem(const char* label)
 void help()
 {
   printf("\nUsage:\n");
-  printf("\n./analyzer.exe [-h] [-eMaxEvents] [-pTcpPort] [-m] [-g] [file1 file2 ...]\n");
+  printf("\n./analyzer.exe [-h] [-Hhostname] [-Eexptname] [-eMaxEvents] [-PtcpPort] [-pTcpPort] [-m] [-g] [file1 file2 ...]\n");
   printf("\n");
-  printf("\t-h: Print this help message\n");
-  printf("\t-p: Start the midas histogram server on specified tcp port (for use with roody)\n");
+  printf("\t-h: print this help message\n");
+  printf("\t-T: test mode - start and serve a test histogram\n");
+  printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
+  printf("\t-Eexptname: connect to this MIDAS experiment\n");
+  printf("\t-P: Start the TNetDirectory server on specified tcp port (for use with roody)\n");
+  printf("\t-p: Start the old midas histogram server on specified tcp port (for use with roody)\n");
   printf("\t-e: Number of events to read from input data files\n");
   printf("\t-m: Enable memory leak debugging\n");
   printf("\t-g: Enable graphics display when processing data files\n");
@@ -545,9 +557,9 @@ int main(int argc, char *argv[])
    std::vector<std::string> args;
    for (int i=0; i<argc; i++)
      {
-       args.push_back(argv[i]);
        if (strcmp(argv[i],"-h")==0)
-	 help();
+	 help(); // does not return
+       args.push_back(argv[i]);
      }
 
    TApplication *app = new TApplication("rootana", &argc, argv);
@@ -558,7 +570,11 @@ int main(int argc, char *argv[])
    }
 
    bool forceEnableGraphics = false;
+   bool testMode = false;
+   int  oldTcpPort = 0;
    int  tcpPort = 0;
+   const char* hostname = NULL;
+   const char* exptname = NULL;
 
    for (unsigned int i=1; i<args.size(); i++) // loop over the commandline options
      {
@@ -570,10 +586,18 @@ int main(int argc, char *argv[])
        else if (strncmp(arg,"-m",2)==0) // Enable memory debugging
 	 gEnableShowMem = true;
        else if (strncmp(arg,"-p",2)==0) // Set the histogram server port
+	 oldTcpPort = atoi(arg+2);
+       else if (strncmp(arg,"-P",2)==0) // Set the histogram server port
 	 tcpPort = atoi(arg+2);
-       else if (strcmp(arg,"-g")==0)  
+       else if (strcmp(arg,"-T")==0)
+	 testMode = true;
+       else if (strcmp(arg,"-g")==0)
 	 forceEnableGraphics = true;
-       else if (strcmp(arg,"-h")==0)  
+       else if (strncmp(arg,"-H",2)==0)
+	 hostname = strdup(arg+2);
+       else if (strncmp(arg,"-E",2)==0)
+	 exptname = strdup(arg+2);
+       else if (strcmp(arg,"-h")==0)
 	 help(); // does not return
        else if (arg[0] == '-')
 	 help(); // does not return
@@ -581,8 +605,23 @@ int main(int argc, char *argv[])
     
    MainWindow mainWindow(gClient->GetRoot(), 200, 300);
 
+   gROOT->cd();
+   gOnlineHistDir = new TDirectory("rootana", "rootana online plots");
+
+#ifdef OLD_SERVER
+   if (oldTcpPort)
+     StartMidasServer(oldTcpPort);
+#else
+   if (oldTcpPort)
+     fprintf(stderr,"ERROR: No support for the old midas server!\n");
+#endif
+#ifdef HAVE_LIBNETDIRECTORY
    if (tcpPort)
-     StartMidasServer(tcpPort);
+     StartNetDirectoryServer(tcpPort, gOnlineHistDir);
+#else
+   if (tcpPort)
+     fprintf(stderr,"ERROR: No support for the TNetDirectory server!\n");
+#endif
 	 
    gIsOffline = false;
 
@@ -599,6 +638,18 @@ int main(int argc, char *argv[])
 	 }
      }
 
+   if (testMode)
+     {
+       gOnlineHistDir->cd();
+       TH1D* hh = new TH1D("test", "test", 100, 0, 100);
+       hh->Fill(1);
+       hh->Fill(10);
+       hh->Fill(50);
+
+       app->Run(kTRUE);
+       return 0;
+     }
+
    // if we processed some data files,
    // do not go into online mode.
    if (gIsOffline)
@@ -607,7 +658,7 @@ int main(int argc, char *argv[])
    gIsOffline = false;
    //gEnableGraphics = true;
 #ifdef HAVE_MIDAS
-   ProcessMidasOnline(app);
+   ProcessMidasOnline(app, hostname, exptname);
 #endif
    
    return 0;

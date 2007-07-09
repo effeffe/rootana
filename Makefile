@@ -27,13 +27,27 @@ endif
 
 CXXFLAGS += -DHAVE_ZLIB
 
-ALL:= librootana.a
+# optional TNetDirectory code
+
+CXXFLAGS += -DHAVE_LIBNETDIRECTORY
+OBJS     += ./libNetDirectory/netDirectoryServer.o
+
+ALL+= libNetDirectory/libNetDirectory.a
+
+# optional old midas server
+
+CXXFLAGS += -DOLD_SERVER
+
+ALL+= librootana.a
 
 ifdef ROOTSYS
 ALL+= analyzer.exe
 endif
 
 all: $(ALL)
+
+libNetDirectory/libNetDirectory.a:
+	make -C libNetDirectory
 
 librootana.a: $(OBJS)
 	-rm -f $@
@@ -43,12 +57,15 @@ analyzer.exe: %.exe: %.o librootana.a
 	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
 
 %.o: %.cxx
-	$(CXX) $(CXXFLAGS) -c $<
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 dox:
 	doxygen
 
 clean::
-	-rm -f *.o *.exe $(ALL)
+	-rm -f *.o *.a *.exe $(ALL)
+
+clean::
+	make -C libNetDirectory clean
 
 # end

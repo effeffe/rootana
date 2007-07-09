@@ -16,6 +16,7 @@ extern bool gIsOffline;
 // Output files
 
 extern TFile* gOutputFile;
+extern TDirectory* gOnlineHistDir;
 
 // ODB access
 
