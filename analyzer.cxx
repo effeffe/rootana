@@ -164,7 +164,7 @@ void startRun(int transition,int run,int time)
 
   char filename[1024];
   sprintf(filename, "output%05d.root", run);
-  gOutputFile = new TFile(filename,"UPDATE"); 
+  gOutputFile = new TFile(filename,"CREATE"); 
 }
 
 void endRun(int transition,int run,int time)
