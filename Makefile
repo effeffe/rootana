@@ -40,6 +40,8 @@ CXXFLAGS += -DOLD_SERVER
 
 ALL+= librootana.a
 
+ALL+= testODB.exe
+
 ifdef ROOTSYS
 ALL+= analyzer.exe
 endif
@@ -53,7 +55,7 @@ librootana.a: $(OBJS)
 	-rm -f $@
 	ar -rv $@ $^
 
-analyzer.exe: %.exe: %.o librootana.a
+%.exe: %.o librootana.a
 	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
 
 %.o: %.cxx

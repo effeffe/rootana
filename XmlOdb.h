@@ -48,6 +48,8 @@ struct XmlOdb : VirtualOdb
   int      odbReadInt(   const char*name, int index, int      defaultValue);
   uint32_t odbReadUint32(const char*name, int index, uint32_t defaultValue);
   bool     odbReadBool(  const char*name, int index, bool     defaultValue);
+  double   odbReadDouble(const char*name, int index, double   defaultValue);
+  int      odbReadArraySize(const char*name);
 };
 
 #endif

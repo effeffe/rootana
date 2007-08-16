@@ -216,6 +216,8 @@ TXMLNode* XmlOdb::FindPath(TXMLNode*node,const char* path)
 
 int      XmlOdb::odbReadAny(   const char*name, int index, int tid,void* value)    { assert(!"Not implemented!"); }
 uint32_t XmlOdb::odbReadUint32(const char*name, int index, uint32_t defaultValue)  { assert(!"Not implemented!"); }
+double   XmlOdb::odbReadDouble(const char*name, int index, double defaultValue)  { assert(!"Not implemented!"); }
+int      XmlOdb::odbReadArraySize(const char*name)  { assert(!"Not implemented!"); }
 
 int      XmlOdb::odbReadInt(   const char*name, int index, int      defaultValue)
 {

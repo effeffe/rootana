@@ -5,18 +5,7 @@
 
   Contents:     C++ MIDAS analyzer
 
-  $Id: TMidasOnline.cxx,v 1.3 2006/08/07 09:19:51 alpha Exp $
-
-  $Log: TMidasOnline.cxx,v $
-  Revision 1.3  2006/08/07 09:19:51  alpha
-  RAH - changes made to the connection routine (by KO)
-
-  Revision 1.2  2006/06/05 19:22:22  alpha
-  KO- added functions to read values from ODB
-
-  Revision 1.1  2006/05/25 05:58:05  alpha
-  First commit
-
+  $Id$
 
 \********************************************************************/
 
@@ -288,6 +277,33 @@ bool     TMidasOnline::odbReadBool(const char*name,int index,bool defaultValue)
   else
     return defaultValue;
 };
+
+double TMidasOnline::odbReadDouble(const char*name,int index,double defaultValue)
+{
+  double value = defaultValue;
+  if (odbReadAny(name,index,TID_DOUBLE,&value) == 0)
+    return value;
+  else
+    return defaultValue;
+};
+
+int TMidasOnline::odbReadArraySize(const char*name)
+{
+  int status;
+  HNDLE hdir = 0;
+  HNDLE hkey;
+  KEY key;
+
+  status = db_find_key (fDB, hdir, (char*)name, &hkey);
+  if (status != SUCCESS)
+    return 0;
+
+  status = db_get_key(fDB, hkey, &key);
+  if (status != SUCCESS)
+    return 0;
+
+  return key.num_values;
+}
 
 int TMidasOnline::odbReadAny(const char*name,int index,int tid,void* value)
 {
