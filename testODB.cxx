@@ -21,93 +21,6 @@
 
 VirtualOdb* gOdb = NULL;
 
-double GetTimeSec()
-{
-  struct timeval tv;
-  gettimeofday(&tv,NULL);
-  return tv.tv_sec + 0.000001*tv.tv_usec;
-}
-
-#ifdef HAVE_ROOT
-int ProcessMidasFile(const char*fname)
-{
-  TMidasFile f;
-  bool tryOpen = f.Open(fname);
-
-  if (!tryOpen)
-    {
-      printf("Cannot open input file \"%s\"\n",fname);
-      return -1;
-    }
-
-  int i=0;
-  while (1)
-    {
-      TMidasEvent event;
-      if (!f.Read(&event))
-	break;
-
-      int eventId = event.GetEventId();
-      //printf("Have an event of type %d\n",eventId);
-
-      if ((eventId & 0xFFFF) == 0x8000)
-	{
-	  // begin run
-	  event.Print();
-
-	  //char buf[256];
-	  //memset(buf,0,sizeof(buf));
-	  //memcpy(buf,event.GetData(),255);
-	  //printf("buf is [%s]\n",buf);
-
-	  //
-	  // Load ODB contents from the ODB XML file
-	  //
-	  if (gOdb)
-	    delete gOdb;
-	  gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
-
-	  //startRun(0,event.GetSerialNumber(),0);
-	}
-      else if ((eventId & 0xFFFF) == 0x8001)
-	{
-	  // end run
-	  event.Print();
-	}
-      else
-	{
-	  event.SetBankList();
-	  //event.Print();
-	  //HandleMidasEvent(event);
-	}
-	
-      if((i%500)==0)
-	{
-	  //resetClock2time();
-	  printf("Processing event %d\n",i);
-	  //SISperiodic();
-	  //StepThroughSISBuffer();
-	}
-      
-      i++;
-      //if ((gEventCutoff!=0)&&(i>=gEventCutoff))
-      //	{
-      //  printf("Reached event %d, exiting loop.\n",i);
-      //  break;
-      //}
-    }
-  
-  f.Close();
-
-  //endRun(0,gRunNumber,0);
-
-  // start the ROOT GUI event loop
-  //  app->Run(kTRUE);
-
-  return 0;
-}
-#endif
-
 // Main function call
 
 int main(int argc, char *argv[])
@@ -121,7 +34,9 @@ int main(int argc, char *argv[])
  
    const char* hostname = NULL;
    const char* exptname = NULL;
-   bool online = true;
+   const char* filename = argv[1];
+   bool online  = filename==NULL;
+   bool xmlfile = true;
 
    if (online)
      {
@@ -136,25 +51,87 @@ int main(int argc, char *argv[])
 
        gOdb = midas;
      }
+   else if (xmlfile)
+     {
+#ifdef HAVE_ROOT
+       XmlOdb* odb = new XmlOdb(filename);
+       //odb->DumpTree();
+       gOdb = odb;
+#else
+       printf("This program is compiled without support for XML ODB access\n");
+       return -1;
+#endif
+     }
    else
      {
 #ifdef HAVE_ROOT
-       //ProcessMidasFile(app,arg);
+       TMidasFile f;
+       bool tryOpen = f.Open(filename);
+
+       if (!tryOpen)
+         {
+           printf("Cannot open input file \"%s\"\n",filename);
+           return -1;
+         }
+
+       while (1)
+         {
+           TMidasEvent event;
+           if (!f.Read(&event))
+             break;
+
+           int eventId = event.GetEventId();
+           //printf("Have an event of type %d\n",eventId);
+
+           if ((eventId & 0xFFFF) == 0x8000)
+             {
+               // begin run
+               //event.Print();
+
+               //
+               // Load ODB contents from the ODB XML file
+               //
+               if (gOdb)
+                 delete gOdb;
+               gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
+               break;
+             }
+         }
+
+       if (!gOdb)
+         {
+           printf("Failed to load ODB from input file \"%s\"\n",filename);
+           return -1;
+         }
+#else
+       printf("This program is compiled without support for XML ODB access\n");
+       return -1;
 #endif
      }
 
    printf("read run number (odbReadInt): %d\n", gOdb->odbReadInt("/runinfo/Run number"));
-   printf("read array size: %d\n", gOdb->odbReadArraySize("/test/intarr"));
+   printf("read array size of /test: %d\n", gOdb->odbReadArraySize("/test"));
+   printf("read array size of /runinfo/run number: %d\n", gOdb->odbReadArraySize("/runinfo/Run number"));
+   printf("read array size of /test/intarr: %d\n", gOdb->odbReadArraySize("/test/intarr"));
    printf("read array values:\n");
    int size = gOdb->odbReadArraySize("/test/intarr");
    for (int i=0; i<size; i++)
      printf("  intarr[%d] = %d\n", i, gOdb->odbReadInt("/test/intarr", i));
    printf("read double value: %f\n", gOdb->odbReadDouble("/test/dblvalue"));
-   printf("read float value: %f\n", gOdb->odbReadDouble("/test/fltvalue"));
    printf("read uint32 value: %d\n", gOdb->odbReadUint32("/test/dwordvalue"));
+   printf("read bool value: %d\n", gOdb->odbReadBool("/test/boolvalue"));
+
+   printf("\nTry wrong types...\n\n");
+
+   printf("read float value: %f\n", gOdb->odbReadDouble("/test/fltvalue"));
    printf("read uint32 value: %d\n", gOdb->odbReadUint32("/test/wordvalue"));
    printf("read int value: %d\n", gOdb->odbReadInt("/test/wordvalue"));
-   printf("read bool value: %d\n", gOdb->odbReadBool("/test/boolvalue"));
+
+   printf("\nTry wrong array indices...\n\n");
+
+   printf("read try to index a non-array: %f\n", gOdb->odbReadDouble("/test/dblvalue", 10, -9999));
+   printf("read try invalid index -1: %d\n", gOdb->odbReadInt("/test/intarr", -1, -9999));
+   printf("read try invalid index 999: %d\n", gOdb->odbReadInt("/test/intarr", 999, -9999));
    
    return 0;
 }

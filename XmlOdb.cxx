@@ -20,6 +20,7 @@
 
 XmlOdb::XmlOdb(const char*xbuf,int bufLength) //ctor
 {
+  fOdb = NULL;
   fParser = new TDOMParser();
   fParser->SetValidate(false);
 
@@ -44,9 +45,31 @@ XmlOdb::XmlOdb(const char*xbuf,int bufLength) //ctor
   //printf("end: %s\n", buf+bufLength-5);
 
   fParser->ParseBuffer(buf,bufLength);
-  //TXmlDocument* xxx = fParser->GetXMLDocument();
-  //assert(xxx);
-  fOdb = FindNode(fParser->GetXMLDocument()->GetRootNode(),"odb");
+
+  TXMLDocument* doc = fParser->GetXMLDocument();
+  assert(doc);
+
+  fOdb = FindNode(doc->GetRootNode(),"odb");
+  assert(fOdb);
+}
+
+XmlOdb::XmlOdb(const char* filename) //ctor
+{
+  fOdb = NULL;
+  fParser = new TDOMParser();
+  fParser->SetValidate(false);
+
+  int status = fParser->ParseFile(filename);
+  if (status != 0)
+    {
+      fprintf(stderr,"XmlOdb::XmlOdb: Failed to parse XML file \'%s\', ParseFile() returned %d\n", filename, status);
+      return;
+    }
+
+  TXMLDocument* doc = fParser->GetXMLDocument();
+  assert(doc);
+
+  fOdb = FindNode(doc->GetRootNode(),"odb");
   assert(fOdb);
 }
 
@@ -56,7 +79,7 @@ XmlOdb::~XmlOdb() // dtor
   fParser = NULL;
 }
 
-TXMLNode* XmlOdb::FindNode(TXMLNode*node,const char*name)
+TXMLNode* XmlOdb::FindNode(TXMLNode*node, const char*name)
 {
   for (; node != NULL; node = node->GetNextNode())
     {
@@ -77,6 +100,15 @@ TXMLNode* XmlOdb::FindNode(TXMLNode*node,const char*name)
 
 void XmlOdb::DumpTree(TXMLNode*node,int level)
 {
+  if (!node)
+    node = fOdb;
+
+  if (!node)
+    {
+      fprintf(stderr,"XmlOdb::DumpTree: node is NULL!\n");
+      return;
+    }
+
   while (node)
     {
       for (int i=0; i<level; i++)
@@ -106,6 +138,15 @@ void XmlOdb::DumpTree(TXMLNode*node,int level)
 
 void XmlOdb::DumpDirTree(TXMLNode*node,int level)
 {
+  if (!node)
+    node = fOdb;
+
+  if (!node)
+    {
+      fprintf(stderr,"XmlOdb::DumpDirTree: node is NULL!\n");
+      return;
+    }
+
   for (; node != NULL; node = node->GetNextNode())
     {
       const char* name = node->GetNodeName();
@@ -152,6 +193,9 @@ const char* XmlOdb::GetAttrValue(TXMLNode*node,const char*attrName)
 //
 TXMLNode* XmlOdb::FindPath(TXMLNode*node,const char* path)
 {
+  if (!fOdb)
+    return NULL;
+
   if (!node)
     node = fOdb->GetChildren();
   
@@ -214,38 +258,135 @@ TXMLNode* XmlOdb::FindPath(TXMLNode*node,const char* path)
     }
 }
 
+//
+// Follow the ODB path through the XML DOM tree
+//
+TXMLNode* XmlOdb::FindArrayPath(TXMLNode*node,const char* path,const char* type,int index)
+{
+  if (!fOdb)
+    return NULL;
+
+  if (!node)
+    node = fOdb->GetChildren();
+
+  node = FindPath(node, path);
+
+  const char* nodename = node->GetNodeName();
+  const char* num_values = GetAttrValue(node,"num_values");
+
+  const char* typevalue = GetAttrValue(node,"type");
+  if (strcasecmp(typevalue,type) != 0)
+    {
+      fprintf(stderr,"XmlOdb::FindArrayPath: Type mismatch: \'%s\' has type \'%s\', we expected \'%s\'\n", path, typevalue, type);
+      return NULL;
+    }
+  
+  bool isKeyArray = (num_values!=NULL) && (strcmp(nodename,"keyarray")==0);
+
+  if (!isKeyArray)
+    {
+      if (index != 0)
+        {
+          fprintf(stderr,"XmlOdb::FindArrayPath: Attempt to access array element %d, but \'%s\' is not an array\n", index, path);
+          return NULL;
+        }
+
+      return node;
+    }
+
+  int max_index = atoi(num_values);
+
+  if (index < 0 || index >= max_index)
+    {
+      fprintf(stderr,"XmlOdb::FindArrayPath: Attempt to access array element %d, but size of array \'%s\' is %d\n", index, path, max_index);
+      return NULL;
+    }
+
+  //printf("nodename [%s]\n", nodename);
+
+  TXMLNode* elem = node->GetChildren();
+
+  for (int i=0; elem!=NULL; )
+    {
+      const char* name = elem->GetNodeName();
+      const char* text = elem->GetText();
+      //printf("index %d, name [%s] text [%s]\n", i, name, text);
+
+      if (strcmp(name,"value") == 0)
+        {
+          if (i == index)
+            return elem;
+          i++;
+        }
+
+      elem = elem->GetNextNode();
+    }
+  
+
+  return node;
+}
+
 int      XmlOdb::odbReadAny(   const char*name, int index, int tid,void* value)    { assert(!"Not implemented!"); }
-uint32_t XmlOdb::odbReadUint32(const char*name, int index, uint32_t defaultValue)  { assert(!"Not implemented!"); }
-double   XmlOdb::odbReadDouble(const char*name, int index, double defaultValue)  { assert(!"Not implemented!"); }
-int      XmlOdb::odbReadArraySize(const char*name)  { assert(!"Not implemented!"); }
+
+uint32_t XmlOdb::odbReadUint32(const char*name, int index, uint32_t defaultValue)
+{
+  TXMLNode *node = FindArrayPath(NULL,name,"DWORD",index);
+  if (!node)
+    return defaultValue;
+  const char* text = node->GetText();
+  if (!text)
+    return defaultValue;
+  return strtoul(text,NULL,0);
+}
+
+double   XmlOdb::odbReadDouble(const char*name, int index, double defaultValue)
+{
+  TXMLNode *node = FindArrayPath(NULL,name,"DOUBLE",index);
+  if (!node)
+    return defaultValue;
+  const char* text = node->GetText();
+  if (!text)
+    return defaultValue;
+  return atof(text);
+}
 
 int      XmlOdb::odbReadInt(   const char*name, int index, int      defaultValue)
 {
-  TXMLNode *node = FindPath(NULL,name);
+  TXMLNode *node = FindArrayPath(NULL,name,"INT",index);
   if (!node)
     return defaultValue;
-  const char* typevalue = GetAttrValue(node,"type");
-  if (strcasecmp(typevalue,"INT") != 0)
-    return defaultValue;
   const char* text = node->GetText();
-  printf("for %s, type is %s, text is %s\n", name, typevalue, text);
-  DumpTree(node);
-  exit(1);
+  if (!text)
+    return defaultValue;
+  return atoi(text);
+  //printf("for \'%s\', type is \'%s\', text is \'%s\'\n", name, typevalue, text);
+  //DumpTree(node);
+  //exit(1);
   return 0;
 }
 
 bool     XmlOdb::odbReadBool(  const char*name, int index, bool     defaultValue)
 {
-  TXMLNode *node = FindPath(NULL,name);
+  TXMLNode *node = FindArrayPath(NULL,name,"BOOL",index);
   if (!node)
     return defaultValue;
-  const char* typevalue = GetAttrValue(node,"type");
-  if (strcasecmp(typevalue,"BOOL") != 0)
-    return defaultValue;
   const char* text = node->GetText();
+  if (!text)
+    return defaultValue;
   if (*text == 'n')
     return false;
   return true;
+}
+
+int      XmlOdb::odbReadArraySize(const char*name)
+{
+  TXMLNode *node = FindPath(NULL,name);
+  if (!node)
+    return 0;
+  const char* num_values = GetAttrValue(node,"num_values");
+  if (!num_values)
+    return 0;
+  return atoi(num_values);
 }
 
 //end

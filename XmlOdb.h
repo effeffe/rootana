@@ -23,8 +23,11 @@ struct XmlOdb : VirtualOdb
   TDOMParser* fParser; ///< XML parser for the XML-encoded ODB data
   TXMLNode*   fOdb;    ///< Pointer to the root of the ODB tree
 
-  /// Contructor
+  /// Contructor from a string
   XmlOdb(const char*buf,int bufLength);
+
+  /// Contructor from a file
+  XmlOdb(const char* filename);
 
   /// Destructor
   virtual ~XmlOdb();
@@ -33,16 +36,19 @@ struct XmlOdb : VirtualOdb
   TXMLNode* FindNode(TXMLNode*node,const char*name);
 
   /// Print out the contents of the ODB tree
-  void DumpTree(TXMLNode*node,int level = 0);
+  void DumpTree(TXMLNode*node = NULL, int level = 0);
 
   /// Print out the directory structure of the ODB tree
-  void DumpDirTree(TXMLNode*node,int level = 0);
+  void DumpDirTree(TXMLNode*node = NULL, int level = 0);
 
   /// Return the value of the named attribute
   const char* GetAttrValue(TXMLNode*node,const char*attrName);
 
   /// Follow the ODB path through the XML DOM tree
   TXMLNode* FindPath(TXMLNode*node,const char* path);
+
+  /// Same as FindPath(), but also index into an array
+  TXMLNode* FindArrayPath(TXMLNode*node,const char* path,const char* type,int index);
 
   int      odbReadAny(   const char*name, int index, int tid,void* value);
   int      odbReadInt(   const char*name, int index, int      defaultValue);
