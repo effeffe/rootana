@@ -30,6 +30,7 @@
 #define THREADRETURN 0
 #endif
 
+#include <TROOT.h>
 #include <TSemaphore.h>
 #include <TFolder.h>
 #include <TSocket.h>
@@ -37,6 +38,7 @@
 #include <TThread.h>
 #include <TMessage.h>
 #include <TObjString.h>
+#include <TObjArray.h>
 #include <TH1.h>
 #include <TCutG.h>
 
@@ -44,6 +46,14 @@ static TSemaphore gRootSema(0);
 static TSemaphore gWaitSema(0);
 
 static bool gDebugLock = false;
+
+static bool gVerbose   = false;
+
+void VerboseMidasServer(bool verbose)
+{
+  fprintf(stderr, "VerboseMidasServer: change verbose level from %d to %d\n", gVerbose, verbose);
+  gVerbose = verbose;
+}
 
 static void LockRoot()
 {
@@ -141,7 +151,9 @@ TFolder *ReadFolderPointer(TSocket * fSocket)
    *m >> p;
 
    const char* name = gPointers[p].c_str();
-   printf("converted %d to \'%s\'\n", p, name);
+
+   if (gVerbose)
+     printf("converted %d to \'%s\'\n", p, name);
 
    TObject* obj = gROOT->FindObjectAny(name);
 
@@ -174,7 +186,8 @@ THREADTYPE root_server_thread(void *arg)
          return THREADRETURN;
       }
 
-      printf("Request %s\n", request);
+      if (gVerbose)
+        printf("Request %s\n", request);
 
       if (strcmp(request, "GetListOfFolders") == 0) {
 
@@ -272,7 +285,8 @@ THREADTYPE root_server_thread(void *arg)
                 gRevPointers[name] = p;
               }
 
-            printf("give %d for \'%s\'\n", p, name);
+            if (gVerbose)
+              printf("give %d for \'%s\'\n", p, name);
           }
 
         message << p;
@@ -339,14 +353,14 @@ THREADTYPE root_socket_server(void *arg)
 
    port = *(int *) arg;
 
-   printf("Root server listening on port %d...\n", port);
+   printf("MIDAS ROOT server listening on port %d...\n", port);
    TServerSocket *lsock = new TServerSocket(port, kTRUE);
 
    do {
       TSocket *sock = lsock->Accept();
 
       if (sock==NULL) {
-        printf("Root server accept() error\n");
+        fprintf(stderr, "MIDAS ROOT server accept() error\n");
         break;
       }
 

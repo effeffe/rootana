@@ -10,5 +10,6 @@ class TObjArray;
 extern TFolder* gManaHistosFolder;
 
 void StartMidasServer(int port);
+void VerboseMidasServer(bool verbose);
 
 // end
