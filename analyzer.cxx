@@ -75,6 +75,7 @@
 #endif
 
 #include <TSystem.h>
+#include <TROOT.h>
 #include <TApplication.h>
 #include <TTimer.h>
 #include <TFile.h>

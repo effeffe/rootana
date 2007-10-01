@@ -18,6 +18,8 @@
 
 #include "XmlOdb.h"
 
+#include <TList.h>
+
 XmlOdb::XmlOdb(const char*xbuf,int bufLength) //ctor
 {
   fOdb = NULL;
