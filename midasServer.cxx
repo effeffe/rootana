@@ -17,7 +17,7 @@
 
 /*==== ROOT socket histo server ====================================*/
 
-#if defined (__linux__)
+#if defined (OS_LINUX) || defined (OS_DARWIN)
 #define THREADRETURN
 #define THREADTYPE void
 #endif
