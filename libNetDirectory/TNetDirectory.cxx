@@ -7,14 +7,17 @@
 #include "TSocket.h"
 #include "TMessage.h"
 #include "TClass.h"
+#include "TObjString.h"
 
-class Connection
+static bool gVerbose = false;
+
+class TNetDirectoryConnection
 {
   TSocket* fSocket;
 
 public:
 
-  Connection(const char* host, int port)
+  TNetDirectoryConnection(const char* host, int port)
   {
     fSocket = new TSocket(host, port);
     printf("Connected to %s:%d\n", host, port);
@@ -27,20 +30,23 @@ public:
     fSocket->Close();
     delete fSocket;
     fSocket = new TSocket(host.c_str(), port);
+    printf("Connected to %s:%d\n", host.c_str(), port);
+    return 0;
   }
 
   void Request(const char* req)
   {
-    printf("Request %s\n", req);
+    if (gVerbose)
+      printf("Request [%s]\n", req);
     int s = fSocket->Send(req);
-    printf("Request sent %d\n", s);
+    //printf("Request sent %d\n", s);
   }
 
   TObject* ReadObject(TClass* type)
   {
     TMessage *mr = 0;
     int r = fSocket->Recv(mr);
-    printf("ReadObject recv %d\n", r);
+    //printf("ReadObject recv %d\n", r);
     if (r <= 0) {
       printf("Error reading from socket!\n");
       return NULL;
@@ -49,14 +55,14 @@ public:
     TObject *obj = NULL;
 
     if (mr) {
-      mr->Print();
+      //mr->Print();
       obj = (TObject*)mr->ReadObjectAny(mr->GetClass());
     }
 
-    printf("mr %p, obj %p, class %p, %s\n", mr, obj, mr->GetClass(), mr->GetClass()->GetName());
+    //printf("mr %p, obj %p, class %p, %s\n", mr, obj, mr->GetClass(), mr->GetClass()->GetName());
 
     if (obj) {
-      obj->Print();
+      //obj->Print();
 
       if (!obj->InheritsFrom(type)) {
         printf("Object type mismatch, received %s, expected %s\n", obj->IsA()->GetName(), type->GetName());
@@ -71,39 +77,73 @@ public:
   }
 };
 
-Connection *gConnection;
-
-#define CONN() ((Connection*)gConnection)
-
-TNetDirectory::TNetDirectory(const char *name, TDirectory* motherDir)
-  : TDirectory(name, name, "", motherDir)
+TNetDirectory::TNetDirectory(const char *remoteServerName, TDirectory* motherDir)
+  : TDirectory(remoteServerName, remoteServerName, "", motherDir)
 {
-  printf("TNetDirectory::ctor: %s\n", name);
-  gConnection = new Connection("localhost", 9090);
+  if (gVerbose)
+    printf("TNetDirectory::ctor: %s\n", remoteServerName);
+  int port = 9091;
+  char hostname[256];
+  strcat(hostname, remoteServerName);
+  char* s = strchr(hostname, ':');
+  if (s)
+    {
+      *s = 0;
+      port = atoi(s+1);
+    }
+  fConn = new TNetDirectoryConnection(hostname, port);
+  fPath = "";
+}
+
+TNetDirectory::TNetDirectory(TNetDirectoryConnection* conn, const char* dirname, const std::string& path, TDirectory* motherDir)
+  : TDirectory(dirname, dirname, "", motherDir)
+{
+  if (gVerbose)
+    printf("TNetDirectory::ctor: conn %p, path [%s]\n", conn, path.c_str());
+  fConn = conn;
+  fPath = path;
 }
 
 TNetDirectory::~TNetDirectory()
 {
-  printf("TNetDirectory::dtor\n");
+  if (gVerbose)
+    printf("TNetDirectory::dtor\n");
+  fConn = NULL;
 }
 
 int TNetDirectory::Reconnect()
 {
-  return CONN()->Reconnect();
+  return fConn->Reconnect();
 }
 
 void TNetDirectory::ResetTH1(const char *name)
 {
-  printf("TNetDirectory::ResetTH1\n");
-  char req[1024];
-  strcpy(req, "ResetTH1 ");
-  strcat(req, name);
-  CONN()->Request(req);
-  TObject *obj = CONN()->ReadObject(TObject::Class());
+  if (gVerbose)
+    printf("TNetDirectory(%s)::ResetTH1(%s)\n", fPath.c_str(), name);
+
+  std::string req = "ResetTH1 ";
+  if (fPath.length() > 0)
+    {
+      req += fPath;
+      req += "/";
+    }
+
+  if (name && strlen(name)>0)
+    {
+      req += name;
+    }
+
+  fConn->Request(req.c_str());
+  TObject *obj = fConn->ReadObject(TObject::Class());
   delete obj;
 }
 
-void        TNetDirectory::Append(TObject *obj) { assert(!"not implemented"); }
+void        TNetDirectory::Append(TObject *obj)
+{
+  if (gVerbose)
+    printf("TNetDirectory(%s)::Append(%p, name: %s)\n", fPath.c_str(), obj, obj->GetName());
+}
+
 void        TNetDirectory::Browse(TBrowser *b) { assert(!"not implemented"); }
 void        TNetDirectory::Clear(Option_t *option) { assert(!"not implemented"); }
 void        TNetDirectory::Close(Option_t *option) { assert(!"not implemented"); }
@@ -117,12 +157,39 @@ TKey       *TNetDirectory::FindKeyAny(const char *keyname) const { assert(!"not 
 
 TObject    *TNetDirectory::FindObject(const char *name) const
 {
-  printf("TNetDirectory::FindObject\n");
-  char req[1024];
-  strcpy(req, "FindObjectByName ");
-  strcat(req, name);
-  CONN()->Request(req);
-  TObject *obj = CONN()->ReadObject(TObject::Class());
+  if (gVerbose)
+    printf("TNetDirectory(%s)::FindObject(%s)\n", fPath.c_str(), name);
+
+  for (unsigned int i=0; i<fSubDirs.size(); i++)
+    {
+      TNetDirectory *s = fSubDirs[i];
+      if (strcmp(name, s->GetName()) == 0)
+        {
+          //printf("Return subdirectory %p [%s]\n", s, s->GetName());
+          return s;
+        }
+    }
+
+  std::string req = "FindObjectByName ";
+  if (fPath.length() > 0)
+    {
+      req += fPath;
+      req += "/";
+    }
+  req += name;
+
+  fConn->Request(req.c_str());
+  TObject *obj = fConn->ReadObject(TObject::Class());
+
+  if (obj && strcmp(obj->IsA()->GetName(), "TObjString") == 0)
+    {
+      const char* s = ((TObjString*)obj)->GetName();
+      if (strncmp(s, "TDirectory ", 11) == 0)
+        {
+          return NULL;
+        }
+    }
+
   return obj;
 }
 
@@ -135,12 +202,34 @@ TObject    *TNetDirectory::FindObjectAny(const char *name) const { assert(!"not 
 
 TObject    *TNetDirectory::Get(const char *namecycle)
 {
-  printf("TNetDirectory::Get\n");
-  char req[1024];
-  strcpy(req, "Get ");
-  strcat(req, namecycle);
-  CONN()->Request(req);
-  TObject *obj = CONN()->ReadObject(TObject::Class());
+  if (gVerbose)
+    printf("TNetDirectory(%s)::Get(%s)\n", fPath.c_str(), namecycle);
+
+  std::string req = "FindObjectByName "; // "Get ";
+  if (fPath.length() > 0)
+    {
+      req += fPath;
+      req += "/";
+    }
+  req += namecycle;
+
+  fConn->Request(req.c_str());
+  TObject *obj = fConn->ReadObject(TObject::Class());
+
+  if (obj && strcmp(obj->IsA()->GetName(), "TObjString") == 0)
+    {
+      const char* s = ((TObjString*)obj)->GetName();
+      if (strncmp(s, "TDirectory ", 11) == 0)
+        {
+          const char* dirname = s+11;
+          if (gVerbose)
+            printf("Got TDirectory %s\n", dirname);
+          TNetDirectory *s = new TNetDirectory(fConn, dirname, fPath + "/" + dirname, this);
+          fSubDirs.push_back(s);
+          return s;
+        }
+    }
+
   return obj;
 }
 
@@ -149,18 +238,29 @@ void       *TNetDirectory::GetObjectChecked(const char *namecycle, const char* c
 void       *TNetDirectory::GetObjectChecked(const char *namecycle, const TClass* cl) { assert(!"not implemented"); }
 void       *TNetDirectory::GetObjectUnchecked(const char *namecycle) { assert(!"not implemented"); }
 Int_t       TNetDirectory::GetBufferSize() const { assert(!"not implemented"); }
-TFile      *TNetDirectory::GetFile() const { assert(!"not implemented"); return NULL; }
+TFile      *TNetDirectory::GetFile() const { return NULL; assert(!"not implemented"); return NULL; }
 TKey       *TNetDirectory::GetKey(const char *name, Short_t cycle) const { assert(!"not implemented"); }
 TList      *TNetDirectory::GetList() const { assert(!"not implemented"); }
+
 TList      *TNetDirectory::GetListOfKeys() const
 {
-  printf("TNetDirectory::GetListOfKeys\n");
-  CONN()->Request("GetListOfKeys");
-  TList *keys = (TList*)CONN()->ReadObject(TList::Class());
+  if (gVerbose)
+    printf("TNetDirectory(%s)::GetListOfKeys()\n", fPath.c_str());
+
+  std::string req = "GetListOfKeys";
+  if (fPath.length() > 0)
+    {
+      req += " ";
+      req += fPath;
+    }
+
+  fConn->Request(req.c_str());
+  TList *keys = (TList*)fConn->ReadObject(TList::Class());
   if (keys == NULL)
-    return fKeys;
-  keys->Print();
-  keys->ls();
+    //    return fKeys;
+    return NULL;
+  //keys->Print();
+  //keys->ls();
   return keys;
 }
 

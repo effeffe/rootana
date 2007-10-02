@@ -44,6 +44,7 @@ ALL+= testODB.exe
 
 ifdef ROOTSYS
 ALL+= analyzer.exe
+ALL+= test_midasServer.exe
 endif
 
 all: $(ALL)

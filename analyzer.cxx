@@ -527,19 +527,19 @@ int ShowMem(const char* label)
 void help()
 {
   printf("\nUsage:\n");
-  printf("\n./analyzer.exe [-h] [-Hhostname] [-Eexptname] [-eMaxEvents] [-PtcpPort] [-pTcpPort] [-m] [-g] [file1 file2 ...]\n");
+  printf("\n./analyzer.exe [-h] [-Hhostname] [-Eexptname] [-eMaxEvents] [-P9091] [-p9090] [-m] [-g] [file1 file2 ...]\n");
   printf("\n");
   printf("\t-h: print this help message\n");
   printf("\t-T: test mode - start and serve a test histogram\n");
   printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
   printf("\t-Eexptname: connect to this MIDAS experiment\n");
-  printf("\t-P: Start the TNetDirectory server on specified tcp port (for use with roody)\n");
-  printf("\t-p: Start the old midas histogram server on specified tcp port (for use with roody)\n");
+  printf("\t-P: Start the TNetDirectory server on specified tcp port (for use with roody -Plocalhost:9091)\n");
+  printf("\t-p: Start the old midas histogram server on specified tcp port (for use with roody -Hlocalhost:9090)\n");
   printf("\t-e: Number of events to read from input data files\n");
   printf("\t-m: Enable memory leak debugging\n");
   printf("\t-g: Enable graphics display when processing data files\n");
   printf("\n");
-  printf("Example1: analyze online data: ./analyzer.exe -p9090\n");
+  printf("Example1: analyze online data: ./analyzer.exe -P9091\n");
   printf("Example2: analyze existing data: ./analyzer.exe /data/alpha/current/run00500.mid\n");
   exit(1);
 }

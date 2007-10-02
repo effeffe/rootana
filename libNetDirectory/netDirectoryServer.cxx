@@ -30,6 +30,9 @@
 #define THREADRETURN 0
 #endif
 
+#include <TROOT.h>
+#include <TClass.h>
+#include <TDirectory.h>
 #include <TSemaphore.h>
 #include <TKey.h>
 #include <TFolder.h>
@@ -40,6 +43,13 @@
 #include <TObjString.h>
 #include <TH1.h>
 #include <TCutG.h>
+
+#include <deque>
+#include <string>
+
+static bool gVerbose = false;
+
+static std::deque<std::string> gExports;
 
 static TSemaphore gRootSema(0);
 static TSemaphore gWaitSema(0);
@@ -130,7 +140,97 @@ static ServerTimer gTimer;
 #include <map>
 #include <string>
 
-static TDirectory *gDir;
+/*------------------------------------------------------------------*/
+
+static TObject* FollowPath(TDirectory* dir, char* path)
+{
+  if (!dir)
+    {
+      gROOT->cd("/");
+      dir = gROOT;
+    }
+
+  //printf("FollowPath [%s] from %p (%s)\n", path, dir, dir->GetName());
+
+  bool topLevel = (*path == '/');
+
+  for (int level=0; ; level++)
+    {
+      while (*path == '/')
+        path++;
+
+      char* s = strchr(path,'/');
+      if (!s)
+        break;
+
+      *s = 0;
+
+      if (topLevel && level==0)
+        {
+          bool found = false;
+          for (unsigned int i=0; i<gExports.size(); i++)
+            {
+              const char* xname = gExports[i].c_str();
+              if (strcmp(path, xname) == 0)
+                found = true;
+            }
+
+          if (!found)
+            {
+              printf("ERROR: Top level object \'%s\' not found in exports list\n", path);
+              return NULL;
+            }
+        }
+
+      TObject* obj = dir->FindObject(path);
+
+      //printf("Looking for [%s], got %p\n", path, obj);
+
+      if (!obj)
+        return NULL;
+
+      if (!obj->InheritsFrom(TDirectory::Class()))
+        {
+          printf("ERROR: Object \'%s\' of type %s not a directory\n", path, obj->IsA()->GetName());
+          return NULL;
+        }
+
+      dir = (TDirectory*)obj;
+
+      path = s+1;
+    }
+
+  TObject* obj = dir->FindObject(path);
+  //printf("Final element [%s], got %p\n", path, obj);
+  return obj;
+}
+
+void ResetObject(TObject* obj)
+{
+  assert(obj!=NULL);
+
+  if (gVerbose)
+    printf("ResetObject object %p name [%s] type [%s]\n", obj, obj->GetName(), obj->IsA()->GetName());
+
+  if (obj->InheritsFrom(TH1::Class()))
+    {
+      ((TH1*)obj)->Reset();
+    }
+  else if (obj->InheritsFrom(TDirectory::Class()))
+    {
+      TDirectory* dir = (TDirectory*)obj;
+      TList* objs = dir->GetList();
+
+      TIter next = objs;
+      while(1)
+        {
+          TObject *obj = next();
+          if (obj == NULL)
+            break;
+          ResetObject(obj);
+        }
+    }
+}
 
 /*------------------------------------------------------------------*/
 
@@ -139,7 +239,7 @@ static THREADTYPE root_server_thread(void *arg)
   Serve histograms over TCP/IP socket link
 */
 {
-   char request[256];
+   char request[2560];
 
    TSocket *sock = (TSocket *) arg;
    TMessage message(kMESS_OBJECT);
@@ -148,55 +248,124 @@ static THREADTYPE root_server_thread(void *arg)
 
       /* close connection if client has disconnected */
       int rd = sock->Recv(request, sizeof(request));
-      if (rd <= 0) {
-         // printf("Closed connection to %s\n", sock->GetInetAddress().GetHostName());
-         sock->Close();
-         delete sock;
-         return THREADRETURN;
-      }
+      if (rd <= 0)
+        {
+          if (gVerbose)
+            fprintf(stderr, "TNetDirectory connection from %s closed\n", sock->GetInetAddress().GetHostName());
+          sock->Close();
+          delete sock;
+          return THREADRETURN;
+        }
 
-      printf("Request %s\n", request);
+      if (gVerbose)
+        printf("Request [%s] from %s\n", request, sock->GetInetAddress().GetHostName());
 
       if (strcmp(request, "GetListOfKeys") == 0)
         {
+          // enumerate top level exported directories
+
           LockRootGuard lock;
           
-          printf("Directory %p contains:\n", gDir);
-          gDir->Print();
+          //printf("Top level exported directories are:\n");
+          TList* keys = new TList();
           
-          TList* keys = gDir->GetListOfKeys();
-          printf("Directory %p keys:\n", gDir);
-          keys->Print();
-          
-          TList* objs = gDir->GetList();
-          printf("Directory %p objects:\n", gDir);
-          objs->Print();
-          
-          TIter next = objs;
-          while(1)
+          for (unsigned int i=0; i<gExports.size(); i++)
             {
-              TObject *obj = next();
-              printf("object %p\n", obj);
-              if (obj == NULL)
-                break;
-              
+              const char* xname = gExports[i].c_str();
+
+              TObject* obj = gROOT->FindObjectAny(xname);
+
+              if (!obj)
+                {
+                  fprintf(stderr, "GetListOfKeys: Exported name \'%s\' cannot be found!\n", xname);
+                  continue;
+                }
+
               const char* classname = obj->IsA()->GetName();
               const char* name      = obj->GetName();
               const char* title     = obj->GetTitle();
               
-              printf("Enumerating objects: %s %s %s\n", classname, name, title);
+              //printf("Class \'%s\', name \'%s\', title \'%s\'\n", classname, name, title);
               
-              if (!keys->FindObject(name))
-                {
-                  TKey* key = new TKey(name, title, obj->IsA(), 1, gDir);
-                  keys->Add(key);
-                }
+              TKey* key = new TKey(name, title, obj->IsA(), 1, gROOT);
+              keys->Add(key);
             }
           
-          printf("Sending keys %p\n", keys);
-          keys->Print();
+          //printf("Sending keys %p\n", keys);
+          //keys->Print();
+
           message.Reset(kMESS_OBJECT);
           message.WriteObject(keys);
+          delete keys;
+          lock.Unlock();
+          sock->Send(message);
+        }
+      else if (strncmp(request, "GetListOfKeys ", 14) == 0)
+        {
+          LockRootGuard lock;
+
+          char* dirname = request + 14;
+
+          TObject* obj = FollowPath(NULL, dirname);
+
+          if (obj->InheritsFrom(TDirectory::Class()))
+            {
+              TDirectory* dir = (TDirectory*)obj;
+
+              //printf("Directory %p\n", dir);
+              //dir->Print();
+              
+              TList* xkeys = dir->GetListOfKeys();
+              TList* keys = xkeys;
+              if (!keys)
+                keys = new TList();
+
+              //printf("Directory %p keys:\n", dir);
+              //keys->Print();
+              
+              TList* objs = dir->GetList();
+
+              //printf("Directory %p objects:\n", dir);
+              //objs->Print();
+              
+              TIter next = objs;
+              while(1)
+                {
+                  TObject *obj = next();
+
+                  //printf("object %p\n", obj);
+
+                  if (obj == NULL)
+                    break;
+                  
+                  const char* classname = obj->IsA()->GetName();
+                  const char* name      = obj->GetName();
+                  const char* title     = obj->GetTitle();
+                  
+                  //printf("Enumerating objects: %s %s %s\n", classname, name, title);
+                  
+                  if (!keys->FindObject(name))
+                    {
+                      TKey* key = new TKey(name, title, obj->IsA(), 1, dir);
+                      keys->Add(key);
+                    }
+                }
+
+              //printf("Sending keys %p\n", keys);
+              //keys->Print();
+
+              message.Reset(kMESS_OBJECT);
+              message.WriteObject(keys);
+              if (keys != xkeys)
+                delete keys;
+            }
+          else
+            {
+              TObjString s("Not a directory");
+              message.Reset(kMESS_OBJECT);
+              message.WriteObject(&s);
+            }
+              
           lock.Unlock();
           sock->Send(message);
         }
@@ -204,14 +373,20 @@ static THREADTYPE root_server_thread(void *arg)
         {
           LockRootGuard lock;
 
-          const char* name = request + 17;
+          char* top  = request + 17;
 
-          printf("Directory %p looking for [%s]\n", gDir, name);
+          TObject *obj = FollowPath(NULL, top);
+
+          if (strcmp(obj->IsA()->GetName(), "TDirectory") == 0)
+            {
+              char str[256];
+              sprintf(str, "TDirectory %s", obj->GetName());
+              obj = new TObjString(str);
+            }
           
-          TObject* obj = gDir->FindObject(name);
-          
-          printf("Sending object %p\n", obj);
-          obj->Print();
+          //printf("Sending object %p name \'%s\' class \'%s\'\n", obj, obj->GetName(), obj->IsA()->GetName());
+          //obj->Print();
+
           message.Reset(kMESS_OBJECT);
           message.WriteObject(obj);
           lock.Unlock();
@@ -221,37 +396,31 @@ static THREADTYPE root_server_thread(void *arg)
         {
           LockRootGuard lock;
           
-          const char* name = request + 9;
+          char* path = request + 9;
 
-          printf("Directory %p reset TH1 [%s]\n", gDir, name);
-
-          bool all = false;
-          if (strlen(name) < 1)
-            all = true;
-          
-          TList* objs = gDir->GetList();
-          printf("Directory %p objects:\n", gDir);
-          objs->Print();
-          
-          TIter next = objs;
-          while(1)
+          if (strlen(path) > 1)
             {
-              TObject *obj = next();
-              printf("object %p\n", obj);
-              if (obj == NULL)
-                break;
-              
-              const char* classname = obj->IsA()->GetName();
-              const char* name      = obj->GetName();
-              const char* title     = obj->GetTitle();
-              
-              printf("Enumerating objects: %s %s %s\n", classname, name, title);
-              
-              if (all || strcmp(name, obj->GetName())==0)
-                if (obj->InheritsFrom(TH1::Class()))
-                  {
-                    ((TH1*)obj)->Reset();
-                  }
+              TObject *obj = FollowPath(NULL, path);
+
+              if (obj)
+                ResetObject(obj);
+            }
+          else
+            {
+              for (unsigned int i=0; i<gExports.size(); i++)
+                {
+                  const char* xname = gExports[i].c_str();
+
+                  TObject* obj = gROOT->FindObjectAny(xname);
+
+                  if (!obj)
+                    {
+                      fprintf(stderr, "ResetTH1: Exported name \'%s\' cannot be found!\n", xname);
+                      continue;
+                    }
+
+                  ResetObject(obj);
+                }
             }
           
           TObjString s("Success");
@@ -260,52 +429,6 @@ static THREADTYPE root_server_thread(void *arg)
           message.WriteObject(&s);
           lock.Unlock();
           sock->Send(message);
-        }
-      else if (strncmp(request, "Command", 7) == 0)
-        {
-          char objName[100], method[100];
-          sock->Recv(objName, sizeof(objName));
-          sock->Recv(method, sizeof(method));
-          
-          LockRootGuard lock;
-          
-          TObject *object = gROOT->FindObjectAny(objName);
-          if (object && object->InheritsFrom(TH1::Class())
-              && strcmp(method, "Reset") == 0)
-            static_cast < TH1 * >(object)->Reset();
-          
-        }
-      else if (strncmp(request, "SetCut", 6) == 0)
-        {
-          
-          //read new settings for a cut
-          char name[256];
-          sock->Recv(name, sizeof(name));
-          
-          LockRootGuard lock;
-          
-          TCutG *cut = (TCutG *) gDir->FindObjectAny(name);
-          
-          TMessage *m = 0;
-          sock->Recv(m);
-          TCutG *newc = ((TCutG *) m->ReadObject(m->GetClass()));
-          
-          if (cut) {
-            fprintf(stderr, "root server thread: changing cut %s\n", newc->GetName());
-            newc->TAttMarker::Copy(*cut);
-            newc->TAttFill::Copy(*cut);
-            newc->TAttLine::Copy(*cut);
-            newc->TNamed::Copy(*cut);
-            cut->Set(newc->GetN());
-            for (int i = 0; i < cut->GetN(); ++i) {
-              cut->SetPoint(i, newc->GetX()[i], newc->GetY()[i]);
-            }
-          } else {
-            fprintf(stderr, "root server thread: ignoring receipt of unknown cut \'%s\'\n",
-                    newc->GetName());
-          }
-          delete newc;
-          
         }
       else
         {
@@ -326,44 +449,58 @@ static THREADTYPE root_server_thread(void *arg)
 
 static THREADTYPE socket_listener(void *arg)
 {
-// Server loop listening for incoming network connections on specified port.
-// Starts a searver_thread for each connection.
+  // Server loop listening for incoming network connections on specified port.
+  // Starts a searver_thread for each connection.
 
-   bool trace = true;
-   int port = *(int *) arg;
-
-   fprintf(stderr, "NetDirectory server listening on port %d...\n", port);
-   TServerSocket *lsock = new TServerSocket(port, kTRUE);
-
-   while (1) {
+  int port = *(int *) arg;
+  
+  fprintf(stderr, "NetDirectory server listening on port %d...\n", port);
+  TServerSocket *lsock = new TServerSocket(port, kTRUE);
+  
+  while (1)
+    {
       TSocket *sock = lsock->Accept();
-
-      if (sock==NULL) {
-        printf("TNetDirectory server accept() error\n");
-        break;
-      }
-
-      if (trace)
+      
+      if (sock==NULL)
+        {
+          printf("TNetDirectory server accept() error\n");
+          break;
+        }
+      
+      if (gVerbose)
         fprintf(stderr, "TNetDirectory connection from %s\n", sock->GetInetAddress().GetHostName());
-
+      
 #if 1
-      TThread *thread = new TThread("Server", root_server_thread, sock);
+      TThread *thread = new TThread("NetDirectoryServer", root_server_thread, sock);
       thread->Run();
 #else
       LPDWORD lpThreadId = 0;
       CloseHandle(CreateThread(NULL, 1024, &root_server_thread, sock, 0, lpThreadId));
 #endif
-   }
-
-   return THREADRETURN;
+    }
+  
+  return THREADRETURN;
 }
 
 /*------------------------------------------------------------------*/
 
+void VerboseNetDirectoryServer(bool verbose)
+{
+  gVerbose = verbose;
+}
+
+/*------------------------------------------------------------------*/
+
+static bool gAlreadyRunning = false;
+
 void StartNetDirectoryServer(int port, TDirectory* dir)
 {
-  /* create the folder for analyzer histograms */
-  gDir = dir;
+  gExports.push_back(dir->GetName());
+
+  if (gAlreadyRunning)
+    return;
+
+  gAlreadyRunning = true;
 
   int period_msec = 100;
   gTimer.Start(period_msec,kTRUE);

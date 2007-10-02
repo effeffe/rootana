@@ -25,9 +25,17 @@
 #include "TDirectory.h"
 #endif
 
+#include <string>
+#include <deque>
+
+class TNetDirectoryConnection;
+
 class TNetDirectory : public TDirectory {
 
 protected:
+   TNetDirectoryConnection* fConn; //! pointer to network connection
+   std::string              fPath;
+   std::deque<TNetDirectory*> fSubDirs;
 
 private:
    TNetDirectory(const TNetDirectory &directory);  //Directories cannot be copied
@@ -38,6 +46,7 @@ public:
 
    //TNetDirectory(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = 0);
    TNetDirectory(const char *name, TDirectory* motherDir = 0);
+   TNetDirectory(TNetDirectoryConnection* conn, const char* dirname, const std::string& path, TDirectory* motherDir);
    virtual ~TNetDirectory();
 
    // manage connections
