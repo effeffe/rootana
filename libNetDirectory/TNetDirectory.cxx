@@ -65,6 +65,13 @@ public:
       //obj->Print();
 
       if (!obj->InheritsFrom(type)) {
+
+        if (obj->IsA() == TObjString::Class()) {
+            TObjString *ostr = (TObjString*)obj;
+            printf("Instead of a %s, received a %s reading \'%s\'\n", type->GetName(), obj->IsA()->GetName(), ostr->GetName());
+            return NULL;
+        }
+
         printf("Object type mismatch, received %s, expected %s\n", obj->IsA()->GetName(), type->GetName());
         return NULL;
       }
