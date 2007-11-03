@@ -119,7 +119,7 @@ void help()
 void IncrFunc()
 {
   TH1D *h;
-  h = (TH1D*)gOnlineHistDir->FindObjectAny("test1");
+  h = (TH1D*)gROOT->FindObjectAny("test1");
   //printf("Histogram %p\n", h);
   if (h)
     {
@@ -202,16 +202,23 @@ int main(int argc, char *argv[])
 	 
    gOnlineHistDir->cd();
 
+   TFile *f = new TFile("output.root", "RECREATE");
+   f->cd();
+
+   NetDirectoryExport(f, "outputFile");
+
    TH1D* hh = new TH1D("test1", "test1", 100, 0, 100);
    hh->Fill(1);
    hh->Fill(10);
    hh->Fill(50);
 
-   TDirectory* subdir = gOnlineHistDir->mkdir("subdir");
+   TDirectory* subdir = gDirectory->mkdir("subdir");
    subdir->cd();
 
    TH1D* hh2 = new TH1D("test2", "test2", 100, 0, 100);
    hh2->Fill(25);
+
+   //f->Write();
 
 #ifdef OLD_SERVER
    if (oldTcpPort)
