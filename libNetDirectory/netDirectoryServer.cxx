@@ -45,14 +45,17 @@
 #include <TCutG.h>
 
 #include <deque>
+#include <map>
 #include <string>
 
 static bool gVerbose = false;
 
 static std::deque<std::string> gExports;
+static std::map<std::string,std::string> gExportNames;
 
-static TSemaphore gRootSema(0);
-static TSemaphore gWaitSema(0);
+static TSemaphore gRootSema(0); // wait by server, post by timer
+static TSemaphore gWaitSema(0); // post by server, wait by timer
+static TSemaphore gDoneSema(0); // post by server, wait by timer
 
 static bool gDebugLock = false;
 
@@ -70,7 +73,7 @@ static void UnlockRoot()
 {
   if (gDebugLock)
     printf("Unlock ROOT!\n");
-  gRootSema.Post();
+  gDoneSema.Post();
 }
 
 struct LockRootGuard
@@ -112,13 +115,15 @@ public:
       fprintf(stderr, "ServerTimer::Notify!!\n");
 
     int notWaiting = gWaitSema.TryWait();
+    if (gDebugLock)
+      printf("NotWaiting %d!\n", notWaiting);
     if (!notWaiting)
       {
         if (gDebugLock)
           printf("Yeld root sema!\n");
         gRootSema.Post();
         TThread::Self()->Sleep(0, 1000000); // sleep in ns
-        gRootSema.Wait();
+        gDoneSema.Wait();
         if (gDebugLock)
           printf("Recapture root sema!\n");
       }
@@ -142,17 +147,11 @@ static ServerTimer gTimer;
 
 /*------------------------------------------------------------------*/
 
-static TObject* FollowPath(TDirectory* dir, char* path)
+static TObject* FollowPath(char* path)
 {
-  if (!dir)
-    {
-      gROOT->cd("/");
-      dir = gROOT;
-    }
+  TDirectory* dir = NULL;
 
-  //printf("FollowPath [%s] from %p (%s)\n", path, dir, dir->GetName());
-
-  bool topLevel = (*path == '/');
+  //printf("Path [%s]\n", path);
 
   for (int level=0; ; level++)
     {
@@ -160,49 +159,80 @@ static TObject* FollowPath(TDirectory* dir, char* path)
         path++;
 
       char* s = strchr(path,'/');
-      if (!s)
-        break;
 
-      *s = 0;
+      if (s)
+        *s = 0;
 
-      if (topLevel && level==0)
+      //printf("Level %d, element [%s], next %p\n", level, path, s);
+
+      if (level==0)
         {
-          bool found = false;
+          TObject *obj = NULL;
+
           for (unsigned int i=0; i<gExports.size(); i++)
             {
-              const char* xname = gExports[i].c_str();
-              if (strcmp(path, xname) == 0)
-                found = true;
+              const char* ename = gExports[i].c_str();
+              //printf("Compare [%s] and [%s]\n", path, ename);
+              if (strcmp(path, ename) == 0)
+                {
+                  const char* xname = gExportNames[ename].c_str();
+                  obj = gROOT->FindObjectAny(xname);
+                  //printf("Lookup of [%s] returned %p\n", xname, obj);
+                  break;
+                }
             }
 
-          if (!found)
+          if (!obj)
             {
               printf("ERROR: Top level object \'%s\' not found in exports list\n", path);
               return NULL;
             }
+
+          if (!obj->InheritsFrom(TDirectory::Class()))
+            {
+              printf("ERROR: Object \'%s\' of type %s not a directory\n", obj->GetName(), obj->IsA()->GetName());
+              return NULL;
+            }
+
+          dir = (TDirectory*)obj;
         }
-
-      TObject* obj = dir->FindObject(path);
-
-      //printf("Looking for [%s], got %p\n", path, obj);
-
-      if (!obj)
-        return NULL;
-
-      if (!obj->InheritsFrom(TDirectory::Class()))
+      else if (s)
         {
-          printf("ERROR: Object \'%s\' of type %s not a directory\n", path, obj->IsA()->GetName());
-          return NULL;
+          assert(dir);
+
+          TObject *obj = dir->FindObject(path);
+
+          //printf("Looking for [%s], got %p\n", path, obj);
+
+          if (!obj)
+            return NULL;
+
+          if (!obj->InheritsFrom(TDirectory::Class()))
+            {
+              printf("ERROR: Object \'%s\' of type %s not a directory\n", path, obj->IsA()->GetName());
+              return NULL;
+            }
+
+          dir = (TDirectory*)obj;
+        }
+      else
+        {
+          assert(dir);
+
+          TObject *obj = dir->FindObject(path);
+
+          //printf("Looking for [%s], got %p\n", path, obj);
+
+          return obj;
         }
 
-      dir = (TDirectory*)obj;
+      if (!s)
+        return dir;
 
       path = s+1;
     }
 
-  TObject* obj = dir->FindObject(path);
-  //printf("Final element [%s], got %p\n", path, obj);
-  return obj;
+  return dir;
 }
 
 void ResetObject(TObject* obj)
@@ -271,7 +301,8 @@ static THREADTYPE root_server_thread(void *arg)
           
           for (unsigned int i=0; i<gExports.size(); i++)
             {
-              const char* xname = gExports[i].c_str();
+              const char* ename = gExports[i].c_str();
+              const char* xname = gExportNames[ename].c_str();
 
               TObject* obj = gROOT->FindObjectAny(xname);
 
@@ -281,18 +312,26 @@ static THREADTYPE root_server_thread(void *arg)
                   continue;
                 }
 
-              const char* classname = obj->IsA()->GetName();
-              const char* name      = obj->GetName();
+              const char* name      = ename;
               const char* title     = obj->GetTitle();
               
-              //printf("Class \'%s\', name \'%s\', title \'%s\'\n", classname, name, title);
               
-              TKey* key = new TKey(name, title, obj->IsA(), 1, gROOT);
+              TClass *xclass = obj->IsA();
+              if (xclass->InheritsFrom(TDirectory::Class()))
+                xclass = TDirectory::Class();
+
+              if (gVerbose)
+                printf("Class \'%s\', name \'%s\', title \'%s\'\n", xclass->GetName(), name, title);
+
+              TKey* key = new TKey(name, title, xclass, 1, gROOT);
               keys->Add(key);
             }
           
-          //printf("Sending keys %p\n", keys);
-          //keys->Print();
+          if (gVerbose)
+            {
+              printf("Sending keys %p\n", keys);
+              keys->Print();
+            }
 
           message.Reset(kMESS_OBJECT);
           message.WriteObject(keys);
@@ -306,9 +345,9 @@ static THREADTYPE root_server_thread(void *arg)
 
           char* dirname = request + 14;
 
-          TObject* obj = FollowPath(NULL, dirname);
+          TObject* obj = FollowPath(dirname);
 
-          if (obj->InheritsFrom(TDirectory::Class()))
+          if (obj && obj->InheritsFrom(TDirectory::Class()))
             {
               TDirectory* dir = (TDirectory*)obj;
 
@@ -338,11 +377,10 @@ static THREADTYPE root_server_thread(void *arg)
                   if (obj == NULL)
                     break;
                   
-                  const char* classname = obj->IsA()->GetName();
                   const char* name      = obj->GetName();
                   const char* title     = obj->GetTitle();
                   
-                  //printf("Enumerating objects: %s %s %s\n", classname, name, title);
+                  //printf("Enumerating objects: %s %s %s\n", obj->IsA()->GetName(), name, title);
                   
                   if (!keys->FindObject(name))
                     {
@@ -375,16 +413,33 @@ static THREADTYPE root_server_thread(void *arg)
 
           char* top  = request + 17;
 
-          TObject *obj = FollowPath(NULL, top);
+          TObject *obj = FollowPath(top);
 
-          if (strcmp(obj->IsA()->GetName(), "TDirectory") == 0)
+          if (obj && obj->InheritsFrom(TDirectory::Class()))
             {
               char str[256];
               sprintf(str, "TDirectory %s", obj->GetName());
+
+              if (1) // top level objects use fake names
+                {
+                  for (unsigned int i=0; i<gExports.size(); i++)
+                    {
+                      const char* ename = gExports[i].c_str();
+                      const char* xname = gExportNames[ename].c_str();
+
+                      if (strcmp(xname, obj->GetName()) == 0)
+                        {
+                          sprintf(str, "TDirectory %s", ename);
+                          break;
+                        }
+                    }
+                }
+
               obj = new TObjString(str);
             }
           
-          //printf("Sending object %p name \'%s\' class \'%s\'\n", obj, obj->GetName(), obj->IsA()->GetName());
+          if (gVerbose)
+            printf("Sending object %p name \'%s\' class \'%s\'\n", obj, obj->GetName(), obj->IsA()->GetName());
           //obj->Print();
 
           message.Reset(kMESS_OBJECT);
@@ -400,7 +455,7 @@ static THREADTYPE root_server_thread(void *arg)
 
           if (strlen(path) > 1)
             {
-              TObject *obj = FollowPath(NULL, path);
+              TObject *obj = FollowPath(path);
 
               if (obj)
                 ResetObject(obj);
@@ -409,7 +464,8 @@ static THREADTYPE root_server_thread(void *arg)
             {
               for (unsigned int i=0; i<gExports.size(); i++)
                 {
-                  const char* xname = gExports[i].c_str();
+                  const char* ename = gExports[i].c_str();
+                  const char* xname = gExportNames[ename].c_str();
 
                   TObject* obj = gROOT->FindObjectAny(xname);
 
@@ -493,11 +549,33 @@ void VerboseNetDirectoryServer(bool verbose)
 
 static bool gAlreadyRunning = false;
 
+void NetDirectoryExport(TDirectory* dir, const char* exportName)
+{
+  if (gVerbose)
+    printf("Export object %p named [%s] of type [%s] as [%s]\n", dir, dir->GetName(), dir->IsA()->GetName(), exportName);
+
+  bool found = false;
+  for (unsigned int i=0; i<gExports.size(); i++)
+    {
+      const char* ename = gExports[i].c_str();
+      if (strcmp(ename, exportName) == 0)
+        found = true;
+    }
+
+  if (!found)
+    gExports.push_back(exportName);
+  gExportNames[exportName] = dir->GetName();
+}
+
 void StartNetDirectoryServer(int port, TDirectory* dir)
 {
-  gExports.push_back(dir->GetName());
+  if (dir)
+    NetDirectoryExport(dir, dir->GetName());
 
   if (gAlreadyRunning)
+    return;
+
+  if (port==0)
     return;
 
   gAlreadyRunning = true;
