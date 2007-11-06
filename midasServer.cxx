@@ -42,10 +42,7 @@
 #include <TH1.h>
 #include <TCutG.h>
 
-static TSemaphore gRootSema(0);
-static TSemaphore gWaitSema(0);
-
-static bool gDebugLock = false;
+#include "libNetDirectory/RootLock.h"
 
 static bool gVerbose   = false;
 
@@ -54,84 +51,6 @@ void VerboseMidasServer(bool verbose)
   fprintf(stderr, "VerboseMidasServer: change verbose level from %d to %d\n", gVerbose, verbose);
   gVerbose = verbose;
 }
-
-static void LockRoot()
-{
-  if (gDebugLock)
-    printf("Try Lock ROOT!\n");
-  gWaitSema.Post();
-  gRootSema.Wait();
-  if (gDebugLock)
-    printf("Lock ROOT!\n");
-}
-
-static void UnlockRoot()
-{
-  if (gDebugLock)
-    printf("Unlock ROOT!\n");
-  gRootSema.Post();
-}
-
-struct LockRootGuard
-{
-  bool fLocked;
-
-  LockRootGuard()
-  {
-    fLocked = true;
-    LockRoot();
-  }
-
-  ~LockRootGuard()
-  {
-    if (fLocked)
-      Unlock();
-  }
-
-  void Unlock()
-  {
-    UnlockRoot();
-    fLocked = false;
-  }
-};
-
-class MidasServer : public TTimer
-{
-public:
-
-  MidasServer()
-  {
-    //int period_msec = 100;
-    //Start(period_msec,kTRUE);
-  }
-
-  Bool_t Notify()
-  {
-    //fprintf(stderr, "midasServer::Notify!!\n");
-
-    int notWaiting = gWaitSema.TryWait();
-    if (!notWaiting)
-      {
-        if (gDebugLock)
-          printf("Yeld root sema!\n");
-        gRootSema.Post();
-        TThread::Self()->Sleep(0, 1000000); // sleep in ns
-        gRootSema.Wait();
-        if (gDebugLock)
-          printf("Recapture root sema!\n");
-      }
-
-    Reset();
-    return kTRUE;
-  }
-
-  ~MidasServer()
-  {
-    //TurnOff();
-  }
-};
-
-static MidasServer gTimer;
 
 /*------------------------------------------------------------------*/
 
@@ -389,8 +308,7 @@ void StartMidasServer(int port)
   gManaHistosFolder = gROOT->GetRootFolder()->AddFolder("histos", "MIDAS Analyzer Histograms");
   gROOT->GetListOfBrowsables()->Add(gManaHistosFolder, "histos");
 
-  int period_msec = 100;
-  gTimer.Start(period_msec,kTRUE);
+  StartLockRootTimer();
   
   static int pport = port;
 #if defined (OS_LINUX)
