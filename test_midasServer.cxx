@@ -192,7 +192,7 @@ int main(int argc, char *argv[])
 #ifdef HAVE_LIBNETDIRECTORY
    if (tcpPort)
      {
-       VerboseNetDirectoryServer(true);
+       //VerboseNetDirectoryServer(true);
        StartNetDirectoryServer(tcpPort, gOnlineHistDir);
      }
 #else
@@ -221,21 +221,21 @@ int main(int argc, char *argv[])
    //f->Write();
 
 #ifdef OLD_SERVER
-   if (oldTcpPort)
+   if (oldTcpPort>0 && gManaHistosFolder)
      {
-       if (1)
-         {
-           TFolder *subfolder = gManaHistosFolder->AddFolder("subfolder", "Sub folder");
-           subfolder->Add(hh);
+       NetDirectoryExport(gManaHistosFolder, "histos");
 
-           gManaHistosFolder->Add(hh2);
-         }
-       else
-         {
-           gManaHistosFolder->Add(hh);
-         }
+       TFolder *subfolder = gManaHistosFolder->AddFolder("subfolder", "Sub folder");
+       subfolder->Add(hh2);
+
+       gManaHistosFolder->Add(hh);
      }
 #endif
+
+   //gDirectory->cd("/");
+   //gDirectory->pwd();
+   NetDirectoryExport(gROOT->GetListOfFiles(), "ListOfFiles");
+   NetDirectoryExport(gROOT->GetListOfGlobals(), "ListOfGlobals");
 
    new MyPeriodic(100, IncrFunc);
    
