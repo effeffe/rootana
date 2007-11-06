@@ -13,7 +13,7 @@ endif
 
 ALL:= libNetDirectory.a
 
-OBJS = TNetDirectory.o TNetDirectoryDict.o netDirectoryServer.o
+OBJS = TNetDirectory.o TNetDirectoryDict.o netDirectoryServer.o RootLock.o
 
 all: $(ALL)
 
