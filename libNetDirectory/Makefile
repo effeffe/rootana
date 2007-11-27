@@ -8,7 +8,7 @@ ifdef ROOTSYS
 ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread
 ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread
 RPATH    += -Wl,-rpath,$(ROOTSYS)/lib
-CXXFLAGS += -DHAVE_ROOT -I$(ROOTSYS)/include
+CXXFLAGS += -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
 endif
 
 ALL:= libNetDirectory.a
