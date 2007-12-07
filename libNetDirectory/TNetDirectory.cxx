@@ -91,7 +91,7 @@ TNetDirectory::TNetDirectory(const char *remoteServerName, TDirectory* motherDir
     printf("TNetDirectory::ctor: %s\n", remoteServerName);
   int port = 9091;
   char hostname[256];
-  strcat(hostname, remoteServerName);
+  strcpy(hostname, remoteServerName);
   char* s = strchr(hostname, ':');
   if (s)
     {
