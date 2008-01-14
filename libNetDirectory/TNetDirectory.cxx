@@ -2,6 +2,9 @@
 // TNetDirectory.cxx
 //
 
+#include <stdio.h>
+#include <assert.h>
+
 #include "TNetDirectory.h"
 
 #include "TSocket.h"
