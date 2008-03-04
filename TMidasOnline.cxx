@@ -199,14 +199,55 @@ static void eventCallback(HNDLE buffer_handle, HNDLE request_id, EVENT_HEADER* p
     TMidasOnline::instance()->fEventHandler(pheader,pevent,pheader->data_size);
 }
 
+int TMidasOnline::receiveEvent(int requestId, void* pevent, int size, bool async)
+{
+  EventRequest* r = fEventRequests;
+
+  while (1)
+    {
+      if (!r)
+        {
+          fprintf(stderr, "TMidasOnline::receiveEvent: Cannot find request %d\n", requestId);
+          return -1;
+        }
+
+      if (r->fRequestId == requestId)
+        break;
+
+      r = r->fNext;
+    }
+
+  int flag = 0;
+  if (async)
+    flag = ASYNC;
+
+  int status = bm_receive_event(r->fBufferHandle, pevent, &size, flag);
+
+  if (status == BM_ASYNC_RETURN)
+    {
+      return 0;
+    }
+
+  if (status != BM_SUCCESS)
+    {
+      fprintf(stderr, "TMidasOnline::receiveEvent: bm_receive_event() error %d\n", status);
+      return -1;
+    }
+
+  return size;
+}
+
 #ifndef EVENT_BUFFER_SIZE
 #define EVENT_BUFFER_SIZE 0
 #endif
 
-int TMidasOnline::eventRequest(const char* bufferName,int eventId,int triggerMask,int samplingType)
+int TMidasOnline::eventRequest(const char* bufferName, int eventId, int triggerMask, int samplingType, bool poll)
 {
   int status;
   EventRequest* r = new EventRequest();
+
+  if (bufferName == NULL)
+    bufferName = EVENT_BUFFER_NAME;
   
   r->fNext         = NULL;
   r->fBufferName   = bufferName;
@@ -226,8 +267,11 @@ int TMidasOnline::eventRequest(const char* bufferName,int eventId,int triggerMas
   /* set the default buffer cache size */
   status = bm_set_cache_size(r->fBufferHandle, 100000, 0);
   assert(status == BM_SUCCESS);
-  
-  status = bm_request_event(r->fBufferHandle, r->fEventId, r->fTriggerMask, r->fSamplingType, &r->fRequestId, eventCallback);
+
+  if (poll)
+    status = bm_request_event(r->fBufferHandle, r->fEventId, r->fTriggerMask, r->fSamplingType, &r->fRequestId, NULL);
+  else
+    status = bm_request_event(r->fBufferHandle, r->fEventId, r->fTriggerMask, r->fSamplingType, &r->fRequestId, eventCallback);
   assert(status == BM_SUCCESS);
   
   fprintf(stderr, "TMidasOnline::eventRequest: Event request: buffer \"%s\" (%d), event id 0x%x, trigger mask 0x%x, sample %d, request id: %d\n",bufferName,r->fBufferHandle,r->fEventId,r->fTriggerMask,r->fSamplingType,r->fRequestId);

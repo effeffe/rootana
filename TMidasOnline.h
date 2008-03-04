@@ -93,10 +93,15 @@ public:
 
   /// Specify user handler for data events
   void setEventHandler(EventHandler handler);
-  /// Request data
-  int eventRequest(const char* bufferName,int eventId,int triggerMask,int samplingType);
+
+  /// Request data for delivery via callback (setEventHandler) or by polling (via receiveEvent)
+  int eventRequest(const char* bufferName,int eventId,int triggerMask,int samplingType,bool poll=false);
+
   /// Delete data request
   void deleteEventRequest(int requestId);
+
+  /// Receive event by polling
+  int receiveEvent(int requestId, void* pevent, int size, bool async);
 
   // ODB functions required by VirtualOdb
 
