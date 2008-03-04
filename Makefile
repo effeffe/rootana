@@ -50,6 +50,8 @@ ALL+= librootana.a
 
 ALL+= testODB.exe
 
+ALL+= html/index.html
+
 ifdef ROOTSYS
 ALL+= analyzer.exe
 ALL+= test_midasServer.exe
@@ -70,6 +72,11 @@ librootana.a: $(OBJS)
 %.o: %.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
+html/index.html:
+	-mkdir html
+	-make -k dox
+	touch html/index.html
+
 dox:
 	doxygen
 
@@ -78,5 +85,8 @@ clean::
 
 clean::
 	make -C libNetDirectory clean
+
+clean::
+	-rm -f html/*
 
 # end
