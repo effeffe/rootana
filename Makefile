@@ -37,10 +37,12 @@ CXXFLAGS += -DHAVE_ZLIB
 
 # optional TNetDirectory code
 
+ifdef ROOTSYS
 CXXFLAGS += -DHAVE_LIBNETDIRECTORY
 OBJS     += ./libNetDirectory/netDirectoryServer.o
 
 ALL+= libNetDirectory/libNetDirectory.a
+endif
 
 # optional old midas server
 
@@ -48,7 +50,11 @@ CXXFLAGS += -DOLD_SERVER
 
 ALL+= librootana.a
 
+ifdef ROOTSYS
+ifdef MIDASSYS
 ALL+= testODB.exe
+endif
+endif
 
 ALL+= html/index.html
 
