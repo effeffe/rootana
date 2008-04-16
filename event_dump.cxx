@@ -56,13 +56,6 @@ int ProcessMidasFile(const char*fname)
 	  // begin run
 	  event.Print();
 
-	  //
-	  // Load ODB contents from the ODB XML file
-	  //
-	  if (gOdb)
-	    delete gOdb;
-	  gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
-
           if (gSaveOdb)
             {
               char fname[256];
@@ -81,6 +74,13 @@ int ProcessMidasFile(const char*fname)
               fprintf(stderr,"Wrote ODB to \'%s\'\n", fname);
               exit(0);
             }
+
+	  //
+	  // Load ODB contents from the ODB XML file
+	  //
+	  if (gOdb)
+	    delete gOdb;
+	  gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
 	}
       else if ((eventId & 0xFFFF) == 0x8001)
 	{

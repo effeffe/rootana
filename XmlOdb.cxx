@@ -49,10 +49,18 @@ XmlOdb::XmlOdb(const char*xbuf,int bufLength) //ctor
   fParser->ParseBuffer(buf,bufLength);
 
   TXMLDocument* doc = fParser->GetXMLDocument();
-  assert(doc);
+  if (!doc)
+    {
+      fprintf(stderr,"XmlOdb::XmlOdb: Malformed ODB dump: cannot get XML document\n");
+      return;
+    }
 
   fOdb = FindNode(doc->GetRootNode(),"odb");
-  assert(fOdb);
+  if (!fOdb)
+    {
+      fprintf(stderr,"XmlOdb::XmlOdb: Malformed ODB dump: cannot find <odb> tag\n");
+      return;
+    }
 }
 
 XmlOdb::XmlOdb(const char* filename) //ctor
@@ -69,10 +77,18 @@ XmlOdb::XmlOdb(const char* filename) //ctor
     }
 
   TXMLDocument* doc = fParser->GetXMLDocument();
-  assert(doc);
+  if (!doc)
+    {
+      fprintf(stderr,"XmlOdb::XmlOdb: Malformed ODB dump: cannot get XML document\n");
+      return;
+    }
 
   fOdb = FindNode(doc->GetRootNode(),"odb");
-  assert(fOdb);
+  if (!fOdb)
+    {
+      fprintf(stderr,"XmlOdb::XmlOdb: Malformed ODB dump: cannot find <odb> tag\n");
+      return;
+    }
 }
 
 XmlOdb::~XmlOdb() // dtor

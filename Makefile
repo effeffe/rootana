@@ -60,6 +60,7 @@ ALL+= html/index.html
 
 ifdef ROOTSYS
 ALL+= analyzer.exe
+ALL+= event_dump.exe
 ALL+= test_midasServer.exe
 endif
 
