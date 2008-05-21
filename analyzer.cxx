@@ -212,7 +212,9 @@ void startRun(int transition,int run,int time)
   sprintf(filename, "output%05d.root", run);
   gOutputFile = new TFile(filename,"CREATE");
 
+#ifdef HAVE_LIBNETDIRECTORY
   NetDirectoryExport(gOutputFile, "outputFile");
+#endif
 }
 
 void endRun(int transition,int run,int time)
@@ -258,8 +260,10 @@ void HandleSample(int ichan, void* ptr, int wsize)
       printf("Create [%s]\n", name);
       samplePlot = new TH1D(name, name, numSamples, 0, numSamples);
       //samplePlot->SetMinimum(0);
+#ifdef OLD_SERVER
       if (gManaHistosFolder)
         gManaHistosFolder->Add(samplePlot);
+#endif
     }
 
   for(int ti=0; ti<numSamples; ti++)
