@@ -17,19 +17,6 @@
 
 /*==== ROOT socket histo server ====================================*/
 
-#if defined (OS_LINUX) || defined (OS_DARWIN)
-#define THREADRETURN
-#define THREADTYPE void
-#endif
-#if defined( OS_WINNT )
-#define THREADRETURN 0
-#define THREADTYPE DWORD WINAPI
-#endif
-#ifndef THREADTYPE
-#define THREADTYPE int
-#define THREADRETURN 0
-#endif
-
 #include <TROOT.h>
 #include <TSemaphore.h>
 #include <TFolder.h>
@@ -84,7 +71,7 @@ TFolder *ReadFolderPointer(TSocket * fSocket)
 
 /*------------------------------------------------------------------*/
 
-THREADTYPE root_server_thread(void *arg)
+void root_server_thread(void *arg)
 /*
   Serve histograms over TCP/IP socket link
 */
@@ -102,7 +89,7 @@ THREADTYPE root_server_thread(void *arg)
          // printf("Closed connection to %s\n", sock->GetInetAddress().GetHostName());
          sock->Close();
          delete sock;
-         return THREADRETURN;
+         return;
       }
 
       if (gVerbose)
@@ -258,13 +245,11 @@ THREADTYPE root_server_thread(void *arg)
       }
 
    } while (1);
-
-   return THREADRETURN;
 }
 
 /*------------------------------------------------------------------*/
 
-THREADTYPE root_socket_server(void *arg)
+void root_socket_server(void *arg)
 {
 // Server loop listening for incoming network connections on specified port.
 // Starts a searver_thread for each connection.
@@ -285,17 +270,13 @@ THREADTYPE root_socket_server(void *arg)
 
       // printf("Established connection to %s\n", sock->GetInetAddress().GetHostName());
 
-#if defined ( __linux__ )
-      TThread *thread = new TThread("Server", root_server_thread, sock);
+      TThread *thread = new TThread("Server", root_server_thread, (void*)sock);
       thread->Run();
-#endif
-#if defined( _MSC_VER )
+#if 0
       LPDWORD lpThreadId = 0;
       CloseHandle(CreateThread(NULL, 1024, &root_server_thread, sock, 0, lpThreadId));
 #endif
    } while (1);
-
-   return THREADRETURN;
 }
 
 /*------------------------------------------------------------------*/
@@ -311,11 +292,11 @@ void StartMidasServer(int port)
   StartLockRootTimer();
   
   static int pport = port;
-#if defined (OS_LINUX)
-  TThread *thread = new TThread("server_loop", root_socket_server, &pport);
+
+  TThread *thread = new TThread("server_loop", root_socket_server, (void*)&pport);
   thread->Run();
-#endif
-#if defined( _MSC_VER )
+
+#if 0
   LPDWORD lpThreadId = 0;
   CloseHandle(CreateThread(NULL, 1024, &root_socket_server, &pport, 0, lpThreadId));
 #endif
