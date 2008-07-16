@@ -85,6 +85,7 @@ void TMidasEvent::SetData(uint32_t size, char* data)
   assert(IsGoodSize());
   fData = data;
   fAllocatedByUs = false;
+  SwapBytes(false);
 }
 
 uint16_t TMidasEvent::GetEventId() const
@@ -447,11 +448,17 @@ int TMidasEvent::SwapBytes(bool force)
   uint16_t type;
 
   pbh = (BankHeader_t *) fData;
+
+  //printf("SwapBytes %d, flags 0x%x 0x%x\n", force, pbh->fFlags, pbh->fDataSize);
+
   //
   // only swap if flags in high 16-bit
   //
   if (pbh->fFlags < 0x10000 && ! force)
     return 0;
+
+  if (pbh->fDataSize == 0x6d783f3c) // string "<xml..." in wrong-endian format
+    return 1;
 
   if (pbh->fDataSize == 0x3c3f786d) // string "<xml..."
     return 1;
