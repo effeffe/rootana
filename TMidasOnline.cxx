@@ -331,6 +331,16 @@ double TMidasOnline::odbReadDouble(const char*name,int index,double defaultValue
     return defaultValue;
 };
 
+const char* TMidasOnline::odbReadString(const char *name, int index, const char *defaultValue)
+{
+  const int bufsize = 1024;
+  static char buf[bufsize];
+  if (odbReadAny(name, index, TID_STRING, buf, bufsize) == 0)
+    return buf;
+  else
+    return defaultValue;
+};
+
 int TMidasOnline::odbReadArraySize(const char*name)
 {
   int status;
@@ -349,17 +359,20 @@ int TMidasOnline::odbReadArraySize(const char*name)
   return key.num_values;
 }
 
-int TMidasOnline::odbReadAny(const char*name,int index,int tid,void* value)
+int TMidasOnline::odbReadAny(const char*name,int index,int tid,void* buf, int bufsize)
 {
   int status;
-  int size = rpc_tid_size(tid);
+  int size = bufsize; 
   HNDLE hdir = 0;
   HNDLE hkey;
+
+  if (size == 0)
+    size = rpc_tid_size(tid);
 
   status = db_find_key (fDB, hdir, (char*)name, &hkey);
   if (status == SUCCESS)
     {
-      status = db_get_data_index(fDB, hkey, value, &size, index, tid);
+      status = db_get_data_index(fDB, hkey, buf, &size, index, tid);
       if (status != SUCCESS)
         {
           cm_msg(MERROR, "TMidasOnline", "Cannot read \'%s\'[%d] of type %d from odb, db_get_data_index() status %d", name, index, tid, status);
@@ -386,7 +399,7 @@ int TMidasOnline::odbReadAny(const char*name,int index,int tid,void* value)
           return -1;
         }
 
-      status = db_set_data_index(fDB, hkey, value, size, index, tid);
+      status = db_set_data_index(fDB, hkey, buf, size, index, tid);
       if (status != SUCCESS)
         {
           cm_msg(MERROR, "TMidasOnline", "Cannot write \'%s\'[%d] of type %d to odb, db_set_data_index() status %d", name, index, tid, status);

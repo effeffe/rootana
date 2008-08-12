@@ -50,11 +50,12 @@ struct XmlOdb : VirtualOdb
   /// Same as FindPath(), but also index into an array
   TXMLNode* FindArrayPath(TXMLNode*node,const char* path,const char* type,int index);
 
-  int      odbReadAny(   const char*name, int index, int tid,void* value);
+  int      odbReadAny(   const char*name, int index, int tid,void* buf, int bufsize=0);
   int      odbReadInt(   const char*name, int index, int      defaultValue);
   uint32_t odbReadUint32(const char*name, int index, uint32_t defaultValue);
   bool     odbReadBool(  const char*name, int index, bool     defaultValue);
   double   odbReadDouble(const char*name, int index, double   defaultValue);
+  virtual const char* odbReadString(const char*name, int index, const char* defaultValue);
   int      odbReadArraySize(const char*name);
 };
 

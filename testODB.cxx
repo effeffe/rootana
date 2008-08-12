@@ -120,6 +120,8 @@ int main(int argc, char *argv[])
    printf("read double value: %f\n", gOdb->odbReadDouble("/test/dblvalue"));
    printf("read uint32 value: %d\n", gOdb->odbReadUint32("/test/dwordvalue"));
    printf("read bool value: %d\n", gOdb->odbReadBool("/test/boolvalue"));
+   const char* s = gOdb->odbReadString("/test/stringvalue");
+   printf("read string value: [%s] length %d\n", s, strlen(s));
 
    printf("\nTry wrong types...\n\n");
 

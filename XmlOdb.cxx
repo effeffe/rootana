@@ -344,7 +344,7 @@ TXMLNode* XmlOdb::FindArrayPath(TXMLNode*node,const char* path,const char* type,
   return node;
 }
 
-int      XmlOdb::odbReadAny(   const char*name, int index, int tid,void* value)    { assert(!"Not implemented!"); }
+int      XmlOdb::odbReadAny(   const char*name, int index, int tid,void* buf, int bufsize)    { assert(!"Not implemented!"); }
 
 uint32_t XmlOdb::odbReadUint32(const char*name, int index, uint32_t defaultValue)
 {
@@ -394,6 +394,17 @@ bool     XmlOdb::odbReadBool(  const char*name, int index, bool     defaultValue
   if (*text == 'n')
     return false;
   return true;
+}
+
+const char* XmlOdb::odbReadString(const char* name, int index, const char* defaultValue)
+{
+  TXMLNode *node = FindArrayPath(NULL, name, "STRING", index);
+  if (!node)
+    return defaultValue;
+  const char* text = node->GetText();
+  if (!text)
+    return defaultValue;
+  return text;
 }
 
 int      XmlOdb::odbReadArraySize(const char*name)
