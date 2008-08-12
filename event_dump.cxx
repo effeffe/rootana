@@ -114,6 +114,16 @@ int ProcessMidasFile(const char*fname)
 
 #ifdef HAVE_MIDAS
 
+void startRun(int transition,int run,int time)
+{
+  printf("Begin run: %d\n", run);
+}
+
+void endRun(int transition,int run,int time)
+{
+  printf("End of run %d\n",run);
+}
+
 int ProcessMidasOnline(const char* hostname, const char* exptname)
 {
    TMidasOnline *midas = TMidasOnline::instance();
@@ -127,6 +137,7 @@ int ProcessMidasOnline(const char* hostname, const char* exptname)
 
    gOdb = midas;
 
+   midas->setTransitionHandlers(startRun,endRun,NULL,NULL);
    midas->registerTransitions();
 
    /* reqister event requests */
@@ -141,7 +152,8 @@ int ProcessMidasOnline(const char* hostname, const char* exptname)
 
        if (size == 0)
          {
-           sleep(1);
+           if (!midas->poll(1000))
+             break;
            continue;
          }
 
