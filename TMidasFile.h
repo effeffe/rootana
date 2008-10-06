@@ -37,6 +37,7 @@ protected:
 
   int         fFile; ///< open file descriptor
   void*       fGzFile; ///< zlib compressed file reader
+  void*       fPoFile; ///< popen() file reader
 };
 
 #endif // TMidasFile.h

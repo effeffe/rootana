@@ -30,11 +30,11 @@
 ///
 /// \section features_sec Features
 ///
-/// - C++ classes for reading MIDAS events from .mid files
+/// - C++ classes for reading MIDAS events from .mid files, including compressed midas files and remote midas files through ssh and dcache pipes, see TMidasFile::Open()
 /// - C++ classes for reading MIDAS events from a running
 /// MIDAS experiment via the mserver or directly from the MIDAS
 /// shared memory (this requires linking with MIDAS libraries).
-/// - C++ classes for accessing ODB data from .mid files
+/// - C++ classes for accessing XML ODB data from .mid files
 /// - C++ classes for accessing ODB from MIDAS shared memory
 /// (this requires linking with MIDAS libraries).
 /// - an example event dump program

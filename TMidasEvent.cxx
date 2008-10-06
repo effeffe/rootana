@@ -127,7 +127,7 @@ EventHeader_t * TMidasEvent::GetEventHeader()
 
 bool TMidasEvent::IsGoodSize() const
 {
-  return fEventHeader.fDataSize > 0 && fEventHeader.fDataSize <= 1024 * 1024;
+  return fEventHeader.fDataSize > 0 && fEventHeader.fDataSize <= 500 * 1024 * 1024;
 }
 
 bool TMidasEvent::IsBank32() const
