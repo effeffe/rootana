@@ -289,16 +289,20 @@ TXMLNode* XmlOdb::FindArrayPath(TXMLNode*node,const char* path,const char* type,
 
   node = FindPath(node, path);
 
+  if (!node)
+    return NULL;
+
   const char* nodename = node->GetNodeName();
   const char* num_values = GetAttrValue(node,"num_values");
 
   const char* typevalue = GetAttrValue(node,"type");
-  if (strcasecmp(typevalue,type) != 0)
+
+  if (!typevalue || (strcasecmp(typevalue,type) != 0))
     {
       fprintf(stderr,"XmlOdb::FindArrayPath: Type mismatch: \'%s\' has type \'%s\', we expected \'%s\'\n", path, typevalue, type);
       return NULL;
     }
-  
+
   bool isKeyArray = (num_values!=NULL) && (strcmp(nodename,"keyarray")==0);
 
   if (!isKeyArray)
@@ -414,7 +418,7 @@ int      XmlOdb::odbReadArraySize(const char*name)
     return 0;
   const char* num_values = GetAttrValue(node,"num_values");
   if (!num_values)
-    return 0;
+    return 1;
   return atoi(num_values);
 }
 

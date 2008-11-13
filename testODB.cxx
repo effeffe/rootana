@@ -121,7 +121,10 @@ int main(int argc, char *argv[])
    printf("read uint32 value: %d\n", gOdb->odbReadUint32("/test/dwordvalue"));
    printf("read bool value: %d\n", gOdb->odbReadBool("/test/boolvalue"));
    const char* s = gOdb->odbReadString("/test/stringvalue");
-   printf("read string value: [%s] length %d\n", s, strlen(s));
+   int len=0;
+   if (s)
+     len = strlen(s);
+   printf("read string value: [%s] length %d\n", s, len);
 
    printf("\nTry wrong types...\n\n");
 
@@ -131,9 +134,10 @@ int main(int argc, char *argv[])
 
    printf("\nTry wrong array indices...\n\n");
 
-   printf("read try to index a non-array: %f\n", gOdb->odbReadDouble("/test/dblvalue", 10, -9999));
-   printf("read try invalid index -1: %d\n", gOdb->odbReadInt("/test/intarr", -1, -9999));
-   printf("read try invalid index 999: %d\n", gOdb->odbReadInt("/test/intarr", 999, -9999));
+   printf("try to index a non-array: %f\n", gOdb->odbReadDouble("/test/dblvalue", 10, -9999));
+   printf("try invalid index -1: %d\n", gOdb->odbReadInt("/test/intarr", -1, -9999));
+   printf("try invalid index 999: %d\n", gOdb->odbReadInt("/test/intarr", 999, -9999));
+   printf("read double value: %f\n", gOdb->odbReadDouble("/test/dblvalue", 1, -9999));
    
    return 0;
 }
