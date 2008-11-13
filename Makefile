@@ -12,7 +12,7 @@ ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLPa
 ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread
 RPATH    += -Wl,-rpath,$(ROOTSYS)/lib
 CXXFLAGS += -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
-OBJS     +=  XmlOdb.o midasServer.o libNetDirectory/RootLock.o
+OBJS     +=  XmlOdb.o HttpOdb.o midasServer.o libNetDirectory/RootLock.o
 endif
 
 # optional MIDAS libraries

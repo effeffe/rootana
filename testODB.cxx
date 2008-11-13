@@ -17,6 +17,7 @@
 #include "TMidasEvent.h"
 #ifdef HAVE_ROOT
 #include "XmlOdb.h"
+#include "HttpOdb.h"
 #endif
 
 VirtualOdb* gOdb = NULL;
@@ -35,8 +36,16 @@ int main(int argc, char *argv[])
    const char* hostname = NULL;
    const char* exptname = NULL;
    const char* filename = argv[1];
-   bool online  = filename==NULL;
-   bool xmlfile = true;
+   bool online  = false;
+   bool xmlfile = false;
+   bool httpfile = false;
+
+   if (!filename)
+     online = true;
+   else if (strstr(filename, ".xml")!=0)
+     xmlfile = true;
+   else
+     httpfile = true;
 
    if (online)
      {
@@ -59,6 +68,17 @@ int main(int argc, char *argv[])
        gOdb = odb;
 #else
        printf("This program is compiled without support for XML ODB access\n");
+       return -1;
+#endif
+     }
+   else if (httpfile)
+     {
+#ifdef HAVE_ROOT
+       HttpOdb* odb = new HttpOdb(filename);
+       //odb->DumpTree();
+       gOdb = odb;
+#else
+       printf("This program is compiled without support for HTTP ODB access\n");
        return -1;
 #endif
      }
