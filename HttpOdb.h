@@ -15,9 +15,13 @@
 ///
 /// Access to ODB through the MIDAS HTTP server mhttpd.
 ///
-/// To enable this function, create an ODB string entry "/Custom/secret.html!" with blank value.
-/// Then use the HttpOdb URL http://hostname:port/CS/secret.html
-/// In this usage "secret.html" functions as an access password.
+/// To enable ODB access in mhttpd, create an ODB string entry "/Custom/secret.html!" with blank value.
+///
+/// Then create an HttpOdb class with URL "http://hostname:port/CS/secret.html" and use the odb access functions as required.
+///
+/// Note that HTTP access is not optimized for speed. It can be slow, can result in high CPU utilization by mhttpd and is subject to lengthy delays if mhttpd is busy with something else (i.e. starting a run or generating history plots).
+///
+/// In this usage, the string "secret.html" functions as an access password.
 ///
 
 class HttpOdb : public VirtualOdb
@@ -42,6 +46,7 @@ class HttpOdb : public VirtualOdb
   int      odbReadArraySize(const char*name);
 
  protected:
+  const char* jkey(const char* path);
   const char* jget(const char* path, int index);
 
  protected:

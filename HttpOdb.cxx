@@ -31,6 +31,10 @@ HttpOdb::~HttpOdb() // dtor
 
 const char* HttpOdb::jget(const char* path, int index)
 {
+  // index "-1" is special for "return whole array"
+  if (index < 0)
+    return NULL;
+
   TUrl xurl(fUrl);
 
   TSocket s(xurl.GetHost(), xurl.GetPort());
@@ -63,6 +67,12 @@ const char* HttpOdb::jget(const char* path, int index)
 
   p += 4;
 
+  if (strcmp(p, "<DB_NO_KEY>") == 0)
+    return NULL;
+
+  if (strcmp(p, "<DB_OUT_OF_RANGE>") == 0)
+    return NULL;
+
   if (strcmp(p, "<unknown>") == 0)
     return NULL;
 
@@ -74,6 +84,61 @@ const char* HttpOdb::jget(const char* path, int index)
 
   if (fDebug)
     printf("----> mhttpd %s[%d] return [%s]\n", path, index, p);
+  
+  return p;
+}
+
+const char* HttpOdb::jkey(const char* path)
+{
+  TUrl xurl(fUrl);
+
+  TSocket s(xurl.GetHost(), xurl.GetPort());
+
+  //char *req = "GET /CS/F000.html?cmd=jset&odb=/equipment/mscb/settings/FGD/Feb_demand/power[0]&value=y HTTP/1.1\r\n\r\n";
+  //char *req = "GET /CS/F000.html?cmd=jget&odb=/runinfo/run number HTTP/1.1\r\n\r\n";
+
+  sprintf(fRequestBuf,"GET /%s?cmd=jkey&odb=%s HTTP/1.1\r\n\r\n", xurl.GetFileAndOptions(), path);
+
+  if (fDebug)
+    printf("Sending [%s]\n", fRequestBuf);
+
+  s.SendRaw(fRequestBuf, strlen(fRequestBuf));
+  int rd = s.RecvRaw(fReplyBuf, sizeof(fReplyBuf));
+
+  if (fDebug)
+    printf("Received %d [%s]\n", rd, fReplyBuf);
+
+  if (rd < 10)
+    return NULL;
+
+  if (strstr(fReplyBuf, "200 Document follows") == NULL)
+    return NULL;
+
+  fReplyBuf[rd] = 0;
+
+  const char* p = strstr(fReplyBuf,"\r\n\r\n");
+  if (!p)
+    return NULL;
+
+  p += 4;
+
+  if (strcmp(p, "<DB_NO_KEY>") == 0)
+    return NULL;
+
+  if (strcmp(p, "<DB_OUT_OF_RANGE>") == 0)
+    return NULL;
+
+  if (strcmp(p, "<unknown>") == 0)
+    return NULL;
+
+  if (strstr(p, "<html>") != NULL)
+    {
+      fprintf(stderr, "HttpOdb::jget: Bad mhttpd response: %s\n", p);
+      return NULL;
+    }
+
+  if (fDebug)
+    printf("----> mhttpd %s return [%s]\n", path, p);
   
   return p;
 }
@@ -124,16 +189,15 @@ const char* HttpOdb::odbReadString(const char* name, int index, const char* defa
 
 int      HttpOdb::odbReadArraySize(const char*name)
 {
-  return 1;
-#if 0
-  TXMLNode *node = FindPath(NULL,name);
-  if (!node)
+  const char* reply = jkey(name);
+  if (!reply)
     return 0;
-  const char* num_values = GetAttrValue(node,"num_values");
-  if (!num_values)
-    return 1;
-  return atoi(num_values);
-#endif
+  char* p = strstr(reply, "\n");
+  if (p)
+    p = strstr(p+1, "\n");
+  if (p)
+    return atoi(p);
+  return 1;
 }
 
 //end

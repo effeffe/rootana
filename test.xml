@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- created by MXML on Thu Aug 16 13:22:35 2007 -->
+<odb root="/" filename="test.xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/home/olchansk/daq/midas/midas/odb.xsd">
+  <dir name="test">
+    <keyarray name="intarr" type="INT" num_values="10">
+      <value>15</value>
+      <value>0</value>
+      <value>0</value>
+      <value>3</value>
+      <value>0</value>
+      <value>0</value>
+      <value>0</value>
+      <value>0</value>
+      <value>0</value>
+      <value>9</value>
+    </keyarray>
+    <key name="dblvalue" type="DOUBLE">22.2</key>
+    <key name="fltvalue" type="FLOAT">11.1</key>
+    <key name="dwordvalue" type="DWORD">125</key>
+    <key name="wordvalue" type="WORD">321</key>
+    <key name="boolvalue" type="BOOL">y</key>
+  </dir>
+</odb>

@@ -35,6 +35,7 @@
 /// MIDAS experiment via the mserver or directly from the MIDAS
 /// shared memory (this requires linking with MIDAS libraries).
 /// - C++ classes for accessing XML ODB data from .mid files
+/// - C++ classes for accessing ODB through HTTP/mhttpd (see HttpOdb)
 /// - C++ classes for accessing ODB from MIDAS shared memory
 /// (this requires linking with MIDAS libraries).
 /// - an example event dump program

@@ -146,6 +146,11 @@ int main(int argc, char *argv[])
      len = strlen(s);
    printf("read string value: [%s] length %d\n", s, len);
 
+   printf("\nTry non-existent entries...\n\n");
+
+   printf("read array size: %d\n", gOdb->odbReadArraySize("/test/doesnotexist"));
+   printf("read uint32 value: %d\n", gOdb->odbReadUint32("/test/doesnotexist", 0, -9999));
+
    printf("\nTry wrong types...\n\n");
 
    printf("read float value: %f\n", gOdb->odbReadDouble("/test/fltvalue"));
@@ -157,7 +162,7 @@ int main(int argc, char *argv[])
    printf("try to index a non-array: %f\n", gOdb->odbReadDouble("/test/dblvalue", 10, -9999));
    printf("try invalid index -1: %d\n", gOdb->odbReadInt("/test/intarr", -1, -9999));
    printf("try invalid index 999: %d\n", gOdb->odbReadInt("/test/intarr", 999, -9999));
-   printf("read double value: %f\n", gOdb->odbReadDouble("/test/dblvalue", 1, -9999));
+   printf("try invalid index 1 for double value: %f\n", gOdb->odbReadDouble("/test/dblvalue", 1, -9999));
    
    return 0;
 }
