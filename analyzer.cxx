@@ -3,7 +3,7 @@
 //
 // K.Olchanski
 //
-// $Rev$
+// $Id$
 //
 
 #include <stdio.h>

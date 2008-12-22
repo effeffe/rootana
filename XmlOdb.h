@@ -4,7 +4,7 @@
 // Name: XmlOdb.h
 // Author: K.Olchanski, 11-July-2006
 //
-// $Id: XmlOdb.h,v 1.1 2006/07/11 18:53:18 alpha Exp $
+// $Id$
 //
 
 #ifndef INCLUDE_XmlOdb_H

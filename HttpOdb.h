@@ -4,7 +4,7 @@
 // Name: HttpOdb.h
 // Author: K.Olchanski, 12-Nov-2008
 //
-// $Rev$
+// $Id$
 //
 
 #ifndef INCLUDE_HttpOdb_H

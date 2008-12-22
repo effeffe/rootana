@@ -6,7 +6,7 @@
   Contents:     The system part of the MIDAS analyzer. Has to be
                 linked with analyze.c to form a complete analyzer
 
-  $Id: mana.c 3326 2006-09-20 13:31:46Z ritt $
+  $Id$
 
 \********************************************************************/
 
