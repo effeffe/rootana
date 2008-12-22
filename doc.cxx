@@ -27,7 +27,7 @@
 /// - C++ classes for reading MIDAS events from .mid files, including compressed midas files and remote midas files through ssh and dcache pipes, see TMidasFile::Open()
 /// - C++ classes for reading MIDAS events from a running
 /// MIDAS experiment via the mserver or directly from the MIDAS
-/// shared memory (this requires linking with MIDAS libraries).
+/// shared memory (this requires linking with MIDAS libraries) (see TMidasOnline, analyzer.cxx and event_dump.cxx)
 /// - C++ classes for accessing XML ODB data from .mid files (see XmlOdb)
 /// - C++ classes for accessing ODB through HTTP/mhttpd (see HttpOdb)
 /// - C++ classes for accessing ODB from MIDAS shared memory (see TMidasOnline,
@@ -61,6 +61,14 @@
 /// - edit analyzer.cxx, look at how different MIDAS events are handled in HandleMidasEvent() and how event data is passed to the example user function HandleSample(). Create your own HandleFoo() functions to handle your data.
 /// - for more advanced analysis, use rootana as a library: in your own analysis directory, copy the example analyzer.cxx (rename it according to your tastes, popular choices are "alpharoot", "dragonroot", "fgdroot", etc), place the HandleFoo() functions into separate files HandleFoo{.h,.cxx}.
 ///  
+/// \section config_sec Configuration
+///
+/// - env.variable ROOTSYS controls support for ROOT (also the C++ define -DHAVE_ROOT). Most rootana classes require ROOT, so if ROOTSYS is not defined, only code that works without ROOT will be compiled - TMidasEvent and TMidasFile at this moment.
+/// - env.variable MIDASSYS controls support for connecting to live MIDAS data (also the C++ define -DHAVE_MIDAS). All of rootana is supposed to work without MIDAS, except for the TMidasOnline class.
+/// - C++ define -DHAVE_LIBNETDIRECTORY enables use of the newer "libNetDirectory" interface for Roody. This replaces the "-DOLD_SERVER" functions that use the "MIDAS server" from MIDAS mana.c.
+/// - C++ define "-DOLD_SERVER" enables the obsolete MIDAS server from MIDAS mana.c. Please use the newer libNetDirectory instead.
+///
+///
 /// \section histo_sec Creating histograms, etc
 ///
 /// Think of the example ROOT analyzer as a normal ROOT application where
