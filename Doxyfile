@@ -4,7 +4,7 @@
 # Project related configuration options
 #---------------------------------------------------------------------------
 PROJECT_NAME           = rootana
-PROJECT_NUMBER         = SVN_revision_$Id$
+PROJECT_NUMBER         = SVN_revision_$Rev$
 OUTPUT_DIRECTORY       = 
 CREATE_SUBDIRS         = NO
 OUTPUT_LANGUAGE        = English
