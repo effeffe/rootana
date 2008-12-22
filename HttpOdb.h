@@ -4,7 +4,7 @@
 // Name: HttpOdb.h
 // Author: K.Olchanski, 12-Nov-2008
 //
-// $Id$
+// $Rev$
 //
 
 #ifndef INCLUDE_HttpOdb_H
@@ -12,8 +12,6 @@
 
 #include "VirtualOdb.h"
 
-///
-/// Access to ODB through the MIDAS HTTP server mhttpd.
 ///
 /// To enable ODB access in mhttpd, create an ODB string entry "/Custom/secret.html!" with blank value.
 ///
@@ -23,6 +21,8 @@
 ///
 /// In this usage, the string "secret.html" functions as an access password.
 ///
+
+/// Access to ODB through the MIDAS HTTP server mhttpd
 
 class HttpOdb : public VirtualOdb
 {
