@@ -49,6 +49,7 @@ endif
 CXXFLAGS += -DOLD_SERVER
 
 ALL+= librootana.a
+ALL+= event_dump.exe
 
 ifdef ROOTSYS
 ifdef MIDASSYS
@@ -60,7 +61,6 @@ ALL+= html/index.html
 
 ifdef ROOTSYS
 ALL+= analyzer.exe
-ALL+= event_dump.exe
 ALL+= test_midasServer.exe
 endif
 

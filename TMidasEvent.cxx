@@ -449,7 +449,7 @@ int TMidasEvent::SwapBytes(bool force)
 
   pbh = (BankHeader_t *) fData;
 
-  //printf("SwapBytes %d, flags 0x%x 0x%x\n", force, pbh->fFlags, pbh->fDataSize);
+  printf("evh.datasize: 0x%08x, SwapBytes: %d, pbh.flags: 0x%08x, pbh.datasize: 0x%08x\n", fEventHeader.fDataSize, force, pbh->fFlags, pbh->fDataSize);
 
   //
   // only swap if flags in high 16-bit
@@ -462,6 +462,8 @@ int TMidasEvent::SwapBytes(bool force)
 
   if (pbh->fDataSize == 0x3c3f786d) // string "<xml..."
     return 1;
+
+  return 1;
 
   //
   // swap bank header
