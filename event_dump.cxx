@@ -15,7 +15,10 @@
 #include "TMidasOnline.h"
 #include "TMidasEvent.h"
 #include "TMidasFile.h"
+
+#ifdef HAVE_ROOT
 #include "XmlOdb.h"
+#endif
 
 #include <vector>
 
@@ -80,7 +83,10 @@ int ProcessMidasFile(const char*fname)
 	  //
 	  if (gOdb)
 	    delete gOdb;
+          gOdb = NULL;
+#ifdef HAVE_ROOT
 	  gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
+#endif
 	}
       else if ((eventId & 0xFFFF) == 0x8001)
 	{
