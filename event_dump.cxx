@@ -62,7 +62,14 @@ int ProcessMidasFile(const char*fname)
           if (gSaveOdb)
             {
               char fname[256];
-              sprintf(fname,"odb%05d.xml", event.GetSerialNumber());
+
+              char* ptr = event.GetData();
+              int size = event.GetDataSize();
+
+              if (strncmp(ptr, "<?xml", 5) == 0)
+                sprintf(fname,"odb%05d.xml", event.GetSerialNumber());
+              else
+                sprintf(fname,"odb%05d.odb", event.GetSerialNumber());
 
               FILE* fp = fopen(fname,"w");
               if (!fp)
@@ -71,7 +78,7 @@ int ProcessMidasFile(const char*fname)
                   exit(1);
                 }
 
-              fwrite(event.GetData(), event.GetDataSize(), 1, fp);
+              fwrite(ptr, size, 1, fp);
               fclose(fp);
 
               fprintf(stderr,"Wrote ODB to \'%s\'\n", fname);
@@ -201,7 +208,7 @@ void help()
   printf("\t-h: print this help message\n");
   printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
   printf("\t-Eexptname: connect to this MIDAS experiment\n");
-  printf("\t-O: save ODB from midas data file into odbNNNN.xml\n");
+  printf("\t-O: save ODB from midas data file into odbNNNN.xml or .odb file\n");
   printf("\t-e: Number of events to read from input data files\n");
   printf("\n");
   printf("Example1: print online events: ./event_dump.exe\n");

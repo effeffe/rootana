@@ -451,7 +451,12 @@ int TMidasEvent::SwapBytes(bool force)
 
   pbh = (BankHeader_t *) fData;
 
+  uint32_t dssw = pbh->fDataSize;
+
+  DWORD_SWAP(&dssw);
+
   //printf("SwapBytes %d, flags 0x%x 0x%x\n", force, pbh->fFlags, pbh->fDataSize);
+  //printf("evh.datasize: 0x%08x, SwapBytes: %d, pbh.flags: 0x%08x, pbh.datasize: 0x%08x swapped 0x%08x\n", fEventHeader.fDataSize, force, pbh->fFlags, pbh->fDataSize, dssw);
 
   //
   // only swap if flags in high 16-bit
@@ -463,6 +468,9 @@ int TMidasEvent::SwapBytes(bool force)
     return 1;
 
   if (pbh->fDataSize == 0x3c3f786d) // string "<xml..."
+    return 1;
+
+  if (dssw > fEventHeader.fDataSize + 100) // swapped data size looks wrong. do not swap.
     return 1;
 
   //
@@ -499,10 +507,12 @@ int TMidasEvent::SwapBytes(bool force)
     // pbk points to next bank
     //
     if (b32) {
+      assert(pbk32->fDataSize < fEventHeader.fDataSize + 100);
       pbk32 = (Bank32_t *) ((char*) (pbk32 + 1) +
                           (((pbk32->fDataSize)+7) & ~7));
       pbk = (Bank_t *) pbk32;
     } else {
+      assert(pbk->fDataSize < fEventHeader.fDataSize + 100);
       pbk = (Bank_t *) ((char*) (pbk + 1) +  (((pbk->fDataSize)+7) & ~7));
       pbk32 = (Bank32_t *) pbk;
     }
