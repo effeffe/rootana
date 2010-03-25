@@ -18,7 +18,7 @@ endif
 # optional MIDAS libraries
 
 ifdef MIDASSYS
-MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil
+MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil -lrt
 CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 OBJS     += TMidasOnline.o
 
