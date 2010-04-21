@@ -5,7 +5,10 @@
 // $Id$
 //
 
+#include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <string.h>
 #include <iostream>
 #include <assert.h>
 
@@ -192,7 +195,7 @@ int      HttpOdb::odbReadArraySize(const char*name)
   const char* reply = jkey(name);
   if (!reply)
     return 0;
-  char* p = strstr(reply, "\n");
+  const char* p = strstr(reply, "\n");
   if (p)
     p = strstr(p+1, "\n");
   if (p)

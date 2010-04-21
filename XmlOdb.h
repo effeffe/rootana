@@ -10,6 +10,8 @@
 #ifndef INCLUDE_XmlOdb_H
 #define INCLUDE_XmlOdb_H
 
+#include <stdlib.h>
+#include <stdint.h>
 #include "TXMLNode.h"
 #include "TXMLAttr.h"
 #include "TDOMParser.h"

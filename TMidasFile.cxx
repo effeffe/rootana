@@ -3,6 +3,7 @@
 //
 
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -34,7 +35,7 @@ TMidasFile::~TMidasFile()
 
 static int hasSuffix(const char*name,const char*suffix)
 {
-  char*s = strstr(name,suffix);
+  const char* s = strstr(name,suffix);
   if (s == NULL)
     return 0;
 

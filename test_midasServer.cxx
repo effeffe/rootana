@@ -7,6 +7,7 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 #include <iostream>
 #include <assert.h>
