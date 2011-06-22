@@ -156,6 +156,14 @@ uint32_t HttpOdb::odbReadUint32(const char*name, int index, uint32_t defaultValu
   return strtoul(reply, NULL, 0);
 }
 
+float   HttpOdb::odbReadFloat(const char*name, int index, float defaultValue)
+{
+  const char* reply = jget(name, index);
+  if (!reply)
+    return defaultValue;
+  return atof(reply);
+}
+
 double   HttpOdb::odbReadDouble(const char*name, int index, double defaultValue)
 {
   const char* reply = jget(name, index);
