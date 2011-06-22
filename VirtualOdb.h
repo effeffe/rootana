@@ -25,7 +25,9 @@ struct VirtualOdb
   virtual int      odbReadInt(   const char*name, int index = 0, int      defaultValue = 0) = 0;
   /// Read an unsigned 32-bit integer value, midas type TID_DWORD
   virtual uint32_t odbReadUint32(const char*name, int index = 0, uint32_t defaultValue = 0) = 0;
-  /// Read an 64-bit floating point value, midas type TID_DOUBLE, TID_FLOAT
+  /// Read an 32-bit floating point value, midas type TID_FLOAT
+  virtual float   odbReadFloat(const char*name, int index = 0, float   defaultValue = 0) = 0;
+  /// Read an 64-bit floating point value, midas type TID_DOUBLET
   virtual double   odbReadDouble(const char*name, int index = 0, double   defaultValue = 0) = 0;
   /// Read a boolean value, midas type TID_BOOL
   virtual bool     odbReadBool(  const char*name, int index = 0, bool     defaultValue = false) = 0;
