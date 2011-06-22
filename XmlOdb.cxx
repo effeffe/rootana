@@ -372,6 +372,17 @@ double   XmlOdb::odbReadDouble(const char*name, int index, double defaultValue)
   return atof(text);
 }
 
+float  XmlOdb::odbReadFloat(const char*name, int index, float defaultValue)
+{
+  TXMLNode *node = FindArrayPath(NULL,name,"FLOAT",index);
+  if (!node)
+    return defaultValue;
+  const char* text = node->GetText();
+  if (!text)
+    return defaultValue;
+  return atof(text);
+}
+
 int      XmlOdb::odbReadInt(   const char*name, int index, int      defaultValue)
 {
   TXMLNode *node = FindArrayPath(NULL,name,"INT",index);
