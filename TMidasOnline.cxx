@@ -322,6 +322,15 @@ bool     TMidasOnline::odbReadBool(const char*name,int index,bool defaultValue)
     return defaultValue;
 };
 
+float TMidasOnline::odbReadFloat(const char*name,int index,float defaultValue)
+{
+  float value = defaultValue;
+  if (odbReadAny(name,index,TID_FLOAT,&value) == 0)
+    return value;
+  else
+    return defaultValue;
+};
+
 double TMidasOnline::odbReadDouble(const char*name,int index,double defaultValue)
 {
   double value = defaultValue;
