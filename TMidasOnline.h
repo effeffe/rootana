@@ -1,3 +1,5 @@
+#ifndef TMidasOnline_hxx_seen
+#define TMidasOnline_hxx_seen
 /********************************************************************\
 
   Name:         TMidasOnline.h
@@ -116,3 +118,4 @@ public:
 };
 
 //end
+#endif
