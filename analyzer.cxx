@@ -22,6 +22,9 @@
 #ifdef HAVE_LIBNETDIRECTORY
 #include "libNetDirectory/netDirectoryServer.h"
 #endif
+#ifdef HAVE_XMLSERVER
+#include "libXmlServer/xmlServer.h"
+#endif
 
 #include <TSystem.h>
 #include <TROOT.h>
@@ -114,7 +117,15 @@ void startRun(int transition,int run,int time)
 
   char filename[1024];
   sprintf(filename, "output%05d.root", run);
-  gOutputFile = new TFile(filename,"CREATE");
+  gOutputFile = new TFile(filename, "RECREATE");
+  
+  //if (gOutputFile && !gOutputFile->IsOpen())
+  //gOutputFile = NULL;
+
+  assert(gOutputFile);
+  assert(gOutputFile->IsOpen());
+
+  //printf("gOutputFile: %p, isOpen %d\n", gOutputFile, gOutputFile->IsOpen());
 
 #ifdef HAVE_LIBNETDIRECTORY
   NetDirectoryExport(gOutputFile, "outputFile");
