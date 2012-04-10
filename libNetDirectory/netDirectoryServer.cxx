@@ -157,7 +157,7 @@ static TObject* FollowPath(char* path)
 
 /*------------------------------------------------------------------*/
 
-void ResetObject(TObject* obj)
+static void ResetObject(TObject* obj)
 {
   assert(obj!=NULL);
 
