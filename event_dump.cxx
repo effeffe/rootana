@@ -20,17 +20,23 @@
 #include "XmlOdb.h"
 #endif
 
+#include "VirtualOdb.h"
+
 #include <vector>
 
 VirtualOdb* gOdb = NULL;
 
 int  gEventCutoff = 0;
 bool gSaveOdb = false;
+bool gPrintBank = false;
 
 void HandleMidasEvent(TMidasEvent& event)
 {
   int eventId = event.GetEventId();
-  event.Print();
+  if (gPrintBank)
+    event.Print("a");
+  else
+    event.Print();
 }
 
 int ProcessMidasFile(const char*fname)
@@ -203,13 +209,14 @@ int ProcessMidasOnline(const char* hostname, const char* exptname)
 void help()
 {
   printf("\nUsage:\n");
-  printf("\n./event_dump.exe [-h] [-Hhostname] [-Eexptname] [-O] [-eMaxEvents] [file1 file2 ...]\n");
+  printf("\n./event_dump.exe [-h] [-Hhostname] [-Eexptname] [-p] [-O] [-eMaxEvents] [file1 file2 ...]\n");
   printf("\n");
   printf("\t-h: print this help message\n");
   printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
   printf("\t-Eexptname: connect to this MIDAS experiment\n");
   printf("\t-O: save ODB from midas data file into odbNNNN.xml or .odb file\n");
   printf("\t-e: Number of events to read from input data files\n");
+  printf("\t-p: Print bank contents\n");
   printf("\n");
   printf("Example1: print online events: ./event_dump.exe\n");
   printf("Example2: print events from file: ./event_dump.exe /data/alpha/current/run00500.mid.gz\n");
@@ -226,6 +233,7 @@ int main(int argc, char *argv[])
    signal(SIGILL,  SIG_DFL);
    signal(SIGBUS,  SIG_DFL);
    signal(SIGSEGV, SIG_DFL);
+   signal(SIGPIPE, SIG_DFL);
  
    std::vector<std::string> args;
    for (int i=0; i<argc; i++)
@@ -251,6 +259,8 @@ int main(int argc, char *argv[])
 	 exptname = strdup(arg+2);
        else if (strncmp(arg,"-O",2)==0)
 	 gSaveOdb = true;
+       else if (strncmp(arg,"-p",2)==0)
+	 gPrintBank = true;
        else if (strcmp(arg,"-h")==0)
 	 help(); // does not return
        else if (arg[0] == '-')
