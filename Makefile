@@ -8,8 +8,8 @@ CXXFLAGS = -g -O2 -Wall -Wuninitialized
 # optional ROOT libraries
 
 ifdef ROOTSYS
-ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread
-ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread
+ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lXMLIO -lThread
+ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lXMLIO -lThread
 RPATH    += -Wl,-rpath,$(ROOTSYS)/lib
 CXXFLAGS += -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
 OBJS     +=  XmlOdb.o HttpOdb.o midasServer.o libNetDirectory/RootLock.o
@@ -44,12 +44,22 @@ OBJS     += ./libNetDirectory/netDirectoryServer.o
 ALL+= libNetDirectory/libNetDirectory.a
 endif
 
+# optional XmlServer code
+
+ifdef ROOTSYS
+CXXFLAGS += -DHAVE_XMLSERVER
+OBJS     += ./libXmlServer/xmlServer.o
+
+#ALL+= libNetDirectory/libNetDirectory.a
+endif
+
 # optional old midas server
 
 CXXFLAGS += -DOLD_SERVER
 
 ALL+= librootana.a
 ALL+= event_dump.exe
+ALL+= event_skim.exe
 
 ifdef ROOTSYS
 ifdef MIDASSYS

@@ -19,6 +19,9 @@
 #ifdef HAVE_LIBNETDIRECTORY
 #include "libNetDirectory/netDirectoryServer.h"
 #endif
+#ifdef HAVE_XMLSERVER
+#include "libXmlServer/xmlServer.h"
+#endif
 
 #include <TSystem.h>
 #include <TROOT.h>
@@ -106,9 +109,10 @@ void help()
 {
   printf("\nUsage:\n");
 
-  printf("\n./test_midasServer.exe [-h] [-PtcpPort] [-pTcpPort] [-m]\n");
+  printf("\n./test_midasServer.exe [-h] [-PtcpPort] [-pTcpPort] [-XtmpPort] [-m]\n");
   printf("\n");
   printf("\t-h: print this help message\n");
+  printf("\t-X: Start the XML Server on specified tcp port (for use with roody)\n");
   printf("\t-P: Start the TNetDirectory server on specified tcp port (for use with roody)\n");
   printf("\t-p: Start the old midas histogram server on specified tcp port (for use with roody)\n");
   printf("\t-m: Enable memory leak debugging\n");
@@ -142,6 +146,7 @@ int main(int argc, char *argv[])
    signal(SIGILL,  SIG_DFL);
    signal(SIGBUS,  SIG_DFL);
    signal(SIGSEGV, SIG_DFL);
+   signal(SIGPIPE, SIG_DFL);
  
    std::vector<std::string> args;
    for (int i=0; i<argc; i++)
@@ -160,6 +165,7 @@ int main(int argc, char *argv[])
 
    int  oldTcpPort = 0;
    int  tcpPort = 0;
+   int  xmlTcpPort = 0;
 
    for (unsigned int i=1; i<args.size(); i++) // loop over the commandline options
      {
@@ -174,6 +180,8 @@ int main(int argc, char *argv[])
 	 oldTcpPort = atoi(arg+2);
        else if (strncmp(arg,"-P",2)==0) // Set the histogram server port
 	 tcpPort = atoi(arg+2);
+       else if (strncmp(arg,"-X",2)==0) // Set the histogram server port
+	 xmlTcpPort = atoi(arg+2);
        else if (strcmp(arg,"-h")==0)
 	 help(); // does not return
        else if (arg[0] == '-')
@@ -200,6 +208,19 @@ int main(int argc, char *argv[])
    if (tcpPort)
      fprintf(stderr,"ERROR: No support for the TNetDirectory server!\n");
 #endif
+#ifdef HAVE_XMLSERVER
+   XmlServer* xmlServer = NULL;
+   if (xmlTcpPort)
+     {
+        xmlServer = new XmlServer();
+        xmlServer->SetVerbose(true);
+        xmlServer->Start(xmlTcpPort);
+        xmlServer->Export(gOnlineHistDir, gOnlineHistDir->GetName());
+     }
+#else
+   if (xmlTcpPort)
+     fprintf(stderr,"ERROR: No support for the XML Server!\n");
+#endif
 	 
    gOnlineHistDir->cd();
 
@@ -207,6 +228,9 @@ int main(int argc, char *argv[])
    f->cd();
 
    NetDirectoryExport(f, "outputFile");
+
+   if (xmlServer)
+      xmlServer->Export(f, "outputFile");
 
    TH1D* hh = new TH1D("test1", "test1", 100, 0, 100);
    hh->Fill(1);
@@ -237,6 +261,12 @@ int main(int argc, char *argv[])
    //gDirectory->pwd();
    NetDirectoryExport(gROOT->GetListOfFiles(), "ListOfFiles");
    NetDirectoryExport(gROOT->GetListOfGlobals(), "ListOfGlobals");
+
+   if (xmlServer) {
+      xmlServer->Export(gROOT->GetListOfFiles(), "ListOfFiles");
+      xmlServer->Export(gROOT->GetListOfGlobals(), "ListOfGlobals");
+   }
+
 
    new MyPeriodic(100, IncrFunc);
    
