@@ -154,6 +154,9 @@ int TMidasEvent::LocateBank(const void *unused, const char *name, void **pdata) 
   return bklen;
 }
 
+static const unsigned TID_SIZE[] = {0, 1, 1, 1, 2, 2, 4, 4, 4, 4, 8, 1, 0, 0, 0, 0, 0};
+static const unsigned TID_MAX = (sizeof(TID_SIZE)/sizeof(TID_SIZE[0]));
+
 int TMidasEvent::FindBank(const char* name, int *bklen, int *bktype, void **pdata) const
 {
   /// Find a data bank.
@@ -164,14 +167,13 @@ int TMidasEvent::FindBank(const char* name, int *bklen, int *bktype, void **pdat
   /// \returns 1 if bank found, 0 otherwise.
   ///
 
-  static const int TID_SIZE[] = {0, 1, 1, 1, 2, 2, 4, 4, 4, 4, 8, 1, 0, 0, 0, 0, 0};
-
   const BankHeader_t *pbkh = (const BankHeader_t*)fData; 
   Bank_t *pbk;
   Bank32_t *pbk32;
   uint32_t dname;
 
   if (((pbkh->fFlags & (1<<4)) > 0)) {
+#if 0
     pbk32 = (Bank32_t *) (pbkh + 1);
     memcpy(&dname, name, 4);
     do {
@@ -188,6 +190,30 @@ int TMidasEvent::FindBank(const char* name, int *bklen, int *bktype, void **pdat
       pbk32 = (Bank32_t *) ((char*) (pbk32 + 1) +
                           (((pbk32->fDataSize)+7) & ~7));
     } while ((char*) pbk32 < (char*) pbkh + pbkh->fDataSize + sizeof(BankHeader_t));
+#endif
+
+    Bank32_t *pbk32 = NULL;
+
+    while (1) {
+      IterateBank32(&pbk32, (char**)pdata);
+      //printf("looking for [%s] got [%s]\n", name, pbk32->fName);
+      if (pbk32 == NULL)
+	break;
+
+      if (name[0]==pbk32->fName[0] &&
+	  name[1]==pbk32->fName[1] &&
+	  name[2]==pbk32->fName[2] &&
+	  name[3]==pbk32->fName[3]) {
+	
+	if (TID_SIZE[pbk32->fType & 0xFF] == 0)
+	  *bklen = pbk32->fDataSize;
+	else
+	  *bklen = pbk32->fDataSize / TID_SIZE[pbk32->fType & 0xFF];
+	
+	*bktype = pbk32->fType;
+	return 1;
+      }
+    }
   } else {
     pbk = (Bank_t *) (pbkh + 1);
     memcpy(&dname, name, 4);
@@ -263,6 +289,11 @@ void TMidasEvent::Print(const char *option) const
 		printf("\n");
 		break;
 	      case 6: // TID_DWORD
+		for (int j = 0; j < bankLength; j++)
+		  printf("0x%08x%c", ((uint32_t*)pdata)[j], (j%10==9)?'\n':' ');
+		printf("\n");
+		break;
+	      case 7: // TID_nd280 (like a DWORD?)
 		for (int j = 0; j < bankLength; j++)
 		  printf("0x%08x%c", ((uint32_t*)pdata)[j], (j%10==9)?'\n':' ');
 		printf("\n");
@@ -379,11 +410,35 @@ int TMidasEvent::IterateBank32(Bank32_t **pbk, char **pdata) const
   /// See IterateBank()
 
   const BankHeader_t* event = (const BankHeader_t*)fData;
-
   if (*pbk == NULL)
     *pbk = (Bank32_t *) (event + 1);
-  else
-    *pbk = (Bank32_t *) ((char*) (*pbk + 1) + ((((*pbk)->fDataSize)+7) & ~7));
+  else {
+    uint32_t length = (*pbk)->fDataSize;
+    uint32_t length_adjusted = (length+7) & ~7;
+    //printf("length %6d 0x%08x, 0x%08x\n", length, length, length_adjusted);
+    *pbk = (Bank32_t *) ((char*) (*pbk + 1) + length_adjusted);
+  }
+
+  Bank32_t *bk4 = (Bank32_t*)(((char*) *pbk) + 4);
+
+  //printf("iterate bank32: pbk 0x%p, align %d, type %d %d, name [%s], next [%s], TID_MAX %d\n", *pbk, (int)( ((uint64_t)(*pbk))&7), (*pbk)->fType, bk4->fType, (*pbk)->fName, bk4->fName, TID_MAX);
+
+  if ((*pbk)->fType > TID_MAX) // bad - unknown bank type - it's invalid MIDAS file?
+    {
+      if (bk4->fType <= TID_MAX) // okey, this is a malformed T2K/ND280 data file
+	{
+	  *pbk = bk4;
+
+	  //printf("iterate bank32: pbk 0x%p, align %d, type %d, name [%s]\n", *pbk, (int)(((uint64_t)(*pbk))&7), (*pbk)->fType, (*pbk)->fName);
+	}
+      else
+	{
+	  // truncate invalid data
+	  *pbk = NULL;
+	  *pdata = NULL;
+	  return 0;
+	}
+    }
 
   *pdata = (char*)((*pbk) + 1);
 
