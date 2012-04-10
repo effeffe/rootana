@@ -169,11 +169,11 @@ int TMidasEvent::FindBank(const char* name, int *bklen, int *bktype, void **pdat
 
   const BankHeader_t *pbkh = (const BankHeader_t*)fData; 
   Bank_t *pbk;
-  Bank32_t *pbk32;
-  uint32_t dname;
+  //uint32_t dname;
 
   if (((pbkh->fFlags & (1<<4)) > 0)) {
 #if 0
+    Bank32_t *pbk32;
     pbk32 = (Bank32_t *) (pbkh + 1);
     memcpy(&dname, name, 4);
     do {
@@ -216,9 +216,11 @@ int TMidasEvent::FindBank(const char* name, int *bklen, int *bktype, void **pdat
     }
   } else {
     pbk = (Bank_t *) (pbkh + 1);
-    memcpy(&dname, name, 4);
     do {
-      if (*((uint32_t *) pbk->fName) == dname) {
+      if (name[0]==pbk->fName[0] &&
+	  name[1]==pbk->fName[1] &&
+	  name[2]==pbk->fName[2] &&
+	  name[3]==pbk->fName[3]) {
         *pdata = pbk + 1;
         if (TID_SIZE[pbk->fType & 0xFF] == 0)
           *bklen = pbk->fDataSize;
