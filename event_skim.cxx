@@ -210,6 +210,7 @@ int main(int argc, char *argv[])
    signal(SIGILL,  SIG_DFL);
    signal(SIGBUS,  SIG_DFL);
    signal(SIGSEGV, SIG_DFL);
+   signal(SIGPIPE, SIG_DFL);
  
    std::vector<std::string> args;
    for (int i=0; i<argc; i++)
