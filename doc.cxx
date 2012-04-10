@@ -54,7 +54,7 @@
 ///
 /// \section starting_sec Getting started
 ///
-/// - "get" the sources: svn checkout svn://ladd00.triumf.ca/rootana/trunk rootana
+/// - "get" the sources: svn checkout https://ladd00.triumf.ca/svn/rootana/trunk rootana
 /// - cd rootana
 /// - make
 /// - make dox (generate this documentation); cd html; mozilla index.html
