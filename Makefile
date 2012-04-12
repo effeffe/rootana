@@ -1,9 +1,13 @@
 # Makefile
 
-# ROOTANA library
-OBJS = TMidasFile.o TMidasEvent.o
-
 CXXFLAGS = -g -O2 -Wall -Wuninitialized
+
+# MIDAS interface library
+
+CXXFLAGS += -I./libMidasInterface
+#OBJS     += ./libMidasInterfacerectory/netDirectoryServer.o
+ALL+= libMidasInterface/libMidasInterface.a
+LIBS+= libMidasInterface/libMidasInterface.a
 
 # optional ROOT libraries
 
@@ -12,7 +16,6 @@ ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLPa
 ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lXMLIO -lThread
 RPATH    += -Wl,-rpath,$(ROOTSYS)/lib
 CXXFLAGS += -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
-OBJS     +=  XmlOdb.o HttpOdb.o midasServer.o libNetDirectory/RootLock.o
 endif
 
 # optional MIDAS libraries
@@ -20,26 +23,22 @@ endif
 ifdef MIDASSYS
 MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil -lrt
 CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
-OBJS     += TMidasOnline.o
 
-UNAME=$(shell uname)
-ifeq ($(UNAME),Darwin)
-CXXFLAGS += -DOS_LINUX -DOS_DARWIN
-MIDASLIBS = $(MIDASSYS)/darwin/lib/libmidas.a
-RPATH=
+#UNAME=$(shell uname)
+#ifeq ($(UNAME),Darwin)
+#CXXFLAGS += -DOS_LINUX -DOS_DARWIN
+#MIDASLIBS = $(MIDASSYS)/darwin/lib/libmidas.a
+#RPATH=
+#endif
+
 endif
-
-endif
-
-# optional ZLIB library
-
-CXXFLAGS += -DHAVE_ZLIB
 
 # optional TNetDirectory code
 
 ifdef ROOTSYS
-CXXFLAGS += -DHAVE_LIBNETDIRECTORY
+CXXFLAGS += -DHAVE_LIBNETDIRECTORY -IlibNetDirectory
 OBJS     += ./libNetDirectory/netDirectoryServer.o
+LIBS     += libNetDirectory/libNetDirectory.a
 
 ALL+= libNetDirectory/libNetDirectory.a
 endif
@@ -47,7 +46,7 @@ endif
 # optional XmlServer code
 
 ifdef ROOTSYS
-CXXFLAGS += -DHAVE_XMLSERVER
+CXXFLAGS += -DHAVE_XMLSERVER -IlibXmlServer
 OBJS     += ./libXmlServer/xmlServer.o
 
 #ALL+= libNetDirectory/libNetDirectory.a
@@ -55,15 +54,18 @@ endif
 
 # optional old midas server
 
-CXXFLAGS += -DOLD_SERVER
+ifdef OLD_SERVER
+CXXFLAGS += -DOLD_SERVER -I./obsolete -IlibNetDirectory
+OBJS     += ./obsolete/midasServer.o
+endif
 
-ALL+= librootana.a
+#ALL+= librootana.a
 ALL+= event_dump.exe
 ALL+= event_skim.exe
 
 ifdef ROOTSYS
 ifdef MIDASSYS
-ALL+= testODB.exe
+ALL+= tests/testODB.exe
 endif
 endif
 
@@ -71,19 +73,22 @@ ALL+= html/index.html
 
 ifdef ROOTSYS
 ALL+= analyzer.exe
-ALL+= test_midasServer.exe
+ALL+= tests/test_midasServer.exe
 endif
 
 all: $(ALL)
 
+libMidasInterface/libMidasInterface.a:
+	make -C libMidasInterface
+
 libNetDirectory/libNetDirectory.a:
 	make -C libNetDirectory
 
-librootana.a: $(OBJS)
-	-rm -f $@
-	ar -rv $@ $^
+#librootana.a: $(OBJS)
+#	-rm -f $@
+#	ar -rv $@ $^
 
-%.exe: %.o librootana.a
+%.exe: %.o $(OBJS) $(LIBS)
 	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
 
 %.o: %.cxx
@@ -99,6 +104,9 @@ dox:
 
 clean::
 	-rm -f *.o *.a *.exe $(ALL)
+
+clean::
+	make -C libMidasInterface clean
 
 clean::
 	make -C libNetDirectory clean

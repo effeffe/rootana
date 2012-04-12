@@ -30,7 +30,7 @@
 #include <TH1.h>
 #include <TCutG.h>
 
-#include "libNetDirectory/RootLock.h"
+#include "RootLock.h"
 
 static bool gVerbose   = false;
 

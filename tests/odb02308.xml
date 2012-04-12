@@ -1,0 +1,4716 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- created by MXML on Mon Nov 20 08:29:19 2006 -->
+<odb root="/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://midas.psi.ch/odb.xsd">
+  <dir name="System">
+    <dir name="Clients">
+      <dir name="13102">
+        <key name="Name" type="STRING" size="32">Logger</key>
+        <key name="Host" type="STRING" size="256">alphavme01.cern.ch</key>
+        <key name="Hardware type" type="INT">42</key>
+        <key name="Server Port" type="INT">35414</key>
+        <key name="Transition START" type="INT">200</key>
+        <key name="Transition STOP" type="INT">800</key>
+        <key name="Transition PAUSE" type="INT">800</key>
+        <key name="Transition RESUME" type="INT">200</key>
+        <dir name="RPC">
+          <key name="14000" type="BOOL">y</key>
+        </dir>
+      </dir>
+      <dir name="13113">
+        <key name="Name" type="STRING" size="32">fevme</key>
+        <key name="Host" type="STRING" size="256">alphavme01.cern.ch</key>
+        <key name="Hardware type" type="INT">42</key>
+        <key name="Server Port" type="INT">40841</key>
+        <key name="Transition START" type="INT">500</key>
+        <key name="Transition STOP" type="INT">500</key>
+        <key name="Transition PAUSE" type="INT">500</key>
+        <key name="Transition RESUME" type="INT">500</key>
+      </dir>
+      <dir name="13123">
+        <key name="Name" type="STRING" size="32">fesequencer</key>
+        <key name="Host" type="STRING" size="256">alphavme01.cern.ch</key>
+        <key name="Hardware type" type="INT">42</key>
+        <key name="Server Port" type="INT">60131</key>
+        <key name="Transition START" type="INT">500</key>
+        <key name="Transition STOP" type="INT">500</key>
+        <key name="Transition PAUSE" type="INT">500</key>
+        <key name="Transition RESUME" type="INT">500</key>
+      </dir>
+      <dir name="13129">
+        <key name="Name" type="STRING" size="32">Speaker</key>
+        <key name="Host" type="STRING" size="256">alphacpc05.cern.ch</key>
+        <key name="Hardware type" type="INT">42</key>
+        <key name="Server Port" type="INT">54462</key>
+        <key name="Link timeout" type="INT">10000</key>
+      </dir>
+      <dir name="13159">
+        <key name="Name" type="STRING" size="32">mhttpd_history</key>
+        <key name="Host" type="STRING" size="256">alphacpc05.cern.ch</key>
+        <key name="Hardware type" type="INT">42</key>
+        <key name="Server Port" type="INT">54514</key>
+        <key name="Link timeout" type="INT">60000</key>
+      </dir>
+      <dir name="10211">
+        <key name="Name" type="STRING" size="32">alpharoot</key>
+        <key name="Host" type="STRING" size="256">alphacpc05.cern.ch</key>
+        <key name="Hardware type" type="INT">42</key>
+        <key name="Server Port" type="INT">52644</key>
+        <key name="Link timeout" type="INT">60000</key>
+        <key name="Transition START" type="INT">300</key>
+        <key name="Transition PAUSE" type="INT">700</key>
+        <key name="Transition RESUME" type="INT">300</key>
+        <key name="Transition STOP" type="INT">700</key>
+      </dir>
+      <dir name="19200">
+        <key name="Name" type="STRING" size="32">mhttpd</key>
+        <key name="Host" type="STRING" size="256">alphavme01.cern.ch</key>
+        <key name="Hardware type" type="INT">42</key>
+        <key name="Server Port" type="INT">47031</key>
+      </dir>
+      <dir name="19202">
+        <key name="Name" type="STRING" size="32">felabview</key>
+        <key name="Host" type="STRING" size="256">alphavme01.cern.ch</key>
+        <key name="Hardware type" type="INT">42</key>
+        <key name="Server Port" type="INT">37368</key>
+        <key name="Transition START" type="INT">500</key>
+        <key name="Transition STOP" type="INT">500</key>
+        <key name="Transition PAUSE" type="INT">500</key>
+        <key name="Transition RESUME" type="INT">500</key>
+      </dir>
+    </dir>
+    <dir name="Tmp"/>
+    <key name="Client Notify" type="INT">0</key>
+    <key name="Prompt" type="STRING" size="256">[%h:%e:%s]%p&gt;</key>
+  </dir>
+  <dir name="Programs">
+    <dir name="ODBEdit">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">10000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">1163913736</key>
+    </dir>
+    <dir name="mhttpd">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">60000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">0</key>
+    </dir>
+    <dir name="Logger">
+      <key name="Required" type="BOOL">y</key>
+      <key name="Watchdog timeout" type="INT">10000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256">mlogger -D</key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32">Warning</key>
+      <key name="First failed" type="DWORD">0</key>
+    </dir>
+    <dir name="fesequencer">
+      <key name="Required" type="BOOL">y</key>
+      <key name="Watchdog timeout" type="INT">60000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256">logfile --once --name fesequencer fesequencer.exe</key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32">Warning</key>
+      <key name="First failed" type="DWORD">0</key>
+    </dir>
+    <dir name="fevme">
+      <key name="Required" type="BOOL">y</key>
+      <key name="Watchdog timeout" type="INT">60000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256">logfile --once --name fevme fevme.exe</key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32">Alarm</key>
+      <key name="First failed" type="DWORD">0</key>
+    </dir>
+    <dir name="felabview">
+      <key name="Required" type="BOOL">y</key>
+      <key name="Watchdog timeout" type="INT">60000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256">logfile --once --name felabview felabview.exe</key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32">Warning</key>
+      <key name="First failed" type="DWORD">0</key>
+    </dir>
+    <dir name="Speaker">
+      <key name="Required" type="BOOL">y</key>
+      <key name="Watchdog timeout" type="INT">10000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256">logfile --once --name Speaker  ssh alphacpc05 mlxspeaker</key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">0</key>
+    </dir>
+    <key name="Execute on start run" type="STRING" size="256"></key>
+    <key name="Execute on stop run" type="STRING" size="256"></key>
+    <dir name="xmana">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">10000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">1147902859</key>
+    </dir>
+    <dir name="mdump">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">10000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">1154612915</key>
+    </dir>
+    <dir name="alpharoot">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">10000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">0</key>
+    </dir>
+    <dir name="timetest">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">10000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">1152989390</key>
+    </dir>
+    <dir name="mhttpd_history">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">60000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">0</key>
+    </dir>
+  </dir>
+  <dir name="Experiment">
+    <key name="Name" type="STRING" size="32">alpha</key>
+    <dir name="edit on start">
+      <key name="Comment" type="STRING" size="256">pbar expansion</key>
+      <key name="Pedestals run" type="BOOL">n</key>
+      <key name="Pedestal events" type="INT">1000</key>
+      <key name="Pedestal period" type="INT">50</key>
+      <key name="SIS_mode" type="DWORD">0</key>
+    </dir>
+    <dir name="Security">
+      <dir name="Allowed hosts">
+        <key name="localhost" type="INT">0</key>
+        <key name="alphavme01.cern.ch" type="INT">0</key>
+        <key name="alphacpc04.cern.ch" type="INT">0</key>
+        <key name="alphacpc05.cern.ch" type="INT">0</key>
+        <key name="alphacpc04" type="INT">0</key>
+        <key name="alphacpc05" type="INT">0</key>
+      </dir>
+      <key name="Web Password" type="STRING" size="32">miaaup3UfORgr</key>
+      <key name="Password" type="STRING" size="14">miaaup3UfORgr</key>
+    </dir>
+    <dir name="Run Parameters">
+      <key name="Comment" type="STRING" size="256">11/20/2006 8:27:57 AM , repetition #1 , Chain file: C:\Documents and Settings\alpha\Desktop\ALPHA Sequences\Mixing\Pbar Mixing deeper e+ 20061119\DEEPER_RampedInjectPbars_Mix_50s_Ramp_OctDSMir_RDUSMir_Sym_Expand_1500ms.chn_mix , Seq. file: RampedInject_Po</key>
+    </dir>
+  </dir>
+  <dir name="Logger">
+    <key name="Data dir" type="STRING" size="256">/data/alpha/current</key>
+    <key name="Message file" type="STRING" size="256">midas.log</key>
+    <key name="Auto restart" type="BOOL">y</key>
+    <key name="Write data" type="BOOL">y</key>
+    <key name="ODB Dump" type="BOOL">y</key>
+    <key name="ODB Dump File" type="STRING" size="256">run%05d.xml</key>
+    <key name="Tape message" type="BOOL">y</key>
+    <dir name="Channels">
+      <dir name="0">
+        <dir name="Settings">
+          <key name="Active" type="BOOL">y</key>
+          <key name="Type" type="STRING" size="8">Disk</key>
+          <key name="Filename" type="STRING" size="256">run%05d.mid</key>
+          <key name="Format" type="STRING" size="8">MIDAS</key>
+          <key name="Compression" type="INT">0</key>
+          <key name="ODB dump" type="BOOL">y</key>
+          <key name="Log messages" type="DWORD">0</key>
+          <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+          <key name="Event ID" type="INT">-1</key>
+          <key name="Trigger mask" type="INT">-1</key>
+          <key name="Event limit" type="DWORD">0</key>
+          <key name="Byte limit" type="DOUBLE">3000000000</key>
+          <key name="Tape capacity" type="DOUBLE">0</key>
+          <key name="Subdir format" type="STRING" size="32"></key>
+          <key name="Current filename" type="STRING" size="256">run02308.mid</key>
+        </dir>
+        <dir name="Statistics">
+          <key name="Events written" type="DOUBLE">0</key>
+          <key name="Bytes written" type="DOUBLE">0</key>
+          <key name="Bytes written total" type="DOUBLE">5208148018738</key>
+          <key name="Files written" type="INT">2042</key>
+        </dir>
+      </dir>
+    </dir>
+    <key name="elog dir" type="STRING" size="32">/home/alpha/online/elog</key>
+    <key name="history dir" type="STRING" size="32">/home/alpha/online/history</key>
+  </dir>
+  <dir name="Runinfo">
+    <key name="State" type="INT">1</key>
+    <key name="Online Mode" type="INT">1</key>
+    <key name="Run number" type="INT">2308</key>
+    <key name="Transition in progress" type="INT">0</key>
+    <key name="Requested transition" type="INT">0</key>
+    <key name="Start time" type="STRING" size="32">Mon Nov 20 08:29:15 2006</key>
+    <key name="Start time binary" type="DWORD">1164007755</key>
+    <key name="Stop time" type="STRING" size="32">Mon Nov 20 08:29:04 2006</key>
+    <key name="Stop time binary" type="DWORD">0</key>
+  </dir>
+  <dir name="Alarms">
+    <key name="Alarm system active" type="BOOL">y</key>
+    <dir name="Alarms">
+      <dir name="Demo ODB">
+        <key name="Active" type="BOOL">n</key>
+        <key name="Triggered" type="INT">0</key>
+        <key name="Type" type="INT">3</key>
+        <key name="Check interval" type="INT">60</key>
+        <key name="Checked last" type="DWORD">0</key>
+        <key name="Time triggered first" type="STRING" size="32"></key>
+        <key name="Time triggered last" type="STRING" size="32"></key>
+        <key name="Condition" type="STRING" size="256">/Runinfo/Run number &gt; 100</key>
+        <key name="Alarm Class" type="STRING" size="32">Alarm</key>
+        <key name="Alarm Message" type="STRING" size="80">Run number became too large</key>
+      </dir>
+      <dir name="Demo periodic">
+        <key name="Active" type="BOOL">n</key>
+        <key name="Triggered" type="INT">0</key>
+        <key name="Type" type="INT">4</key>
+        <key name="Check interval" type="INT">28800</key>
+        <key name="Checked last" type="DWORD">1149070429</key>
+        <key name="Time triggered first" type="STRING" size="32"></key>
+        <key name="Time triggered last" type="STRING" size="32"></key>
+        <key name="Condition" type="STRING" size="256"></key>
+        <key name="Alarm Class" type="STRING" size="32">Warning</key>
+        <key name="Alarm Message" type="STRING" size="80">Please do your shift checks</key>
+      </dir>
+      <dir name="SIS_FIFO_Overflow">
+        <key name="Active" type="BOOL">n</key>
+        <key name="Triggered" type="INT">0</key>
+        <key name="Type" type="INT">3</key>
+        <key name="Check interval" type="INT">10</key>
+        <key name="Checked last" type="DWORD">0</key>
+        <key name="Time triggered first" type="STRING" size="32"></key>
+        <key name="Time triggered last" type="STRING" size="32"></key>
+        <key name="Condition" type="STRING" size="256">/equipment/sishistory/variables/MCST[0] &gt; 150000</key>
+        <key name="Alarm Class" type="STRING" size="32">Warning</key>
+        <key name="Alarm Message" type="STRING" size="80">SIS FIFO Overflow: LNE rate is too high!</key>
+      </dir>
+      <dir name="fevme">
+        <key name="Active" type="BOOL">y</key>
+        <key name="Triggered" type="INT">0</key>
+        <key name="Type" type="INT">2</key>
+        <key name="Check interval" type="INT">60000</key>
+        <key name="Checked last" type="DWORD">0</key>
+        <key name="Time triggered first" type="STRING" size="32"></key>
+        <key name="Time triggered last" type="STRING" size="32"></key>
+        <key name="Condition" type="STRING" size="256">Program not running</key>
+        <key name="Alarm Class" type="STRING" size="32">Warning</key>
+        <key name="Alarm Message" type="STRING" size="80">Program fevme is not running</key>
+      </dir>
+      <dir name="felabview">
+        <key name="Active" type="BOOL">y</key>
+        <key name="Triggered" type="INT">0</key>
+        <key name="Type" type="INT">2</key>
+        <key name="Check interval" type="INT">60000</key>
+        <key name="Checked last" type="DWORD">0</key>
+        <key name="Time triggered first" type="STRING" size="32"></key>
+        <key name="Time triggered last" type="STRING" size="32"></key>
+        <key name="Condition" type="STRING" size="256">Program not running</key>
+        <key name="Alarm Class" type="STRING" size="32">Warning</key>
+        <key name="Alarm Message" type="STRING" size="80">Program felabview is not running</key>
+      </dir>
+      <dir name="Logger">
+        <key name="Active" type="BOOL">y</key>
+        <key name="Triggered" type="INT">0</key>
+        <key name="Type" type="INT">2</key>
+        <key name="Check interval" type="INT">60000</key>
+        <key name="Checked last" type="DWORD">0</key>
+        <key name="Time triggered first" type="STRING" size="32"></key>
+        <key name="Time triggered last" type="STRING" size="32"></key>
+        <key name="Condition" type="STRING" size="256">Program not running</key>
+        <key name="Alarm Class" type="STRING" size="32">Warning</key>
+        <key name="Alarm Message" type="STRING" size="80">Program Logger is not running</key>
+      </dir>
+      <dir name="fesequencer">
+        <key name="Active" type="BOOL">y</key>
+        <key name="Triggered" type="INT">0</key>
+        <key name="Type" type="INT">2</key>
+        <key name="Check interval" type="INT">60000</key>
+        <key name="Checked last" type="DWORD">0</key>
+        <key name="Time triggered first" type="STRING" size="32"></key>
+        <key name="Time triggered last" type="STRING" size="32"></key>
+        <key name="Condition" type="STRING" size="256">Program not running</key>
+        <key name="Alarm Class" type="STRING" size="32">Warning</key>
+        <key name="Alarm Message" type="STRING" size="80">Program fesequencer is not running</key>
+      </dir>
+      <dir name="Valve Status">
+        <key name="Active" type="BOOL">y</key>
+        <key name="Triggered" type="INT">0</key>
+        <key name="Type" type="INT">3</key>
+        <key name="Check interval" type="INT">60</key>
+        <key name="Checked last" type="DWORD">1164007736</key>
+        <key name="Time triggered first" type="STRING" size="32"></key>
+        <key name="Time triggered last" type="STRING" size="32"></key>
+        <key name="Condition" type="STRING" size="256">/equipment/labview/Variables/ADSV[12] &lt; 3</key>
+        <key name="Alarm Class" type="STRING" size="32">Warning</key>
+        <key name="Alarm Message" type="STRING" size="80">Valve to AD closed</key>
+      </dir>
+    </dir>
+    <dir name="Classes">
+      <dir name="Alarm">
+        <key name="Write system message" type="BOOL">y</key>
+        <key name="Write Elog message" type="BOOL">n</key>
+        <key name="System message interval" type="INT">60000</key>
+        <key name="System message last" type="DWORD">0</key>
+        <key name="Execute command" type="STRING" size="256"></key>
+        <key name="Execute interval" type="INT">0</key>
+        <key name="Execute last" type="DWORD">0</key>
+        <key name="Stop run" type="BOOL">y</key>
+        <key name="Display BGColor" type="STRING" size="32">red</key>
+        <key name="Display FGColor" type="STRING" size="32">black</key>
+      </dir>
+      <dir name="Warning">
+        <key name="Write system message" type="BOOL">y</key>
+        <key name="Write Elog message" type="BOOL">n</key>
+        <key name="System message interval" type="INT">60</key>
+        <key name="System message last" type="DWORD">0</key>
+        <key name="Execute command" type="STRING" size="256"></key>
+        <key name="Execute interval" type="INT">0</key>
+        <key name="Execute last" type="DWORD">0</key>
+        <key name="Stop run" type="BOOL">n</key>
+        <key name="Display BGColor" type="STRING" size="32">yellow</key>
+        <key name="Display FGColor" type="STRING" size="32">black</key>
+      </dir>
+    </dir>
+  </dir>
+  <dir name="History">
+    <dir name="Display">
+      <dir name="Default">
+        <dir name="Trigger rate">
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>System:Events per sec.</value>
+            <value>System:Events per sec.</value>
+          </keyarray>
+          <key name="Time Scale" type="STRING" size="32">1h</key>
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+        </dir>
+        <dir name="ADC">
+          <keyarray name="Factor" type="FLOAT" num_values="7">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="7">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">30m</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="7">
+            <value>ADC:BC1</value>
+            <value>ADC:BC2</value>
+            <value>ADC:BC3</value>
+            <value>ADC:BC4</value>
+            <value>ADC:BC5</value>
+            <value>ADC:HPD1</value>
+            <value>ADC:HPD2</value>
+          </keyarray>
+          <keyarray name="Colour" type="STRING" size="32" num_values="7">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+            <value>#FF00FF</value>
+            <value>#C0C000</value>
+            <value>#808080</value>
+          </keyarray>
+        </dir>
+        <dir name="Scaler">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">200</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>Scaler:Scint 1</value>
+            <value>Scaler:Scint 2</value>
+            <value>Scaler:Scint 3</value>
+            <value>Scaler:Scint 4</value>
+          </keyarray>
+        </dir>
+        <dir name="Rates">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>SisHistory:MCRT[0]</value>
+            <value>SisHistory:MCRT[1]</value>
+            <value>SisHistory:MCRT[16]</value>
+            <value>SisHistory:MCRT[17]</value>
+          </keyarray>
+        </dir>
+        <dir name="AD">
+          <keyarray name="Factor" type="FLOAT" num_values="6">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="6">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">8h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="10">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+            <value></value>
+            <value></value>
+            <value></value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="6">
+            <value>labview:ADE_3.5GeV</value>
+            <value>labview:ADE_2GeV</value>
+            <value>labview:ADE_300MeV</value>
+            <value>labview:ADE_100MeV_ramp</value>
+            <value>labview:ADE_100MeV_end</value>
+            <value>labview:ADE_TFA7049</value>
+          </keyarray>
+        </dir>
+        <dir name="SIS">
+          <keyarray name="Factor" type="FLOAT" num_values="3">
+            <value>0.01</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="3">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">10000</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="3">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="3">
+            <value>SisHistory:SIS_Fifo_used</value>
+            <value>SisHistory:SIS_LNE_count</value>
+            <value>SisHistory:SIS_LNE_frequency</value>
+          </keyarray>
+        </dir>
+        <dir name="Latch">
+          <keyarray name="Factor" type="FLOAT" num_values="3">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="3">
+            <value>0.01</value>
+            <value>0.02</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">10m</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="3">
+            <value>Latch:LAT0[14]</value>
+            <value>Latch:LAT0[15]</value>
+            <value>Latch:LAT0[0]</value>
+          </keyarray>
+        </dir>
+        <dir name="Custom">
+          <keyarray name="Factor" type="FLOAT" num_values="5">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="5">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">y</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="5">
+            <value>labview:THM.1</value>
+            <value>labview:THM.4</value>
+            <value>labview:THM.8</value>
+            <value>labview:THM.9</value>
+            <value>labview:MXG.1.2</value>
+          </keyarray>
+        </dir>
+        <dir name="Temp. IGBT">
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+        </dir>
+        <dir name="test">
+          <keyarray name="Factor" type="FLOAT" num_values="19">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="19">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Colour" type="STRING" size="32" num_values="19">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+            <value>#FF00FF</value>
+            <value>#C0C000</value>
+            <value>#808080</value>
+            <value>#80FF80</value>
+            <value>#FF8080</value>
+            <value>#8080FF</value>
+            <value>#C000C0</value>
+            <value>#008080</value>
+            <value>#800080</value>
+            <value>#808000</value>
+            <value>#808080</value>
+            <value>#808080</value>
+            <value>#808080</value>
+            <value>#808080</value>
+            <value>#808080</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="19">
+            <value>ADC:BC1</value>
+            <value>ADC:BC2</value>
+            <value>ADC:BC3</value>
+            <value>ADC:BC4</value>
+            <value>ADC:BC1</value>
+            <value>ADC:BC1</value>
+            <value>ADC:BC1</value>
+            <value>ADC:BC1</value>
+            <value>ADC:BC1</value>
+            <value>ADC:BC1</value>
+            <value>ADC:adc16</value>
+            <value>ADC:adc17</value>
+            <value>ADC:adc18</value>
+            <value>ADC:adc19</value>
+            <value>ADC:adc11</value>
+            <value>ADC:adc12</value>
+            <value>ADC:adc13</value>
+            <value>ADC:adc14</value>
+            <value>ADC:adc15</value>
+          </keyarray>
+        </dir>
+        <dir name="ch61">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <key name="Variables" type="STRING" size="64">SisHistory:MCRT[27]</key>
+          <key name="Colour" type="STRING" size="32">#0000FF</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+        </dir>
+        <dir name="sis2324">
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">5000</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="2">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>SisHistory:MCRT[22]</value>
+            <value>SisHistory:MCRT[23]</value>
+          </keyarray>
+        </dir>
+      </dir>
+      <dir name="BNL Magnet">
+        <dir name="PS Status">
+          <keyarray name="Factor" type="FLOAT" num_values="8">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="8">
+            <value>0.005</value>
+            <value>0.015</value>
+            <value>0.02</value>
+            <value>0.025</value>
+            <value>0.03</value>
+            <value>0.035</value>
+            <value>0.04</value>
+            <value>0.045</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">30m</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="8">
+            <value>labview:BNL.PS.SOL</value>
+            <value>labview:BNL.IGBT.SOL</value>
+            <value>labview:BNL.PS.USTR</value>
+            <value>labview:BNL.IGBT.USTR</value>
+            <value>labview:BNL.PS.OCT</value>
+            <value>labview:BNL.IGBT.OCT</value>
+            <value>labview:BNL.PS.DSTR</value>
+            <value>labview:BNL.IGBT.DSTR</value>
+          </keyarray>
+        </dir>
+        <dir name="PS Currents">
+          <keyarray name="Factor" type="FLOAT" num_values="8">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="8">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">10m</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="8">
+            <value>labview:BNL.CUR.SOL</value>
+            <value>labview:BNL.CUR.USTR</value>
+            <value>labview:BNL.CUR.OCT</value>
+            <value>labview:BNL.CUR.DSTR</value>
+            <value>labview:BNL.CUR.SHNT.SOL</value>
+            <value>labview:BNL.CUR.SHNT.USTR</value>
+            <value>labview:BNL.CUR.SHNT.OCT</value>
+            <value>labview:BNL.CUR.SHNT.DSTR</value>
+          </keyarray>
+          <keyarray name="Colour" type="STRING" size="32" num_values="8">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+            <value>#FF00FF</value>
+            <value>#C0C000</value>
+            <value>#808080</value>
+            <value>#80FF80</value>
+          </keyarray>
+        </dir>
+        <dir name="PS Voltages">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:BNL.VOLT.MAG.SOL</value>
+            <value>labview:BNL.VOLT.MAG.USTR</value>
+            <value>labview:BNL.VOLT.MAG.OCT</value>
+            <value>labview:BNL.VOLT.MAG.DSTR</value>
+          </keyarray>
+        </dir>
+        <dir name="Solenoid Leads">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">5m</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:BNL.VOLT.VCLP.SOL</value>
+            <value>labview:BNL.VOLT.SCLP.SOL</value>
+            <value>labview:BNL.VOLT.SCLM.SOL</value>
+            <value>labview:BNL.VOLT.VCLM.SOL</value>
+          </keyarray>
+          <keyarray name="Colour" type="STRING" size="32" num_values="4">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+          </keyarray>
+        </dir>
+        <dir name="Upstream mirror">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">10m</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="4">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:BNL.VOLT.VCLP.USTR</value>
+            <value>labview:BNL.VOLT.SCLP.USTR</value>
+            <value>labview:BNL.VOLT.SCLM.USTR</value>
+            <value>labview:BNL.VOLT.VCLM.USTR</value>
+          </keyarray>
+        </dir>
+        <dir name="Octupole">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">10m</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:BNL.VOLT.VCLP.OCT</value>
+            <value>labview:BNL.VOLT.SCLP.OCT</value>
+            <value>labview:BNL.VOLT.SCLM.OCT</value>
+            <value>labview:BNL.VOLT.VCLM.OCT</value>
+          </keyarray>
+          <keyarray name="Colour" type="STRING" size="32" num_values="4">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+          </keyarray>
+        </dir>
+        <dir name="Downstream Mirror">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">10m</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:BNL.VOLT.VCLP.DSTR</value>
+            <value>labview:BNL.VOLT.SCLP.DSTR</value>
+            <value>labview:BNL.VOLT.SCLM.DSTR</value>
+            <value>labview:BNL.VOLT.VCLM.DSTR</value>
+          </keyarray>
+        </dir>
+        <dir name="Solenoid Taps">
+          <keyarray name="Factor" type="FLOAT" num_values="5">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="5">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="5">
+            <value>labview:BNLTAP.SOL.12_13</value>
+            <value>labview:BNLTAP.SOL.13_14</value>
+            <value>labview:BNLTAP.SOL.14_15</value>
+            <value>labview:BNLTAP.SOL.15_16</value>
+            <value>labview:BNLTAP.SOL.16_17</value>
+          </keyarray>
+        </dir>
+        <dir name="Upstream Taps">
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>labview:BNLTAP.USTR.9_10</value>
+            <value>labview:BNLTAP.USTR.10_11</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+        </dir>
+        <dir name="Octupole Taps">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:BNLTAP.OCT.1_2</value>
+            <value>labview:BNLTAP.OCT.2_3</value>
+            <value>labview:BNLTAP.OCT.3_4</value>
+            <value>labview:BNLTAP.OCT.4_5</value>
+          </keyarray>
+        </dir>
+        <dir name="Downstream Taps">
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>labview:BNLTAP.DSTR.6_7</value>
+            <value>labview:BNLTAP.DSTR.7_8</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+        </dir>
+        <dir name="Tap Temps">
+          <keyarray name="Factor" type="FLOAT" num_values="7">
+            <value>74.4</value>
+            <value>69.14</value>
+            <value>64.42</value>
+            <value>175.48</value>
+            <value>153.66</value>
+            <value>127.23</value>
+            <value>128.51</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="7">
+            <value>2.76</value>
+            <value>13.53</value>
+            <value>8.176</value>
+            <value>-51.85</value>
+            <value>-33.59</value>
+            <value>-78.51</value>
+            <value>-41.2</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="7">
+            <value>labview:BNLTAP.SOL.12_13</value>
+            <value>labview:BNLTAP.SOL.13_14</value>
+            <value>labview:BNLTAP.SOL.14_15</value>
+            <value>labview:BNLTAP.OCT.1_2</value>
+            <value>labview:BNLTAP.OCT.2_3</value>
+            <value>labview:BNLTAP.OCT.3_4</value>
+            <value>labview:BNLTAP.OCT.4_5</value>
+          </keyarray>
+        </dir>
+        <dir name="Tap Temp 15mA">
+          <keyarray name="Factor" type="FLOAT" num_values="7">
+            <value>-2480</value>
+            <value>-2323.77</value>
+            <value>-2147.3</value>
+            <value>5849.5</value>
+            <value>5018.8</value>
+            <value>4240.9</value>
+            <value>4283.7</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="7">
+            <value>38.7</value>
+            <value>38.7</value>
+            <value>38.7</value>
+            <value>38.7</value>
+            <value>38.7</value>
+            <value>38.7</value>
+            <value>38.7</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="7">
+            <value>labview:BNLTAP.SOL.12_13</value>
+            <value>labview:BNLTAP.SOL.13_14</value>
+            <value>labview:BNLTAP.SOL.14_15</value>
+            <value>labview:BNLTAP.OCT.1_2</value>
+            <value>labview:BNLTAP.OCT.2_3</value>
+            <value>labview:BNLTAP.OCT.3_4</value>
+            <value>labview:BNLTAP.OCT.4_5</value>
+          </keyarray>
+        </dir>
+        <dir name="Velocity Taps">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>0.125</value>
+            <value>0.041666</value>
+            <value>0.033333</value>
+            <value>0.041666</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:BNL.CUR.SHNT.SOL</value>
+            <value>labview:BNL.CUR.SHNT.USTR</value>
+            <value>labview:BNL.CUR.SHNT.OCT</value>
+            <value>labview:BNL.CUR.SHNT.DSTR</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+        </dir>
+        <dir name="Temperature Copper">
+          <keyarray name="Factor" type="FLOAT" num_values="8">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="8">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="8">
+            <value>labview:TMP.SOL.DiodeOut</value>
+            <value>labview:TMP.SOL.PosBus</value>
+            <value>labview:TMP.USTR.CrossOver</value>
+            <value>labview:TMP.USTR.PosBus</value>
+            <value>labview:TMP.DSTR.CrossOver</value>
+            <value>labview:TMP.DSTR.PosBus</value>
+            <value>labview:TMP.OCT.CrossOver</value>
+            <value>labview:TMP.OCT.PosBus</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+        </dir>
+        <dir name="Temp. IGBT &amp; Diode">
+          <keyarray name="Factor" type="FLOAT" num_values="8">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="8">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="8">
+            <value>labview:TMP.SOL.IGBT</value>
+            <value>labview:TMP.SOL.Diode</value>
+            <value>labview:TMP.USTR.IGBT</value>
+            <value>labview:TMP.USTR.Diode</value>
+            <value>labview:TMP.OCT.IGBT</value>
+            <value>labview:TMP.OCT.Diode</value>
+            <value>labview:TMP.DSTR.IGBT</value>
+            <value>labview:TMP.DSTR.Diode</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+        </dir>
+        <dir name="SCLs">
+          <keyarray name="Factor" type="FLOAT" num_values="9">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1e-04</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="9">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">-0.001</key>
+          <key name="Maximum" type="FLOAT">0.001</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="9">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+            <value>#FF00FF</value>
+            <value>#C0C000</value>
+            <value>#808080</value>
+            <value>#80FF80</value>
+            <value>#FF8080</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="9">
+            <value>labview:BNL.VOLT.SCLP.SOL</value>
+            <value>labview:BNL.VOLT.SCLM.SOL</value>
+            <value>labview:BNL.VOLT.SCLP.USTR</value>
+            <value>labview:BNL.VOLT.SCLM.USTR</value>
+            <value>labview:BNL.VOLT.SCLP.OCT</value>
+            <value>labview:BNL.VOLT.SCLM.OCT</value>
+            <value>labview:BNL.VOLT.SCLP.DSTR</value>
+            <value>labview:BNL.VOLT.SCLM.DSTR</value>
+            <value>labview:LAMI[0]</value>
+          </keyarray>
+        </dir>
+        <dir name="Hall Probes">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">-10</key>
+          <key name="Maximum" type="FLOAT">10</key>
+          <key name="Colour" type="STRING" size="32">#0000FF</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Variables" type="STRING" size="64">labview:LHPR[1]</key>
+        </dir>
+        <dir name="Pbar SCLs">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1e-05</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">20m</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="4">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:BNL.VOLT.SCLP.SOL</value>
+            <value>labview:BNL.VOLT.SCLM.SOL</value>
+            <value>labview:BNL.VOLT.SCLM.USTR</value>
+            <value>labview:CNX.1</value>
+          </keyarray>
+        </dir>
+      </dir>
+      <dir name="Cryogenics-Vacuum">
+        <dir name="He level">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>5</value>
+            <value>1</value>
+            <value>1</value>
+            <value>10</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">3d</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">800</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="4">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:BNL.LHE.LVL</value>
+            <value>labview:BNL.LHE.VOL</value>
+            <value>labview:LHE</value>
+            <value>labview:LAMI[0]</value>
+          </keyarray>
+        </dir>
+        <dir name="Temperature">
+          <keyarray name="Factor" type="FLOAT" num_values="7">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="7">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>215</value>
+            <value>233</value>
+            <value>260</value>
+            <value>245</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">10</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">3</key>
+          <key name="Maximum" type="FLOAT">330</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="7">
+            <value>labview:CNX.0</value>
+            <value>labview:CNX.1</value>
+            <value>labview:CNX.2 (on E24)</value>
+            <value>labview:THM.1</value>
+            <value>labview:THM.4</value>
+            <value>labview:THM.8</value>
+            <value>labview:THM.9</value>
+          </keyarray>
+        </dir>
+        <dir name="LN2 Diode">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">y</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">0.5</key>
+          <key name="Maximum" type="FLOAT">1.1</key>
+          <key name="Variables" type="STRING" size="64">labview:BNLD[0]</key>
+        </dir>
+        <dir name="True vacuum">
+          <keyarray name="Factor" type="FLOAT" num_values="10">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="10">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">10m</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">y</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">1000</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="10">
+            <value>labview:MXG.0.0</value>
+            <value>labview:MXG.0.1</value>
+            <value>labview:MXG.0.2</value>
+            <value>labview:MXG.1.0</value>
+            <value>labview:MXG.0.4</value>
+            <value>labview:MXG.0.5</value>
+            <value>labview:MXG.0.3</value>
+            <value>labview:MXG.1.1</value>
+            <value>labview:DE2.VGP12</value>
+            <value>labview:DE2.VGP45</value>
+          </keyarray>
+          <keyarray name="Colour" type="STRING" size="32" num_values="10">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+            <value>#FF00FF</value>
+            <value>#C0C000</value>
+            <value>#808080</value>
+            <value>#80FF80</value>
+            <value>#FF8080</value>
+            <value>#8080FF</value>
+          </keyarray>
+        </dir>
+        <dir name="Filling">
+          <keyarray name="Factor" type="FLOAT" num_values="3">
+            <value>1</value>
+            <value>1</value>
+            <value>0.1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="3">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">3h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">70</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="3">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="3">
+            <value>labview:CNX.0</value>
+            <value>labview:CNX.1</value>
+            <value>labview:LHE</value>
+          </keyarray>
+        </dir>
+        <dir name="OVC vs T">
+          <keyarray name="Factor" type="FLOAT" num_values="3">
+            <value>1</value>
+            <value>1</value>
+            <value>4000</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="3">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">10</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">y</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">1</key>
+          <key name="Maximum" type="FLOAT">1000</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="3">
+            <value>labview:CNX.0</value>
+            <value>labview:CNX.1</value>
+            <value>labview:MXG.1.0</value>
+          </keyarray>
+        </dir>
+        <dir name="Cernox only">
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">10m</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">4</key>
+          <key name="Maximum" type="FLOAT">300</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="2">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>labview:CNX.0</value>
+            <value>labview:CNX.1</value>
+          </keyarray>
+        </dir>
+        <dir name="4 K OPS">
+          <keyarray name="Factor" type="FLOAT" num_values="6">
+            <value>1</value>
+            <value>1</value>
+            <value>10</value>
+            <value>800</value>
+            <value>0.1</value>
+            <value>3000</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="6">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">10m</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">200</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="6">
+            <value>labview:CNX.0</value>
+            <value>labview:CNX.1</value>
+            <value>labview:LAMI[0]</value>
+            <value>labview:MXG.1.0</value>
+            <value>labview:LHE</value>
+            <value>labview:MXG.1.1</value>
+          </keyarray>
+          <keyarray name="Colour" type="STRING" size="32" num_values="6">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+            <value>#FF00FF</value>
+            <value>#C0C000</value>
+          </keyarray>
+        </dir>
+      </dir>
+      <dir name="Positron">
+        <dir name="Vacuum Main">
+          <keyarray name="Factor" type="FLOAT" num_values="3">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="3">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">y</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="3">
+            <value>labview:LPOS[1]</value>
+            <value>labview:LPOS[3]</value>
+            <value>labview:LPOS[4]</value>
+          </keyarray>
+        </dir>
+        <dir name="Vacuum Back">
+          <keyarray name="Factor" type="FLOAT" num_values="3">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="3">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">y</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="3">
+            <value>labview:LPOS[0]</value>
+            <value>labview:LPOS[2]</value>
+            <value>labview:LPOS[5]</value>
+          </keyarray>
+        </dir>
+        <dir name="SCM">
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">12h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>labview:LPOS[8]</value>
+            <value>labview:LPOS[9]</value>
+          </keyarray>
+        </dir>
+        <dir name="Coldhead Temp">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <key name="Variables" type="STRING" size="64">labview:LPOS[6]</key>
+          <key name="Colour" type="STRING" size="32">#0000FF</key>
+        </dir>
+        <dir name="NaI">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">5h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <key name="Variables" type="STRING" size="64">labview:LPOS[7]</key>
+        </dir>
+        <dir name="CsI1">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">4h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <key name="Variables" type="STRING" size="64">labview:LPOS[10]</key>
+        </dir>
+        <dir name="CsI2">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <key name="Variables" type="STRING" size="64">labview:LPOS[11]</key>
+        </dir>
+        <dir name="Phosphor charge">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">4h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <key name="Variables" type="STRING" size="64">labview:LPOS[12]</key>
+        </dir>
+        <dir name="Transients">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>0.25</value>
+            <value>2</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">8h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:LPOS[10]</value>
+            <value>labview:LPOS[11]</value>
+            <value>labview:LPOS[12]</value>
+            <value>labview:LPOS[13]</value>
+          </keyarray>
+        </dir>
+        <dir name="Magnetic Field">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">8h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <key name="Variables" type="STRING" size="64">labview:LPOS[14]</key>
+        </dir>
+        <dir name="CsI3">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <key name="Variables" type="STRING" size="64">labview:LPOS[13]</key>
+          <key name="Colour" type="STRING" size="32">#0000FF</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+        </dir>
+        <dir name="CsIA">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <key name="Variables" type="STRING" size="64">labview:LPOS[15]</key>
+          <key name="Colour" type="STRING" size="32">#0000FF</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+        </dir>
+      </dir>
+      <dir name="Detectors">
+        <dir name="Scintillators">
+          <keyarray name="Factor" type="FLOAT" num_values="8">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="8">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>1m</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">50</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="8">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+            <value>#FF00FF</value>
+            <value>#C0C000</value>
+            <value>#808080</value>
+            <value>#80FF80</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="8">
+            <value>Scaler:Scint 1</value>
+            <value>Scaler:Scint 2</value>
+            <value>Scaler:Scint 3</value>
+            <value>Scaler:Scint 4</value>
+            <value>Scaler:Scint 1&amp;2</value>
+            <value>Scaler:Scint 3&amp;4</value>
+            <value>Scaler:Scint (1&amp;2)or(3&amp;4)</value>
+            <value>Scaler:Scint (1&amp;2)&amp;(3&amp;4)</value>
+          </keyarray>
+        </dir>
+        <dir name="Faraday Cup">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-5e+08</key>
+          <key name="Maximum" type="FLOAT">5e+08</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="4">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:LFC0[1]</value>
+            <value>labview:LFC1[1]</value>
+            <value>labview:LFC2[1]</value>
+            <value>labview:LFC3[1]</value>
+          </keyarray>
+        </dir>
+        <dir name="scint_coin">
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>100</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">500</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="2">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>Scaler:Scint 1&amp;2</value>
+            <value>Scaler:Scint 3&amp;4</value>
+          </keyarray>
+        </dir>
+        <dir name="APD_singles">
+          <keyarray name="Factor" type="FLOAT" num_values="7">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>10</value>
+            <value>0.1</value>
+            <value>50</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="7">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>10</value>
+            <value>0</value>
+            <value>-1000</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">10m</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">100</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="7">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+            <value>#FF00FF</value>
+            <value>#C0C000</value>
+            <value>#000000</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="7">
+            <value>SisHistory:MCRT[12]</value>
+            <value>SisHistory:MCRT[13]</value>
+            <value>SisHistory:MCRT[14]</value>
+            <value>SisHistory:MCRT[15]</value>
+            <value>SisHistory:MCRT[10]</value>
+            <value>SisHistory:MCRT[3]</value>
+            <value>labview:THM.11</value>
+          </keyarray>
+        </dir>
+        <dir name="Small_CsI">
+          <keyarray name="Factor" type="FLOAT" num_values="3">
+            <value>1</value>
+            <value>0.1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="3">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">y</key>
+          <key name="Minimum" type="FLOAT">0.01</key>
+          <key name="Maximum" type="FLOAT">1000</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="3">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="3">
+            <value>SisHistory:MCRT[11]</value>
+            <value>SisHistory:MCRT[15]</value>
+            <value>SisHistory:MCRT[12]</value>
+          </keyarray>
+        </dir>
+        <dir name="First Kickout">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">-1e+08</key>
+          <key name="Maximum" type="FLOAT">1e+07</key>
+          <key name="Colour" type="STRING" size="32">#0000FF</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Variables" type="STRING" size="64">labview:LFC2[1]</key>
+        </dir>
+        <dir name="APD_Vmon">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">1750</key>
+          <key name="Maximum" type="FLOAT">2000</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="4">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:HVVM[21]</value>
+            <value>labview:HVVM[22]</value>
+            <value>labview:HVVM[23]</value>
+            <value>labview:HVVM[24]</value>
+          </keyarray>
+        </dir>
+        <dir name="APD_Imon">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="4">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:HVIM[21]</value>
+            <value>labview:HVIM[22]</value>
+            <value>labview:HVIM[23]</value>
+            <value>labview:HVIM[24]</value>
+          </keyarray>
+        </dir>
+        <dir name="PMT_Vmon">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="4">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:HVVM[1]</value>
+            <value>labview:HVVM[2]</value>
+            <value>labview:HVVM[3]</value>
+            <value>labview:HVVM[4]</value>
+          </keyarray>
+        </dir>
+        <dir name="PMT_Imon">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="4">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:HVIM[1]</value>
+            <value>labview:HVIM[2]</value>
+            <value>labview:HVIM[3]</value>
+            <value>labview:HVIM[4]</value>
+          </keyarray>
+        </dir>
+        <dir name="HPD_Vmon">
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>labview:HVVM[5]</value>
+            <value>labview:HVVM[6]</value>
+          </keyarray>
+          <keyarray name="Colour" type="STRING" size="32" num_values="2">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+        </dir>
+        <dir name="HPD_Imon">
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>labview:HVIM[5]</value>
+            <value>labview:HVIM[6]</value>
+          </keyarray>
+          <keyarray name="Colour" type="STRING" size="32" num_values="2">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+        </dir>
+        <dir name="Ion Dump">
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">500</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="2">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>Scaler:Scaler Count 9</value>
+            <value>Scaler:Scaler Count 10</value>
+          </keyarray>
+        </dir>
+      </dir>
+      <dir name="Electrodes">
+        <dir name="Mixing">
+          <keyarray name="Factor" type="FLOAT" num_values="10">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="10">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="10">
+            <value>labview:E12</value>
+            <value>labview:E13</value>
+            <value>labview:E14a</value>
+            <value>labview:E15</value>
+            <value>labview:E16</value>
+            <value>labview:E17a</value>
+            <value>labview:E18</value>
+            <value>labview:E19</value>
+            <value>labview:E20</value>
+            <value>labview:E21</value>
+          </keyarray>
+          <keyarray name="Colour" type="STRING" size="32" num_values="10">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+            <value>#FF00FF</value>
+            <value>#C0C000</value>
+            <value>#808080</value>
+            <value>#80FF80</value>
+            <value>#FF8080</value>
+            <value>#8080FF</value>
+          </keyarray>
+        </dir>
+        <dir name="E17">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">2m</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:E17a</value>
+            <value>labview:E17b</value>
+            <value>labview:E17c</value>
+            <value>labview:E17d</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+        </dir>
+        <dir name="Catching">
+          <keyarray name="Factor" type="FLOAT" num_values="9">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="9">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="9">
+            <value>labview:E01 (HVA)</value>
+            <value>labview:E02</value>
+            <value>labview:E03</value>
+            <value>labview:E04a</value>
+            <value>labview:E05</value>
+            <value>labview:E06</value>
+            <value>labview:E07</value>
+            <value>labview:E08</value>
+            <value>labview:E09 (HVB)</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+        </dir>
+        <dir name="E5-E6">
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>labview:E05</value>
+            <value>labview:E06</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+        </dir>
+        <dir name="ShortingTest">
+          <keyarray name="Factor" type="FLOAT" num_values="3">
+            <value>0.2</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="3">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">20m</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="3">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="3">
+            <value>labview:E21</value>
+            <value>labview:CNX.0</value>
+            <value>labview:CNX.1</value>
+          </keyarray>
+        </dir>
+        <dir name="HV">
+          <keyarray name="Factor" type="FLOAT" num_values="3">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="3">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">10m</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="3">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="3">
+            <value>labview:LHVE[1]</value>
+            <value>labview:LHVE[2]</value>
+            <value>labview:LHVE[3]</value>
+          </keyarray>
+        </dir>
+        <dir name="EKicks">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:LEKI[1]</value>
+            <value>labview:LEKI[2]</value>
+            <value>labview:LEKI[3]</value>
+            <value>labview:LEKI[4]</value>
+          </keyarray>
+          <keyarray name="Colour" type="STRING" size="32" num_values="4">
+            <value>#0000FF</value>
+            <value>#00C000</value>
+            <value>#FF0000</value>
+            <value>#00C0C0</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+        </dir>
+      </dir>
+      <dir name="Beam line settings">
+        <dir name="Quadrupoles">
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>labview:DE2.QN20</value>
+            <value>labview:DE2.QN30</value>
+          </keyarray>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+        </dir>
+        <dir name="Dipoles">
+          <keyarray name="Factor" type="FLOAT" num_values="5">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="5">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="5">
+            <value>labview:DE2.DHZ35</value>
+            <value>labview:DE2.DVT35</value>
+            <value>labview:DE2.DHZ15</value>
+            <value>labview:DE2.DVT15</value>
+            <value>ADC:Spill Number[0]</value>
+          </keyarray>
+        </dir>
+        <dir name="Gauges">
+          <keyarray name="Factor" type="FLOAT" num_values="4">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+            <value>1e-08</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="4">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">8h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">y</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="4">
+            <value>labview:DE2.VGP45</value>
+            <value>labview:DE2.VGP12</value>
+            <value>labview:DE3.VGP17</value>
+            <value>labview:DE2.VVS42</value>
+          </keyarray>
+        </dir>
+        <dir name="Septum">
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <key name="Variables" type="STRING" size="64">labview:DR.SME5307S</key>
+        </dir>
+      </dir>
+      <dir name="Vac comp">
+        <dir name="Vac comp">
+          <keyarray name="Factor" type="FLOAT" num_values="3">
+            <value>1</value>
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="3">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">y</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">-inf</key>
+          <key name="Maximum" type="FLOAT">inf</key>
+          <keyarray name="Variables" type="STRING" size="64" num_values="3">
+            <value>labview:MXG.0.3</value>
+            <value>labview:MXG.0.4</value>
+            <value>labview:MXG.0.5</value>
+          </keyarray>
+        </dir>
+      </dir>
+      <dir name="VCL T and flow">
+        <dir name="VCL, Temps and helium flow">
+          <keyarray name="Factor" type="FLOAT" num_values="12">
+            <value>-1150000</value>
+            <value>1</value>
+            <value>1500000</value>
+            <value>1</value>
+            <value>1000000</value>
+            <value>1</value>
+            <value>-1200000</value>
+            <value>1</value>
+            <value>1</value>
+            <value>10</value>
+            <value>100</value>
+            <value>100</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="12">
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">n</key>
+          <key name="Show run markers" type="BOOL">n</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">1000</key>
+          <keyarray name="Colour" type="STRING" size="32" num_values="12">
+            <value>#FFCC00</value>
+            <value>#FF6600</value>
+            <value>#33FF44</value>
+            <value>#339900</value>
+            <value>#FF00FF</value>
+            <value>#9900FF</value>
+            <value>#996633</value>
+            <value>#993333</value>
+            <value>#FF0000</value>
+            <value>#8080FF</value>
+            <value>#0000FF</value>
+            <value>#00C000</value>
+          </keyarray>
+          <keyarray name="Variables" type="STRING" size="64" num_values="12">
+            <value>labview:BNL.VOLT.SCLM.USTR</value>
+            <value>labview:BNL.CUR.SHNT.USTR</value>
+            <value>labview:BNL.VOLT.SCLM.OCT</value>
+            <value>labview:BNL.CUR.SHNT.OCT</value>
+            <value>labview:BNL.VOLT.SCLP.SOL</value>
+            <value>labview:BNL.CUR.SHNT.SOL</value>
+            <value>labview:BNL.VOLT.SCLP.DSTR</value>
+            <value>labview:BNL.CUR.SHNT.DSTR</value>
+            <value>labview:LHE</value>
+            <value>labview:LAMI[0]</value>
+            <value>labview:CNX.0</value>
+            <value>labview:CNX.1</value>
+          </keyarray>
+        </dir>
+      </dir>
+    </dir>
+    <dir name="Links">
+      <dir name="System">
+        <key name="Events per sec." type="DOUBLE">0.998004</key>
+        <key name="kBytes per sec." type="DOUBLE">124.827</key>
+      </dir>
+    </dir>
+    <key name="URL" type="STRING" size="32">http://alphacpc05.cern.ch:8088</key>
+  </dir>
+  <dir name="equipment">
+    <dir name="sequencer">
+      <dir name="Settings">
+        <key name="tcp_port" type="DWORD">12022</key>
+      </dir>
+      <dir name="Common">
+        <key name="Event ID" type="WORD">8</key>
+        <key name="Trigger mask" type="WORD">256</key>
+        <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+        <key name="Type" type="INT">2</key>
+        <key name="Source" type="INT">16777215</key>
+        <key name="Format" type="STRING" size="8">MIDAS</key>
+        <key name="Enabled" type="BOOL">y</key>
+        <key name="Read on" type="INT">255</key>
+        <key name="Period" type="INT">100</key>
+        <key name="Event limit" type="DOUBLE">0</key>
+        <key name="Num subevents" type="DWORD">0</key>
+        <key name="Log history" type="INT">0</key>
+        <key name="Frontend host" type="STRING" size="32">alphavme01.cern.ch</key>
+        <key name="Frontend name" type="STRING" size="32">fesequencer</key>
+        <key name="Frontend file name" type="STRING" size="256">fesequencer.cxx</key>
+      </dir>
+      <dir name="Variables"/>
+      <dir name="Statistics">
+        <key name="Events sent" type="DOUBLE">19</key>
+        <key name="Events per sec." type="DOUBLE">0</key>
+        <key name="kBytes per sec." type="DOUBLE">0</key>
+      </dir>
+    </dir>
+    <dir name="labview">
+      <dir name="Settings">
+        <key name="tcp_port" type="DWORD">12021</key>
+        <keyarray name="Names ADE0" type="STRING" size="32" num_values="8">
+          <value>ADE_unixtime</value>
+          <value>ADE_time</value>
+          <value>ADE_3.5GeV</value>
+          <value>ADE_2GeV</value>
+          <value>ADE_300MeV</value>
+          <value>ADE_100MeV_ramp</value>
+          <value>ADE_100MeV_end</value>
+          <value>ADE_TFA7049</value>
+        </keyarray>
+        <keyarray name="NAMES LVAC" type="STRING" size="32" num_values="46">
+          <value>LVAC_Timestamp</value>
+          <value>MXG.0.0</value>
+          <value>MXG.0.1</value>
+          <value>MXG.0.2</value>
+          <value>MXG.0.3</value>
+          <value>MXG.0.4</value>
+          <value>MXG.0.5</value>
+          <value>MXG.1.0</value>
+          <value>MXG.1.1</value>
+          <value>MXG.1.2</value>
+          <value>MXG.1.3</value>
+          <value>MXG.1.4</value>
+          <value>MXG.1.5</value>
+          <value>MXG.1.6</value>
+          <value>MXG.1.7</value>
+          <value>MXG.1.8</value>
+          <value>MXG.1.9</value>
+          <value>MXG.2.0</value>
+          <value>MXG.2.5</value>
+          <value>THM.0</value>
+          <value>THM.1</value>
+          <value>THM.2</value>
+          <value>THM.3</value>
+          <value>THM.4</value>
+          <value>THM.5</value>
+          <value>THM.6</value>
+          <value>THM.7</value>
+          <value>THM.8</value>
+          <value>THM.9</value>
+          <value>THM.10</value>
+          <value>THM.11</value>
+          <value>THM.12</value>
+          <value>THM.13</value>
+          <value>THM.14</value>
+          <value>THM.15</value>
+          <value>CNX.0</value>
+          <value>CNX.1</value>
+          <value>CNX.2 (on E24)</value>
+          <value>CNX.3</value>
+          <value>CNX.4</value>
+          <value>CNX.5</value>
+          <value>CNX.6</value>
+          <value>CNX.7</value>
+          <value>LHE</value>
+          <value>VIO</value>
+          <value>LVAC_Timestamp2</value>
+        </keyarray>
+        <keyarray name="NAMES BNLM" type="STRING" size="32" num_values="37">
+          <value>BNL.PS.SOL</value>
+          <value>BNL.IGBT.SOL</value>
+          <value>BNL.CUR.SOL</value>
+          <value>BNL.VOLT.MAG.SOL</value>
+          <value>BNL.VOLT.VCLP.SOL</value>
+          <value>BNL.VOLT.SCLP.SOL</value>
+          <value>BNL.VOLT.SCLM.SOL</value>
+          <value>BNL.VOLT.VCLM.SOL</value>
+          <value>BNL.CUR.SHNT.SOL</value>
+          <value>BNL.PS.USTR</value>
+          <value>BNL.IGBT.USTR</value>
+          <value>BNL.CUR.USTR</value>
+          <value>BNL.VOLT.MAG.USTR</value>
+          <value>BNL.VOLT.VCLP.USTR</value>
+          <value>BNL.VOLT.SCLP.USTR</value>
+          <value>BNL.VOLT.SCLM.USTR</value>
+          <value>BNL.VOLT.VCLM.USTR</value>
+          <value>BNL.CUR.SHNT.USTR</value>
+          <value>BNL.PS.OCT</value>
+          <value>BNL.IGBT.OCT</value>
+          <value>BNL.CUR.OCT</value>
+          <value>BNL.VOLT.MAG.OCT</value>
+          <value>BNL.VOLT.VCLP.OCT</value>
+          <value>BNL.VOLT.SCLP.OCT</value>
+          <value>BNL.VOLT.SCLM.OCT</value>
+          <value>BNL.VOLT.VCLM.OCT</value>
+          <value>BNL.CUR.SHNT.OCT</value>
+          <value>BNL.PS.DSTR</value>
+          <value>BNL.IGBT.DSTR</value>
+          <value>BNL.CUR.DSTR</value>
+          <value>BNL.VOLT.MAG.DSTR</value>
+          <value>BNL.VOLT.VCLP.DSTR</value>
+          <value>BNL.VOLT.SCLP.DSTR</value>
+          <value>BNL.VOLT.SCLM.DSTR</value>
+          <value>BNL.VOLT.VCLM.DSTR</value>
+          <value>BNL.CUR.SHNT.DSTR</value>
+          <value>BNLM_Timestamp</value>
+        </keyarray>
+        <keyarray name="Names BNLE" type="STRING" size="32" num_values="7">
+          <value>BNL.LHE.LVL</value>
+          <value>BNL.LHE.LVL.STA</value>
+          <value>BNL.LHE.VOL</value>
+          <value>BNL.LHE.VOL.STA</value>
+          <value>BNL.T</value>
+          <value>BNL.T.STA</value>
+          <value>BNLE_Timestamp</value>
+        </keyarray>
+        <keyarray name="NAMES LBKF" type="STRING" size="32" num_values="49">
+          <value>ElectrodeTimestamp</value>
+          <value>E01 (HVA)</value>
+          <value>E02</value>
+          <value>E03</value>
+          <value>E04a</value>
+          <value>E04b</value>
+          <value>E04c</value>
+          <value>E04d</value>
+          <value>E04e</value>
+          <value>E04f</value>
+          <value>E05</value>
+          <value>E06</value>
+          <value>E07</value>
+          <value>E08</value>
+          <value>E09 (HVB)</value>
+          <value>E10</value>
+          <value>E11</value>
+          <value>E12</value>
+          <value>E13</value>
+          <value>E14a</value>
+          <value>E14b</value>
+          <value>E14c</value>
+          <value>E14d</value>
+          <value>E15</value>
+          <value>E16</value>
+          <value>E17a</value>
+          <value>E17b</value>
+          <value>E17c</value>
+          <value>E17d</value>
+          <value>E18</value>
+          <value>E19</value>
+          <value>E20</value>
+          <value>E21</value>
+          <value>E22</value>
+          <value>E23</value>
+          <value>E24</value>
+          <value>E25</value>
+          <value>E26</value>
+          <value>E27</value>
+          <value>E28</value>
+          <value>E29</value>
+          <value>E30</value>
+          <value>E31</value>
+          <value>E32 (HVC)</value>
+          <value>E33</value>
+          <value>E34</value>
+          <value>E35</value>
+          <value>E36</value>
+          <value>LBKF_Timestamp</value>
+        </keyarray>
+        <keyarray name="Names LTMP" type="STRING" size="32" num_values="17">
+          <value>TMP.SOL.IGBT</value>
+          <value>TMP.SOL.Diode</value>
+          <value>TMP.SOL.DiodeOut</value>
+          <value>TMP.SOL.PosBus</value>
+          <value>TMP.USTR.IGBT</value>
+          <value>TMP.USTR.Diode</value>
+          <value>TMP.USTR.CrossOver</value>
+          <value>TMP.USTR.PosBus</value>
+          <value>TMP.OCT.IGBT</value>
+          <value>TMP.OCT.Diode</value>
+          <value>TMP.OCT.CrossOver</value>
+          <value>TMP.OCT.PosBus</value>
+          <value>TMP.DSTR.IGBT</value>
+          <value>TMP.DSTR.Diode</value>
+          <value>TMP.DSTR.CrossOver</value>
+          <value>TMP.DSTR.PosBus</value>
+          <value>LTMP_Timestamp</value>
+        </keyarray>
+        <keyarray name="NAMES ADSV" type="STRING" size="32" num_values="13">
+          <value>AD Timestamp</value>
+          <value>DR.SME5307S</value>
+          <value>DE2.VGP45</value>
+          <value>DE2.VGP12</value>
+          <value>DE3.VGP17</value>
+          <value>DE2.BHZ10</value>
+          <value>DE2.DHZ15</value>
+          <value>DE2.DVT15</value>
+          <value>DE2.QN20</value>
+          <value>DE2.QN30</value>
+          <value>DE2.DHZ35</value>
+          <value>DE2.DVT35</value>
+          <value>DE2.VVS42</value>
+        </keyarray>
+        <keyarray name="NAMES BNLT" type="STRING" size="32" num_values="14">
+          <value>BNLTAP.SOL.12_13</value>
+          <value>BNLTAP.SOL.13_14</value>
+          <value>BNLTAP.SOL.14_15</value>
+          <value>BNLTAP.SOL.15_16</value>
+          <value>BNLTAP.SOL.16_17</value>
+          <value>BNLTAP.USTR.9_10</value>
+          <value>BNLTAP.USTR.10_11</value>
+          <value>BNLTAP.OCT.1_2</value>
+          <value>BNLTAP.OCT.2_3</value>
+          <value>BNLTAP.OCT.3_4</value>
+          <value>BNLTAP.OCT.4_5</value>
+          <value>BNLTAP.DSTR.6_7</value>
+          <value>BNLTAP.DSTR.7_8</value>
+          <value>BNLTAP Timestamp</value>
+        </keyarray>
+      </dir>
+      <dir name="Common">
+        <key name="Event ID" type="WORD">6</key>
+        <key name="Trigger mask" type="WORD">65535</key>
+        <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+        <key name="Type" type="INT">1</key>
+        <key name="Source" type="INT">16777215</key>
+        <key name="Format" type="STRING" size="8">MIDAS</key>
+        <key name="Enabled" type="BOOL">y</key>
+        <key name="Read on" type="INT">511</key>
+        <key name="Period" type="INT">100</key>
+        <key name="Event limit" type="DOUBLE">0</key>
+        <key name="Num subevents" type="DWORD">0</key>
+        <key name="Log history" type="INT">1</key>
+        <key name="Frontend host" type="STRING" size="32">alphavme01.cern.ch</key>
+        <key name="Frontend name" type="STRING" size="32">felabview</key>
+        <key name="Frontend file name" type="STRING" size="256">felabview.cxx</key>
+      </dir>
+      <dir name="Variables">
+        <keyarray name="LTMP" type="DOUBLE" num_values="17">
+          <value>26.8</value>
+          <value>35.1</value>
+          <value>40.5</value>
+          <value>30.6</value>
+          <value>36</value>
+          <value>33.8</value>
+          <value>44.1</value>
+          <value>38.9</value>
+          <value>23.8</value>
+          <value>24.4</value>
+          <value>27.1</value>
+          <value>25</value>
+          <value>24.6</value>
+          <value>24.5</value>
+          <value>26.2</value>
+          <value>26</value>
+          <value>3246852557.411</value>
+        </keyarray>
+        <keyarray name="LOXF" type="DOUBLE" num_values="7">
+          <value>0</value>
+          <value>83.7</value>
+          <value>0</value>
+          <value>0</value>
+          <value>60.6</value>
+          <value>0</value>
+          <value>3246852557.974</value>
+        </keyarray>
+        <keyarray name="LVAC" type="DOUBLE" num_values="46">
+          <value>3246852551</value>
+          <value>1.229e-07</value>
+          <value>0.02</value>
+          <value>0.02</value>
+          <value>1.939e-10</value>
+          <value>1.577e-10</value>
+          <value>1.416e-08</value>
+          <value>0.0164</value>
+          <value>0.02</value>
+          <value>0.03208</value>
+          <value>0.02</value>
+          <value>0.02</value>
+          <value>0.02</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>850</value>
+          <value>-193.9</value>
+          <value>850</value>
+          <value>850</value>
+          <value>-3276.7</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>8.4</value>
+          <value>-141.6</value>
+          <value>850</value>
+          <value>19</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>4.492295</value>
+          <value>4.483741</value>
+          <value>1.73233</value>
+          <value>nan</value>
+          <value>1193.018</value>
+          <value>nan</value>
+          <value>nan</value>
+          <value>nan</value>
+          <value>118</value>
+          <value>0</value>
+          <value>3246852551.802</value>
+        </keyarray>
+        <keyarray name="LPOS" type="DOUBLE" num_values="21">
+          <value>0.01524</value>
+          <value>3.265e-08</value>
+          <value>3.039</value>
+          <value>4.932e-06</value>
+          <value>8.697e-07</value>
+          <value>160.1</value>
+          <value>7.217</value>
+          <value>51</value>
+          <value>270</value>
+          <value>258.7333</value>
+          <value>15.12451</value>
+          <value>7.409668</value>
+          <value>0</value>
+          <value>827.6245</value>
+          <value>90</value>
+          <value>1301.88</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>3246852559.467</value>
+        </keyarray>
+        <keyarray name="LBKF" type="DOUBLE" num_values="49">
+          <value>3246852560.052</value>
+          <value>-0.3769646</value>
+          <value>0</value>
+          <value>0.1884823</value>
+          <value>0</value>
+          <value>0.3769646</value>
+          <value>0.1884823</value>
+          <value>0</value>
+          <value>0.3769646</value>
+          <value>-0.3769646</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0.1884823</value>
+          <value>0</value>
+          <value>0.1884823</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0.1884823</value>
+          <value>-0.3769646</value>
+          <value>-0.3769646</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0.1884823</value>
+          <value>0.1884823</value>
+          <value>0.1884823</value>
+          <value>0.1884823</value>
+          <value>0.1884823</value>
+          <value>0</value>
+          <value>0.1884823</value>
+          <value>0</value>
+          <value>0.1884823</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0.1884823</value>
+          <value>0.1884823</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0.1884823</value>
+          <value>0</value>
+          <value>3246852560.052</value>
+        </keyarray>
+        <keyarray name="ADE0" type="DOUBLE" num_values="8">
+          <value>1164007711</value>
+          <value>8.449999999999999</value>
+          <value>3.05</value>
+          <value>3.03</value>
+          <value>2.65</value>
+          <value>2.67</value>
+          <value>2.45</value>
+          <value>2.3</value>
+        </keyarray>
+        <key name="BNLD" type="DOUBLE">1.00043</key>
+        <key name="LHE" type="INT">0</key>
+        <keyarray name="LAVM" type="DOUBLE" num_values="18">
+          <value>3231830000</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>850</value>
+          <value>0.02309</value>
+        </keyarray>
+        <keyarray name="BNLE" type="DOUBLE" num_values="7">
+          <value>59.69953</value>
+          <value>0</value>
+          <value>275.5578</value>
+          <value>0</value>
+          <value>nan</value>
+          <value>0</value>
+          <value>3246852560.13</value>
+        </keyarray>
+        <keyarray name="LFIL" type="DOUBLE" num_values="42">
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="LEGN" type="DOUBLE" num_values="42">
+          <value>3240280000</value>
+          <value>1</value>
+          <value>1</value>
+          <value>0.28</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>2.5</value>
+          <value>0</value>
+          <value>7</value>
+          <value>0.0454</value>
+          <value>0.0033</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0.3</value>
+          <value>0.4</value>
+          <value>2.5</value>
+          <value>3</value>
+          <value>0</value>
+          <value>1000</value>
+          <value>0.2</value>
+          <value>20</value>
+          <value>0.5</value>
+          <value>2000</value>
+          <value>5</value>
+          <value>5</value>
+          <value>20</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>1</value>
+          <value>0.000651536</value>
+          <value>0.000716434</value>
+          <value>0.994129</value>
+          <value>0.000155498</value>
+          <value>0.00730438</value>
+          <value>0</value>
+          <value>0</value>
+          <value>1</value>
+        </keyarray>
+        <keyarray name="BNLM" type="DOUBLE" num_values="37">
+          <value>1</value>
+          <value>0</value>
+          <value>241.0542</value>
+          <value>4.136467</value>
+          <value>0.03825186</value>
+          <value>0.0002243835</value>
+          <value>0.0002603764</value>
+          <value>0.03649782</value>
+          <value>231.6972</value>
+          <value>1</value>
+          <value>0</value>
+          <value>521.2643</value>
+          <value>2.907706</value>
+          <value>-0.03461041</value>
+          <value>-0.0008498572</value>
+          <value>-0.0003442114</value>
+          <value>-0.03296543</value>
+          <value>507.6007</value>
+          <value>1</value>
+          <value>0</value>
+          <value>0.04337698</value>
+          <value>0.001627654</value>
+          <value>1.866569e-05</value>
+          <value>-4.514242e-06</value>
+          <value>-3.848011e-06</value>
+          <value>-2.995015e-05</value>
+          <value>-0.05220688</value>
+          <value>1</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0.006510615</value>
+          <value>2.752606e-05</value>
+          <value>-0.0005738406</value>
+          <value>1.786117e-05</value>
+          <value>-3.043413e-05</value>
+          <value>0.1498885</value>
+          <value>3246852557.411</value>
+        </keyarray>
+        <keyarray name="ADSV" type="DOUBLE" num_values="13">
+          <value>1164007661</value>
+          <value>664.083</value>
+          <value>8e-08</value>
+          <value>2.4e-08</value>
+          <value>7.699999999999999e-09</value>
+          <value>168.462</value>
+          <value>3.8349</value>
+          <value>0.0903335</value>
+          <value>-142.476</value>
+          <value>143.986</value>
+          <value>-2.02884</value>
+          <value>-2.03128</value>
+          <value>3</value>
+        </keyarray>
+        <keyarray name="BNLT" type="DOUBLE" num_values="14">
+          <value>0.004481271</value>
+          <value>0.005294253</value>
+          <value>0.005684018</value>
+          <value>0.006708698</value>
+          <value>0.0008872801</value>
+          <value>-0.0009115297</value>
+          <value>-0.0009948104</value>
+          <value>6.004883e-05</value>
+          <value>5.615473e-05</value>
+          <value>3.252461e-05</value>
+          <value>4.084382e-05</value>
+          <value>-0.0009966689999999999</value>
+          <value>-0.00214773</value>
+          <value>3246852557.411</value>
+        </keyarray>
+        <key name="LAMI" type="DOUBLE">0</key>
+        <keyarray name="LFC" type="DOUBLE" num_values="4">
+          <value>3</value>
+          <value>3244393000</value>
+          <value>-1537513</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="LFC0" type="DOUBLE" num_values="3">
+          <value>3246839000</value>
+          <value>nan</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="LFC1" type="DOUBLE" num_values="3">
+          <value>3246852000</value>
+          <value>-16391940</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="LFC2" type="DOUBLE" num_values="3">
+          <value>3246852000</value>
+          <value>-100809500</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="LFC3" type="DOUBLE" num_values="3">
+          <value>3246852000</value>
+          <value>nan</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="LFC4" type="DOUBLE" num_values="3">
+          <value>3246853000</value>
+          <value>17259840</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="LFC5" type="DOUBLE" num_values="3">
+          <value>3245924000</value>
+          <value>-153107600</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="LFC6" type="DOUBLE" num_values="3">
+          <value>3244750000</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="LFC7" type="DOUBLE" num_values="3">
+          <value>3245393000</value>
+          <value>401861.1</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="LHPR" type="DOUBLE" num_values="5">
+          <value>3246853000</value>
+          <value>-1.067354</value>
+          <value>0.009765922999999999</value>
+          <value>0.01464888</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="HVVD" type="DOUBLE" num_values="41">
+          <value>164007670</value>
+          <value>1820</value>
+          <value>1750</value>
+          <value>1640</value>
+          <value>1580</value>
+          <value>5000</value>
+          <value>5000</value>
+          <value>1750</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>1500</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>1761</value>
+          <value>1778</value>
+          <value>1772</value>
+          <value>1769</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="HVVM" type="DOUBLE" num_values="41">
+          <value>1164007670</value>
+          <value>1823</value>
+          <value>1753</value>
+          <value>1643</value>
+          <value>1583</value>
+          <value>5000</value>
+          <value>4998</value>
+          <value>2</value>
+          <value>2</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0.5</value>
+          <value>0.5</value>
+          <value>0.5</value>
+          <value>0.5</value>
+          <value>0</value>
+          <value>1.5</value>
+          <value>0.5</value>
+          <value>0.5</value>
+          <value>1754</value>
+          <value>1769</value>
+          <value>1765.5</value>
+          <value>1764</value>
+          <value>0.5</value>
+          <value>0.5</value>
+          <value>0</value>
+          <value>0.5</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="HVIM" type="DOUBLE" num_values="41">
+          <value>1164007670</value>
+          <value>1280</value>
+          <value>1238</value>
+          <value>1153</value>
+          <value>1118</value>
+          <value>0</value>
+          <value>0</value>
+          <value>2</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0.7</value>
+          <value>0.6</value>
+          <value>0.6</value>
+          <value>0.9</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="LHVE" type="DOUBLE" num_values="4">
+          <value>3246852556.349</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="LEKI" type="DOUBLE" num_values="5">
+          <value>3246852531.334</value>
+          <value>-200</value>
+          <value>0.1</value>
+          <value>0.1</value>
+          <value>0</value>
+        </keyarray>
+      </dir>
+      <dir name="Statistics">
+        <key name="Events sent" type="DOUBLE">1554</key>
+        <key name="Events per sec." type="DOUBLE">0</key>
+        <key name="kBytes per sec." type="DOUBLE">0.6211395312005068</key>
+      </dir>
+    </dir>
+    <dir name="SisHistory">
+      <dir name="Settings">
+        <key name="SIS_mode" type="DWORD">0</key>
+        <key name="ClockChannel" type="INT">16</key>
+        <key name="ClockFrequency" type="DOUBLE">50000000</key>
+        <keyarray name="Names MCST" type="STRING" size="32" num_values="10">
+          <value>SIS_Fifo_used</value>
+          <value>SIS_LNE_count</value>
+          <value>SIS_LNE_frequency</value>
+          <value>mcst3</value>
+          <value>mcst4</value>
+          <value>mcst5</value>
+          <value>mcst6</value>
+          <value>mcst7</value>
+          <value>mcst8</value>
+          <value>mcst9</value>
+        </keyarray>
+        <key name="ADChannel" type="INT">1</key>
+        <key name="ADTalk" type="STRING" size="32">Fweens</key>
+        <key name="SIS_LNE_prescale" type="DWORD">10000</key>
+      </dir>
+      <dir name="Common">
+        <key name="Event ID" type="WORD">3</key>
+        <key name="Trigger mask" type="WORD">8</key>
+        <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+        <key name="Type" type="INT">1</key>
+        <key name="Source" type="INT">0</key>
+        <key name="Format" type="STRING" size="8">MIDAS</key>
+        <key name="Enabled" type="BOOL">y</key>
+        <key name="Read on" type="INT">257</key>
+        <key name="Period" type="INT">1000</key>
+        <key name="Event limit" type="DOUBLE">0</key>
+        <key name="Num subevents" type="DWORD">0</key>
+        <key name="Log history" type="INT">1</key>
+        <key name="Frontend host" type="STRING" size="32">alphavme01.cern.ch</key>
+        <key name="Frontend name" type="STRING" size="32">fevme</key>
+        <key name="Frontend file name" type="STRING" size="256">fevme.cxx</key>
+      </dir>
+      <dir name="Variables">
+        <keyarray name="MCRT" type="FLOAT" num_values="32">
+          <value>1.000005e+07</value>
+          <value>0</value>
+          <value>51.74149</value>
+          <value>1741.398</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>29.68774</value>
+          <value>22.05375</value>
+          <value>2.544664</value>
+          <value>3.392885</value>
+          <value>113.6616</value>
+          <value>303.6632</value>
+          <value>543.7098</value>
+          <value>782.9081</value>
+          <value>5e+07</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>1792.291</value>
+          <value>1713.407</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="MCMX" type="DWORD" num_values="32">
+          <value>164166372</value>
+          <value>1</value>
+          <value>375</value>
+          <value>78</value>
+          <value>4</value>
+          <value>12</value>
+          <value>1</value>
+          <value>1</value>
+          <value>307</value>
+          <value>228</value>
+          <value>206</value>
+          <value>819</value>
+          <value>500</value>
+          <value>673</value>
+          <value>420</value>
+          <value>659</value>
+          <value>820827642</value>
+          <value>1</value>
+          <value>1</value>
+          <value>1</value>
+          <value>120</value>
+          <value>1</value>
+          <value>375</value>
+          <value>1</value>
+          <value>7</value>
+          <value>1</value>
+          <value>0</value>
+          <value>0</value>
+          <value>1</value>
+          <value>6</value>
+          <value>6</value>
+          <value>1</value>
+        </keyarray>
+        <keyarray name="MCSA" type="DWORD" num_values="32">
+          <value>5094</value>
+          <value>0</value>
+          <value>0</value>
+          <value>1</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>1</value>
+          <value>25472</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>1</value>
+          <value>1</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="MCST" type="FLOAT" num_values="10">
+          <value>1760</value>
+          <value>2020</value>
+          <value>1713.407</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+      </dir>
+      <dir name="Statistics">
+        <key name="Events sent" type="DOUBLE">464</key>
+        <key name="Events per sec." type="DOUBLE">0</key>
+        <key name="kBytes per sec." type="DOUBLE">0</key>
+      </dir>
+    </dir>
+    <dir name="SIS">
+      <dir name="Common">
+        <key name="Event ID" type="WORD">1</key>
+        <key name="Trigger mask" type="WORD">65535</key>
+        <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+        <key name="Type" type="INT">2</key>
+        <key name="Source" type="INT">16777215</key>
+        <key name="Format" type="STRING" size="8">MIDAS</key>
+        <key name="Enabled" type="BOOL">y</key>
+        <key name="Read on" type="INT">1</key>
+        <key name="Period" type="INT">1</key>
+        <key name="Event limit" type="DOUBLE">0</key>
+        <key name="Num subevents" type="DWORD">0</key>
+        <key name="Log history" type="INT">0</key>
+        <key name="Frontend host" type="STRING" size="32">alphavme01.cern.ch</key>
+        <key name="Frontend name" type="STRING" size="32">fevme</key>
+        <key name="Frontend file name" type="STRING" size="256">fevme.cxx</key>
+      </dir>
+      <dir name="Variables"/>
+      <dir name="Statistics">
+        <key name="Events sent" type="DOUBLE">844</key>
+        <key name="Events per sec." type="DOUBLE">0</key>
+        <key name="kBytes per sec." type="DOUBLE">0</key>
+      </dir>
+    </dir>
+    <dir name="ADC">
+      <dir name="Common">
+        <key name="Event ID" type="WORD">2</key>
+        <key name="Trigger mask" type="WORD">0</key>
+        <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+        <key name="Type" type="INT">1</key>
+        <key name="Source" type="INT">0</key>
+        <key name="Format" type="STRING" size="8">MIDAS</key>
+        <key name="Enabled" type="BOOL">y</key>
+        <key name="Read on" type="INT">257</key>
+        <key name="Period" type="INT">1000</key>
+        <key name="Event limit" type="DOUBLE">0</key>
+        <key name="Num subevents" type="DWORD">0</key>
+        <key name="Log history" type="INT">1</key>
+        <key name="Frontend host" type="STRING" size="32">alphavme01.cern.ch</key>
+        <key name="Frontend name" type="STRING" size="32">fevme</key>
+        <key name="Frontend file name" type="STRING" size="256">fevme.cxx</key>
+      </dir>
+      <dir name="Variables">
+        <keyarray name="ADC" type="WORD" num_values="32">
+          <value>1391</value>
+          <value>1398</value>
+          <value>1367</value>
+          <value>825</value>
+          <value>964</value>
+          <value>890</value>
+          <value>1446</value>
+          <value>284</value>
+          <value>315</value>
+          <value>309</value>
+          <value>281</value>
+          <value>331</value>
+          <value>307</value>
+          <value>292</value>
+          <value>318</value>
+          <value>311</value>
+          <value>323</value>
+          <value>330</value>
+          <value>293</value>
+          <value>318</value>
+          <value>304</value>
+          <value>337</value>
+          <value>317</value>
+          <value>353</value>
+          <value>324</value>
+          <value>330</value>
+          <value>291</value>
+          <value>313</value>
+          <value>305</value>
+          <value>323</value>
+          <value>340</value>
+          <value>301</value>
+        </keyarray>
+        <key name="Spill Number" type="INT">4</key>
+      </dir>
+      <dir name="Statistics">
+        <key name="Events sent" type="DOUBLE">4</key>
+        <key name="Events per sec." type="DOUBLE">0</key>
+        <key name="kBytes per sec." type="DOUBLE">0</key>
+      </dir>
+      <dir name="Settings">
+        <keyarray name="Names ADC" type="STRING" size="32" num_values="32">
+          <value>BC1</value>
+          <value>BC2</value>
+          <value>BC3</value>
+          <value>BC4</value>
+          <value>BC5</value>
+          <value>HPD1</value>
+          <value>HPD2</value>
+          <value>adc07</value>
+          <value>adc08</value>
+          <value>adc09</value>
+          <value>adc10</value>
+          <value>adc11</value>
+          <value>adc12</value>
+          <value>adc13</value>
+          <value>adc14</value>
+          <value>adc15</value>
+          <value>adc16</value>
+          <value>adc17</value>
+          <value>adc18</value>
+          <value>adc19</value>
+          <value>adc20</value>
+          <value>adc21</value>
+          <value>adc22</value>
+          <value>adc23</value>
+          <value>adc24</value>
+          <value>adc25</value>
+          <value>adc26</value>
+          <value>adc27</value>
+          <value>adc28</value>
+          <value>adc29</value>
+          <value>adc30</value>
+          <value>adc31</value>
+        </keyarray>
+        <key name="Spill Number" type="INT">100</key>
+      </dir>
+    </dir>
+    <dir name="Scaler">
+      <dir name="Common">
+        <key name="Event ID" type="WORD">5</key>
+        <key name="Trigger mask" type="WORD">0</key>
+        <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+        <key name="Type" type="INT">1</key>
+        <key name="Source" type="INT">0</key>
+        <key name="Format" type="STRING" size="8">MIDAS</key>
+        <key name="Enabled" type="BOOL">y</key>
+        <key name="Read on" type="INT">257</key>
+        <key name="Period" type="INT">1000</key>
+        <key name="Event limit" type="DOUBLE">0</key>
+        <key name="Num subevents" type="DWORD">0</key>
+        <key name="Log history" type="INT">1</key>
+        <key name="Frontend host" type="STRING" size="32">alphavme01.cern.ch</key>
+        <key name="Frontend name" type="STRING" size="32">fevme</key>
+        <key name="Frontend file name" type="STRING" size="256">fevme.cxx</key>
+      </dir>
+      <dir name="Variables">
+        <keyarray name="SCLR" type="DWORD" num_values="16">
+          <value>134352</value>
+          <value>57935</value>
+          <value>99969</value>
+          <value>49708</value>
+          <value>23969</value>
+          <value>22967</value>
+          <value>2321</value>
+          <value>44005</value>
+          <value>1514</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+        <keyarray name="SCRT" type="FLOAT" num_values="16">
+          <value>196.1927</value>
+          <value>62.74182</value>
+          <value>136.4386</value>
+          <value>49.79509</value>
+          <value>24.89755</value>
+          <value>20.91394</value>
+          <value>0</value>
+          <value>45.81149</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+      </dir>
+      <dir name="Statistics">
+        <key name="Events sent" type="DOUBLE">464</key>
+        <key name="Events per sec." type="DOUBLE">0</key>
+        <key name="kBytes per sec." type="DOUBLE">0</key>
+      </dir>
+      <dir name="Settings">
+        <keyarray name="Names SCRT" type="STRING" size="32" num_values="16">
+          <value>Scint 1</value>
+          <value>Scint 2</value>
+          <value>Scint 3</value>
+          <value>Scint 4</value>
+          <value>Scint 1&amp;2</value>
+          <value>Scint 3&amp;4</value>
+          <value>Scint (1&amp;2)or(3&amp;4)</value>
+          <value>Scint (1&amp;2)&amp;(3&amp;4)</value>
+          <value>Scaler Rate 8</value>
+          <value>Scaler Rate 9</value>
+          <value>Scaler Rate 10</value>
+          <value>Scaler Rate 11</value>
+          <value>Scaler Rate 12</value>
+          <value>Scaler Rate 13</value>
+          <value>Scaler Rate 14</value>
+          <value>Scaler Rate 15</value>
+        </keyarray>
+        <keyarray name="Names SCLR" type="STRING" size="32" num_values="16">
+          <value>Scaler Count 0</value>
+          <value>Scaler Count 1</value>
+          <value>Scaler Count 2</value>
+          <value>Scaler Count 3</value>
+          <value>Scaler Count 4</value>
+          <value>Scaler Count 5</value>
+          <value>Scaler Count 6</value>
+          <value>Scaler Count 7</value>
+          <value>Scaler Count 8</value>
+          <value>Scaler Count 9</value>
+          <value>Scaler Count 10</value>
+          <value>Scaler Count 11</value>
+          <value>Scaler Count 12</value>
+          <value>Scaler Count 13</value>
+          <value>Scaler Count 14</value>
+          <value>Scaler Count 15</value>
+        </keyarray>
+      </dir>
+    </dir>
+    <dir name="Pulser">
+      <dir name="Common">
+        <key name="Event ID" type="WORD">6</key>
+        <key name="Trigger mask" type="WORD">0</key>
+        <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+        <key name="Type" type="INT">1</key>
+        <key name="Source" type="INT">0</key>
+        <key name="Format" type="STRING" size="8">MIDAS</key>
+        <key name="Enabled" type="BOOL">y</key>
+        <key name="Read on" type="INT">1</key>
+        <key name="Period" type="INT">10</key>
+        <key name="Event limit" type="DOUBLE">0</key>
+        <key name="Num subevents" type="DWORD">0</key>
+        <key name="Log history" type="INT">0</key>
+        <key name="Frontend host" type="STRING" size="32">alphavme01.cern.ch</key>
+        <key name="Frontend name" type="STRING" size="32">fevme</key>
+        <key name="Frontend file name" type="STRING" size="256">fevme.cxx</key>
+      </dir>
+      <dir name="Variables"/>
+      <dir name="Statistics">
+        <key name="Events sent" type="DOUBLE">0</key>
+        <key name="Events per sec." type="DOUBLE">0</key>
+        <key name="kBytes per sec." type="DOUBLE">0</key>
+      </dir>
+      <dir name="Settings">
+        <keyarray name="Period" type="DOUBLE" num_values="8">
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+      </dir>
+    </dir>
+    <dir name="Latch">
+      <dir name="Common">
+        <key name="Event ID" type="WORD">9</key>
+        <key name="Trigger mask" type="WORD">512</key>
+        <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+        <key name="Type" type="INT">1</key>
+        <key name="Source" type="INT">0</key>
+        <key name="Format" type="STRING" size="8">MIDAS</key>
+        <key name="Enabled" type="BOOL">y</key>
+        <key name="Read on" type="INT">257</key>
+        <key name="Period" type="INT">1000</key>
+        <key name="Event limit" type="DOUBLE">0</key>
+        <key name="Num subevents" type="DWORD">0</key>
+        <key name="Log history" type="INT">1</key>
+        <key name="Frontend host" type="STRING" size="32">alphavme01.cern.ch</key>
+        <key name="Frontend name" type="STRING" size="32">fevme</key>
+        <key name="Frontend file name" type="STRING" size="256">fevme.cxx</key>
+      </dir>
+      <dir name="Variables">
+        <keyarray name="LAT0" type="INT" num_values="16">
+          <value>1</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+          <value>0</value>
+        </keyarray>
+      </dir>
+      <dir name="Statistics">
+        <key name="Events sent" type="DOUBLE">464</key>
+        <key name="Events per sec." type="DOUBLE">0</key>
+        <key name="kBytes per sec." type="DOUBLE">0</key>
+      </dir>
+    </dir>
+    <dir name="SisPulser">
+      <dir name="Common">
+        <key name="Event ID" type="WORD">7</key>
+        <key name="Trigger mask" type="WORD">0</key>
+        <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+        <key name="Type" type="INT">1</key>
+        <key name="Source" type="INT">0</key>
+        <key name="Format" type="STRING" size="8">MIDAS</key>
+        <key name="Enabled" type="BOOL">n</key>
+        <key name="Read on" type="INT">1</key>
+        <key name="Period" type="INT">1000</key>
+        <key name="Event limit" type="DOUBLE">0</key>
+        <key name="Num subevents" type="DWORD">0</key>
+        <key name="Log history" type="INT">0</key>
+        <key name="Frontend host" type="STRING" size="32">alphavme01.cern.ch</key>
+        <key name="Frontend name" type="STRING" size="32">fevme</key>
+        <key name="Frontend file name" type="STRING" size="256">fevme.cxx</key>
+      </dir>
+      <dir name="Variables"/>
+      <dir name="Statistics">
+        <key name="Events sent" type="DOUBLE">0</key>
+        <key name="Events per sec." type="DOUBLE">0</key>
+        <key name="kBytes per sec." type="DOUBLE">0</key>
+      </dir>
+    </dir>
+    <dir name="VF48">
+      <dir name="Common">
+        <key name="Event ID" type="WORD">4</key>
+        <key name="Trigger mask" type="WORD">0</key>
+        <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+        <key name="Type" type="INT">1</key>
+        <key name="Source" type="INT">0</key>
+        <key name="Format" type="STRING" size="8">MIDAS</key>
+        <key name="Enabled" type="BOOL">n</key>
+        <key name="Read on" type="INT">1</key>
+        <key name="Period" type="INT">1000</key>
+        <key name="Event limit" type="DOUBLE">0</key>
+        <key name="Num subevents" type="DWORD">0</key>
+        <key name="Log history" type="INT">0</key>
+        <key name="Frontend host" type="STRING" size="32">alphavme01.cern.ch</key>
+        <key name="Frontend name" type="STRING" size="32">fevme</key>
+        <key name="Frontend file name" type="STRING" size="256">fevme.cxx</key>
+      </dir>
+      <dir name="Variables"/>
+      <dir name="Statistics">
+        <key name="Events sent" type="DOUBLE">0</key>
+        <key name="Events per sec." type="DOUBLE">0</key>
+        <key name="kBytes per sec." type="DOUBLE">0</key>
+      </dir>
+    </dir>
+  </dir>
+  <dir name="Elog">
+    <key name="Display run number" type="BOOL">y</key>
+    <key name="Allow delete" type="BOOL">n</key>
+    <keyarray name="Buttons" type="STRING" size="32" num_values="3">
+      <value>8h</value>
+      <value>24h</value>
+      <value>7d</value>
+    </keyarray>
+    <keyarray name="Types" type="STRING" size="32" num_values="20">
+      <value>Pbar log</value>
+      <value>Shift summary</value>
+      <value>Reply</value>
+      <value>Positron log</value>
+      <value>electron log</value>
+      <value>Routine</value>
+      <value>Solenoid</value>
+      <value>cryostat/vacuum</value>
+      <value>BNL Magnet</value>
+      <value>Berkeley Magnet</value>
+      <value>Problems</value>
+      <value>MCP/Filaments/Stick</value>
+      <value>Positron Accumulator</value>
+      <value>External Scintillators</value>
+      <value>Beam Counter / HPD</value>
+      <value></value>
+      <value></value>
+      <value></value>
+      <value></value>
+      <value></value>
+    </keyarray>
+    <keyarray name="Systems" type="STRING" size="32" num_values="20">
+      <value>Run Log</value>
+      <value>Software</value>
+      <value>Hardware</value>
+      <value>Physics Discussion</value>
+      <value>Announcements</value>
+      <value>Magnet</value>
+      <value>Positron</value>
+      <value>Detector Systems</value>
+      <value></value>
+      <value></value>
+      <value></value>
+      <value></value>
+      <value></value>
+      <value></value>
+      <value></value>
+      <value></value>
+      <value></value>
+      <value></value>
+      <value></value>
+      <value></value>
+    </keyarray>
+    <key name="Host name" type="STRING" size="256">alphavme01.cern.ch</key>
+    <key name="SMTP host" type="STRING" size="32">alphacpc05.cern.ch</key>
+    <key name="Email Software" type="STRING" size="196">olchansk@triumf.ca,olin@triumf.ca,fujiwara@triumf.ca,Richard.Hydomako@cern.ch,alexander.peter.povilus@cern.ch,Niels.Madsen@cern.ch,funakosi@mail.cern.ch,james.storey@cern.ch,gorm.andresen@cern.ch</key>
+    <key name="Email Test" type="STRING" size="32">olchansk@triumf.ca</key>
+    <key name="Email Announcements" type="STRING" size="134"> project-alpha@cern.ch</key>
+    <key name="Email Shiftsummary" type="STRING" size="246">niels.madsen@cern.ch,fujiwara@triumf.ca,olin@triumf.ca, james.storey@cern.ch,drgill@triumf.ca,olchansk@triumf.ca,daniel.miranda@cern.ch,matt.jenkins@cern.ch,jfajans@berkeley.edu,wabertsche.lbl.gov,rhydomako@phas.ucalgary.ca,Gorm.Andresen@cern.ch</key>
+    <key name="From" type="STRING" size="32">alphacdr@mail.cern.ch</key>
+    <key name="URL" type="STRING" size="37">http://alphacpc05.cern.ch:8080/midas</key>
+    <key name="Logbook dir" type="STRING" size="32">/home/alpha/online/elog</key>
+  </dir>
+</odb>
+ 

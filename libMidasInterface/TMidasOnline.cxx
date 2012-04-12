@@ -15,8 +15,8 @@
 #include <assert.h>
 #include "midas.h"
 #include "msystem.h"
-#include "hardware.h"
-#include "ybos.h"
+//#include "hardware.h"
+//#include "ybos.h"
 
 
 TMidasOnline::TMidasOnline() // ctor

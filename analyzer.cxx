@@ -232,7 +232,7 @@ void HandleMidasEvent(TMidasEvent& event)
 void eventHandler(const void*pheader,const void*pdata,int size)
 {
   TMidasEvent event;
-  memcpy(event.GetEventHeader(), pheader, sizeof(EventHeader_t));
+  memcpy(event.GetEventHeader(), pheader, sizeof(TMidas_EVENT_HEADER));
   event.SetData(size, (char*)pdata);
   event.SetBankList();
   HandleMidasEvent(event);

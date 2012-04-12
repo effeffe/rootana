@@ -1,0 +1,590 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!-- created by MXML on Tue Aug 12 12:26:50 2008 -->
+<odb root="/" filename="odb.xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="/home/olchansk/daq/midas/midas/odb.xsd">
+  <dir name="System">
+    <dir name="Clients">
+      <dir name="3315">
+        <key name="Name" type="STRING" size="32">ODBEdit</key>
+        <key name="Host" type="STRING" size="256">ladd00.triumf.ca</key>
+        <key name="Hardware type" type="INT">44</key>
+        <key name="Server Port" type="INT">60271</key>
+      </dir>
+    </dir>
+    <dir name="Tmp"/>
+    <key name="Client Notify" type="INT">0</key>
+    <key name="Prompt" type="STRING" size="256">[%h:%e:%s]%p&gt;</key>
+  </dir>
+  <dir name="Programs">
+    <dir name="ODBEdit">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">10000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">0</key>
+    </dir>
+    <dir name="rootana">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">60000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">1211844442</key>
+    </dir>
+    <dir name="mhttpd">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">10000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">1218569122</key>
+    </dir>
+    <key name="Execute on start run" type="STRING" size="256"></key>
+    <key name="Execute on stop run" type="STRING" size="256"></key>
+    <dir name="Logger">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">10000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">1218569122</key>
+    </dir>
+    <dir name="fedvm">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">60000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">1206324062</key>
+    </dir>
+    <dir name="fepa">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">60000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">1206724375</key>
+    </dir>
+    <dir name="PostAmp">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">60000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">1206752975</key>
+    </dir>
+    <dir name="dummy">
+      <key name="Required" type="BOOL">n</key>
+      <key name="Watchdog timeout" type="INT">60000</key>
+      <key name="Check interval" type="DWORD">180000</key>
+      <key name="Start command" type="STRING" size="256"></key>
+      <key name="Auto start" type="BOOL">n</key>
+      <key name="Auto stop" type="BOOL">n</key>
+      <key name="Auto restart" type="BOOL">n</key>
+      <key name="Alarm class" type="STRING" size="32"></key>
+      <key name="First failed" type="DWORD">1212099776</key>
+    </dir>
+  </dir>
+  <dir name="Experiment">
+    <key name="Name" type="STRING" size="32">ladd00</key>
+    <dir name="Buffer sizes">
+      <key name="SYSMSG" type="DWORD">100000</key>
+      <key name="SYSTEM" type="DWORD">8388608</key>
+    </dir>
+    <dir name="edit on start">
+      <key name="test_int" type="INT">3</key>
+      <keyarray name="test_dlb_array" type="DOUBLE" num_values="5">
+        <value>15</value>
+        <value>15</value>
+        <value>15</value>
+        <value>15</value>
+        <value>15</value>
+      </keyarray>
+      <key name="test_string" type="STRING" size="32">0123456789012345678901234567890</key>
+      <keyarray name="test_string_array" type="STRING" size="32" num_values="5">
+        <value></value>
+        <value></value>
+        <value></value>
+        <value></value>
+        <value>123456789012345678901234567890</value>
+      </keyarray>
+      <key name="long_string" type="STRING" size="300">123456789012345678903456789012345678903456789012345678903456789012345678903456789012345678903456789012345678901234567890</key>
+      <key name="Pedestals run" type="BOOL">n</key>
+    </dir>
+    <dir name="Security"/>
+  </dir>
+  <dir name="Logger">
+    <key name="Data dir" type="STRING" size="256">/home/olchansk/daq/expt/</key>
+    <key name="Message file" type="STRING" size="256">midas.log</key>
+    <key name="Auto restart" type="BOOL">y</key>
+    <key name="Write data" type="BOOL">y</key>
+    <key name="ODB Dump" type="BOOL">n</key>
+    <key name="ODB Dump File" type="STRING" size="256">run%05d.odb</key>
+    <key name="Tape message" type="BOOL">y</key>
+    <dir name="Channels">
+      <dir name="0">
+        <dir name="Settings">
+          <key name="Active" type="BOOL">y</key>
+          <key name="Type" type="STRING" size="8">Disk</key>
+          <key name="Filename" type="STRING" size="256">run%05d.mid.gz</key>
+          <key name="Format" type="STRING" size="8">MIDAS</key>
+          <key name="Compression" type="INT">1</key>
+          <key name="ODB dump" type="BOOL">y</key>
+          <key name="Log messages" type="DWORD">0</key>
+          <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+          <key name="Event ID" type="INT">-1</key>
+          <key name="Trigger mask" type="INT">-1</key>
+          <key name="Event limit" type="DOUBLE">0</key>
+          <key name="Byte limit" type="DOUBLE">0</key>
+          <key name="Tape capacity" type="DOUBLE">0</key>
+          <key name="Subdir format" type="STRING" size="32"></key>
+          <key name="Current filename" type="STRING" size="256">run00126.mid.gz</key>
+        </dir>
+        <dir name="Statistics">
+          <key name="Events written" type="DOUBLE">2</key>
+          <key name="Bytes written" type="DOUBLE">4507</key>
+          <key name="Bytes written uncompressed" type="DOUBLE">50129</key>
+          <key name="Bytes written total" type="DOUBLE">9361302828</key>
+          <key name="Files written" type="DOUBLE">23</key>
+        </dir>
+      </dir>
+    </dir>
+    <dir name="SQL">
+      <key name="Create database" type="BOOL">n</key>
+      <key name="Write data" type="BOOL">n</key>
+      <key name="Hostname" type="STRING" size="80">localhost</key>
+      <key name="Username" type="STRING" size="80">root</key>
+      <key name="Password" type="STRING" size="80"></key>
+      <key name="Database" type="STRING" size="32">ladd00</key>
+      <key name="Table" type="STRING" size="80">Runlog</key>
+      <key name="Logfile" type="STRING" size="80">sql.log</key>
+      <dir name="Links BOR">
+        <key name="Run number" type="LINK" size="20">/Runinfo/Run number</key>
+        <key name="Start time" type="LINK" size="20">/Runinfo/Start time</key>
+      </dir>
+      <dir name="Links EOR">
+        <key name="Stop time" type="LINK" size="19">/Runinfo/Stop time</key>
+      </dir>
+    </dir>
+  </dir>
+  <dir name="Runinfo">
+    <key name="State" type="INT">1</key>
+    <key name="Online Mode" type="INT">1</key>
+    <key name="Run number" type="INT">126</key>
+    <key name="Transition in progress" type="INT">0</key>
+    <key name="Start abort" type="INT">0</key>
+    <key name="Requested transition" type="INT">0</key>
+    <key name="Start time" type="STRING" size="32">Thu May 29 17:46:21 2008</key>
+    <key name="Start time binary" type="DWORD">1212108381</key>
+    <key name="Stop time" type="STRING" size="32">Thu May 29 17:46:42 2008</key>
+    <key name="Stop time binary" type="DWORD">1212108402</key>
+  </dir>
+  <dir name="Alarms">
+    <key name="Alarm system active" type="BOOL">y</key>
+    <dir name="Alarms">
+      <dir name="Demo ODB">
+        <key name="Active" type="BOOL">n</key>
+        <key name="Triggered" type="INT">0</key>
+        <key name="Type" type="INT">3</key>
+        <key name="Check interval" type="INT">60</key>
+        <key name="Checked last" type="DWORD">0</key>
+        <key name="Time triggered first" type="STRING" size="32"></key>
+        <key name="Time triggered last" type="STRING" size="32"></key>
+        <key name="Condition" type="STRING" size="256">/Runinfo/Run number &gt; 100</key>
+        <key name="Alarm Class" type="STRING" size="32">Alarm</key>
+        <key name="Alarm Message" type="STRING" size="80">Run number became too large</key>
+      </dir>
+      <dir name="Demo periodic">
+        <key name="Active" type="BOOL">n</key>
+        <key name="Triggered" type="INT">0</key>
+        <key name="Type" type="INT">4</key>
+        <key name="Check interval" type="INT">28800</key>
+        <key name="Checked last" type="DWORD">0</key>
+        <key name="Time triggered first" type="STRING" size="32"></key>
+        <key name="Time triggered last" type="STRING" size="32"></key>
+        <key name="Condition" type="STRING" size="256"></key>
+        <key name="Alarm Class" type="STRING" size="32">Warning</key>
+        <key name="Alarm Message" type="STRING" size="80">Please do your shift checks</key>
+      </dir>
+    </dir>
+    <dir name="Classes">
+      <dir name="Alarm">
+        <key name="Write system message" type="BOOL">y</key>
+        <key name="Write Elog message" type="BOOL">n</key>
+        <key name="System message interval" type="INT">60</key>
+        <key name="System message last" type="DWORD">0</key>
+        <key name="Execute command" type="STRING" size="256"></key>
+        <key name="Execute interval" type="INT">0</key>
+        <key name="Execute last" type="DWORD">0</key>
+        <key name="Stop run" type="BOOL">n</key>
+        <key name="Display BGColor" type="STRING" size="32">red</key>
+        <key name="Display FGColor" type="STRING" size="32">black</key>
+      </dir>
+      <dir name="Warning">
+        <key name="Write system message" type="BOOL">y</key>
+        <key name="Write Elog message" type="BOOL">n</key>
+        <key name="System message interval" type="INT">60</key>
+        <key name="System message last" type="DWORD">0</key>
+        <key name="Execute command" type="STRING" size="256"></key>
+        <key name="Execute interval" type="INT">0</key>
+        <key name="Execute last" type="DWORD">0</key>
+        <key name="Stop run" type="BOOL">n</key>
+        <key name="Display BGColor" type="STRING" size="32">red</key>
+        <key name="Display FGColor" type="STRING" size="32">black</key>
+      </dir>
+    </dir>
+  </dir>
+  <dir name="test">
+    <keyarray name="intarr" type="INT" num_values="10">
+      <value>15</value>
+      <value>0</value>
+      <value>0</value>
+      <value>3</value>
+      <value>0</value>
+      <value>0</value>
+      <value>0</value>
+      <value>0</value>
+      <value>0</value>
+      <value>9</value>
+    </keyarray>
+    <key name="dblvalue" type="DOUBLE">22.2</key>
+    <key name="fltvalue" type="FLOAT">11.1</key>
+    <key name="dwordvalue" type="DWORD">125</key>
+    <key name="wordvalue" type="WORD">321</key>
+    <key name="boolvalue" type="BOOL">y</key>
+    <key name="stringvalue" type="STRING" size="1024">aaa123bbb</key>
+  </dir>
+  <dir name="History">
+    <dir name="Display">
+      <dir name="Default">
+        <dir name="Trigger rate">
+          <keyarray name="Variables" type="STRING" size="64" num_values="2">
+            <value>System:Trigger per sec.</value>
+            <value>System:Trigger kB per sec.</value>
+          </keyarray>
+          <key name="Time Scale" type="STRING" size="32">1h</key>
+          <keyarray name="Factor" type="FLOAT" num_values="2">
+            <value>1</value>
+            <value>1</value>
+          </keyarray>
+          <keyarray name="Offset" type="FLOAT" num_values="2">
+            <value>0</value>
+            <value>0</value>
+          </keyarray>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+        </dir>
+        <dir name="test">
+          <key name="Label" type="STRING" size="32"></key>
+          <key name="Factor" type="FLOAT">1</key>
+          <key name="Offset" type="FLOAT">0</key>
+          <key name="Timescale" type="STRING" size="32">1h</key>
+          <key name="Zero ylow" type="BOOL">y</key>
+          <key name="Show run markers" type="BOOL">y</key>
+          <key name="Show values" type="BOOL">y</key>
+          <key name="Log axis" type="BOOL">n</key>
+          <key name="Minimum" type="FLOAT">0</key>
+          <key name="Maximum" type="FLOAT">0</key>
+          <key name="Colour" type="STRING" size="32">#0000FF</key>
+          <keyarray name="Buttons" type="STRING" size="32" num_values="7">
+            <value>10m</value>
+            <value>1h</value>
+            <value>3h</value>
+            <value>12h</value>
+            <value>24h</value>
+            <value>3d</value>
+            <value>7d</value>
+          </keyarray>
+          <key name="Variables" type="STRING" size="64">slow:SLOW</key>
+        </dir>
+      </dir>
+    </dir>
+    <dir name="Links"/>
+    <dir name="ODBC">
+      <key name="DSN" type="STRING" size="32">aaa</key>
+    </dir>
+    <key name="PerVariableHistory" type="INT">0</key>
+    <dir name="Tags">
+      <key name="4" type="STRING" size="5">slow</key>
+      <dir name="Tags 4">
+        <key name="SLOW" type="WORD">1</key>
+      </dir>
+    </dir>
+  </dir>
+  <dir name="Equipment">
+    <dir name="dummy">
+      <dir name="Common">
+        <key name="Event ID" type="WORD">3</key>
+        <key name="Trigger mask" type="WORD">0</key>
+        <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+        <key name="Type" type="INT">1</key>
+        <key name="Source" type="INT">0</key>
+        <key name="Format" type="STRING" size="8">MIDAS</key>
+        <key name="Enabled" type="BOOL">y</key>
+        <key name="Read on" type="INT">1</key>
+        <key name="Period" type="INT">30</key>
+        <key name="Event limit" type="DOUBLE">0</key>
+        <key name="Num subevents" type="DWORD">0</key>
+        <key name="Log history" type="INT">0</key>
+        <key name="Frontend host" type="STRING" size="32">ladd00.triumf.ca</key>
+        <key name="Frontend name" type="STRING" size="32">dummy</key>
+        <key name="Frontend file name" type="STRING" size="256">fedummy.cxx</key>
+      </dir>
+      <dir name="Variables"/>
+      <dir name="Statistics">
+        <key name="Events sent" type="DOUBLE">1002</key>
+        <key name="Events per sec." type="DOUBLE">0</key>
+        <key name="kBytes per sec." type="DOUBLE">0</key>
+      </dir>
+      <dir name="settings">
+        <key name="event_size" type="INT">3000000</key>
+      </dir>
+    </dir>
+    <dir name="slow">
+      <dir name="Common">
+        <key name="Event ID" type="WORD">4</key>
+        <key name="Trigger mask" type="WORD">0</key>
+        <key name="Buffer" type="STRING" size="32">SYSTEM</key>
+        <key name="Type" type="INT">1</key>
+        <key name="Source" type="INT">0</key>
+        <key name="Format" type="STRING" size="8">MIDAS</key>
+        <key name="Enabled" type="BOOL">y</key>
+        <key name="Read on" type="INT">255</key>
+        <key name="Period" type="INT">1000</key>
+        <key name="Event limit" type="DOUBLE">0</key>
+        <key name="Num subevents" type="DWORD">0</key>
+        <key name="Log history" type="INT">1</key>
+        <key name="Frontend host" type="STRING" size="32">ladd00.triumf.ca</key>
+        <key name="Frontend name" type="STRING" size="32">dummy</key>
+        <key name="Frontend file name" type="STRING" size="256">fedummy.cxx</key>
+      </dir>
+      <dir name="Variables">
+        <key name="SLOW" type="FLOAT">40.67366</key>
+      </dir>
+      <dir name="Statistics">
+        <key name="Events sent" type="DOUBLE">55</key>
+        <key name="Events per sec." type="DOUBLE">0</key>
+        <key name="kBytes per sec." type="DOUBLE">0.04292582417582418</key>
+      </dir>
+    </dir>
+  </dir>
+  <dir name="status">
+    <dir name="postamp">
+      <keyarray name="vtp" type="DWORD" num_values="24">
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>0</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+      </keyarray>
+      <keyarray name="M_ThreshA" type="DWORD" num_values="24">
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4000072</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+      </keyarray>
+      <keyarray name="M_ThreshB" type="DWORD" num_values="24">
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4000076</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+      </keyarray>
+      <keyarray name="temp" type="DWORD" num_values="24">
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>0</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+      </keyarray>
+      <keyarray name="vplus" type="DWORD" num_values="24">
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>0</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+      </keyarray>
+      <keyarray name="vminus" type="DWORD" num_values="24">
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>0</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+      </keyarray>
+      <keyarray name="chan" type="DWORD" num_values="24">
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4000076</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+        <value>4294967294</value>
+      </keyarray>
+      <key name="maxtemp" type="DWORD">0</key>
+      <key name="ctrl" type="DWORD">0</key>
+    </dir>
+  </dir>
+</odb>

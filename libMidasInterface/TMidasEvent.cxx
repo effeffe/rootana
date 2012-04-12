@@ -122,7 +122,7 @@ char* TMidasEvent::GetData()
   return fData;
 }
 
-EventHeader_t * TMidasEvent::GetEventHeader()
+TMidas_EVENT_HEADER * TMidasEvent::GetEventHeader()
 {
   return &fEventHeader;
 }
@@ -134,7 +134,7 @@ bool TMidasEvent::IsGoodSize() const
 
 bool TMidasEvent::IsBank32() const
 {
-  return ((BankHeader_t *)fData)->fFlags & (1<<4);
+  return ((TMidas_BANK_HEADER *)fData)->fFlags & (1<<4);
 }
 
 int TMidasEvent::LocateBank(const void *unused, const char *name, void **pdata) const
@@ -167,14 +167,14 @@ int TMidasEvent::FindBank(const char* name, int *bklen, int *bktype, void **pdat
   /// \returns 1 if bank found, 0 otherwise.
   ///
 
-  const BankHeader_t *pbkh = (const BankHeader_t*)fData; 
-  Bank_t *pbk;
+  const TMidas_BANK_HEADER *pbkh = (const TMidas_BANK_HEADER*)fData; 
+  TMidas_BANK *pbk;
   //uint32_t dname;
 
   if (((pbkh->fFlags & (1<<4)) > 0)) {
 #if 0
-    Bank32_t *pbk32;
-    pbk32 = (Bank32_t *) (pbkh + 1);
+    TMidas_BANK32 *pbk32;
+    pbk32 = (TMidas_BANK32 *) (pbkh + 1);
     memcpy(&dname, name, 4);
     do {
       if (*((uint32_t *) pbk32->fName) == dname) {
@@ -187,12 +187,12 @@ int TMidasEvent::FindBank(const char* name, int *bklen, int *bktype, void **pdat
         *bktype = pbk32->fType;
         return 1;
       }
-      pbk32 = (Bank32_t *) ((char*) (pbk32 + 1) +
+      pbk32 = (TMidas_BANK32 *) ((char*) (pbk32 + 1) +
                           (((pbk32->fDataSize)+7) & ~7));
-    } while ((char*) pbk32 < (char*) pbkh + pbkh->fDataSize + sizeof(BankHeader_t));
+    } while ((char*) pbk32 < (char*) pbkh + pbkh->fDataSize + sizeof(TMidas_BANK_HEADER));
 #endif
 
-    Bank32_t *pbk32 = NULL;
+    TMidas_BANK32 *pbk32 = NULL;
 
     while (1) {
       IterateBank32(&pbk32, (char**)pdata);
@@ -215,7 +215,7 @@ int TMidasEvent::FindBank(const char* name, int *bklen, int *bktype, void **pdat
       }
     }
   } else {
-    pbk = (Bank_t *) (pbkh + 1);
+    pbk = (TMidas_BANK *) (pbkh + 1);
     do {
       if (name[0]==pbk->fName[0] &&
 	  name[1]==pbk->fName[1] &&
@@ -230,8 +230,8 @@ int TMidasEvent::FindBank(const char* name, int *bklen, int *bktype, void **pdat
         *bktype = pbk->fType;
         return 1;
       }
-      pbk = (Bank_t *) ((char*) (pbk + 1) + (((pbk->fDataSize)+7) & ~7));
-    } while ((char*) pbk < (char*) pbkh + pbkh->fDataSize + sizeof(BankHeader_t));
+      pbk = (TMidas_BANK *) ((char*) (pbk + 1) + (((pbk->fDataSize)+7) & ~7));
+    } while ((char*) pbk < (char*) pbkh + pbkh->fDataSize + sizeof(TMidas_BANK_HEADER));
   }
   //
   // bank not found
@@ -344,8 +344,8 @@ int TMidasEvent::SetBankList()
 
   fBanksN = 0;
 
-  Bank32_t *pmbk32 = NULL;
-  Bank_t *pmbk = NULL;
+  TMidas_BANK32 *pmbk32 = NULL;
+  TMidas_BANK *pmbk = NULL;
   char *pdata = NULL;
 
   while (1)
@@ -379,7 +379,7 @@ int TMidasEvent::SetBankList()
   return fBanksN;
 }
 
-int TMidasEvent::IterateBank(Bank_t **pbk, char **pdata) const
+int TMidasEvent::IterateBank(TMidas_BANK **pbk, char **pdata) const
 {
   /// Iterates through banks inside an event. The function can be used
   /// to enumerate all banks of an event.
@@ -388,16 +388,16 @@ int TMidasEvent::IterateBank(Bank_t **pbk, char **pdata) const
   /// \param [in] pdata Pointer to data area of bank. Returns NULL if no more banks
   /// \returns Size of bank in bytes or 0 if no more banks.
   ///
-  const BankHeader_t* event = (const BankHeader_t*)fData;
+  const TMidas_BANK_HEADER* event = (const TMidas_BANK_HEADER*)fData;
 
   if (*pbk == NULL)
-    *pbk = (Bank_t *) (event + 1);
+    *pbk = (TMidas_BANK *) (event + 1);
   else
-    *pbk = (Bank_t *) ((char*) (*pbk + 1) + ((((*pbk)->fDataSize)+7) & ~7));
+    *pbk = (TMidas_BANK *) ((char*) (*pbk + 1) + ((((*pbk)->fDataSize)+7) & ~7));
 
   *pdata = (char*)((*pbk) + 1);
 
-  if ((char*) *pbk >=  (char*) event + event->fDataSize + sizeof(BankHeader_t))
+  if ((char*) *pbk >=  (char*) event + event->fDataSize + sizeof(TMidas_BANK_HEADER))
     {
       *pbk = NULL;
       *pdata = NULL;
@@ -407,21 +407,21 @@ int TMidasEvent::IterateBank(Bank_t **pbk, char **pdata) const
   return (*pbk)->fDataSize;
 }
 
-int TMidasEvent::IterateBank32(Bank32_t **pbk, char **pdata) const
+int TMidasEvent::IterateBank32(TMidas_BANK32 **pbk, char **pdata) const
 {
   /// See IterateBank()
 
-  const BankHeader_t* event = (const BankHeader_t*)fData;
+  const TMidas_BANK_HEADER* event = (const TMidas_BANK_HEADER*)fData;
   if (*pbk == NULL)
-    *pbk = (Bank32_t *) (event + 1);
+    *pbk = (TMidas_BANK32 *) (event + 1);
   else {
     uint32_t length = (*pbk)->fDataSize;
     uint32_t length_adjusted = (length+7) & ~7;
     //printf("length %6d 0x%08x, 0x%08x\n", length, length, length_adjusted);
-    *pbk = (Bank32_t *) ((char*) (*pbk + 1) + length_adjusted);
+    *pbk = (TMidas_BANK32 *) ((char*) (*pbk + 1) + length_adjusted);
   }
 
-  Bank32_t *bk4 = (Bank32_t*)(((char*) *pbk) + 4);
+  TMidas_BANK32 *bk4 = (TMidas_BANK32*)(((char*) *pbk) + 4);
 
   //printf("iterate bank32: pbk 0x%p, align %d, type %d %d, name [%s], next [%s], TID_MAX %d\n", *pbk, (int)( ((uint64_t)(*pbk))&7), (*pbk)->fType, bk4->fType, (*pbk)->fName, bk4->fName, TID_MAX);
 
@@ -444,7 +444,7 @@ int TMidasEvent::IterateBank32(Bank32_t **pbk, char **pdata) const
 
   *pdata = (char*)((*pbk) + 1);
 
-  if ((char*) *pbk >= (char*)event  + event->fDataSize + sizeof(BankHeader_t))
+  if ((char*) *pbk >= (char*)event  + event->fDataSize + sizeof(TMidas_BANK_HEADER))
     {
       *pbk = NULL;
       *pdata = NULL;
@@ -500,13 +500,13 @@ void TMidasEvent::SwapBytesEventHeader()
 
 int TMidasEvent::SwapBytes(bool force)
 {
-  BankHeader_t *pbh;
-  Bank_t *pbk;
-  Bank32_t *pbk32;
+  TMidas_BANK_HEADER *pbh;
+  TMidas_BANK *pbk;
+  TMidas_BANK32 *pbk32;
   void *pdata;
   uint16_t type;
 
-  pbh = (BankHeader_t *) fData;
+  pbh = (TMidas_BANK_HEADER *) fData;
 
   uint32_t dssw = pbh->fDataSize;
 
@@ -540,12 +540,12 @@ int TMidasEvent::SwapBytes(bool force)
   //
   bool b32 = IsBank32();
 
-  pbk = (Bank_t *) (pbh + 1);
-  pbk32 = (Bank32_t *) pbk;
+  pbk = (TMidas_BANK *) (pbh + 1);
+  pbk32 = (TMidas_BANK32 *) pbk;
   //
   // scan event
   //
-  while ((char*) pbk < (char*) pbh + pbh->fDataSize + sizeof(BankHeader_t)) {
+  while ((char*) pbk < (char*) pbh + pbh->fDataSize + sizeof(TMidas_BANK_HEADER)) {
     //
     // swap bank header
     //
@@ -565,13 +565,13 @@ int TMidasEvent::SwapBytes(bool force)
     //
     if (b32) {
       assert(pbk32->fDataSize < fEventHeader.fDataSize + 100);
-      pbk32 = (Bank32_t *) ((char*) (pbk32 + 1) +
+      pbk32 = (TMidas_BANK32 *) ((char*) (pbk32 + 1) +
                           (((pbk32->fDataSize)+7) & ~7));
-      pbk = (Bank_t *) pbk32;
+      pbk = (TMidas_BANK *) pbk32;
     } else {
       assert(pbk->fDataSize < fEventHeader.fDataSize + 100);
-      pbk = (Bank_t *) ((char*) (pbk + 1) +  (((pbk->fDataSize)+7) & ~7));
-      pbk32 = (Bank32_t *) pbk;
+      pbk = (TMidas_BANK *) ((char*) (pbk + 1) +  (((pbk->fDataSize)+7) & ~7));
+      pbk32 = (TMidas_BANK32 *) pbk;
     }
 
     switch (type) {

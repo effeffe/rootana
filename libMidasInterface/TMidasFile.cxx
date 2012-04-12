@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <assert.h>
 
 #ifdef HAVE_ZLIB
 #include <zlib.h>
@@ -286,12 +287,12 @@ bool TMidasFile::Read(TMidasEvent *midasEvent)
 
   if (fGzFile)
 #ifdef HAVE_ZLIB
-    rd = gzread(*(gzFile*)fGzFile, (char*)midasEvent->GetEventHeader(), sizeof(EventHeader_t));
+    rd = gzread(*(gzFile*)fGzFile, (char*)midasEvent->GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
 #else
     assert(!"Cannot get here");
 #endif
   else
-    rd = readpipe(fFile, (char*)midasEvent->GetEventHeader(), sizeof(EventHeader_t));
+    rd = readpipe(fFile, (char*)midasEvent->GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
 
   if (rd == 0)
     {
@@ -299,7 +300,7 @@ bool TMidasFile::Read(TMidasEvent *midasEvent)
       fLastError = "EOF";
       return false;
     }
-  else if (rd != sizeof(EventHeader_t))
+  else if (rd != sizeof(TMidas_EVENT_HEADER))
     {
       fLastErrno = errno;
       fLastError = strerror(errno);
@@ -343,15 +344,15 @@ bool TMidasFile::Write(TMidasEvent *midasEvent)
 
   if (fOutGzFile)
 #ifdef HAVE_ZLIB
-    wr = gzwrite(*(gzFile*)fOutGzFile, (char*)midasEvent->GetEventHeader(), sizeof(EventHeader_t));
+    wr = gzwrite(*(gzFile*)fOutGzFile, (char*)midasEvent->GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
 #else
     assert(!"Cannot get here");
 #endif
   else
-    wr = write(fOutFile, (char*)midasEvent->GetEventHeader(), sizeof(EventHeader_t));
+    wr = write(fOutFile, (char*)midasEvent->GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
 
-  if(wr !=  sizeof(EventHeader_t)){
-    printf("TMidasFile: error on write event header, return %i, size requested %lu\n",wr,sizeof(EventHeader_t));
+  if(wr !=  sizeof(TMidas_EVENT_HEADER)){
+    printf("TMidasFile: error on write event header, return %i, size requested %lu\n",wr,sizeof(TMidas_EVENT_HEADER));
     return false;
   }
 

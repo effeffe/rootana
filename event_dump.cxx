@@ -180,8 +180,8 @@ int ProcessMidasOnline(const char* hostname, const char* exptname)
          break;
 
        TMidasEvent event;
-       memcpy(event.GetEventHeader(), pevent, sizeof(EventHeader_t));
-       event.SetData(size, pevent+sizeof(EventHeader_t));
+       memcpy(event.GetEventHeader(), pevent, sizeof(TMidas_EVENT_HEADER));
+       event.SetData(size, pevent+sizeof(TMidas_EVENT_HEADER));
        event.SetBankList();
        HandleMidasEvent(event);
 
