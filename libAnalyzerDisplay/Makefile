@@ -1,0 +1,52 @@
+# Makefile
+
+CXXFLAGS = -g -O2 -Wall -Wuninitialized -I../libMidasInterface/ -I../libAnalyzer/
+
+# optional ZLIB library
+
+CXXFLAGS += -DHAVE_ZLIB
+
+# ROOT libraries
+
+ifdef ROOTSYS
+#ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread
+ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread
+#RPATH    += -Wl,-rpath,$(ROOTSYS)/lib
+CXXFLAGS += -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
+endif
+
+ALL:= 
+OBJS:=
+ifdef ROOTSYS
+ALL  += libAnalyzerDisplay.a display_example.exe
+OBJS += TComplicatedExampleCanvas.o TMainDisplayWindow.o TRootanaDisplay.o TSimpleExampleCanvas.o
+OBJS += TMainDisplayWindowDict.o TRootanaDisplayDict.o
+endif
+
+all: $(ALL)
+
+libAnalyzerDisplay.a: $(OBJS)
+	-rm -f $@
+	ar -rv $@ $^
+
+display_example.exe: display_example.cxx libAnalyzerDisplay.a ../libAnalyzer/libAnalyzer.a ../libMidasInterface/libMidasInterface.a 
+	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH) 
+
+
+%Dict.o: %Dict.cxx
+	$(CXX) $(CXXFLAGS) -c $<
+
+%Dict.cxx: %.hxx %_LinkDef.h
+	rootcint -f $@ -c -p $(CXXFLAGS) $^
+
+
+%.o: %.cxx
+	$(CXX) $(CXXFLAGS) -c $<
+
+dox:
+	doxygen
+
+clean::
+	-rm -f *.o *.a *.exe *Dict.h *Dict.cxx $(ALL)
+
+# end

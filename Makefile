@@ -59,6 +59,14 @@ CXXFLAGS += -DOLD_SERVER -I./obsolete -IlibNetDirectory
 OBJS     += ./obsolete/midasServer.o
 endif
 
+# optional libAnalyzer and libAnalyzerDisplay code
+ifdef ROOTSYS
+LIBS     += libAnalyzer/libAnalyzer.a libAnalyzerDisplay/libAnalyzerDisplay.a
+ALL+= libAnalyzer/libAnalyzer.a libAnalyzerDisplay/libAnalyzerDisplay.a
+endif
+
+
+
 #ALL+= librootana.a
 ALL+= event_dump.exe
 ALL+= event_skim.exe
@@ -83,6 +91,12 @@ libMidasInterface/libMidasInterface.a:
 
 libNetDirectory/libNetDirectory.a:
 	make -C libNetDirectory
+
+libAnalyzer/libAnalyzer.a:
+	make -C libAnalyzer
+
+libAnalyzerDisplay/libAnalyzerDisplay.a:
+	make -C libAnalyzerDisplay
 
 #librootana.a: $(OBJS)
 #	-rm -f $@
@@ -110,6 +124,12 @@ clean::
 
 clean::
 	make -C libNetDirectory clean
+
+clean::
+	make -C libAnalyzer clean
+
+clean::
+	make -C libAnalyzerDisplay clean
 
 clean::
 	-rm -f html/*
