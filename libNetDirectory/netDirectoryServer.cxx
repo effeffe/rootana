@@ -31,6 +31,7 @@
 
 #include <TROOT.h>
 #include <TClass.h>
+#include <TFile.h>
 #include <TDirectory.h>
 #include <TKey.h>
 #include <TFolder.h>
@@ -57,11 +58,11 @@ static std::map<std::string,std::string> gExportNames;
 
 static TObject* FollowPath(TObject* container, char* path)
 {
-  if (0)
-    printf("Follow path [%s] in container %p\n", path, container);
-
   while (1)
     {
+      if (0)
+        printf("Follow path [%s] in container %p\n", path, container);
+
       while (*path == '/')
         path++;
 
@@ -87,11 +88,27 @@ static TObject* FollowPath(TObject* container, char* path)
       if (!s)
         return obj;
 
+      if (!obj)
+        return NULL;
+
       container = obj;
 
       path = s+1;
     }
   /* NOT REACHED */
+}
+
+static TObject* FindTopLevelObject(const char* name)
+{
+   TObject *obj = NULL;
+   //gROOT->GetListOfFiles()->Print();
+   obj = gROOT->GetListOfFiles()->FindObject(name);
+   if (obj)
+      return obj;
+   obj = gROOT->FindObjectAny(name);
+   if (obj)
+      return obj;
+   return NULL;
 }
 
 static TObject* TopLevel(char* path, char**opath)
@@ -123,7 +140,7 @@ static TObject* TopLevel(char* path, char**opath)
       if (strcmp(path, ename) == 0)
         {
           const char* xname = gExportNames[ename].c_str();
-          obj = gROOT->FindObjectAny(xname);
+          obj = FindTopLevelObject(xname);
           //printf("Lookup of [%s] returned %p\n", xname, obj);
           break;
         }
@@ -188,6 +205,10 @@ static void ResetObject(TObject* obj)
 
 static TKey* MakeKey(TObject* obj, int cycle, TDirectory* dir, const char* name = NULL)
 {
+  static TDirectory* xfile = NULL;
+  if (!xfile)
+    xfile = new TFile("/dev/null");
+
   TClass *xclass = obj->IsA();
   
   if (xclass->InheritsFrom(TDirectory::Class()))
@@ -199,8 +220,9 @@ static TKey* MakeKey(TObject* obj, int cycle, TDirectory* dir, const char* name 
 
   if (!name)
     name = obj->GetName();
-  
-  return new TKey(name, obj->GetTitle(), xclass, cycle, dir);
+
+  //return new TKey(name, obj->GetTitle(), xclass, cycle, dir);
+  return new TKey(name, obj->GetTitle(), xclass, 0, xfile);
 }
  
 /*------------------------------------------------------------------*/
@@ -245,7 +267,7 @@ static THREADTYPE root_server_thread(void *arg)
               const char* ename = gExports[i].c_str();
               const char* xname = gExportNames[ename].c_str();
 
-              TObject* obj = gROOT->FindObjectAny(xname);
+              TObject* obj = FindTopLevelObject(xname);
 
               if (!obj)
                 {
@@ -427,6 +449,8 @@ static THREADTYPE root_server_thread(void *arg)
           char *s;
           TObject *obj = TopLevel(top, &s);
 
+          //printf("toplevel found %p for \'%s\' remaining \'%s\'\n", obj, top, s);
+
           if (obj && !s)
             {
               // they requested a top-level object. Give out a fake name
@@ -508,7 +532,7 @@ static THREADTYPE root_server_thread(void *arg)
                   const char* ename = gExports[i].c_str();
                   const char* xname = gExportNames[ename].c_str();
 
-                  TObject* obj = gROOT->FindObjectAny(xname);
+                  TObject* obj = FindTopLevelObject(xname);
 
                   if (!obj)
                     {

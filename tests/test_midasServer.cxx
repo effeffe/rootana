@@ -31,6 +31,7 @@
 #include <TDirectory.h>
 #include <TFolder.h>
 #include <TH1D.h>
+//#include <TBrowser.h>
 
 TDirectory* gOnlineHistDir = NULL;
 TFile* gOutputFile = NULL;
@@ -224,6 +225,7 @@ int main(int argc, char *argv[])
 	 
    gOnlineHistDir->cd();
 
+   //TFile *f = new TFile("/Users/olchansk/output.root", "RECREATE");
    TFile *f = new TFile("output.root", "RECREATE");
    f->cd();
 
@@ -244,6 +246,7 @@ int main(int argc, char *argv[])
    hh2->Fill(25);
 
    //f->Write();
+   //f->Close();
 
 #ifdef OLD_SERVER
    if (oldTcpPort>0 && gManaHistosFolder)
@@ -259,17 +262,20 @@ int main(int argc, char *argv[])
 
    //gDirectory->cd("/");
    //gDirectory->pwd();
-   NetDirectoryExport(gROOT->GetListOfFiles(), "ListOfFiles");
-   NetDirectoryExport(gROOT->GetListOfGlobals(), "ListOfGlobals");
+   //gROOT->cd();
+
+   //NetDirectoryExport(gROOT->GetListOfFiles(), "ListOfFiles");
+   //NetDirectoryExport(gROOT->GetListOfGlobals(), "ListOfGlobals");
 
    if (xmlServer) {
-      xmlServer->Export(gROOT->GetListOfFiles(), "ListOfFiles");
-      xmlServer->Export(gROOT->GetListOfGlobals(), "ListOfGlobals");
+      //xmlServer->Export(gROOT->GetListOfFiles(), "ListOfFiles");
+      //xmlServer->Export(gROOT->GetListOfGlobals(), "ListOfGlobals");
    }
 
 
    new MyPeriodic(100, IncrFunc);
    
+   //new TBrowser();
    app->Run(kTRUE);
    return 0;
 }
