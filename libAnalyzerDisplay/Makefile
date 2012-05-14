@@ -37,7 +37,7 @@ display_example.exe: display_example.cxx libAnalyzerDisplay.a ../libAnalyzer/lib
 	$(CXX) $(CXXFLAGS) -c $<
 
 %Dict.cxx: %.hxx %_LinkDef.h
-	rootcint -f $@ -c -p $(CXXFLAGS) $^
+	LD_LIBRARY_PATH=$(ROOTSYS)/lib $(ROOTSYS)/bin/rootcint -f $@ -c -p $(CXXFLAGS) $^
 
 
 %.o: %.cxx
