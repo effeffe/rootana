@@ -207,6 +207,59 @@ static TKey* MakeKey(TObject* obj, int cycle, TDirectory* dir, const char* name 
  
 /*------------------------------------------------------------------*/
 
+static void SendString(TSocket* sock, const char* str)
+{
+   sock->SendRaw(str, strlen(str));
+}
+
+static void SendHttpReply(TSocket* sock, const char* mimetype, const char* message)
+{
+   char buf[256];
+   int len = strlen(message);
+   SendString(sock, "HTTP/1.1 200 OK\n");
+   //SendString(sock, "Date: Tue, 15 May 2012 16:50:31 GMT\n");
+   SendString(sock, "Server: ROOTANA xmlServer\n");
+   sprintf(buf, "Content-Length: %d\n", len);
+   SendString(sock, buf);
+   //Connection: close\n
+   sprintf(buf, "Content-Type: %s\n", mimetype);
+   SendString(sock, buf);
+   //charset=iso-8859-1\n
+   SendString(sock, "\n");
+   SendString(sock, message);
+}
+
+static void SendHttpReply(TSocket* sock, const char* mimetype, const std::string& str)
+{
+   SendHttpReply(sock, mimetype, str.c_str());
+}
+
+static std::string HtmlTag(const char* tag, const char* contents)
+{
+   std::string s;
+   s += "<";
+   s += tag;
+   s += ">";
+   s += contents;
+   s += "</";
+   s += tag;
+   s += ">";
+   return s;
+}
+
+static std::string HtmlTag(const char* tag, const std::string& contents)
+{
+   std::string s;
+   s += "<";
+   s += tag;
+   s += ">";
+   s += contents;
+   s += "</";
+   s += tag;
+   s += ">";
+   return s;
+}
+
 static THREADTYPE root_server_thread(void *arg)
 /*
   Serve histograms over TCP/IP socket link
@@ -242,9 +295,50 @@ static THREADTYPE root_server_thread(void *arg)
       }
          
       if (gVerbose)
-        printf("Request [%s] from %s\n", request, sock->GetInetAddress().GetHostName());
+        printf("xmlServer: Request [%s] from %s\n", request, sock->GetInetAddress().GetHostName());
 
-      if (strcmp(request, "GetListOfKeys") == 0)
+      if (0) {} 
+      else if (strstr(request, "GET / "))
+        {
+          // enumerate top level exported directories
+
+          LockRootGuard lock;
+          
+          std::string reply;
+
+          reply += "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n";
+          reply += HtmlTag("title", "Export list") + "\n";
+          reply += "</head><body>\n";
+          reply += HtmlTag("h1", "Export list") + "\n";
+
+          for (unsigned int i=0; i<gExports.size(); i++) {
+             const char* ename = gExports[i].c_str();
+             const char* xname = gExportNames[ename].c_str();
+             
+             TObject* obj = gROOT->FindObjectAny(xname);
+             
+             if (obj) {
+                std::string s;
+                s += "<a href=\"";
+                s += ename;
+                s += "\">";
+                s += ename;
+                s += "</a>\n";
+                reply += HtmlTag("p", s) + "\n";
+             } else {
+                std::string s;
+                s += ename;
+                s += " (cannot be found. maybe deleted?)\n";
+                reply += HtmlTag("p", s) + "\n";
+             }
+          }
+          
+          lock.Unlock();
+
+          reply += "</body></html>\n";
+          SendHttpReply(sock, "text/html", reply);
+        }
+      else if (strstr(request, "GET /index.xml "))
         {
           // enumerate top level exported directories
 
@@ -280,7 +374,7 @@ static THREADTYPE root_server_thread(void *arg)
 
           delete keys;
           lock.Unlock();
-          sock->SendRaw(s, strlen(s) + 1);
+          SendHttpReply(sock, "application/xml", s);
         }
       else if (strncmp(request, "GetListOfKeys ", 14) == 0)
         {
@@ -560,14 +654,16 @@ static THREADTYPE root_server_thread(void *arg)
         }
       else
         {
-          fprintf(stderr, "netDirectoryServer: Received unknown request \"%s\"\n", request);
-          //LockRootGuard lock;
-          //TObjString s("Unknown request");
-          //message.Reset(kMESS_OBJECT);
-          //message.WriteObject(&s);
-          const char* message = "Unknown request";
-          //lock.Unlock();
-          sock->SendRaw(message, strlen(message) + 1);
+          fprintf(stderr, "xmlServer: Received unknown request \"%s\"\n", request);
+
+          std::string reply;
+          reply += "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n";
+          reply += HtmlTag("title", "Unknown request") + "\n";
+          reply += "</head><body>\n";
+          reply += HtmlTag("h1", "Unknown request") + "\n";
+          reply += HtmlTag("p", request) + "\n";
+          reply += "</body></html>\n";
+          SendHttpReply(sock, "text/html", reply);
         }
    } while (1);
 
