@@ -135,6 +135,13 @@ void IncrFunc()
       if (x>100)
         x = 0;
     }
+
+  h = (TH1D*)gROOT->FindObjectAny("test3");
+  //printf("Histogram %p\n", h);
+  if (h)
+    {
+      h->Fill(33);
+    }
 }
 
 // Main function call
@@ -225,8 +232,8 @@ int main(int argc, char *argv[])
 	 
    gOnlineHistDir->cd();
 
-   //TFile *f = new TFile("/Users/olchansk/output.root", "RECREATE");
-   TFile *f = new TFile("output.root", "RECREATE");
+   TFile *f = new TFile("/Users/olchansk/output.root", "RECREATE");
+   //TFile *f = new TFile("output.root", "RECREATE");
    f->cd();
 
    NetDirectoryExport(f, "outputFile");
@@ -239,11 +246,18 @@ int main(int argc, char *argv[])
    hh->Fill(10);
    hh->Fill(50);
 
-   TDirectory* subdir = gDirectory->mkdir("subdir");
+   TDirectory* subdir = gDirectory->mkdir("subdir with space");
    subdir->cd();
 
-   TH1D* hh2 = new TH1D("test2", "test2", 100, 0, 100);
+   TH1D* hh2 = new TH1D("test2 with space", "test2", 100, 0, 100);
    hh2->Fill(25);
+
+   TFolder* subfolder = new TFolder("subfolder", "subfolder");
+   f->Add(subfolder);
+
+   TH1D* hh3 = new TH1D("test3", "test3", 100, 0, 100);
+   hh3->Fill(33);
+   subfolder->Add(hh3);
 
    //f->Write();
    //f->Close();
@@ -268,10 +282,9 @@ int main(int argc, char *argv[])
    //NetDirectoryExport(gROOT->GetListOfGlobals(), "ListOfGlobals");
 
    if (xmlServer) {
-      //xmlServer->Export(gROOT->GetListOfFiles(), "ListOfFiles");
+      xmlServer->Export(gROOT->GetListOfFiles(), "ListOfFiles");
       //xmlServer->Export(gROOT->GetListOfGlobals(), "ListOfGlobals");
    }
-
 
    new MyPeriodic(100, IncrFunc);
    

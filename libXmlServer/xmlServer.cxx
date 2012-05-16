@@ -57,6 +57,61 @@ static std::map<std::string,std::string> gExportNames;
 
 /*------------------------------------------------------------------*/
 
+static std::string HtmlEncode(const char* s)
+{
+   std::string r;
+   while (*s) {
+      char c = *s;
+      if (isalpha(c)) {
+         r += c;
+      } else if (isdigit(c)) {
+         r += c;
+      } else {
+         char buf[16];
+         sprintf(buf, "%%%02x", c);
+         r += buf;
+      }
+      s++;
+   }
+   return r;
+}
+
+static int atohex(int a)
+{
+   if (a>='0' && a<='9')
+      return a-'0';
+   if (a>='a' && a<='f')
+      return a-'a'+10;
+   if (a>='A' && a<='F')
+      return a-'A'+10;
+   return 0;
+}
+
+static std::string HtmlDecode(const char* s)
+{
+   std::string r;
+   while (*s) {
+      if (*s == '%') {
+         s++;
+         char c = 0;
+         c = c*16 + atohex(s[0]);
+         c = c*16 + atohex(s[1]);
+         r += c;
+
+         // be careful when incrementing "s" to not overrun the '\0' string terminator!
+         if (*s)
+            s++;
+         if (*s)
+            s++;
+      } else {
+         r += *s++;
+      }
+   }
+   return r;
+}
+
+/*------------------------------------------------------------------*/
+
 static TObject* FollowPath(TObject* container, char* path)
 {
   if (0)
@@ -74,17 +129,23 @@ static TObject* FollowPath(TObject* container, char* path)
 
       TObject *obj = NULL;
 
+      std::string xpath = HtmlDecode(path);
+      printf("FindObject %s, decoded [%s]\n", path, xpath.c_str());
+
       if (container->InheritsFrom(TDirectory::Class()))
-        obj = ((TDirectory*)container)->FindObject(path);
+        obj = ((TDirectory*)container)->FindObject(xpath.c_str());
       else if (container->InheritsFrom(TFolder::Class()))
-        obj = ((TFolder*)container)->FindObject(path);
+        obj = ((TFolder*)container)->FindObject(xpath.c_str());
       else if (container->InheritsFrom(TCollection::Class()))
-        obj = ((TCollection*)container)->FindObject(path);
+        obj = ((TCollection*)container)->FindObject(xpath.c_str());
       else
         {
           printf("ERROR: Container \'%s\' of type %s is not a TDirectory, TFolder or TCollection\n", container->GetName(), container->IsA()->GetName());
           return NULL;
         }
+
+      if (!obj)
+        return NULL;
 
       if (!s)
         return obj;
@@ -94,6 +155,19 @@ static TObject* FollowPath(TObject* container, char* path)
       path = s+1;
     }
   /* NOT REACHED */
+}
+
+static TObject* FindTopLevelObject(const char* name)
+{
+   TObject *obj = NULL;
+   //gROOT->GetListOfFiles()->Print();
+   obj = gROOT->GetListOfFiles()->FindObject(name);
+   if (obj)
+      return obj;
+   obj = gROOT->FindObjectAny(name);
+   if (obj)
+      return obj;
+   return NULL;
 }
 
 static TObject* TopLevel(char* path, char**opath)
@@ -125,7 +199,7 @@ static TObject* TopLevel(char* path, char**opath)
       if (strcmp(path, ename) == 0)
         {
           const char* xname = gExportNames[ename].c_str();
-          obj = gROOT->FindObjectAny(xname);
+          obj = FindTopLevelObject(xname);
           //printf("Lookup of [%s] returned %p\n", xname, obj);
           break;
         }
@@ -315,12 +389,12 @@ static THREADTYPE root_server_thread(void *arg)
              const char* ename = gExports[i].c_str();
              const char* xname = gExportNames[ename].c_str();
              
-             TObject* obj = gROOT->FindObjectAny(xname);
+             TObject* obj = FindTopLevelObject(xname);
              
              if (obj) {
                 std::string s;
                 s += "<a href=\"";
-                s += ename;
+                s += HtmlEncode(ename);
                 s += "\">";
                 s += ename;
                 s += "</a>\n";
@@ -338,6 +412,18 @@ static THREADTYPE root_server_thread(void *arg)
           reply += "</body></html>\n";
           SendHttpReply(sock, "text/html", reply);
         }
+      else if (strstr(request, "GET /favicon.ico "))
+        {
+          std::string reply;
+
+          reply += "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n";
+          reply += HtmlTag("title", "No favicon") + "\n";
+          reply += "</head><body>\n";
+          reply += HtmlTag("h1", "No favicon") + "\n";
+          reply += HtmlTag("p", "No favicon") + "\n";
+          reply += "</body></html>\n";
+          SendHttpReply(sock, "text/html", reply);
+        }
       else if (strstr(request, "GET /index.xml "))
         {
           // enumerate top level exported directories
@@ -352,7 +438,7 @@ static THREADTYPE root_server_thread(void *arg)
               const char* ename = gExports[i].c_str();
               const char* xname = gExportNames[ename].c_str();
 
-              TObject* obj = gROOT->FindObjectAny(xname);
+              TObject* obj = FindTopLevelObject(xname);
 
               if (!obj)
                 {
@@ -374,171 +460,273 @@ static THREADTYPE root_server_thread(void *arg)
 
           delete keys;
           lock.Unlock();
+
           SendHttpReply(sock, "application/xml", s);
         }
-      else if (strncmp(request, "GetListOfKeys ", 14) == 0)
+      else if (strncmp(request, "GET /", 5) == 0)
         {
           LockRootGuard lock;
 
-          char* dirname = request + 14;
+          char* dirname = request + 5;
+
+          char* x = strstr(dirname, " HTTP");
+          if (x)
+             *x = 0;
+
+          std::string path;
+          path += "/";
+          path += dirname;
+
+          std::string xpath = HtmlDecode(dirname);
 
           TObject* obj = FollowPath(dirname);
 
-          if (obj && obj->InheritsFrom(TDirectory::Class()))
-            {
-              TDirectory* dir = (TDirectory*)obj;
+          if (!obj) {
+             std::string reply;
+             std::string buf;
+             
+             reply += "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n";
 
-              //printf("Directory %p\n", dir);
-              //dir->Print();
-              
-              TList* xkeys = dir->GetListOfKeys();
-              TList* keys = xkeys;
-              if (!keys)
-                keys = new TList();
+             buf = "Not found ";
+             buf += xpath;
+             reply += HtmlTag("title", buf) + "\n";
+             reply += "</head><body>\n";
+             reply += HtmlTag("h1", buf) + "\n";
+             
+             reply += HtmlTag("p", "Object not found");
 
-              //printf("Directory %p keys:\n", dir);
-              //keys->Print();
-              
-              TList* objs = dir->GetList();
+             reply += "</body></html>\n";
+             SendHttpReply(sock, "text/html", reply);
 
-              //printf("Directory %p objects:\n", dir);
-              //objs->Print();
-              
-              TIter next = objs;
-              while(1)
-                {
-                  TObject *obj = next();
+          } else if (obj && obj->InheritsFrom(TDirectory::Class())) {
+             TDirectory* dir = (TDirectory*)obj;
 
-                  //printf("object %p\n", obj);
+             std::string reply;
+             std::string buf;
+             
+             reply += "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n";
 
-                  if (obj == NULL)
-                    break;
-                  
-                  const char* name      = obj->GetName();
-                  
-                  if (!keys->FindObject(name))
-                    {
-                      TKey* key = MakeKey(obj, 1, dir);
-                      keys->Add(key);
-                    }
+             buf = "Dir ";
+             buf += xpath;
+             reply += HtmlTag("title", buf) + "\n";
+             reply += "</head><body>\n";
+             reply += HtmlTag("h1", buf) + "\n";
+             
+
+             //printf("Directory %p\n", dir);
+             //dir->Print();
+
+             std::map<std::string, std::string> alist;
+
+             if (1) {
+                TList* keys = dir->GetListOfKeys();
+
+                //printf("Directory %p keys:\n", dir);
+                //keys->Print();
+             
+                TIter next = keys;
+                while(1) {
+                   TObject *obj = next();
+                   
+                   //printf("object %p\n", obj);
+                   
+                   if (obj == NULL)
+                      break;
+
+                   if (obj->InheritsFrom(TKey::Class())) {
+                      TKey* key = (TKey*)obj;
+                      
+                      const char* objname   = key->GetName();
+                      const char* classname = key->GetClassName();
+                   
+                      std::string s;
+                      s += "<a href=\"";
+                      s += path; //dir->GetName();
+                      s += "/";
+                      s += HtmlEncode(objname);
+                      s += "\">";
+                      s += objname;
+                      s += " (";
+                      s += classname;
+                      s += ")-KEY";
+                      s += "</a>\n";
+                      std::string a = HtmlTag("p", s) + "\n";
+                      //alist[objname] = a;
+                      reply += a;
+                   }
                 }
+             }
 
-              //printf("Sending keys %p\n", keys);
-              //keys->Print();
-
-              const char*s = TBufferXML::ConvertToXML(keys);
-              sock->SendRaw(s, strlen(s) + 1);
-
-              if (keys != xkeys)
-                delete keys;
-            }
-          else if (obj && obj->InheritsFrom(TFolder::Class()))
-            {
-              TFolder* folder = (TFolder*)obj;
-
-              //printf("Folder %p\n", folder);
-              //folder->Print();
-
-              TIterator *iterator = folder->GetListOfFolders()->MakeIterator();
-
-              TList* keys = new TList();
-
-              while (1)
-                {
-                  TNamed *obj = (TNamed*)iterator->Next();
-                  if (obj == NULL)
-                    break;
-      
-                  const char* name      = obj->GetName();
-                  
-                  if (!keys->FindObject(name))
-                    {
-                      TKey* key = MakeKey(obj, 1, gROOT);
-                      keys->Add(key);
-                    }
+             if (1) {
+                TList* objs = dir->GetList();
+             
+                //printf("Directory %p objects:\n", dir);
+                //objs->Print();
+                
+                TIter next = objs;
+                while(1)
+                   {
+                      TObject *obj = next();
+                      
+                      //printf("object %p\n", obj);
+                      
+                      if (obj == NULL)
+                         break;
+                      
+                      const char* objname   = obj->GetName();
+                      const char* classname = obj->ClassName();
+                   
+                      std::string s;
+                      s += "<a href=\"";
+                      s += path; //dir->GetName();
+                      s += "/";
+                      s += HtmlEncode(objname);
+                      s += "\">";
+                      s += objname;
+                      s += " (";
+                      s += classname;
+                      s += ")";
+                      s += "</a>\n";
+                      std::string a = HtmlTag("p", s) + "\n";
+                      //alist[objname] = a;
+                      reply += a;
+                   }
+             }
+                
+             lock.Unlock();
+             
+             if (1) {
+                std::map<std::string, std::string>::iterator iter = alist.begin();
+                for (; iter!=alist.end(); iter++) {
+                   // iter->first is your key
+                   // iter->second is it''s value
+                   reply += iter->second;
                 }
+             }
               
-              delete iterator;
+             reply += "</body></html>\n";
+             SendHttpReply(sock, "text/html", reply);
+             
+          } else if (obj && obj->InheritsFrom(TFolder::Class())) {
+             TFolder* folder = (TFolder*)obj;
 
-              if (gVerbose)
+             //printf("Folder %p\n", folder);
+             //folder->Print();
+
+             std::string reply;
+             std::string buf;
+             
+             reply += "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n";
+
+             buf = "Folder ";
+             buf += xpath;
+             reply += HtmlTag("title", buf) + "\n";
+             reply += "</head><body>\n";
+             reply += HtmlTag("h1", buf) + "\n";
+             
+             TIterator *iterator = folder->GetListOfFolders()->MakeIterator();
+             
+             while (1)
                 {
-                  printf("Sending keys %p\n", keys);
-                  keys->Print();
+                   TNamed *obj = (TNamed*)iterator->Next();
+                   if (obj == NULL)
+                      break;
+                   
+                   const char* objname   = obj->GetName();
+                   const char* classname = obj->ClassName();
+                   
+                   std::string s;
+                   s += "<a href=\"";
+                   s += path; //folder->GetName();
+                   s += "/";
+                   s += HtmlEncode(objname);
+                   s += "\">";
+                   s += objname;
+                   s += " (";
+                   s += classname;
+                   s += ")";
+                   s += "</a>\n";
+                   std::string a = HtmlTag("p", s) + "\n";
+                   reply += a;
                 }
+             
+             delete iterator;
 
-              //message.Reset(kMESS_OBJECT);
-              //message.WriteObject(keys);
+             lock.Unlock();
+             
+             reply += "</body></html>\n";
+             SendHttpReply(sock, "text/html", reply);
 
-              const char*s = TBufferXML::ConvertToXML(keys);
-              sock->SendRaw(s, strlen(s) + 1);
+          } else if (obj && obj->InheritsFrom(TCollection::Class())) {
+             TCollection* collection = (TCollection*)obj;
+             
+             //printf("Collection %p\n", collection);
+             //collection->Print();
+             //printf("Entries %d\n", collection->GetEntries());
+             //printf("IsEmpty %d\n", collection->IsEmpty());
+             
+             std::string reply;
+             std::string buf;
+             
+             reply += "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n";
 
-              delete keys;
-            }
-          else if (obj && obj->InheritsFrom(TCollection::Class()))
-            {
-              TCollection* collection = (TCollection*)obj;
-
-              //printf("Collection %p\n", collection);
-              //collection->Print();
-
-              TIterator *iterator = collection->MakeIterator();
-
-              TList* keys = new TList();
-
-              while (1)
+             buf = "Collection ";
+             buf += xpath;
+             reply += HtmlTag("title", buf) + "\n";
+             reply += "</head><body>\n";
+             reply += HtmlTag("h1", buf) + "\n";
+             
+             TIterator *iterator = collection->MakeIterator();
+             
+             while (1)
                 {
-                  TNamed *obj = (TNamed*)iterator->Next();
-                  if (obj == NULL)
-                    break;
-      
-                  const char* name      = obj->GetName();
-                  
-                  if (!keys->FindObject(name))
-                    {
-                      TKey* key = MakeKey(obj, 1, gROOT);
-                      keys->Add(key);
-                    }
+                   TNamed *obj = (TNamed*)iterator->Next();
+                   if (obj == NULL)
+                      break;
+                   
+                   const char* objname   = obj->GetName();
+                   const char* classname = obj->ClassName();
+                   
+                   std::string s;
+                   s += "<a href=\"";
+                   s += path; //collection->GetName();
+                   s += "/";
+                   s += HtmlEncode(objname);
+                   s += "\">";
+                   s += objname;
+                   s += " (";
+                   s += classname;
+                   s += ")";
+                   s += "</a>\n";
+                   std::string a = HtmlTag("p", s) + "\n";
+                   reply += a;
                 }
-              
-              delete iterator;
+             
+             delete iterator;
 
-              if (gVerbose)
-                {
-                  printf("Sending keys %p\n", keys);
-                  keys->Print();
-                }
+             lock.Unlock();
+             
+             reply += "</body></html>\n";
+             SendHttpReply(sock, "text/html", reply);
 
-              //message.Reset(kMESS_OBJECT);
-              //message.WriteObject(keys);
+          } else {
+             std::string reply;
+             std::string buf;
+             
+             reply += "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n";
 
-              const char*s = TBufferXML::ConvertToXML(keys);
-              sock->SendRaw(s, strlen(s) + 1);
+             buf = "Object ";
+             buf += xpath;
+             reply += HtmlTag("title", buf) + "\n";
+             reply += "</head><body>\n";
+             reply += HtmlTag("h1", buf) + "\n";
+             
+             reply += HtmlTag("p", obj->GetName());
+             reply += HtmlTag("p", obj->ClassName());
 
-              delete keys;
-            }
-          else if (obj)
-            {
-              fprintf(stderr, "netDirectoryServer: ERROR: obj %p name %s, type %s is not a directory!\n", obj, obj->GetName(), obj->IsA()->GetName());
-              //TObjString s("Not a directory");
-              //message.Reset(kMESS_OBJECT);
-              //message.WriteObject(&s);
-
-              const char*s = "Not a directory";
-              sock->SendRaw(s, strlen(s) + 1);
-            }
-          else
-            {
-              fprintf(stderr, "netDirectoryServer: ERROR: obj %p not found\n", obj);
-              //TObjString s("Not found");
-              //message.Reset(kMESS_OBJECT);
-              //message.WriteObject(&s);
-
-              const char*s = "Not found";
-              sock->SendRaw(s, strlen(s) + 1);
-            }
-              
-          lock.Unlock();
-          //sock->Send(message);
+             reply += "</body></html>\n";
+             SendHttpReply(sock, "text/html", reply);
+          }
         }
       else if (strncmp(request, "FindObjectByName ", 17) == 0)
         {
@@ -630,7 +818,7 @@ static THREADTYPE root_server_thread(void *arg)
                   const char* ename = gExports[i].c_str();
                   const char* xname = gExportNames[ename].c_str();
 
-                  TObject* obj = gROOT->FindObjectAny(xname);
+                  TObject* obj = FindTopLevelObject(xname);
 
                   if (!obj)
                     {
