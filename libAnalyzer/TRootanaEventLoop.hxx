@@ -19,7 +19,7 @@
 #include <sys/time.h>
 #include <iostream>
 #include <assert.h>
-
+#include <typeinfo>
 
 
 /// This is a base class for event loops that are derived from rootana.

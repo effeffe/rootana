@@ -7,6 +7,7 @@
 
 #include "TMidasEvent.h"
 #include "TGenericData.hxx"
+#include <typeinfo>
 
 ///
 class failed_midas_bank_cast: public std::exception
