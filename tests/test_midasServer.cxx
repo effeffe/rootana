@@ -232,8 +232,8 @@ int main(int argc, char *argv[])
 	 
    gOnlineHistDir->cd();
 
-   TFile *f = new TFile("/Users/olchansk/output.root", "RECREATE");
-   //TFile *f = new TFile("output.root", "RECREATE");
+   //TFile *f = new TFile("/Users/olchansk/output.root", "RECREATE");
+   TFile *f = new TFile("output.root", "RECREATE");
    f->cd();
 
    NetDirectoryExport(f, "outputFile");
