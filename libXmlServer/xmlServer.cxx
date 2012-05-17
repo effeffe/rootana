@@ -130,7 +130,7 @@ static TObject* FollowPath(TObject* container, char* path)
       TObject *obj = NULL;
 
       std::string xpath = HtmlDecode(path);
-      printf("FindObject %s, decoded [%s]\n", path, xpath.c_str());
+      //printf("FindObject %s, decoded [%s]\n", path, xpath.c_str());
 
       if (container->InheritsFrom(TDirectory::Class()))
         obj = ((TDirectory*)container)->FindObject(xpath.c_str());
@@ -140,7 +140,7 @@ static TObject* FollowPath(TObject* container, char* path)
         obj = ((TCollection*)container)->FindObject(xpath.c_str());
       else
         {
-          printf("ERROR: Container \'%s\' of type %s is not a TDirectory, TFolder or TCollection\n", container->GetName(), container->IsA()->GetName());
+          fprintf(stderr, "XmlServer: ERROR: Container \'%s\' of type %s is not a TDirectory, TFolder or TCollection\n", container->GetName(), container->IsA()->GetName());
           return NULL;
         }
 
@@ -207,7 +207,7 @@ static TObject* TopLevel(char* path, char**opath)
 
   if (!obj)
     {
-      printf("ERROR: Top level object \'%s\' not found in exports list\n", path);
+      fprintf(stderr, "XmlServer: ERROR: Top level object \'%s\' not found in exports list\n", path);
       return NULL;
     }
 
@@ -262,25 +262,6 @@ void ResetObject(TObject* obj)
 
 /*------------------------------------------------------------------*/
 
-static TKey* MakeKey(TObject* obj, int cycle, TDirectory* dir, const char* name = NULL)
-{
-  TClass *xclass = obj->IsA();
-  
-  if (xclass->InheritsFrom(TDirectory::Class()))
-    xclass = TDirectory::Class();
-  else if (xclass->InheritsFrom(TFolder::Class()))
-    xclass = TDirectory::Class();
-  else if (xclass->InheritsFrom(TCollection::Class()))
-    xclass = TDirectory::Class();
-
-  if (!name)
-    name = obj->GetName();
-  
-  return new TKey(name, obj->GetTitle(), xclass, cycle, dir);
-}
- 
-/*------------------------------------------------------------------*/
-
 static void SendString(TSocket* sock, const char* str)
 {
    sock->SendRaw(str, strlen(str));
@@ -308,6 +289,8 @@ static void SendHttpReply(TSocket* sock, const char* mimetype, const std::string
    SendHttpReply(sock, mimetype, str.c_str());
 }
 
+/*------------------------------------------------------------------*/
+
 static std::string HtmlTag(const char* tag, const char* contents)
 {
    std::string s;
@@ -334,6 +317,80 @@ static std::string HtmlTag(const char* tag, const std::string& contents)
    return s;
 }
 
+/*------------------------------------------------------------------*/
+
+std::string MakeXmlEntry(const TObject* obj)
+{
+   const char* objname = obj->GetName();
+   const char* classname = obj->ClassName();
+   bool isSubdir = false;
+   std::string xkey = "";
+
+   if (obj->InheritsFrom(TKey::Class())) {
+      TKey* key = (TKey*)obj;
+      classname = key->GetClassName();
+      xkey = "<key/>";
+   }
+
+   const TClass *xclass = TClass::GetClass(classname);
+
+   if (xclass->InheritsFrom(TDirectory::Class()))
+      isSubdir = true;
+
+   if (xclass->InheritsFrom(TFolder::Class()))
+      isSubdir = true;
+
+   if (xclass->InheritsFrom(TCollection::Class()))
+      isSubdir = true;
+
+   //printf("xclass %s, classname %s, subdir %d\n", xclass->GetName(), classname, isSubdir);
+
+   if (isSubdir)
+      return HtmlTag("subdir", HtmlTag("name", HtmlEncode(objname)) + HtmlTag("class", HtmlEncode(classname)) + xkey) + "\n";
+   else
+      return HtmlTag("object", HtmlTag("name", HtmlEncode(objname)) + HtmlTag("class", HtmlEncode(classname)) + xkey) + "\n";
+}
+
+std::string MakeHtmlEntry(const TObject* obj, const char* path)
+{
+   const char* objname = obj->GetName();
+   const char* classname = obj->ClassName();
+   bool isKey = false;
+
+   if (obj->InheritsFrom(TKey::Class())) {
+      TKey* key = (TKey*)obj;
+      classname = key->GetClassName();
+      isKey = true;
+   }
+
+   std::string s;
+
+   s += "<a href=\"";
+   s += path; //dir->GetName();
+   s += "/";
+   s += HtmlEncode(objname);
+   s += "\">";
+   s += objname;
+   s += "</a>\n";
+   s += " (";
+   s += classname;
+   s += ")";
+   if (isKey)
+      s += "-KEY";
+   s += " ";
+   s += "<a href=\"";
+   s += path; //dir->GetName();
+   s += "/";
+   s += HtmlEncode(objname);
+   s += ".xml";
+   s += "\">";
+   s += "XML</a>\n";
+
+   return s;
+}
+   
+/*------------------------------------------------------------------*/
+
 static THREADTYPE root_server_thread(void *arg)
 /*
   Serve histograms over TCP/IP socket link
@@ -351,7 +408,7 @@ static THREADTYPE root_server_thread(void *arg)
       if (rd <= 0)
         {
           if (gVerbose)
-            fprintf(stderr, "TXmlServer connection from %s closed\n", sock->GetInetAddress().GetHostName());
+            fprintf(stderr, "XmlServer: connection from %s closed\n", sock->GetInetAddress().GetHostName());
           sock->Close();
           delete sock;
           return THREADRETURN;
@@ -369,7 +426,7 @@ static THREADTYPE root_server_thread(void *arg)
       }
          
       if (gVerbose)
-        printf("xmlServer: Request [%s] from %s\n", request, sock->GetInetAddress().GetHostName());
+        printf("XmlServer: Request [%s] from %s\n", request, sock->GetInetAddress().GetHostName());
 
       if (0) {} 
       else if (strstr(request, "GET / "))
@@ -393,11 +450,17 @@ static THREADTYPE root_server_thread(void *arg)
              
              if (obj) {
                 std::string s;
+                s += " ";
                 s += "<a href=\"";
                 s += HtmlEncode(ename);
                 s += "\">";
                 s += ename;
                 s += "</a>\n";
+                s += "<a href=\"";
+                s += HtmlEncode(ename);
+                s += ".xml";
+                s += "\">";
+                s += "XML</a>\n";
                 reply += HtmlTag("p", s) + "\n";
              } else {
                 std::string s;
@@ -429,9 +492,11 @@ static THREADTYPE root_server_thread(void *arg)
           // enumerate top level exported directories
 
           LockRootGuard lock;
-          
-          //printf("Top level exported directories are:\n");
-          TList* keys = new TList();
+
+          std::string xml;
+
+          xml += "<xml>\n";
+          xml += "<dir>\n";
           
           for (unsigned int i=0; i<gExports.size(); i++)
             {
@@ -440,28 +505,22 @@ static THREADTYPE root_server_thread(void *arg)
 
               TObject* obj = FindTopLevelObject(xname);
 
-              if (!obj)
-                {
-                  fprintf(stderr, "GetListOfKeys: Exported name \'%s\' cannot be found!\n", xname);
-                  continue;
-                }
+              if (!obj) {
+                 xml += HtmlTag("subdir", HtmlTag("name", HtmlEncode(ename)) + "<deleted/>") + "\n";
+                 continue;
+              }
 
-              TKey* key = MakeKey(obj, 1, gROOT, ename);
-              keys->Add(key);
+              const char* cname = obj->ClassName();
+
+              xml += HtmlTag("subdir", HtmlTag("name", HtmlEncode(ename)) + HtmlTag("class", HtmlEncode(cname))) + "\n";
             }
           
-          if (gVerbose)
-            {
-              printf("Sending keys %p\n", keys);
-              keys->Print();
-            }
-
-          const char*s = TBufferXML::ConvertToXML(keys);
-
-          delete keys;
           lock.Unlock();
 
-          SendHttpReply(sock, "application/xml", s);
+          xml += "</dir>\n";
+          xml += "</xml>\n";
+
+          SendHttpReply(sock, "application/xml", xml);
         }
       else if (strncmp(request, "GET /", 5) == 0)
         {
@@ -472,6 +531,14 @@ static THREADTYPE root_server_thread(void *arg)
           char* x = strstr(dirname, " HTTP");
           if (x)
              *x = 0;
+
+          bool xmlOutput = false;
+
+          x = strstr(dirname, ".xml");
+          if (x) {
+             *x = 0;
+             xmlOutput = true;
+          }
 
           std::string path;
           path += "/";
@@ -503,6 +570,10 @@ static THREADTYPE root_server_thread(void *arg)
 
              std::string reply;
              std::string buf;
+             std::string xml;
+
+             xml += "<xml>\n";
+             xml += "<dir>\n";
              
              reply += "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n";
 
@@ -511,7 +582,6 @@ static THREADTYPE root_server_thread(void *arg)
              reply += HtmlTag("title", buf) + "\n";
              reply += "</head><body>\n";
              reply += HtmlTag("h1", buf) + "\n";
-             
 
              //printf("Directory %p\n", dir);
              //dir->Print();
@@ -533,27 +603,11 @@ static THREADTYPE root_server_thread(void *arg)
                    if (obj == NULL)
                       break;
 
-                   if (obj->InheritsFrom(TKey::Class())) {
-                      TKey* key = (TKey*)obj;
-                      
-                      const char* objname   = key->GetName();
-                      const char* classname = key->GetClassName();
+                   std::string a = HtmlTag("p", MakeHtmlEntry(obj, path.c_str())) + "\n";
+                   //alist[objname] = a;
+                   reply += a;
                    
-                      std::string s;
-                      s += "<a href=\"";
-                      s += path; //dir->GetName();
-                      s += "/";
-                      s += HtmlEncode(objname);
-                      s += "\">";
-                      s += objname;
-                      s += " (";
-                      s += classname;
-                      s += ")-KEY";
-                      s += "</a>\n";
-                      std::string a = HtmlTag("p", s) + "\n";
-                      //alist[objname] = a;
-                      reply += a;
-                   }
+                   xml += MakeXmlEntry(obj);
                 }
              }
 
@@ -573,23 +627,11 @@ static THREADTYPE root_server_thread(void *arg)
                       if (obj == NULL)
                          break;
                       
-                      const char* objname   = obj->GetName();
-                      const char* classname = obj->ClassName();
-                   
-                      std::string s;
-                      s += "<a href=\"";
-                      s += path; //dir->GetName();
-                      s += "/";
-                      s += HtmlEncode(objname);
-                      s += "\">";
-                      s += objname;
-                      s += " (";
-                      s += classname;
-                      s += ")";
-                      s += "</a>\n";
-                      std::string a = HtmlTag("p", s) + "\n";
+                      std::string a = HtmlTag("p", MakeHtmlEntry(obj, path.c_str())) + "\n";
                       //alist[objname] = a;
                       reply += a;
+
+                      xml += MakeXmlEntry(obj);
                    }
              }
                 
@@ -605,7 +647,13 @@ static THREADTYPE root_server_thread(void *arg)
              }
               
              reply += "</body></html>\n";
-             SendHttpReply(sock, "text/html", reply);
+
+             xml += "</dir></xml>\n";
+
+             if (xmlOutput)
+                SendHttpReply(sock, "application/xml", xml);
+             else
+                SendHttpReply(sock, "text/html", reply);
              
           } else if (obj && obj->InheritsFrom(TFolder::Class())) {
              TFolder* folder = (TFolder*)obj;
@@ -613,6 +661,11 @@ static THREADTYPE root_server_thread(void *arg)
              //printf("Folder %p\n", folder);
              //folder->Print();
 
+             std::string xml;
+
+             xml += "<xml>\n";
+             xml += "<dir>\n";
+             
              std::string reply;
              std::string buf;
              
@@ -632,30 +685,21 @@ static THREADTYPE root_server_thread(void *arg)
                    if (obj == NULL)
                       break;
                    
-                   const char* objname   = obj->GetName();
-                   const char* classname = obj->ClassName();
-                   
-                   std::string s;
-                   s += "<a href=\"";
-                   s += path; //folder->GetName();
-                   s += "/";
-                   s += HtmlEncode(objname);
-                   s += "\">";
-                   s += objname;
-                   s += " (";
-                   s += classname;
-                   s += ")";
-                   s += "</a>\n";
-                   std::string a = HtmlTag("p", s) + "\n";
-                   reply += a;
+                   reply += HtmlTag("p", MakeHtmlEntry(obj, path.c_str())) + "\n";
+                   xml += MakeXmlEntry(obj);
                 }
              
              delete iterator;
 
              lock.Unlock();
-             
+
+             xml += "</dir></xml>\n";
              reply += "</body></html>\n";
-             SendHttpReply(sock, "text/html", reply);
+
+             if (xmlOutput)
+                SendHttpReply(sock, "application/xml", xml);
+             else
+                SendHttpReply(sock, "text/html", reply);
 
           } else if (obj && obj->InheritsFrom(TCollection::Class())) {
              TCollection* collection = (TCollection*)obj;
@@ -664,6 +708,11 @@ static THREADTYPE root_server_thread(void *arg)
              //collection->Print();
              //printf("Entries %d\n", collection->GetEntries());
              //printf("IsEmpty %d\n", collection->IsEmpty());
+             
+             std::string xml;
+
+             xml += "<xml>\n";
+             xml += "<dir>\n";
              
              std::string reply;
              std::string buf;
@@ -684,120 +733,53 @@ static THREADTYPE root_server_thread(void *arg)
                    if (obj == NULL)
                       break;
                    
-                   const char* objname   = obj->GetName();
-                   const char* classname = obj->ClassName();
-                   
-                   std::string s;
-                   s += "<a href=\"";
-                   s += path; //collection->GetName();
-                   s += "/";
-                   s += HtmlEncode(objname);
-                   s += "\">";
-                   s += objname;
-                   s += " (";
-                   s += classname;
-                   s += ")";
-                   s += "</a>\n";
-                   std::string a = HtmlTag("p", s) + "\n";
-                   reply += a;
+                   reply += HtmlTag("p", MakeHtmlEntry(obj, path.c_str())) + "\n";
+                   xml += MakeXmlEntry(obj);
                 }
              
              delete iterator;
 
              lock.Unlock();
              
+             xml += "</dir></xml>\n";
              reply += "</body></html>\n";
-             SendHttpReply(sock, "text/html", reply);
+
+             if (xmlOutput)
+                SendHttpReply(sock, "application/xml", xml);
+             else
+                SendHttpReply(sock, "text/html", reply);
 
           } else {
-             std::string reply;
-             std::string buf;
-             
-             reply += "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n";
-
-             buf = "Object ";
-             buf += xpath;
-             reply += HtmlTag("title", buf) + "\n";
-             reply += "</head><body>\n";
-             reply += HtmlTag("h1", buf) + "\n";
-             
-             reply += HtmlTag("p", obj->GetName());
-             reply += HtmlTag("p", obj->ClassName());
-
-             reply += "</body></html>\n";
-             SendHttpReply(sock, "text/html", reply);
+             if (xmlOutput) {
+                std::string xml;
+                xml += "<xml>\n";
+                xml += "<ROOTobject>\n";
+                const char *msg = TBufferXML::ConvertToXML(obj);
+                xml += msg;
+                xml += "</ROOTobject>\n";
+                xml += "</xml>\n";
+                SendHttpReply(sock, "application/xml", xml);
+             } else {
+                std::string reply;
+                std::string buf;
+                
+                reply += "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n";
+                
+                buf = "Object ";
+                buf += xpath;
+                reply += HtmlTag("title", buf) + "\n";
+                reply += "</head><body>\n";
+                reply += HtmlTag("h1", buf) + "\n";
+                
+                reply += HtmlTag("p", obj->GetName());
+                reply += HtmlTag("p", obj->ClassName());
+                
+                reply += "</body></html>\n";
+                SendHttpReply(sock, "text/html", reply);
+             }
           }
         }
-      else if (strncmp(request, "FindObjectByName ", 17) == 0)
-        {
-          LockRootGuard lock;
-
-          char* top  = request + 17;
-
-          char *s;
-          TObject *obj = TopLevel(top, &s);
-
-          if (obj && !s)
-            {
-              // they requested a top-level object. Give out a fake name
-
-              char str[256];
-              sprintf(str, "TDirectory %s", obj->GetName());
-
-              for (unsigned int i=0; i<gExports.size(); i++)
-                {
-                  const char* ename = gExports[i].c_str();
-                  const char* xname = gExportNames[ename].c_str();
-
-                  if (strcmp(xname, obj->GetName()) == 0)
-                    {
-                      sprintf(str, "TDirectory %s", ename);
-                      break;
-                    }
-                }
-
-              obj = new TObjString(str); // FIXME: memory leak!
-            }
-          else if (obj)
-            {
-              obj = FollowPath(obj, s);
-            }
-
-          if (obj && obj->InheritsFrom(TDirectory::Class()))
-            {
-              char str[256];
-              sprintf(str, "TDirectory %s", obj->GetName());
-              obj = new TObjString(str);
-            }
-          
-          if (obj && obj->InheritsFrom(TFolder::Class()))
-            {
-              char str[256];
-              sprintf(str, "TDirectory %s", obj->GetName());
-              obj = new TObjString(str);
-            }
-          
-          if (obj && obj->InheritsFrom(TCollection::Class()))
-            {
-              char str[256];
-              sprintf(str, "TDirectory %s", obj->GetName());
-              obj = new TObjString(str);
-            }
-          
-          if (gVerbose)
-            {
-              if (obj)
-                printf("Sending object %p name \'%s\' class \'%s\'\n", obj, obj->GetName(), obj->IsA()->GetName());
-              else
-                printf("Sending object %p\n", obj);
-              //obj->Print();
-            }
-
-          const char *msg = TBufferXML::ConvertToXML(obj);
-          lock.Unlock();
-
-          sock->SendRaw(msg, strlen(msg) + 1);
-        }
+#if 0
       else if (strncmp(request, "ResetTH1 ", 9) == 0)
         {
           LockRootGuard lock;
@@ -822,7 +804,7 @@ static THREADTYPE root_server_thread(void *arg)
 
                   if (!obj)
                     {
-                      fprintf(stderr, "ResetTH1: Exported name \'%s\' cannot be found!\n", xname);
+                      fprintf(stderr, "XmlServer: ResetTH1: Exported name \'%s\' cannot be found!\n", xname);
                       continue;
                     }
 
@@ -840,9 +822,10 @@ static THREADTYPE root_server_thread(void *arg)
           const char *msg = "Success";
           sock->SendRaw(msg, strlen(msg) + 1);
         }
+#endif
       else
         {
-          fprintf(stderr, "xmlServer: Received unknown request \"%s\"\n", request);
+          fprintf(stderr, "XmlServer: Received unknown request \"%s\"\n", request);
 
           std::string reply;
           reply += "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n";
@@ -867,7 +850,7 @@ static THREADTYPE socket_listener(void *arg)
 
   int port = *(int *) arg;
   
-  fprintf(stderr, "XmlServer listening on port %d...\n", port);
+  fprintf(stderr, "XmlServer: Listening on port %d...\n", port);
   TServerSocket *lsock = new TServerSocket(port, kTRUE);
   
   while (1)
@@ -876,12 +859,12 @@ static THREADTYPE socket_listener(void *arg)
       
       if (sock==NULL)
         {
-          printf("XmlServer accept() error\n");
+          fprintf(stderr, "XmlServer: TSocket->Accept() error\n");
           break;
         }
       
       if (gVerbose)
-        fprintf(stderr, "XmlServer connection from %s\n", sock->GetInetAddress().GetHostName());
+        fprintf(stderr, "XmlServer: connection from %s\n", sock->GetInetAddress().GetHostName());
       
 #if 1
       TThread *thread = new TThread("XmlServer", root_server_thread, sock);
@@ -964,7 +947,7 @@ void XmlServer::Start(int port)
   if (port==0)
     return;
 
-  printf("Here!\n");
+  //printf("Here!\n");
 
   //StartLockRootTimer();
 
