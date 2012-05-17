@@ -6,6 +6,7 @@
 #include "TMidasOnline.h"
 #include "TMidasEvent.h"
 #include "VirtualOdb.h"
+#include "TDataContainer.hxx"
 
 // ROOT includes
 #include "TApplication.h"
@@ -26,7 +27,7 @@
 /// The user should create a class that derives from this TRootanaEventLoop class 
 /// and then fill in the methods that they want to implement.
 ///
-/// The user must implement the method ProcessEvent(), which will get executed 
+/// The user must implement the method ProcessMidasEvent(), which will get executed 
 /// on each event.
 /// 
 /// The user can also implement methods like Initialize, BeginRun, EndRun, Finalize
@@ -37,6 +38,7 @@
 /// In example of this type of event loop is shown in examples/analyzer_example.cxx
 ///
 class TRootanaEventLoop {
+ 
 public:
   virtual ~TRootanaEventLoop ();
 
@@ -45,7 +47,8 @@ public:
   
   /// The main method, called for each event.  Users must implement this
   /// function!
-  virtual bool ProcessEvent(TMidasEvent& event) = 0;
+  virtual bool ProcessMidasEvent(TDataContainer& dataContainer) = 0;
+  //virtual bool ProcessEvent(TMidasEvent& event) = 0;
 
 
   /// Called after the arguments are processes but before reading the first
@@ -64,7 +67,7 @@ public:
   
   /// Called after the last event has been processed, but before any open
   /// output files are closed.
-  virtual void Finalize(/*TND280Output * const file*/);
+  virtual void Finalize();
 
   /// Called when there is a usage error.  This code should print a usage
   /// message and then return. 
@@ -113,17 +116,6 @@ public:
   } 
   
 
-  // For the record, users could also create an instance of 
-  // their classes by adding a function like this in the derived class:
-  // 
-  //static void CreateSingleton(){
-  //
-  //if(fTRootanaEventLoop)
-  //  std::cout << "Singleton has already been created" << std::endl;
-  //else
-  //  fTRootanaEventLoop = new MyTestLoop();
-  //}
-  
   /// Disable automatic creation of MainWindow
   void DisableAutoMainWindow(){  fCreateMainWindow = false;}
 
@@ -165,6 +157,14 @@ private:
 
   /// Output ROOT file
   TFile *fOutputFile;
+
+  /// Pointer to the physics event; the physics event is what we pass to user.
+  /// The midas event is accessible through physics event.
+  /// We make a single instance of the physics event for whole execution,
+  /// because sometimes the decoded information needs to persist 
+  /// across multiple midas events.
+  TDataContainer *fDataContainer;
+
 
   // ________________________________________________
   // Variables for online analysis

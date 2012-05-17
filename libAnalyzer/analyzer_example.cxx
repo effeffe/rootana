@@ -7,7 +7,8 @@
 
 #include "TRootanaEventLoop.hxx"
 #include "TH1D.h"
-
+#include "TV1190Data.hxx"
+#include "TV792Data.hxx"
 
 class MyTestLoop: public TRootanaEventLoop {
 
@@ -29,10 +30,11 @@ public:
     std::cout << "Custom end run " << run <<std::endl;
   }
 
-  bool ProcessEvent(TMidasEvent& event){
+  bool ProcessMidasEvent(TDataContainer& dataContainer){
+
 
     void *ptr;
-    int size = event.LocateBank(NULL, "FR10", &ptr);
+    int size = dataContainer.GetMidasData().LocateBank(NULL, "FR10", &ptr);
     if (ptr){
       nnn++;
       if(nnn%100 == 0){
@@ -52,6 +54,28 @@ public:
     }
 
 
+    TV1190Data *v1190 = dataContainer.GetEventData<TV1190Data>("TDC0");
+    if(v1190){ 
+
+      std::cout << "TDC measurements for V1190" << std::endl;
+      std::vector<TDCMeasurement>& measurements = v1190->GetMeasurements();
+      for(unsigned int i = 0; i < measurements.size(); i++){
+	TDCMeasurement tdcmeas = measurements[i];
+	
+	std::cout << "Measurement: " <<    tdcmeas.GetMeasurement() << " for tdc/chan "  <<
+	  tdcmeas.GetTDCNumber() << "/"<< tdcmeas.GetChannel() << std::endl;
+
+      }	  
+      
+    }
+
+    TV792Data *v792 = dataContainer.GetEventData<TV792Data>("ADC0");
+    if(v792 ){ 
+ 
+      v792->Print();
+      
+    }
+ 
     return true;
   }
 

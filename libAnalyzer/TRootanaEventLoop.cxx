@@ -48,6 +48,8 @@ TRootanaEventLoop::TRootanaEventLoop (){
   fIsOffline = true;
   fCreateMainWindow = true;
 
+  fDataContainer = new TDataContainer();
+
   /// Create the TApplication
   char **argv2 = NULL;
   fApp = new TApplication("rootana", 0, argv2);
@@ -236,7 +238,7 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
       TMidasEvent event;
       if (!f.Read(&event))
 	break;
-
+      
       /// Treat the begin run and end run events differently.
       int eventId = event.GetEventId();
 
@@ -258,11 +260,21 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
 
       } else { // all other events
 
+
+	// Set the bank list for midas event.
 	event.SetBankList();
-	ProcessEvent(event);
+
+	// Set the midas event pointer in the physics event.
+	fDataContainer->SetMidasEventPointer(event);
+	
+	//ProcessEvent(event);
+	ProcessMidasEvent(*fDataContainer);
+
+	// Cleanup the information for this event.
+	fDataContainer->CleanupEvent();
 
       }
-	
+ 	
       if((i%500)==0){
 	printf("Processing event %d\n",i);
       }
@@ -315,9 +327,16 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
   event.SetData(size, (char*)pdata);
   event.SetBankList();
   
+  /// Set the midas event pointer in the physics event.
+  fDataContainer->SetMidasEventPointer(event);
 
   // Now pass this to the user event function.
-  TRootanaEventLoop::Get().ProcessEvent(event);
+  TRootanaEventLoop::Get().ProcessMidasEvent(*fDataContainer);
+
+  // Cleanup the information for this event.
+  fDataContainer->CleanupEvent();
+
+  //TRootanaEventLoop::Get().ProcessEvent(event);
   onlineEventLock = false;
 }
 

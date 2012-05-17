@@ -21,6 +21,9 @@ ifdef ROOTSYS
 ALL  += libAnalyzer.a analyzer_example.exe
 OBJS += TPeriodicClass.o
 OBJS += TRootanaEventLoop.o
+OBJS += TDataContainer.o
+OBJS += TV1190Data.o
+OBJS += TV792Data.o
 endif
 
 all: $(ALL)
