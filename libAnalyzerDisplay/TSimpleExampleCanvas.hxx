@@ -9,6 +9,9 @@
 #include "TCanvasHandleBase.hxx"
 
 
+/// A simple example, using V1190 data
+///
+///
 class TSimpleExampleCanvas : public TCanvasHandleBase{
 
 public:
@@ -18,13 +21,13 @@ public:
   void ResetCanvasHistograms();
   
   /// Update the histograms for this canvas.
-  void UpdateCanvasHistograms(TMidasEvent* event);
+  void UpdateCanvasHistograms(TDataContainer& dataContainer);
   
   /// Plot the histograms for this canvas
-  void PlotCanvas(TMidasEvent* event,TRootEmbeddedCanvas *embedCanvas);
+  void PlotCanvas(TDataContainer& dataContainer, TRootEmbeddedCanvas *embedCanvas);
 
 private:
-  TH1F *sizeBankFR11;
+  TH1F *tdcHistogram;
 
 
 };

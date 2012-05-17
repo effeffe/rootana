@@ -9,6 +9,7 @@
 #include "TCanvasHandleBase.hxx"
 #include "TGNumberEntry.h"
 
+/// A complicated canvas example, using the values from V792 module
 class TComplicatedExampleCanvas : public TCanvasHandleBase{
 
 public:
@@ -18,16 +19,16 @@ public:
   void ResetCanvasHistograms();
   
   /// Update the histograms for this canvas.
-  void UpdateCanvasHistograms(TMidasEvent* event);
+  void UpdateCanvasHistograms(TDataContainer& dataContainer);
   
   /// Plot the histograms for this canvas
-  void PlotCanvas(TMidasEvent* event, TRootEmbeddedCanvas *embedCanvas);
+  void PlotCanvas(TDataContainer& dataContainer, TRootEmbeddedCanvas *embedCanvas);
 
   void SetUpCompositeFrame(TGCompositeFrame *compFrame, TRootanaDisplay *display);
   
 
 private:
-  TH1F *sizeBank[4];
+  TH1F *adcValue[32];
   TGNumberEntry *fBankCounterButton;
 
 };

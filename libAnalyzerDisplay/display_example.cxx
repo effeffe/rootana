@@ -53,9 +53,9 @@ public:
   
   void AddAllCanvases(){
     // Set up tabbed canvases
-    AddSingleCanvas("FR10");
     AddSingleCanvas(new TSimpleExampleCanvas());
     AddSingleCanvas(new TComplicatedExampleCanvas());
+    AddSingleCanvas("FR10"); 
     SetNumberSkipEvent(20);
     SetDisplayName("Example Display");
   };
@@ -66,16 +66,16 @@ public:
     sizeBankFR10->Reset();
   }
 
-  void UpdateHistograms(TMidasEvent* event){
+  void UpdateHistograms(TDataContainer& dataContainer){
     void *ptr;
     // Update histograms
-    int size = event->LocateBank(NULL, "FR10", &ptr);
+    int size = dataContainer.GetMidasData().LocateBank(NULL, "FR10", &ptr);
     sizeBankFR10->Fill(size);
 
   }
 
 
-  void PlotCanvas(TMidasEvent* event){
+  void PlotCanvas(TDataContainer& dataContainer){
 
     if(GetDisplayWindow()->GetCurrentTabName().compare("FR10") == 0){       
       TCanvas* c1 = GetDisplayWindow()->GetCanvas("FR10");

@@ -24,10 +24,10 @@ class TCanvasHandleBase{
   virtual void ResetCanvasHistograms() = 0;
 
   /// Update the histograms for this canvas.
-  virtual void UpdateCanvasHistograms(TMidasEvent* event) = 0;
+  virtual void UpdateCanvasHistograms(TDataContainer& dataContainer) = 0;
 
   /// Plot the histograms for this canvas
-  virtual void PlotCanvas(TMidasEvent* event,TRootEmbeddedCanvas *embedCanvas) = 0;
+  virtual void PlotCanvas(TDataContainer& dataContainer, TRootEmbeddedCanvas *embedCanvas) = 0;
 
   std::string GetTabName(){return fTabName;}
 

@@ -26,7 +26,7 @@ class TCanvasHandleBase;
 /// There are two ways that users can decide to update and plot histograms:
 ///
 /// 1) They can create histograms in their event display class and then fill 
-///    the methods UpdateHistograms(TMidasEvent*) and PlotCanvas(TMidasEvent*).
+///    the methods UpdateHistograms(TDataContainer) and PlotCanvas(TDataContainer).
 ///    This histograms can then file in the canvases that are added using 
 ///    AddSingleCanvas(std::string name).
 ///
@@ -73,10 +73,10 @@ public:
   TMainDisplayWindow* GetDisplayWindow(){ return fMainWindow;}
 
   /// This method can be implemented by users to update user histograms.
-  virtual void UpdateHistograms(TMidasEvent* event){};
+  virtual void UpdateHistograms(TDataContainer& dataContainer){};
   
   /// This method can be implemented by users to plotting of current canvas
-  virtual void PlotCanvas(TMidasEvent* event){};
+  virtual void PlotCanvas(TDataContainer& dataContainer){};
 
   /// This method can be implemented by users to plotting of current canvas
   virtual void ResetHistograms(){};
@@ -133,17 +133,17 @@ private:
   /// The pointer to our display window
   TMainDisplayWindow* fMainWindow;
 
-  bool ProcessEvent(TMidasEvent& event);
+  bool ProcessMidasEvent(TDataContainer& dataContainer);
 
   /// We keep a cached copy of the midas event (so that it can used for callback).
-  TMidasEvent* fCachedEvent;
+  TDataContainer* fCachedDataContainer;
 
-  /// Set the cached copy of midas event.
-  /// !!! This is very questionable!  Caching each event might add a considerable overhead
+  /// Set the cached copy of midas dataContainer.
+  /// !!! This is very questionable!  Caching each dataContainer might add a considerable overhead
   /// to the processing!
-  void SetCachedEvent(TMidasEvent& event){
-    if(fCachedEvent) delete fCachedEvent;
-    fCachedEvent = new TMidasEvent(event);
+  void SetCachedDataContainer(TDataContainer& dataContainer){
+    if(fCachedDataContainer) delete fCachedDataContainer;
+    fCachedDataContainer = new TDataContainer(dataContainer);
   }
 
   /// Display name

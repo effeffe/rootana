@@ -10,7 +10,7 @@ TRootanaDisplay::TRootanaDisplay()
   fFirstEvent = false;
   fNumberSkipEvents = 1;
   fNumberProcessed = 0;
-  fCachedEvent = 0;
+  fCachedDataContainer = 0;
   SetDisplayName("Rootana Display");
 
   // Don't create second main window.
@@ -66,7 +66,7 @@ void TRootanaDisplay::AddSingleCanvas(TCanvasHandleBase* handleClass){
 }
 
 
-bool TRootanaDisplay::ProcessEvent(TMidasEvent& event){
+bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 
   if(!fFirstEvent){
     InitializeMainWindow();
@@ -74,12 +74,12 @@ bool TRootanaDisplay::ProcessEvent(TMidasEvent& event){
   }
   fNumberProcessed++;
 
-  SetCachedEvent(event);
+  SetCachedDataContainer(dataContainer);
 
   // Perform any histogram updating from user code.
-  UpdateHistograms(fCachedEvent);
+  UpdateHistograms(*fCachedDataContainer);
   for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)
-    fCanvasHandlers[i].second->UpdateCanvasHistograms(fCachedEvent);
+    fCanvasHandlers[i].second->UpdateCanvasHistograms(*fCachedDataContainer);
   
   /// If processing online and if processing is not paused, then just plot and return
   if(IsOnline() && !fMainWindow->IsDisplayPaused() ){
@@ -134,14 +134,14 @@ bool TRootanaDisplay::ProcessEvent(TMidasEvent& event){
 void TRootanaDisplay::UpdatePlotsAction(){
 
   // Execute the plotting actions from user event loop.
-  PlotCanvas(fCachedEvent);
+  PlotCanvas(*fCachedDataContainer);
 
   // See if we find a user class that describes this tab.
   int currentTab = GetDisplayWindow()->GetCurrentTabNumber();
   for(unsigned int i = 0; i < fCanvasHandlers.size(); i++){
     if(currentTab == fCanvasHandlers[i].first){
       TRootEmbeddedCanvas* embed = GetDisplayWindow()->GetEmbeddedCanvas(currentTab);
-      fCanvasHandlers[i].second->PlotCanvas(fCachedEvent,embed);
+      fCanvasHandlers[i].second->PlotCanvas(*fCachedDataContainer,embed);
     }
   }
   
@@ -150,11 +150,11 @@ void TRootanaDisplay::UpdatePlotsAction(){
   if(IsOnline())
     sprintf(displayTitle,"%s (online): run %i event %i",
 	    GetDisplayName().c_str(),GetCurrentRunNumber(),
-	    fCachedEvent->GetSerialNumber());
+	    fCachedDataContainer->GetMidasData().GetSerialNumber());
   else
     sprintf(displayTitle,"%s (offline): run %i event %i",
 	    GetDisplayName().c_str(),GetCurrentRunNumber(),
-	    fCachedEvent->GetSerialNumber());
+	    fCachedDataContainer->GetMidasData().GetSerialNumber());
     
   GetDisplayWindow()->GetMain()->SetWindowName(displayTitle);
 

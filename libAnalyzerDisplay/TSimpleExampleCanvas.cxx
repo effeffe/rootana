@@ -1,10 +1,11 @@
 #include "TSimpleExampleCanvas.hxx"
 
+#include "TV1190Data.hxx"
 
 
-TSimpleExampleCanvas::TSimpleExampleCanvas(): TCanvasHandleBase("FR11"){
+TSimpleExampleCanvas::TSimpleExampleCanvas(): TCanvasHandleBase("V1190 TDC Values"){
 
-  sizeBankFR11 = new TH1F("sizeBankFR11","Size of FR11 bank",2000,0,10000);
+  tdcHistogram = new TH1F("tdcHistogram","Histogram of all V1190 TDC value",2000,0,100000);
 
 }
 
@@ -13,24 +14,32 @@ TSimpleExampleCanvas::TSimpleExampleCanvas(): TCanvasHandleBase("FR11"){
 /// Reset the histograms for this canvas
 void TSimpleExampleCanvas::ResetCanvasHistograms(){
 
-  sizeBankFR11->Reset();
+  tdcHistogram->Reset();
 }
   
 /// Update the histograms for this canvas.
-void TSimpleExampleCanvas::UpdateCanvasHistograms(TMidasEvent* event){
+void TSimpleExampleCanvas::UpdateCanvasHistograms(TDataContainer& dataContainer){
 
-  void *ptr;
-  int size = event->LocateBank(NULL, "FR11", &ptr);
-  sizeBankFR11->Fill(size);
+  TV1190Data *v1190 = dataContainer.GetEventData<TV1190Data>("TDC0");
+  if(v1190){ 
+    
+    std::vector<TDCMeasurement>& measurements = v1190->GetMeasurements();
+    for(unsigned int i = 0; i < measurements.size(); i++){
+      TDCMeasurement tdcmeas = measurements[i];
+      tdcHistogram->Fill(tdcmeas.GetMeasurement());      
+    }	  
+    
+  }
+  
 
 }
   
 /// Plot the histograms for this canvas
-void TSimpleExampleCanvas::PlotCanvas(TMidasEvent* event,TRootEmbeddedCanvas *embedCanvas){
+void TSimpleExampleCanvas::PlotCanvas(TDataContainer& dataContainer,TRootEmbeddedCanvas *embedCanvas){
 
   TCanvas* c1 = embedCanvas->GetCanvas();
   c1->Clear();
-  sizeBankFR11->Draw();
+  tdcHistogram->Draw();
   c1->Modified();
   c1->Update();
 }
