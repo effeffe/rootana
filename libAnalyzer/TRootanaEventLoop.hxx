@@ -123,6 +123,8 @@ public:
   /// Disable automatic creation of MainWindow
   void DisableAutoMainWindow(){  fCreateMainWindow = false;}
 
+  /// Get pointer to ODB variables
+  VirtualOdb* GetODB(){return fODB;}
 
 protected:
 
@@ -135,7 +137,6 @@ protected:
 
 
   TRootanaEventLoop ();
-  VirtualOdb* GetODB(){return fODB;}
 
   /// The static pointer to the singleton instance.
   static TRootanaEventLoop* fTRootanaEventLoop;
