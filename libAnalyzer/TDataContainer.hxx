@@ -28,8 +28,6 @@ class failed_midas_bank_cast: public std::exception
 class TDataContainer 
 {
 
-  // Add  TRootanaEventLoop as friend class so that it can call SetMidasEvent();
-  friend class TRootanaEventLoop;
  
 public:
 
@@ -89,6 +87,9 @@ public:
   /// but this behaviour may be modified in some cases.
   void CleanupEvent();
   
+  /// This is the ugly function where we de-reference to get pointer for a TMidasEvent (ugly!).
+  /// In this case TDataContainer does not own the memory referenced by fMidasEventPointer.
+  void SetMidasEventPointer(TMidasEvent& event);
 
 private:
     
@@ -99,10 +100,6 @@ private:
   /// Do we own the memory pointed to by TMidasEvent pointer?
   bool fOwnMidasEventMemory;
   
-  /// This is the ugly function where we de-reference to get pointer for a TMidasEvent (ugly!).
-  /// It is private, so only TRootanaEventLoop can call it.
-  /// In this case TDataContainer does not own the memory referenced by fMidasEventPointer.
-  void SetMidasEventPointer(TMidasEvent& event);
 
   /// For the moment make empty assign operator
   TDataContainer& operator= (const TDataContainer &event);

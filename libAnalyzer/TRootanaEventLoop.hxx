@@ -45,6 +45,10 @@ public:
 
   static TRootanaEventLoop& Get(void);
   
+  /// Method to get the data container that event loop owns.
+  TDataContainer* GetDataContainer(){return fDataContainer;};
+
+
   /// The main method, called for each event.  Users must implement this
   /// function!
   virtual bool ProcessMidasEvent(TDataContainer& dataContainer) = 0;

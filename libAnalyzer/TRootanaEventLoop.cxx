@@ -323,18 +323,18 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
 
   // Make a MIDAS event.
   TMidasEvent event;
-  memcpy(event.GetEventHeader(), pheader, sizeof(EventHeader_t));
+  memcpy(event.GetEventHeader(), pheader, sizeof(TMidas_EVENT_HEADER));
   event.SetData(size, (char*)pdata);
   event.SetBankList();
   
   /// Set the midas event pointer in the physics event.
-  fDataContainer->SetMidasEventPointer(event);
+  TRootanaEventLoop::Get().GetDataContainer()->SetMidasEventPointer(event);
 
   // Now pass this to the user event function.
-  TRootanaEventLoop::Get().ProcessMidasEvent(*fDataContainer);
+  TRootanaEventLoop::Get().ProcessMidasEvent(*TRootanaEventLoop::Get().GetDataContainer());
 
   // Cleanup the information for this event.
-  fDataContainer->CleanupEvent();
+  TRootanaEventLoop::Get().GetDataContainer()->CleanupEvent();
 
   //TRootanaEventLoop::Get().ProcessEvent(event);
   onlineEventLock = false;

@@ -15,6 +15,22 @@ ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLPa
 CXXFLAGS += -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
 endif
 
+# optional MIDAS libraries
+
+ifdef MIDASSYS
+MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil -lrt
+CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
+
+#UNAME=$(shell uname)
+#ifeq ($(UNAME),Darwin)
+#CXXFLAGS += -DOS_LINUX -DOS_DARWIN
+#MIDASLIBS = $(MIDASSYS)/darwin/lib/libmidas.a
+#RPATH=
+#endif
+
+endif
+
+
 ALL:= 
 OBJS:=
 ifdef ROOTSYS
@@ -24,6 +40,7 @@ OBJS += TRootanaEventLoop.o
 OBJS += TDataContainer.o
 OBJS += TV1190Data.o
 OBJS += TV792Data.o
+OBJS += TMesytecData.o
 endif
 
 all: $(ALL)
