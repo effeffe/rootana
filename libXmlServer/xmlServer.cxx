@@ -391,6 +391,27 @@ std::string MakeHtmlEntry(const TObject* obj, const char* path)
    
 /*------------------------------------------------------------------*/
 
+static void SendFile(TSocket* sock, const char* filename, const char* mimetype)
+{
+   std::string reply;
+   FILE *fp = fopen(filename, "r");
+   printf("sending file %s, fp %p\n", filename, fp);
+   if (fp) {
+      while (1) {
+         char buf[1024+1];
+         int rd = fread(buf, 1, sizeof(buf)-1, fp);
+         if (rd <= 0)
+            break;
+         buf[rd] = 0;
+         reply += buf;
+      }
+      fclose(fp);
+   }
+   SendHttpReply(sock, mimetype, reply);
+}
+
+/*------------------------------------------------------------------*/
+
 static THREADTYPE root_server_thread(void *arg)
 /*
   Serve histograms over TCP/IP socket link
@@ -474,6 +495,22 @@ static THREADTYPE root_server_thread(void *arg)
 
           reply += "</body></html>\n";
           SendHttpReply(sock, "text/html", reply);
+        }
+      //else if (strstr(request, "GET /plot.html "))
+      //  {
+      //    SendFile(sock, "plot.html", "text/html");
+      //  }
+      else if (strstr(request, "js/jquery.min.js "))
+        {
+          SendFile(sock, "jquery.min.js", "text/javascript");
+        }
+      else if (strstr(request, "js/highcharts.js "))
+        {
+          SendFile(sock, "highcharts.js", "text/javascript");
+        }
+      else if (strstr(request, "js/exporting.js "))
+        {
+          SendFile(sock, "exporting.js", "text/javascript");
         }
       else if (strstr(request, "GET /favicon.ico "))
         {
@@ -752,6 +789,7 @@ static THREADTYPE root_server_thread(void *arg)
           } else {
              if (xmlOutput) {
                 std::string xml;
+                xml += "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
                 xml += "<xml>\n";
                 xml += "<ROOTobject>\n";
                 const char *msg = TBufferXML::ConvertToXML(obj);
@@ -760,6 +798,8 @@ static THREADTYPE root_server_thread(void *arg)
                 xml += "</xml>\n";
                 SendHttpReply(sock, "application/xml", xml);
              } else {
+                SendFile(sock, "plot.html", "text/html");
+                if (0) {
                 std::string reply;
                 std::string buf;
                 
@@ -776,6 +816,7 @@ static THREADTYPE root_server_thread(void *arg)
                 
                 reply += "</body></html>\n";
                 SendHttpReply(sock, "text/html", reply);
+                }
              }
           }
         }
