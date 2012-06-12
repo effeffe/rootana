@@ -48,7 +48,29 @@
 #include <string>
 
 //#include "RootLock.h"
-class LockRootGuard { public: int i; void Unlock() {}; };
+class LockRootGuard
+{
+public:
+   bool fIsLocked;
+
+   LockRootGuard() // ctor
+   {
+      TThread::Lock();
+      fIsLocked = true;
+   }
+
+   ~LockRootGuard() // dtor
+   {
+      if (fIsLocked)
+         Unlock();
+   }
+
+   void Unlock()
+   {
+      fIsLocked = false;
+      TThread::UnLock();
+   };
+};
 
 static bool gVerbose = false;
 
@@ -282,6 +304,7 @@ static void SendHttpReply(TSocket* sock, const char* mimetype, const char* messa
    //charset=iso-8859-1\n
    SendString(sock, "\n");
    SendString(sock, message);
+   printf("SendHttpReply: content-length %d, content-type %s\n", len, mimetype);
 }
 
 static void SendHttpReply(TSocket* sock, const char* mimetype, const std::string& str)
@@ -792,10 +815,11 @@ static THREADTYPE root_server_thread(void *arg)
                 xml += "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
                 xml += "<xml>\n";
                 xml += "<ROOTobject>\n";
-                const char *msg = TBufferXML::ConvertToXML(obj);
+                TString msg = TBufferXML::ConvertToXML(obj);
                 xml += msg;
                 xml += "</ROOTobject>\n";
                 xml += "</xml>\n";
+                lock.Unlock();
                 SendHttpReply(sock, "application/xml", xml);
              } else {
                 SendFile(sock, "plot.html", "text/html");
