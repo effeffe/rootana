@@ -47,19 +47,18 @@
 #include <map>
 #include <string>
 
-//#include "RootLock.h"
-class LockRootGuard
+class XLockRootGuard
 {
 public:
    bool fIsLocked;
 
-   LockRootGuard() // ctor
+   XLockRootGuard() // ctor
    {
       TThread::Lock();
       fIsLocked = true;
    }
 
-   ~LockRootGuard() // dtor
+   ~XLockRootGuard() // dtor
    {
       if (fIsLocked)
          Unlock();
@@ -255,7 +254,7 @@ static TObject* FollowPath(char* path)
 
 /*------------------------------------------------------------------*/
 
-void ResetObject(TObject* obj)
+static void ResetObject(TObject* obj)
 {
   assert(obj!=NULL);
 
@@ -435,7 +434,7 @@ static void SendFile(TSocket* sock, const char* filename, const char* mimetype)
 
 /*------------------------------------------------------------------*/
 
-static THREADTYPE root_server_thread(void *arg)
+static THREADTYPE xroot_server_thread(void *arg)
 /*
   Serve histograms over TCP/IP socket link
 */
@@ -477,7 +476,7 @@ static THREADTYPE root_server_thread(void *arg)
         {
           // enumerate top level exported directories
 
-          LockRootGuard lock;
+          XLockRootGuard lock;
           
           std::string reply;
 
@@ -551,7 +550,7 @@ static THREADTYPE root_server_thread(void *arg)
         {
           // enumerate top level exported directories
 
-          LockRootGuard lock;
+          XLockRootGuard lock;
 
           std::string xml;
 
@@ -584,7 +583,7 @@ static THREADTYPE root_server_thread(void *arg)
         }
       else if (strncmp(request, "GET /", 5) == 0)
         {
-          LockRootGuard lock;
+          XLockRootGuard lock;
 
           char* dirname = request + 5;
 
@@ -847,7 +846,7 @@ static THREADTYPE root_server_thread(void *arg)
 #if 0
       else if (strncmp(request, "ResetTH1 ", 9) == 0)
         {
-          LockRootGuard lock;
+          XLockRootGuard lock;
           
           char* path = request + 9;
 
@@ -908,7 +907,7 @@ static THREADTYPE root_server_thread(void *arg)
 
 /*------------------------------------------------------------------*/
 
-static THREADTYPE socket_listener(void *arg)
+static THREADTYPE xsocket_listener(void *arg)
 {
   // Server loop listening for incoming network connections on specified port.
   // Starts a searver_thread for each connection.
@@ -932,11 +931,11 @@ static THREADTYPE socket_listener(void *arg)
         fprintf(stderr, "XmlServer: connection from %s\n", sock->GetInetAddress().GetHostName());
       
 #if 1
-      TThread *thread = new TThread("XmlServer", root_server_thread, sock);
+      TThread *thread = new TThread("XmlServer", xroot_server_thread, sock);
       thread->Run();
 #else
       LPDWORD lpThreadId = 0;
-      CloseHandle(CreateThread(NULL, 1024, &root_server_thread, sock, 0, lpThreadId));
+      CloseHandle(CreateThread(NULL, 1024, &xroot_server_thread, sock, 0, lpThreadId));
 #endif
     }
   
@@ -948,7 +947,6 @@ static THREADTYPE socket_listener(void *arg)
 void XmlServer::SetVerbose(bool verbose)
 {
   gVerbose = verbose;
-  //gDebugLockRoot = verbose;
 }
 
 /*------------------------------------------------------------------*/
@@ -1014,15 +1012,13 @@ void XmlServer::Start(int port)
 
   //printf("Here!\n");
 
-  //StartLockRootTimer();
-
   static int pport = port;
 #if 1
-  TThread *thread = new TThread("XmlServer", socket_listener, &pport);
+  TThread *thread = new TThread("XmlServer", xsocket_listener, &pport);
   thread->Run();
 #else
   LPDWORD lpThreadId = 0;
-  CloseHandle(CreateThread(NULL, 1024, &root_socket_server, &pport, 0, lpThreadId));
+  CloseHandle(CreateThread(NULL, 1024, &xroot_socket_server, &pport, 0, lpThreadId));
 #endif
 }
 

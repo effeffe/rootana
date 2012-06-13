@@ -12,10 +12,12 @@ LIBS+= libMidasInterface/libMidasInterface.a
 # optional ROOT libraries
 
 ifdef ROOTSYS
-ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lXMLIO -lThread
-ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lXMLIO -lThread
-RPATH    += -Wl,-rpath,$(ROOTSYS)/lib
-CXXFLAGS += -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
+ROOTLIBDIR := $(shell $(ROOTSYS)/bin/root-config --libdir)
+ROOTLIBS   := -L$(ROOTLIBDIR) $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lXMLIO -lThread
+ROOTGLIBS  := -L$(ROOTLIBDIR) $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lXMLIO -lThread
+ROOTCFLAGS := $(shell $(ROOTSYS)/bin/root-config --cflags)
+RPATH    += -Wl,-rpath,$(ROOTLIBDIR)
+CXXFLAGS += -DHAVE_ROOT $(ROOTCFLAGS)
 endif
 
 # optional MIDAS libraries
@@ -48,8 +50,6 @@ endif
 ifdef ROOTSYS
 CXXFLAGS += -DHAVE_XMLSERVER -IlibXmlServer
 OBJS     += ./libXmlServer/xmlServer.o
-
-#ALL+= libNetDirectory/libNetDirectory.a
 endif
 
 # optional old midas server
@@ -65,9 +65,7 @@ LIBS     += libAnalyzer/libAnalyzer.a libAnalyzerDisplay/libAnalyzerDisplay.a
 ALL+= libAnalyzer/libAnalyzer.a libAnalyzerDisplay/libAnalyzerDisplay.a
 endif
 
-
-
-#ALL+= librootana.a
+ALL+= lib/librootana.a
 ALL+= event_dump.exe
 ALL+= event_skim.exe
 
@@ -86,6 +84,18 @@ endif
 
 all: $(ALL)
 
+$(ALL): include
+
+include:
+	mkdir -p include
+	cd include; ln -sfv ../lib*/*.h .
+	cd include; ln -sfv ../lib*/*.hxx .
+
+lib/librootana.a: $(LIBS) $(OBJS)
+	mkdir -p lib
+	-rm -f $@
+	ar -rv $@ lib*/*.o
+
 libMidasInterface/libMidasInterface.a:
 	make -C libMidasInterface
 
@@ -98,12 +108,8 @@ libAnalyzer/libAnalyzer.a:
 libAnalyzerDisplay/libAnalyzerDisplay.a:
 	make -C libAnalyzerDisplay
 
-#librootana.a: $(OBJS)
-#	-rm -f $@
-#	ar -rv $@ $^
-
-%.exe: %.o $(OBJS) $(LIBS)
-	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
+%.exe: %.o lib/librootana.a
+	$(CXX) -o $@ $(CXXFLAGS) $< lib/librootana.a $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
 
 %.o: %.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
@@ -118,6 +124,8 @@ dox:
 
 clean::
 	-rm -f *.o *.a *.exe $(ALL)
+	-rm -rf lib
+	-rm -rf include
 
 clean::
 	make -C libMidasInterface clean
@@ -132,6 +140,6 @@ clean::
 	make -C libAnalyzerDisplay clean
 
 clean::
-	-rm -f html/*
+	-rm -rf html
 
 # end

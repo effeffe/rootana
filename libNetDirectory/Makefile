@@ -31,6 +31,6 @@ dox:
 	doxygen
 
 clean::
-	-rm -f *.o *.a *.exe $(ALL)
+	-rm -f *.o *.a *.exe *Dict.h $(ALL)
 
 # end
