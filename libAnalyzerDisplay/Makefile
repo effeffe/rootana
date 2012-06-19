@@ -37,6 +37,7 @@ ifdef ROOTSYS
 ALL  += libAnalyzerDisplay.a display_example.exe
 OBJS += TComplicatedExampleCanvas.o TMainDisplayWindow.o TRootanaDisplay.o TSimpleExampleCanvas.o
 OBJS += TMainDisplayWindowDict.o TRootanaDisplayDict.o
+OBJS += TFancyHistogramCanvas.o TFancyHistogramCanvasDict.o
 endif
 
 all: $(ALL)
