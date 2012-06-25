@@ -26,6 +26,9 @@ public:
 
   void SetUpCompositeFrame(TGCompositeFrame *compFrame, TRootanaDisplay *display);
   
+  void BeginRun(int transition,int run,int time){
+    std::cout << "BOR: User can do something here... " << std::endl;
+  }
 
 private:
   TH1F *adcValue[32];
