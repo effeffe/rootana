@@ -45,6 +45,13 @@ public:
   /// Plot the histograms for this canvas
   void PlotCanvas(TDataContainer& dataContainer, TRootEmbeddedCanvas *embedCanvas);
 
+  /// Take actions at begin run
+  void BeginRun(int transition,int run,int time);
+
+  /// Take actions at end run  
+  void EndRun(int transition,int run,int time);
+
+
   void SetUpCompositeFrame(TGCompositeFrame *compFrame, TRootanaDisplay *display);
   
   /// These methods are callbacks to ensure that multi-canvas and overlay-histo modes 

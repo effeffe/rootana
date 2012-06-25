@@ -221,6 +221,16 @@ void TFancyHistogramCanvas::PlotCanvas(TDataContainer& dataContainer, TRootEmbed
 
 
 
+/// Take actions at begin run
+void TFancyHistogramCanvas::BeginRun(int transition,int run,int time){
+  fHistoArray->BeginRun(transition, run, time);
+};
+
+/// Take actions at end run  
+void TFancyHistogramCanvas::EndRun(int transition,int run,int time){
+  fHistoArray->EndRun(transition, run, time);  
+};
+
 
 void TFancyHistogramCanvas::ActivateMultiCanvasButton(){
   if(fMultiCanvasButton->IsOn()){

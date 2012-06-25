@@ -55,16 +55,19 @@ public:
 
   TRootanaDisplay();
 
-  virtual ~TRootanaDisplay() {};
+  virtual ~TRootanaDisplay();
 
   /// User must 
   virtual void AddAllCanvases() = 0;
 
-  /// 
+  /// Add a new canvas; user will interactively fill it.
   void AddSingleCanvas(std::string name){
     fMainWindow->AddCanvas(name);
   }
 
+  /// Add a new canvas, using a TCanvasHandleBase class.
+  /// TRootanaDisplay will take ownership of pointer
+  /// and delete memory it points to.
   void AddSingleCanvas(TCanvasHandleBase* handleClass);
 
 
@@ -112,13 +115,14 @@ public:
   /// Set Display name
   void SetDisplayName(std::string name){fDisplayName = name;}
   
+  void Initialize(){
+    InitializeMainWindow();
+  }
+
+
 private:
 
-  // A bool to keep track of whether we have processed first event
-  // (and initialize main display window).
-  bool fFirstEvent;
-
-  /// Method to initialize the Main display window.  Happens once we get to first event.
+  /// Method to initialize the Main display window.
   void InitializeMainWindow();
 
   // Variable to keep track of waiting for next event button (offline mode)
@@ -133,7 +137,19 @@ private:
   /// The pointer to our display window
   TMainDisplayWindow* fMainWindow;
 
+  /// Process each midas event
   bool ProcessMidasEvent(TDataContainer& dataContainer);
+
+  /// Called before the first event of a file is read, but you should prefer
+  /// Initialize() for general initialization.  This method will be called
+  /// once for each input file.  
+  void BeginRun(int transition,int run,int time);
+  
+  /// Called after the last event of a file is read, but you should prefer
+  /// Finalize() for general finalization.  This method will be called once
+  /// for each input file.
+  void EndRun(int transition,int run,int time);
+  
 
   /// We keep a cached copy of the midas event (so that it can used for callback).
   TDataContainer* fCachedDataContainer;

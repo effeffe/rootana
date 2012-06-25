@@ -7,7 +7,6 @@ ClassImp(TRootanaDisplay)
 
 TRootanaDisplay::TRootanaDisplay() 
 {
-  fFirstEvent = false;
   fNumberSkipEvents = 1;
   fNumberProcessed = 0;
   fCachedDataContainer = 0;
@@ -15,7 +14,19 @@ TRootanaDisplay::TRootanaDisplay()
 
   // Don't create second main window.
   DisableAutoMainWindow();
+
+  // Don't create output ROOT files;
+  // Output ROOT files will kill histograms.
+  DisableRootOutput(true);
+
 }
+
+TRootanaDisplay::~TRootanaDisplay() {
+
+  for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)
+    delete fCanvasHandlers[i].second;
+
+};
 
 void TRootanaDisplay::InitializeMainWindow(){
 
@@ -68,10 +79,6 @@ void TRootanaDisplay::AddSingleCanvas(TCanvasHandleBase* handleClass){
 
 bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 
-  if(!fFirstEvent){
-    InitializeMainWindow();
-    fFirstEvent = true;
-  }
   fNumberProcessed++;
 
   SetCachedDataContainer(dataContainer);
@@ -104,6 +111,7 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
     
     // This is crude! Need to add some sort of wait function, otherwise 
     // this will use 99% of CPU time, for no good reason...
+    // usleep(1000); this seems to work fine, but need to test a bit more first...
 
     // ROOT signal/slot trick; this variable will magically 
     // get changed to false once the next button is pushed.
@@ -130,12 +138,38 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 
 }
 
+void TRootanaDisplay::BeginRun(int transition,int run,int time){
   
+  std::cout << "Begin of run " << run << " at time " << time << std::endl;
+  for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)    
+    fCanvasHandlers[i].second->BeginRun(transition,run,time);
+  UpdatePlotsAction();
+}
+
+void TRootanaDisplay::EndRun(int transition,int run,int time){
+
+  std::cout << "End of run " << run << " at time " << time << std::endl;
+  for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)
+    fCanvasHandlers[i].second->EndRun(transition,run,time);
+  UpdatePlotsAction();
+
+}
+
+
+
 void TRootanaDisplay::UpdatePlotsAction(){
 
+  if(!fCachedDataContainer){
+    char displayTitle[200];
+    sprintf(displayTitle,"%s (): run %i (no events yet)",
+	    GetDisplayName().c_str(),GetCurrentRunNumber());
+    GetDisplayWindow()->GetMain()->SetWindowName(displayTitle);
+    return;
+  }
+    
   // Execute the plotting actions from user event loop.
   PlotCanvas(*fCachedDataContainer);
-
+  
   // See if we find a user class that describes this tab.
   int currentTab = GetDisplayWindow()->GetCurrentTabNumber();
   for(unsigned int i = 0; i < fCanvasHandlers.size(); i++){
@@ -144,6 +178,7 @@ void TRootanaDisplay::UpdatePlotsAction(){
       fCanvasHandlers[i].second->PlotCanvas(*fCachedDataContainer,embed);
     }
   }
+    
   
   // Set the display title
   char displayTitle[200];
