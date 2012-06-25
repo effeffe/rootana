@@ -43,6 +43,13 @@ class THistogramArrayBase : public std::vector<TH1*> {
     return (*this)[i];
   }
 
+  /// Take actions at begin run
+  virtual void BeginRun(int transition,int run,int time){};
+
+  /// Take actions at end run  
+  virtual void EndRun(int transition,int run,int time){};
+
+
 private:
 
 };
