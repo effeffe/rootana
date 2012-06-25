@@ -126,6 +126,15 @@ public:
   /// Get pointer to ODB variables
   VirtualOdb* GetODB(){return fODB;}
 
+
+  /// Open output ROOT file
+  void OpenRootFile(int run);
+
+  /// Cloe output ROOT file
+  void CloseRootFile();
+  
+  void DisableRootOutput(bool disable=true){fDisableRootOutput = disable;};
+
 protected:
 
   bool CreateOutputFile(std::string name, std::string options = "RECREATE"){
@@ -151,6 +160,12 @@ private:
   /// Help Message
   void PrintHelp();
 
+  /// Output ROOT file
+  TFile *fOutputFile;
+
+  /// Variable for disabling/enabling Root output
+  bool fDisableRootOutput;
+
   /// Pointer to the ODB access instance
   VirtualOdb* fODB;
  
@@ -160,8 +175,6 @@ private:
   /// Current run number
   int fCurrentRunNumber;
 
-  /// Output ROOT file
-  TFile *fOutputFile;
 
   /// Pointer to the physics event; the physics event is what we pass to user.
   /// The midas event is accessible through physics event.

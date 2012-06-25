@@ -41,6 +41,7 @@ TRootanaEventLoop& TRootanaEventLoop::Get(void) {
 TRootanaEventLoop::TRootanaEventLoop (){
 
   fOutputFile = 0;
+  fDisableRootOutput = false;
   fODB = 0;
   fOnlineHistDir = 0;
   fMaxEvents = 0;
@@ -59,11 +60,8 @@ TRootanaEventLoop::TRootanaEventLoop (){
 TRootanaEventLoop::~TRootanaEventLoop (){
 
   if(fODB) delete fODB;
-  if(fOutputFile){
-    fOutputFile->Write();
-    fOutputFile->Close();
-    delete fOutputFile;
-  }
+  CloseRootFile();
+
 }
 
 
@@ -158,7 +156,17 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
 	PrintHelp(); // does not return
     }
     
-  Initialize();
+  // Do quick check if we are processing online or offline.
+  // Want to know before we initialize.
+  fIsOffline = false;  
+  for (unsigned int i=1; i<args.size(); i++){
+    const char* arg = args[i].c_str();
+    if (arg[0] != '-')  
+      {  
+	fIsOffline = true;
+      }
+  }
+
 
   MainWindow *mainWindow=0;
   if(fCreateMainWindow){
@@ -175,18 +183,17 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
    if (tcpPort)
      fprintf(stderr,"ERROR: No support for the TNetDirectory server!\n");
 #endif
-	 
-   fIsOffline = false;
+   
+   // Initialize the event loop with user initialization.
+   Initialize();
 
    for (unsigned int i=1; i<args.size(); i++){
      const char* arg = args[i].c_str();
      if (arg[0] != '-')  
        {  
-	 fIsOffline = true;
-	 ProcessMidasFile(fApp,arg);
+	   ProcessMidasFile(fApp,arg);
        }
    }
-
 
    if (testMode){
      std::cout << "Entering test mode." << std::endl;
@@ -250,8 +257,9 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
 	if (fODB) delete fODB;
 	fODB = new XmlOdb(event.GetData(),event.GetDataSize());
 	
-	BeginRun(0,event.GetSerialNumber(),0);
 	fCurrentRunNumber = event.GetSerialNumber();
+	OpenRootFile(fCurrentRunNumber);
+	BeginRun(0,event.GetSerialNumber(),0);
 
       } else if ((eventId & 0xFFFF) == 0x8001){// end run event
 	  
@@ -290,12 +298,43 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
   f.Close(); 
 
   EndRun(0,fCurrentRunNumber,0);
+  CloseRootFile();  
 
   // start the ROOT GUI event loop
   //  app->Run(kTRUE);
 
   return 0;
 }
+
+
+void TRootanaEventLoop::OpenRootFile(int run){
+
+
+  if(fDisableRootOutput) return;
+
+  if(fOutputFile) {
+    fOutputFile->Write();
+    fOutputFile->Close();
+    fOutputFile=0;
+  }  
+  
+  char filename[1024];
+  sprintf(filename, "output%05d.root", run);
+  fOutputFile = new TFile(filename,"RECREATE");
+  std::cout << "Opened output file with name : " << filename << std::endl;
+}
+
+
+void TRootanaEventLoop::CloseRootFile(){
+
+  if(fOutputFile) {
+    fOutputFile->Write();
+    fOutputFile->Close();
+    fOutputFile=0;
+  } 
+
+}
+
 
 
 /// _________________________________________________________________________
@@ -360,6 +399,7 @@ void onlineBeginRunHandler(int transition,int run,int time)
   //#ifdef HAVE_LIBNETDIRECTORY
   //  NetDirectoryExport(gOutputFile, "outputFile");
   //#endif
+  TRootanaEventLoop::Get().OpenRootFile(run);
   TRootanaEventLoop::Get().SetCurrentRunNumber(run);
   TRootanaEventLoop::Get().BeginRun(transition,run,time);
 }
@@ -368,6 +408,7 @@ void onlineEndRunHandler(int transition,int run,int time)
 {
   TRootanaEventLoop::Get().SetCurrentRunNumber(run);
   TRootanaEventLoop::Get().EndRun(transition,run,time);
+  TRootanaEventLoop::Get().CloseRootFile();
 }
 
 
@@ -390,6 +431,14 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
 
    fODB = midas;
 
+   /* fill present run parameters */
+
+   fCurrentRunNumber = fODB->odbReadInt("/runinfo/Run number");
+
+   //   if ((fODB->odbReadInt("/runinfo/State") == 3))
+   //startRun(0,gRunNumber,0);
+   OpenRootFile(fCurrentRunNumber);
+
    // Register begin and end run handlers.
    midas->setTransitionHandlers(onlineBeginRunHandler,onlineEndRunHandler,NULL,NULL);
    midas->registerTransitions();
@@ -397,14 +446,7 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    /* reqister event requests */
    midas->setEventHandler(onlineEventHandler);
 
-   midas->eventRequest("SYSTEM",-1,-1,(1<<1));
-
-   /* fill present run parameters */
-
-   fCurrentRunNumber = fODB->odbReadInt("/runinfo/Run number");
-
-   //   if ((fODB->odbReadInt("/runinfo/State") == 3))
-   //startRun(0,gRunNumber,0);
+   midas->eventRequest("SYSTEM",-1,-1,(1<<1));  
 
    // printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
    
