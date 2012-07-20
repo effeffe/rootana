@@ -4,13 +4,27 @@
 
 ClassImp(TFancyHistogramCanvas)
 
-TFancyHistogramCanvas::TFancyHistogramCanvas(THistogramArrayBase* histoArray, std::string name):
+TFancyHistogramCanvas::TFancyHistogramCanvas(THistogramArrayBase* histoArray, 
+					     std::string name, int numberChannelsInGroups,
+					     bool disableAutoUpdate):
   TCanvasHandleBase(name),
-  fHistoArray(histoArray){
+  fHistoArray(histoArray),
+  fDisableAutoUpdate(disableAutoUpdate){
+
+  if(numberChannelsInGroups > 1)
+    fNumberChannelsInGroups = numberChannelsInGroups;
+  else
+    fNumberChannelsInGroups = -1;
 
   fLabelframe = 0;
   fChannelCounterButton = 0;
   fLabelChannels = 0;
+  fChannelName = "Histogram";
+
+  fGroupCounterButton = 0;
+  fLabelGroup = 0;
+  fGroupName = "Group";
+
   fMultiCanvasButton = 0;
   fNCanvasButtonGroup =0;
   fNCanvasButtons[0]=0;
@@ -43,12 +57,40 @@ void TFancyHistogramCanvas::SetUpCompositeFrame(TGCompositeFrame *compFrame, TRo
   compFrame->AddFrame(fLabelframe, new TGLayoutHints(kLHintsCenterX,2,2,2,2));
   
   // ________________________________________________________________________________
+  // Add a button for the groups, if we are using groups
+  
+  if(fNumberChannelsInGroups > 1){
+    
+    int numberGroups = (int)(((double)fHistoArray->size())/((double)fNumberChannelsInGroups));
+
+    fGroupCounterButton = new TGNumberEntry(fLabelframe, 0, 9,999, TGNumberFormat::kNESInteger,
+					      TGNumberFormat::kNEANonNegative, 
+					      TGNumberFormat::kNELLimitMinMax,
+					      0, numberGroups-1);
+    
+    fLabelframe->AddFrame(fGroupCounterButton, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
+    // Add call-backs to update plots if widget is used
+    fGroupCounterButton->Connect("ValueSet(Long_t)", "TRootanaDisplay", display, "UpdatePlotsAction()");
+    fGroupCounterButton->GetNumberEntry()->Connect("ReturnPressed()", "TRootanaDisplay", display, "UpdatePlotsAction()");
+    
+    // Add a label for channel selector    
+    fLabelGroup = new TGLabel(fLabelframe, "");
+    fLabelframe->AddFrame(fLabelGroup, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
+    SetGroupName(fGroupName);
+  }
+
+  // ________________________________________________________________________________
   // Create the default set of widgets used for all display options: namely a counter
   // that keeps track of which channel to start from.
+
+  int numberChannels = fHistoArray->size();
+  if(fNumberChannelsInGroups > 1){
+    numberChannels = fNumberChannelsInGroups;    
+  }
   fChannelCounterButton = new TGNumberEntry(fLabelframe, 0, 9,999, TGNumberFormat::kNESInteger,
 					 TGNumberFormat::kNEANonNegative, 
 					 TGNumberFormat::kNELLimitMinMax,
-					 0, fHistoArray->size()-1);
+					 0, numberChannels-1);
   
   fLabelframe->AddFrame(fChannelCounterButton, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
   // Add call-backs to update plots if widget is used
@@ -56,12 +98,9 @@ void TFancyHistogramCanvas::SetUpCompositeFrame(TGCompositeFrame *compFrame, TRo
   fChannelCounterButton->GetNumberEntry()->Connect("ReturnPressed()", "TRootanaDisplay", display, "UpdatePlotsAction()");
 
   // Add a label for channel selector
-  char tlabel[100];
-  sprintf(tlabel,"Histogram Number (0-%i)",(int)fHistoArray->size()-1);
-
-  fLabelChannels = new TGLabel(fLabelframe, tlabel);
+  fLabelChannels = new TGLabel(fLabelframe, "");
   fLabelframe->AddFrame(fLabelChannels, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
-
+  SetChannelName(fChannelName);
 
   // ________________________________________________________________________________
   // Create a button to control whether to use multiple canvases
@@ -102,7 +141,6 @@ void TFancyHistogramCanvas::SetUpCompositeFrame(TGCompositeFrame *compFrame, TRo
 				    TGNumberFormat::kNEANonNegative, 
 				    TGNumberFormat::kNELLimitMinMax,
 				    2, 20);
-  
   fLabelframe->AddFrame(fNHistoButton, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
   // Add call-backs to update plots if widget is used
   fNHistoButton->Connect("ValueSet(Long_t)", "TRootanaDisplay", display, "UpdatePlotsAction()");
@@ -112,7 +150,6 @@ void TFancyHistogramCanvas::SetUpCompositeFrame(TGCompositeFrame *compFrame, TRo
   labelNHisto = new TGLabel(fLabelframe, "# Histo in Canvas");
   fLabelframe->AddFrame(labelNHisto, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
    
-
 }
 
 
@@ -125,6 +162,11 @@ void TFancyHistogramCanvas::ResetCanvasHistograms(){
   
 /// Update the histograms for this canvas.
 void TFancyHistogramCanvas::UpdateCanvasHistograms(TDataContainer& dataContainer){
+
+  // If this variable is set, then skip calling the histogram updating;
+  // histogram updating will happen elsewhere.
+  if(fDisableAutoUpdate) return;
+
   fHistoArray->UpdateHistograms(dataContainer);
 }
   
@@ -136,6 +178,10 @@ void TFancyHistogramCanvas::PlotCanvas(TDataContainer& dataContainer, TRootEmbed
   c1->Clear();
 
   int channel = fChannelCounterButton->GetNumberEntry()->GetIntNumber();
+  if(fNumberChannelsInGroups > 1)
+    channel = fGroupCounterButton->GetNumberEntry()->GetIntNumber() * fNumberChannelsInGroups
+      + fChannelCounterButton->GetNumberEntry()->GetIntNumber();
+  
   // Choose the display pattern based on which buttons have been pushed.
 
   // Multiple canvas option
@@ -252,5 +298,36 @@ void TFancyHistogramCanvas::ActivateOverlayButton(){
   }
 
   
+
+}
+
+
+void TFancyHistogramCanvas::SetGroupName(std::string groupName){
+
+  fGroupName = groupName;
+  
+  if(!fLabelGroup) return;
+  int numberGroups = (int)(((double)fHistoArray->size())/((double)fNumberChannelsInGroups));
+  char tlabel[100];
+  sprintf(tlabel,"%s# (0-%i)",groupName.c_str(),(int)numberGroups-1);    
+
+  fLabelGroup->SetText(tlabel);//TGLabel
+}
+
+void TFancyHistogramCanvas::SetChannelName(std::string channelName){
+
+  fChannelName = channelName;
+
+  if(!fLabelChannels) return;
+  int numberChannels = fHistoArray->size();
+  if(fNumberChannelsInGroups > 1){
+    numberChannels = fNumberChannelsInGroups;    
+  }
+
+  char tlabel[100];
+  sprintf(tlabel,"%s# (0-%i)",channelName.c_str(),(int)numberChannels-1);    
+
+  fLabelChannels->SetText(tlabel);//TGLabel
+
 
 }

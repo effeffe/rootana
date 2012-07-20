@@ -31,8 +31,21 @@ public:
 
   /// Pass the THistogramArrayBase pointer during constructor;
   /// does not pass ownership (TFancyHistogramCanvas will not delete histoArray);
+  /// parameters:
+  /// 'histoArray': this is the pointer to the class derived from THistogramArrayBase base;
+  ///   - does not assume ownership of pointer memory.
   /// 'name' is the name that the histogram will have.
-  TFancyHistogramCanvas(THistogramArrayBase* histoArray, std::string name);
+  /// 'numberChannelsInGroups': if this value is greater than 1, then the fancy canvas
+  /// will have an additional button allowing the user to specify particular groups;
+  /// the histograms will be organized into size/fNumberChannelsInGroups of groups,
+  /// with each group having fNumberChannelsInGroups entries.
+  /// will have an additional button allowing the user to specify particular groups.
+  /// 'disableAutoUpdate' will tell fancy histogram to not call histoArray->UpdateHistograms()
+  ///   -> the assumption is that the user will take care of calling this function.
+  ///
+  TFancyHistogramCanvas(THistogramArrayBase* histoArray, 
+			std::string name, int numberChannelsInGroups = -1,
+			bool disableAutoUpdate=false);
 
   ~TFancyHistogramCanvas();
 
@@ -59,10 +72,25 @@ public:
   void ActivateMultiCanvasButton();
   void ActivateOverlayButton();
 
+  /// Allow the user to set explicitly the group name.
+  void SetGroupName(std::string groupName);
+  /// Allow the user to set explicitly the channel name.
+  void SetChannelName(std::string channelName);
+
 private:
 
   /// Pointer to the THistogramArrayBase class; memory is not owned by TFancyHistogramCanvas.
   THistogramArrayBase* fHistoArray;
+
+  /// 'disableAutoUpdate' will tell fancy histogram to not call histoArray->UpdateHistograms()
+  ///   -> the assumption is that the user will take care of calling this function.  
+  bool fDisableAutoUpdate;
+
+  /// 'fNumberChannelsInGroups': if this value is greater than 1, then the fancy canvas
+  /// will have an additional button allowing the user to specify particular groups;
+  /// the histograms will be organized into size/fNumberChannelsInGroups of groups,
+  /// with each group having fNumberChannelsInGroups entries.
+  int fNumberChannelsInGroups;
 
   /// Overall frame in which we will add buttons and widgets.
   TGHorizontalFrame *fLabelframe;
@@ -72,6 +100,18 @@ private:
 
   /// A label for the histogram number button.
   TGLabel *fLabelChannels;
+
+  /// Name for the channel button.
+  std::string fChannelName;
+
+  /// Button for the group number.
+  TGNumberEntry *fGroupCounterButton;
+
+  /// A label for the group button.
+  TGLabel *fLabelGroup;
+
+  /// Name for the group button.
+  std::string fGroupName;
 
   /// This button controls whether to display mutliple sub-canvases.
   TGCheckButton *fMultiCanvasButton;
