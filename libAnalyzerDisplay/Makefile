@@ -9,9 +9,10 @@ CXXFLAGS += -DHAVE_ZLIB
 # ROOT libraries
 
 ifdef ROOTSYS
-#ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread
-ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread
-#RPATH    += -Wl,-rpath,$(ROOTSYS)/lib
+ROOTLIBDIR := $(shell $(ROOTSYS)/bin/root-config --libdir)
+#ROOTLIBS  = -L$(ROOTLIBDIR) $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread
+ROOTGLIBS = -L$(ROOTLIBDIR) $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread
+#RPATH    += -Wl,-rpath,$(ROOTLIBDIR)
 CXXFLAGS += -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
 endif
 
@@ -54,7 +55,7 @@ display_example.exe: display_example.cxx libAnalyzerDisplay.a ../libAnalyzer/lib
 	$(CXX) $(CXXFLAGS) -c $<
 
 %Dict.cxx: %.hxx %_LinkDef.h
-	LD_LIBRARY_PATH=$(ROOTSYS)/lib $(ROOTSYS)/bin/rootcint -f $@ -c -p $(CXXFLAGS) $^
+	LD_LIBRARY_PATH=$(ROOTLIBDIR) $(ROOTSYS)/bin/rootcint -f $@ -c -p $(CXXFLAGS) $^
 
 
 %.o: %.cxx
