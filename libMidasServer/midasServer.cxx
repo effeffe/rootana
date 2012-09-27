@@ -45,16 +45,19 @@ void VerboseMidasServer(bool verbose)
 #include <map>
 #include <string>
 
-static std::map<uint32_t,std::string> gPointers;
-static std::map<std::string,uint32_t> gRevPointers;
-static uint32_t gLastPointer = 0;
+//#define XPOINTER_T uint64_t
+#define XPOINTER_T uint32_t
+
+static std::map<XPOINTER_T,std::string> gPointers;
+static std::map<std::string,XPOINTER_T> gRevPointers;
+static XPOINTER_T gLastPointer = 0;
 
 TFolder *ReadFolderPointer(TSocket * fSocket)
 {
    //read pointer to current folder
    TMessage *m = 0;
    fSocket->Recv(m);
-   uint32_t p;
+   XPOINTER_T p;
    *m >> p;
 
    const char* name = gPointers[p].c_str();
@@ -175,7 +178,7 @@ void root_server_thread(void *arg)
       } else if (strncmp(request, "GetPointer", 10) == 0) {
 
         //find object
-        uint32_t p = 0;
+        XPOINTER_T p = 0;
         TObject *obj = gROOT->FindObjectAny(request + 11);
         
         //write pointer
