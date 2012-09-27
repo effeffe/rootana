@@ -1,12 +1,11 @@
 # Makefile
 
-CXXFLAGS = -g -O2 -Wall -Wuninitialized
+CXXFLAGS = -g -O2 -Wall -Wuninitialized -I./include
 
 # MIDAS interface library
 
 CXXFLAGS += -I./libMidasInterface
-#OBJS     += ./libMidasInterfacerectory/netDirectoryServer.o
-ALL+= libMidasInterface/libMidasInterface.a
+ALL+=  libMidasInterface/libMidasInterface.a
 LIBS+= libMidasInterface/libMidasInterface.a
 
 # optional ROOT libraries
@@ -54,9 +53,11 @@ endif
 
 # optional old midas server
 
-ifdef OLD_SERVER
-CXXFLAGS += -DOLD_SERVER -I./obsolete -IlibNetDirectory
-OBJS     += ./obsolete/midasServer.o
+HAVE_MIDASSERVER = 1
+
+ifdef HAVE_MIDASSERVER
+CXXFLAGS += -DOLD_SERVER -DHAVE_MIDASSERVER
+OBJS     += ./libMidasServer/midasServer.o
 endif
 
 # optional libAnalyzer and libAnalyzerDisplay code

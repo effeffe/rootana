@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <signal.h>
 
-#ifdef OLD_SERVER
+#ifdef HAVE_MIDASSERVER
 #include "midasServer.h"
 #endif
 #ifdef HAVE_LIBNETDIRECTORY
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
    gROOT->cd();
    gOnlineHistDir = new TDirectory("rootana", "rootana online plots");
 
-#ifdef OLD_SERVER
+#ifdef HAVE_MIDASSERVER
    if (oldTcpPort)
      StartMidasServer(oldTcpPort);
 #else
@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
    //f->Write();
    //f->Close();
 
-#ifdef OLD_SERVER
+#ifdef HAVE_MIDASSERVER
    if (oldTcpPort>0 && gManaHistosFolder)
      {
        NetDirectoryExport(gManaHistosFolder, "histos");

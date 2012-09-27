@@ -16,7 +16,7 @@
 #include "TMidasEvent.h"
 #include "TMidasFile.h"
 #include "XmlOdb.h"
-#ifdef OLD_SERVER
+#ifdef HAVE_MIDASSERVER
 #include "midasServer.h"
 #endif
 #ifdef HAVE_LIBNETDIRECTORY
@@ -137,7 +137,7 @@ void endRun(int transition,int run,int time)
   gIsRunning = false;
   gRunNumber = run;
 
-#ifdef OLD_SERVER
+#ifdef HAVE_MIDASSERVER
   if (gManaHistosFolder)
     gManaHistosFolder->Clear();
 #endif
@@ -175,7 +175,7 @@ void HandleSample(int ichan, void* ptr, int wsize)
       printf("Create [%s]\n", name);
       samplePlot = new TH1D(name, name, numSamples, 0, numSamples);
       //samplePlot->SetMinimum(0);
-#ifdef OLD_SERVER
+#ifdef HAVE_MIDASSERVER
       if (gManaHistosFolder)
         gManaHistosFolder->Add(samplePlot);
 #endif
@@ -541,6 +541,7 @@ int main(int argc, char *argv[])
    bool testMode = false;
    int  oldTcpPort = 0;
    int  tcpPort = 0;
+   int  xmlTcpPort = 0;
    const char* hostname = NULL;
    const char* exptname = NULL;
 
@@ -557,6 +558,8 @@ int main(int argc, char *argv[])
 	 oldTcpPort = atoi(arg+2);
        else if (strncmp(arg,"-P",2)==0) // Set the histogram server port
 	 tcpPort = atoi(arg+2);
+       else if (strncmp(arg,"-X",2)==0) // Set the histogram server port
+	 xmlTcpPort = atoi(arg+2);
        else if (strcmp(arg,"-T")==0)
 	 testMode = true;
        else if (strcmp(arg,"-g")==0)
@@ -576,7 +579,7 @@ int main(int argc, char *argv[])
    gROOT->cd();
    gOnlineHistDir = new TDirectory("rootana", "rootana online plots");
 
-#ifdef OLD_SERVER
+#ifdef HAVE_MIDASSERVER
    if (oldTcpPort)
      StartMidasServer(oldTcpPort);
 #else
@@ -589,6 +592,19 @@ int main(int argc, char *argv[])
 #else
    if (tcpPort)
      fprintf(stderr,"ERROR: No support for the TNetDirectory server!\n");
+#endif
+#ifdef HAVE_XMLSERVER
+   XmlServer* xmlServer = NULL;
+   if (xmlTcpPort)
+     {
+        xmlServer = new XmlServer();
+        xmlServer->SetVerbose(true);
+        xmlServer->Start(xmlTcpPort);
+        xmlServer->Export(gOnlineHistDir, gOnlineHistDir->GetName());
+     }
+#else
+   if (xmlTcpPort)
+     fprintf(stderr,"ERROR: No support for the XML Server!\n");
 #endif
 	 
    gIsOffline = false;
