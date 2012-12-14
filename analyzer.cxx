@@ -283,6 +283,12 @@ int ProcessMidasFile(TApplication*app,const char*fname)
 	  // end run
 	  event.Print();
 	}
+      else if ((eventId & 0xFFFF) == 0x8002) 
+        { 
+          // log message 
+          event.Print(); 
+          printf("Log message: %s\n", event.GetData()); 
+        } 
       else
 	{
 	  event.SetBankList();
