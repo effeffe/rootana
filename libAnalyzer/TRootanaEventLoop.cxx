@@ -327,6 +327,7 @@ void TRootanaEventLoop::OpenRootFile(int run){
 
 void TRootanaEventLoop::CloseRootFile(){
 
+  std::cout << "Closing ROOT file " << std::endl;
   if(fOutputFile) {
     fOutputFile->Write();
     fOutputFile->Close();
@@ -456,6 +457,9 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
 
    //loop_online();
    app->Run(kTRUE); // kTRUE means return to here after finished with online processing... this ensures that we can disconnect.
+   
+   // Close the ROOT file.
+   CloseRootFile();  
 
    /* disconnect from experiment */
    midas->disconnect();
