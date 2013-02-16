@@ -31,8 +31,11 @@ CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 endif
 
 
+
+
 ALL:= 
 OBJS:=
+LIBS:=
 ifdef ROOTSYS
 ALL  += libAnalyzer.a analyzer_example.exe
 OBJS += TPeriodicClass.o
@@ -43,6 +46,12 @@ OBJS += TV792Data.o
 OBJS += TMesytecData.o
 endif
 
+ifdef ROOTSYS
+CXXFLAGS += -DHAVE_LIBNETDIRECTORY -I../libNetDirectory -I../
+LIBS     += ../libNetDirectory/libNetDirectory.a
+endif
+
+
 all: $(ALL)
 
 libAnalyzer.a: $(OBJS)
@@ -50,7 +59,7 @@ libAnalyzer.a: $(OBJS)
 	ar -rv $@ $^
 
 analyzer_example.exe: analyzer_example.cxx libAnalyzer.a ../libMidasInterface/libMidasInterface.a
-	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH) 
+	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH) $(LIBS)
 
 
 

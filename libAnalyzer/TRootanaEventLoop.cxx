@@ -322,6 +322,11 @@ void TRootanaEventLoop::OpenRootFile(int run){
   sprintf(filename, "output%05d.root", run);
   fOutputFile = new TFile(filename,"RECREATE");
   std::cout << "Opened output file with name : " << filename << std::endl;
+
+
+#ifdef HAVE_LIBNETDIRECTORY
+  NetDirectoryExport(fOutputFile, "outputFile");
+#endif
 }
 
 
@@ -439,6 +444,7 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    //   if ((fODB->odbReadInt("/runinfo/State") == 3))
    //startRun(0,gRunNumber,0);
    OpenRootFile(fCurrentRunNumber);
+   BeginRun(0,fCurrentRunNumber,0);
 
    // Register begin and end run handlers.
    midas->setTransitionHandlers(onlineBeginRunHandler,onlineEndRunHandler,NULL,NULL);
@@ -458,7 +464,8 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    //loop_online();
    app->Run(kTRUE); // kTRUE means return to here after finished with online processing... this ensures that we can disconnect.
    
-   // Close the ROOT file.
+   // Call user-defined EndRun and close the ROOT file.
+   EndRun(0,fCurrentRunNumber,0);
    CloseRootFile();  
 
    /* disconnect from experiment */
