@@ -90,7 +90,7 @@ public:
   }
   /// Method for when skip event button is pushed (online mode)
   void EventSkipButtonPushed(){
-    fNumberSkipEvents = fMainWindow->GetSkipEventButton()->GetNumberEntry()->GetIntNumber();
+    fNumberSkipEventsOnline = fMainWindow->GetSkipEventButton()->GetNumberEntry()->GetIntNumber();
   }
 
   /// This method calls a couple other methods for resets the histograms.
@@ -105,7 +105,7 @@ public:
   /// Function so that user can specify at outset how many events to skip before
   /// refreshing display (in online mode).
   void SetNumberSkipEvent(int number){
-    fNumberSkipEvents = number;
+    fNumberSkipEventsOnline = number;
     if(fMainWindow->GetSkipEventButton())
       fMainWindow->GetSkipEventButton()->GetNumberEntry()->SetIntNumber(number);
   }
@@ -128,8 +128,9 @@ private:
   // Variable to keep track of waiting for next event button (offline mode)
   bool waitingForNextButton; 
 
-  // Variable to keep track of how many events to skip before updating display (online mode)
-  int fNumberSkipEvents;
+  /// Variable to keep track of how many events to skip before updating display;
+  /// we have separate variable for online and offline modes.
+  int fNumberSkipEventsOnline;
 
   // Variable to keep track of number of processed events.
   int fNumberProcessed;

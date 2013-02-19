@@ -7,7 +7,7 @@ ClassImp(TRootanaDisplay)
 
 TRootanaDisplay::TRootanaDisplay() 
 {
-  fNumberSkipEvents = 1;
+  fNumberSkipEventsOnline = 1; 
   fNumberProcessed = 0;
   fCachedDataContainer = 0;
   SetDisplayName("Rootana Display");
@@ -52,7 +52,7 @@ void TRootanaDisplay::InitializeMainWindow(){
     TGNumberEntry *skipButton = fMainWindow->GetSkipEventButton();
     skipButton->Connect("ValueSet(Long_t)", "TRootanaDisplay",this, "EventSkipButtonPushed()");
     skipButton->GetNumberEntry()->Connect("ReturnPressed()", "TRootanaDisplay", this, "EventSkipButtonPushed()");
-    fNumberSkipEvents = skipButton->GetNumberEntry()->GetIntNumber();    
+    fNumberSkipEventsOnline = skipButton->GetNumberEntry()->GetIntNumber();    
   }
 
   // Let the user add all the canvases they want.
@@ -81,22 +81,25 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 
   fNumberProcessed++;
 
-  SetCachedDataContainer(dataContainer);
+  // Only update histograms if we are "offline" or "online and but paused".
+  // This ensures that we don't update if the user pressed 'pause' since the 
+  // last event.
+  if(!IsOnline() || (IsOnline() && !fMainWindow->IsDisplayPaused())){
+    SetCachedDataContainer(dataContainer);
+    
+    // Perform any histogram updating from user code.
+    UpdateHistograms(*fCachedDataContainer);
+    for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)
+      fCanvasHandlers[i].second->UpdateCanvasHistograms(*fCachedDataContainer);
+  }  
 
-  // Perform any histogram updating from user code.
-  UpdateHistograms(*fCachedDataContainer);
-  for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)
-    fCanvasHandlers[i].second->UpdateCanvasHistograms(*fCachedDataContainer);
-  
-  /// If processing online and if processing is not paused, then just plot and return
+  // If processing online and if processing is not paused, then just plot and return
   if(IsOnline() && !fMainWindow->IsDisplayPaused() ){
        
     // Do canvas plotting from user code; 
     // only do plot if we have processed enough events
-    if(fNumberSkipEvents == 1 || fNumberProcessed % fNumberSkipEvents  == 1){
-      
+    if(fNumberSkipEventsOnline == 1 || fNumberProcessed % fNumberSkipEventsOnline  == 1){      
       UpdatePlotsAction();
-
     }
     
     return true;
@@ -104,8 +107,8 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 
   UpdatePlotsAction();
 
-  /// If offline, then keep looping till the next event button is pushed.
-  /// If online, then keep looping till the resume button is pushed.
+  // If offline, then keep looping till the next event button is pushed.
+  // If online, then keep looping till the resume button is pushed.
   waitingForNextButton = true;
   while(1){
     
