@@ -41,14 +41,19 @@ OBJS += TMainDisplayWindowDict.o TRootanaDisplayDict.o
 OBJS += TFancyHistogramCanvas.o TFancyHistogramCanvasDict.o
 endif
 
+ifdef ROOTSYS
+CXXFLAGS += -DHAVE_LIBNETDIRECTORY -I../libNetDirectory -I../
+LIBS     += ../libNetDirectory/libNetDirectory.a
+endif
+
 all: $(ALL)
 
 libAnalyzerDisplay.a: $(OBJS)
 	-rm -f $@
 	ar -rv $@ $^
 
-display_example.exe: display_example.cxx libAnalyzerDisplay.a ../libAnalyzer/libAnalyzer.a ../libMidasInterface/libMidasInterface.a 
-	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH) 
+display_example.exe: display_example.cxx libAnalyzerDisplay.a ../libAnalyzer/libAnalyzer.a ../libMidasInterface/libMidasInterface.a
+	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH) $(LIBS)
 
 
 %Dict.o: %Dict.cxx
