@@ -238,6 +238,7 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
     printf("Cannot open input file \"%s\"\n",fname);
     return -1;
   }
+ 
 
   int i=0;
   while (1)
@@ -248,6 +249,8 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
       
       /// Treat the begin run and end run events differently.
       int eventId = event.GetEventId();
+
+      
 
       if ((eventId & 0xFFFF) == 0x8000){// begin run event
 	
@@ -264,9 +267,15 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
       } else if ((eventId & 0xFFFF) == 0x8001){// end run event
 	  
 	event.Print();
+        //EndRun(0,fCurrentRunNumber,0);
 	
 
-      } else { // all other events
+      } else if ((eventId & 0xFFFF) == 0x8002){
+
+        event.Print(); 
+        printf("Log message: %s\n", event.GetData()); 
+
+      }else { // all other events
 
 
 	// Set the bank list for midas event.
@@ -388,23 +397,6 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
 
 void onlineBeginRunHandler(int transition,int run,int time)
 {
-  //  if(gOutputFile!=NULL)
-  //{
-  //  gOutputFile->Write();
-  //  gOutputFile->Close();
-  //  gOutputFile=NULL;
-  //}  
-
-  //char filename[1024];
-  //sprintf(filename, "output%05d.root", run);
-  //gOutputFile = new TFile(filename,"RECREATE");
-  //printf("gOutputFile: %p, isOpen %d\n", gOutputFile, gOutputFile->IsOpen());
-  //assert(gOutputFile);
-  //assert(gOutputFile->IsOpen());
-
-  //#ifdef HAVE_LIBNETDIRECTORY
-  //  NetDirectoryExport(gOutputFile, "outputFile");
-  //#endif
   TRootanaEventLoop::Get().OpenRootFile(run);
   TRootanaEventLoop::Get().SetCurrentRunNumber(run);
   TRootanaEventLoop::Get().BeginRun(transition,run,time);
