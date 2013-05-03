@@ -104,3 +104,13 @@
 /// menu and provides an example ROOT event handler to execute menu commands and
 /// to interact with the user.
 ///
+/// \section analyzerFramework Analyzer Framework
+///
+/// Recently (post 2012) we have also been adding additional framework classes to rootana.  You can see 
+/// more information on this framework here:
+/// - \ref analyzerClass
+/// - \ref displayClass
+///
+
+
+
