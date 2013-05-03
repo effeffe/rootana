@@ -6,7 +6,7 @@
 #include "TGenericData.hxx"
 
 /// Class for each TDC measurement
-/// For the definition of obscure variables see the CAEN V1190 manual.
+/// For the definition of obscure variables see the CAEN V792 manual.
 class VADCMeasurement {
 
   friend class TV792Data;
