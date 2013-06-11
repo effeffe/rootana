@@ -153,7 +153,13 @@ protected:
   /// TDirectory for online histograms.
   TDirectory* fOnlineHistDir;
 
+  /// This is a special version of CheckOption that is only used by TRootanaDisplay.
+  /// This is just so that users still have the ability to set options for  
+  /// executables derived from TRootanaDisplay.
+  virtual bool CheckOptionRAD(std::string option);
 
+  /// Also a special version of usage for TRootanaDisplay.  See CheckOptionRAD
+  virtual void UsageRAD(void);
 
 private:
   
@@ -187,7 +193,9 @@ private:
   // ________________________________________________
   // Variables for online analysis
 
-
+  /// Buffer to connect to
+  std::string fBufferName;
+  
   // ________________________________________________
   // Variables for offline analysis
   int fMaxEvents;

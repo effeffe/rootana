@@ -8,6 +8,7 @@ ClassImp(TRootanaDisplay)
 TRootanaDisplay::TRootanaDisplay() 
 {
   fNumberSkipEventsOnline = 1; 
+  fNumberSkipEventsOffline = 0;
   fNumberProcessed = 0;
   fCachedDataContainer = 0;
   SetDisplayName("Rootana Display");
@@ -78,7 +79,7 @@ void TRootanaDisplay::AddSingleCanvas(TCanvasHandleBase* handleClass){
 
 
 bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
-
+fMainWindow->ResetSize();
   fNumberProcessed++;
 
   // Only update histograms if we are "offline" or "online and but paused".
@@ -102,6 +103,11 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
       UpdatePlotsAction();
     }
     
+    return true;
+  }
+
+  // If processing offline, make sure we have skipped the right number of events.
+  if(!IsOnline() && fNumberSkipEventsOffline >= fNumberProcessed){
     return true;
   }
 
@@ -134,7 +140,7 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 
     // handle GUI events
     bool result = gSystem->ProcessEvents(); 
-
+    
   }
 
   return true;
@@ -198,7 +204,7 @@ void TRootanaDisplay::UpdatePlotsAction(){
 
 
   // Update canvas and window sizes    
-  fMainWindow->ResetSize();
+   fMainWindow->ResetSize();
 }
 
 void TRootanaDisplay::Reset(){

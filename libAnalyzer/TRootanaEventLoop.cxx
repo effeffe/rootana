@@ -49,6 +49,8 @@ TRootanaEventLoop::TRootanaEventLoop (){
   fIsOffline = true;
   fCreateMainWindow = true;
 
+  fBufferName = std::string("SYSTEM");
+
   fDataContainer = new TDataContainer();
 
   /// Create the TApplication
@@ -74,9 +76,11 @@ void TRootanaEventLoop::EndRun(int transition,int run,int time){};
 void TRootanaEventLoop::Finalize(){};
 
 void TRootanaEventLoop::Usage(void){};
+void TRootanaEventLoop::UsageRAD(void){};
   
 
 bool TRootanaEventLoop::CheckOption(std::string option){return false;}
+bool TRootanaEventLoop::CheckOptionRAD(std::string option){return false;}
 
 
 void TRootanaEventLoop::PrintHelp(){
@@ -88,11 +92,13 @@ void TRootanaEventLoop::PrintHelp(){
   printf("\t-T: test mode - start and serve a test histogram\n");
   printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
   printf("\t-Eexptname: connect to this MIDAS experiment\n");
+  printf("\t-bbuffer: connect to this MIDAS buffer\n");
   printf("\t-P: Start the TNetDirectory server on specified tcp port (for use with roody -Plocalhost:9091)\n");
   printf("\t-p: Start the old midas histogram server on specified tcp port (for use with roody -Hlocalhost:9090)\n");
-  printf("\t-e: Number of events to read from input data files\n");
+  printf("\t-eXXX: Number of events XXX to read from input data files\n");
   //printf("\t-m: Enable memory leak debugging\n");
   printf("\t-g: Enable graphics display when processing data files\n");
+  UsageRAD();  // Print description of TRootanaDisplay options.
   Usage();  // Print description of user options.
   printf("\n");
   printf("Example1: analyze online data: ./analyzer.exe -P9091\n");
@@ -150,10 +156,14 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
 	hostname = strdup(arg+2);
       else if (strncmp(arg,"-E",2)==0)
 	exptname = strdup(arg+2);
-      else if (strcmp(arg,"-h")==0)
+      else if (strncmp(arg,"-b",2)==0){
+	fBufferName = std::string(arg+2);        
+      }else if (strcmp(arg,"-h")==0)
 	PrintHelp(); // does not return
-      else if(arg[0] == '-' && !CheckOption(args[i])) // Chec if a user-defined option	
-	PrintHelp(); // does not return
+      else if(arg[0] == '-')// Check if a TRootanaDisplay or user-defined options
+        if(!CheckOptionRAD(args[i]))
+          if(!CheckOption(args[i]))
+            PrintHelp(); // does not return
     }
     
   // Do quick check if we are processing online or offline.
@@ -445,7 +455,7 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    /* reqister event requests */
    midas->setEventHandler(onlineEventHandler);
 
-   midas->eventRequest("SYSTEM",-1,-1,(1<<1));  
+   midas->eventRequest(fBufferName.c_str(),-1,-1,(1<<1));  
 
    // printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
    

@@ -119,6 +119,18 @@ public:
     InitializeMainWindow();
   }
 
+  bool CheckOptionRAD(std::string option){
+    if(option.find("-s") != std::string::npos){
+      std::string sub = option.substr(2);
+      fNumberSkipEventsOffline = atoi(sub.c_str());
+      printf("Will process %i events before plotting first event.\n",fNumberSkipEventsOffline);
+      return true;
+    }
+    return false;
+  }
+  void UsageRAD(){
+    printf("\t-s: will process specified number of events before displaying (for display programs)\n");
+  }
 
 private:
 
@@ -131,6 +143,10 @@ private:
   /// Variable to keep track of how many events to skip before updating display;
   /// we have separate variable for online and offline modes.
   int fNumberSkipEventsOnline;
+
+  /// Variable to keep track of how many events to skip when running offline;
+  /// defined by command line argument.
+  int fNumberSkipEventsOffline;
 
   // Variable to keep track of number of processed events.
   int fNumberProcessed;
