@@ -4,11 +4,12 @@
 #include <string>
 #include <iostream>
 #include <inttypes.h>
+
+/// A generic ABC for storing decoded data banks.
+/// Provides methods for accessing unstructured data.
+/// INherited classes will provide more user-friendly data access.
 class TGenericData{
 
-  //    friend class TND280RawEvent;    //Needs access to DonateDataBuffer method
-  //  friend class TMidasEventParser; //Needs access to SetT2KHeader
-  
  public:
 
   TGenericData(int bklen, int bktype, const char* name, void *pdata):fSize(bklen),
