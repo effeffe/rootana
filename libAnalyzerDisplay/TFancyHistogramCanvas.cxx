@@ -8,10 +8,11 @@ TFancyHistogramCanvas::TFancyHistogramCanvas(THistogramArrayBase* histoArray,
 					     std::string name, int numberChannelsInGroups,
 					     bool disableAutoUpdate):
   TCanvasHandleBase(name),
-  fHistoArray(histoArray),
-  fDisableAutoUpdate(disableAutoUpdate){
+  fHistoArray(histoArray){
 
-  if(numberChannelsInGroups > 1)
+  if(histoArray->GetNumberChannelsInGroup() != -1){
+    fNumberChannelsInGroups = histoArray->GetNumberChannelsInGroup();  
+  }else if(numberChannelsInGroups > 1)
     fNumberChannelsInGroups = numberChannelsInGroups;
   else
     fNumberChannelsInGroups = -1;
@@ -20,10 +21,14 @@ TFancyHistogramCanvas::TFancyHistogramCanvas(THistogramArrayBase* histoArray,
   fChannelCounterButton = 0;
   fLabelChannels = 0;
   fChannelName = "Histogram";
+  if(histoArray->GetChannelName().compare("")!=0)
+    fChannelName = histoArray->GetChannelName();
 
   fGroupCounterButton = 0;
   fLabelGroup = 0;
   fGroupName = "Group";
+  if(histoArray->GetGroupName().compare("")!=0)
+    fGroupName = histoArray->GetGroupName();
 
   fMultiCanvasButton = 0;
   fNCanvasButtonGroup =0;
@@ -38,6 +43,10 @@ TFancyHistogramCanvas::TFancyHistogramCanvas(THistogramArrayBase* histoArray,
   // Construct the legend here, so that user can modify position immediately.
   fNHistoLegend = new TLegend(0.6,0.6,0.89,0.8);
   fNHistoLegend->SetFillColor(10);
+
+  fDisableAutoUpdate = disableAutoUpdate;
+  if(histoArray->HasAutoUpdate())
+    fDisableAutoUpdate = histoArray->GetDisableAutoUpdate();
 
 }
 

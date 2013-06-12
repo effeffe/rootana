@@ -25,9 +25,16 @@
 /// a set of dissimilar histograms (different binning, different quantities)
 /// the results will probably be unsatisfactory.
 /// The array'ness is actually implemented as a vector of TH1s.
+///
+/// The default representation is to have a 1D array of histograms. 
+/// But the user can also use the class a 2D array of histograms by specifying the functions
+/// 
+///
 class THistogramArrayBase : public std::vector<TH1*> {
  public:
-  THistogramArrayBase(){}
+  THistogramArrayBase():fNumberChannelsInGroups(-1),fGroupName(""),fChannelName(""),
+    fDisableAutoUpdate(false),fHasAutoUpdate(false){}
+
   virtual ~THistogramArrayBase(){}
 
   /// Update the histograms for this canvas.
@@ -49,8 +56,42 @@ class THistogramArrayBase : public std::vector<TH1*> {
   /// Take actions at end run  
   virtual void EndRun(int transition,int run,int time){};
 
+  /// Function to define the number of channels in group and 
+  /// allow user to treat the array as 2D array.
+  void SetNumberChannelsInGroup(int numberChannelsInGroups){ fNumberChannelsInGroups = numberChannelsInGroups; }
+  const int  GetNumberChannelsInGroup(){ return fNumberChannelsInGroups; }
+  
+  /// Set name for the 'group'.
+  void SetGroupName(std::string name){  fGroupName = name;  }
+  const std::string GetGroupName(){ return fGroupName;  }
 
+  /// Set name for the 'channel'.
+  void SetChannelName(std::string name){  fChannelName = name;  }
+  const std::string GetChannelName(){ return fChannelName;  }
+  
+  /// Define whether the histogram gets automatically updated by rootana display.
+  /// 'True' means that rootana display will NOT call UpdateHistograms automatically.
+  void DisableAutoUpdate(bool DisableautoUpdate=true){ fDisableAutoUpdate = DisableautoUpdate; fHasAutoUpdate = true;}  
+  const bool GetDisableAutoUpdate(){ return fDisableAutoUpdate; }  
+  const bool HasAutoUpdate(){ return fHasAutoUpdate; }  
+  
 private:
+
+  /// This is the number of channels in a given group.
+  /// This is mostly used by rootana display, but could 
+  /// also be used to specify histograms as a 2D array of [group][channel.
+  int fNumberChannelsInGroups;
+  
+  /// The name for the 'group'.
+  std::string fGroupName;
+
+  /// The name for the 'channel'.
+  std::string fChannelName;
+
+  /// Defines whether the histogram should be automatically updated 
+  /// by TRootanaDisplay.
+  bool fDisableAutoUpdate;
+  bool fHasAutoUpdate;
 
 };
 
