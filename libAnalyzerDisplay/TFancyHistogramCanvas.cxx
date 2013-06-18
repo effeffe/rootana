@@ -62,29 +62,31 @@ void TFancyHistogramCanvas::SetUpCompositeFrame(TGCompositeFrame *compFrame, TRo
   fDisplay = display;
   
   // Now create my embedded canvas, along with the various buttons for this canvas.  
+  // Sub-frame, to reduce space used
   fLabelframe = new TGHorizontalFrame(compFrame,200,40);
   compFrame->AddFrame(fLabelframe, new TGLayoutHints(kLHintsCenterX,2,2,2,2));
   
   // ________________________________________________________________________________
   // Add a button for the groups, if we are using groups
-  
   if(fNumberChannelsInGroups > 1){
     
+    TGVerticalFrame *hframe1 = new TGVerticalFrame(fLabelframe, 120, 40, kFixedWidth);
+    fLabelframe->AddFrame(hframe1, new TGLayoutHints(kLHintsLeft,2,2,2,2));
     int numberGroups = (int)(((double)fHistoArray->size())/((double)fNumberChannelsInGroups));
 
-    fGroupCounterButton = new TGNumberEntry(fLabelframe, 0, 9,999, TGNumberFormat::kNESInteger,
+    fGroupCounterButton = new TGNumberEntry(hframe1, 0, 9,999, TGNumberFormat::kNESInteger,
 					      TGNumberFormat::kNEANonNegative, 
 					      TGNumberFormat::kNELLimitMinMax,
 					      0, numberGroups-1);
     
-    fLabelframe->AddFrame(fGroupCounterButton, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
+    hframe1->AddFrame(fGroupCounterButton, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
     // Add call-backs to update plots if widget is used
     fGroupCounterButton->Connect("ValueSet(Long_t)", "TRootanaDisplay", display, "UpdatePlotsAction()");
     fGroupCounterButton->GetNumberEntry()->Connect("ReturnPressed()", "TRootanaDisplay", display, "UpdatePlotsAction()");
     
     // Add a label for channel selector    
-    fLabelGroup = new TGLabel(fLabelframe, "");
-    fLabelframe->AddFrame(fLabelGroup, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
+    fLabelGroup = new TGLabel(hframe1, "");
+    hframe1->AddFrame(fLabelGroup, new TGLayoutHints(kLHintsLeft , 1, 1, 1, 1));
     SetGroupName(fGroupName);
   }
 
@@ -92,23 +94,26 @@ void TFancyHistogramCanvas::SetUpCompositeFrame(TGCompositeFrame *compFrame, TRo
   // Create the default set of widgets used for all display options: namely a counter
   // that keeps track of which channel to start from.
 
+  // Sub-frame, to reduce space used
+  TGVerticalFrame *hframe2 = new TGVerticalFrame(fLabelframe, 120, 40, kFixedWidth);
+  fLabelframe->AddFrame(hframe2, new TGLayoutHints(kLHintsLeft,2,2,2,2));
   int numberChannels = fHistoArray->size();
   if(fNumberChannelsInGroups > 1){
     numberChannels = fNumberChannelsInGroups;    
   }
-  fChannelCounterButton = new TGNumberEntry(fLabelframe, 0, 9,999, TGNumberFormat::kNESInteger,
+  fChannelCounterButton = new TGNumberEntry(hframe2, 0, 9,999, TGNumberFormat::kNESInteger,
 					 TGNumberFormat::kNEANonNegative, 
 					 TGNumberFormat::kNELLimitMinMax,
 					 0, numberChannels-1);
   
-  fLabelframe->AddFrame(fChannelCounterButton, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
+  hframe2->AddFrame(fChannelCounterButton, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
   // Add call-backs to update plots if widget is used
   fChannelCounterButton->Connect("ValueSet(Long_t)", "TRootanaDisplay", display, "UpdatePlotsAction()");
   fChannelCounterButton->GetNumberEntry()->Connect("ReturnPressed()", "TRootanaDisplay", display, "UpdatePlotsAction()");
 
   // Add a label for channel selector
-  fLabelChannels = new TGLabel(fLabelframe, "");
-  fLabelframe->AddFrame(fLabelChannels, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
+  fLabelChannels = new TGLabel(hframe2, "");
+  hframe2->AddFrame(fLabelChannels, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
   SetChannelName(fChannelName);
 
   // ________________________________________________________________________________
@@ -146,18 +151,23 @@ void TFancyHistogramCanvas::SetUpCompositeFrame(TGCompositeFrame *compFrame, TRo
   fOverlayHistoButton->Connect("Toggled(Bool_t)", "TRootanaDisplay", display, "UpdatePlotsAction()");
 
   /// Add the button to control how many histograns to plot to plot.
-  fNHistoButton = new TGNumberEntry(fLabelframe, 2, 9,999, TGNumberFormat::kNESInteger,
+  
+  // Sub-frame, to reduce space used
+  TGVerticalFrame *hframe3 = new TGVerticalFrame(fLabelframe, 120, 40, kFixedWidth);
+  fLabelframe->AddFrame(hframe3, new TGLayoutHints(kLHintsLeft,2,2,2,2));
+
+  fNHistoButton = new TGNumberEntry(hframe3, 2, 9,999, TGNumberFormat::kNESInteger,
 				    TGNumberFormat::kNEANonNegative, 
 				    TGNumberFormat::kNELLimitMinMax,
 				    2, 20);
-  fLabelframe->AddFrame(fNHistoButton, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
+  hframe3->AddFrame(fNHistoButton, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
   // Add call-backs to update plots if widget is used
   fNHistoButton->Connect("ValueSet(Long_t)", "TRootanaDisplay", display, "UpdatePlotsAction()");
   fNHistoButton->GetNumberEntry()->Connect("ReturnPressed()", "TRootanaDisplay", display, "UpdatePlotsAction()");
   fNHistoButton->SetState(false);
   // Add a label
-  labelNHisto = new TGLabel(fLabelframe, "# Histo in Canvas");
-  fLabelframe->AddFrame(labelNHisto, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
+  labelNHisto = new TGLabel(hframe3, "# Histo in Canvas");
+  hframe3->AddFrame(labelNHisto, new TGLayoutHints(kLHintsLeft, 5, 5, 5, 5));
    
 }
 
