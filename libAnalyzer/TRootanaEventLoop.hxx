@@ -135,6 +135,8 @@ public:
   
   void DisableRootOutput(bool disable=true){fDisableRootOutput = disable;};
 
+  void SetOnlineName(std::string name){fOnlineName = name;};
+
 protected:
 
   bool CreateOutputFile(std::string name, std::string options = "RECREATE"){
@@ -195,6 +197,9 @@ private:
 
   /// Buffer to connect to
   std::string fBufferName;
+
+  /// Name of program, as seen by MIDAS.
+  std::string fOnlineName;
   
   // ________________________________________________
   // Variables for offline analysis

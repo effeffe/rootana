@@ -50,6 +50,7 @@ TRootanaEventLoop::TRootanaEventLoop (){
   fCreateMainWindow = true;
 
   fBufferName = std::string("SYSTEM");
+  fOnlineName = std::string("rootana");
 
   fDataContainer = new TDataContainer();
 
@@ -328,7 +329,6 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
 
 void TRootanaEventLoop::OpenRootFile(int run){
 
-
   if(fDisableRootOutput) return;
 
   if(fOutputFile) {
@@ -430,7 +430,7 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
 {
    TMidasOnline *midas = TMidasOnline::instance();
 
-   int err = midas->connect(hostname, exptname, "rootana");
+   int err = midas->connect(hostname, exptname, fOnlineName.c_str());
    if (err != 0)
      {
        fprintf(stderr,"Cannot connect to MIDAS, error %d\n", err);
