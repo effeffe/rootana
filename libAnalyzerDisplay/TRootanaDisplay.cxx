@@ -118,9 +118,8 @@ fMainWindow->ResetSize();
   waitingForNextButton = true;
   while(1){
     
-    // This is crude! Need to add some sort of wait function, otherwise 
-    // this will use 99% of CPU time, for no good reason...
-    // usleep(1000); this seems to work fine, but need to test a bit more first...
+    // Add some sleeps; otherwise program takes 100% of CPU...
+    usleep(1000);
 
     // ROOT signal/slot trick; this variable will magically 
     // get changed to false once the next button is pushed.
