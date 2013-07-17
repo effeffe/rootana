@@ -137,6 +137,16 @@ public:
 
   void SetOnlineName(std::string name){fOnlineName = name;};
 
+  /// Provide a way to force program to only process certain event IDs.
+  /// This method can be called repeatedly to specify several different event IDs to accept.
+  /// If the method is not called then all eventIDs are accepted.
+  void ProcessThisEventID(int eventID){
+    fProcessEventIDs.push_back(eventID);
+  };
+
+  /// Little helper method to check if EventID matchs requested EventID list.
+  bool CheckEventID(int eventId);
+
 protected:
 
   bool CreateOutputFile(std::string name, std::string options = "RECREATE"){
@@ -191,6 +201,8 @@ private:
   /// across multiple midas events.
   TDataContainer *fDataContainer;
 
+  /// This is the set of eventIDs to process
+  std::vector<int> fProcessEventIDs;
 
   // ________________________________________________
   // Variables for online analysis
@@ -200,7 +212,7 @@ private:
 
   /// Name of program, as seen by MIDAS.
   std::string fOnlineName;
-  
+    
   // ________________________________________________
   // Variables for offline analysis
   int fMaxEvents;
@@ -210,6 +222,8 @@ private:
 
   // Should we automatically create a Main Window?
   bool fCreateMainWindow;
+
+  
 
 
 };

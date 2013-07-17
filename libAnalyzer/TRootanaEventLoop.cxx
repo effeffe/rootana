@@ -84,6 +84,20 @@ bool TRootanaEventLoop::CheckOption(std::string option){return false;}
 bool TRootanaEventLoop::CheckOptionRAD(std::string option){return false;}
 
 
+bool TRootanaEventLoop::CheckEventID(int eventId){
+
+  // If we didn't specify list of accepted IDs, then accept all.
+  if(fProcessEventIDs.size()==0) return true;
+
+  // Otherwise check event ID against list
+  for(unsigned int i = 0; i < fProcessEventIDs.size(); i++){
+    if(fProcessEventIDs[i] == (eventId & 0xFFFF))
+      return true;
+  }
+  
+  return false;
+}
+
 void TRootanaEventLoop::PrintHelp(){
 
   printf("\nUsage:\n");
@@ -286,21 +300,20 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
         event.Print(); 
         printf("Log message: %s\n", event.GetData()); 
 
-      }else { // all other events
+      }else if(CheckEventID(eventId)){ // all other events; check that this event ID should be processed.
 
-
-	// Set the bank list for midas event.
-	event.SetBankList();
-
-	// Set the midas event pointer in the physics event.
-	fDataContainer->SetMidasEventPointer(event);
-	
-	//ProcessEvent(event);
-	ProcessMidasEvent(*fDataContainer);
-
-	// Cleanup the information for this event.
-	fDataContainer->CleanupEvent();
-
+        // Set the bank list for midas event.
+        event.SetBankList();
+        
+        // Set the midas event pointer in the physics event.
+        fDataContainer->SetMidasEventPointer(event);
+        
+        //ProcessEvent(event);
+        ProcessMidasEvent(*fDataContainer);
+        
+        // Cleanup the information for this event.
+        fDataContainer->CleanupEvent();
+        
       }
  	
       if((i%500)==0){
@@ -391,6 +404,12 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
   event.SetData(size, (char*)pdata);
   event.SetBankList();
   
+  // Make sure that this is an event that we actually want to process.
+  if(!TRootanaEventLoop::Get().CheckEventID(event.GetEventId())){
+    onlineEventLock = false;
+    return;
+  }
+
   /// Set the midas event pointer in the physics event.
   TRootanaEventLoop::Get().GetDataContainer()->SetMidasEventPointer(event);
 
