@@ -98,10 +98,13 @@ public:
   /// button on the canvas.
   void Reset();
 
-  // This is a generic action to call when some button gets pushed.
-  // Also called in regular event handling loop
+  /// This is a generic action to call when some button gets pushed.
+  /// Also called in regular event handling loop
   void UpdatePlotsAction();
 
+  /// Method to call when 'quit' button is pressed.
+  void QuitButtonAction();
+  
   /// Function so that user can specify at outset how many events to skip before
   /// refreshing display (in online mode).
   void SetNumberSkipEvent(int number){

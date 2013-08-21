@@ -43,6 +43,9 @@ void TRootanaDisplay::InitializeMainWindow(){
   // The tab buttons
   fMainWindow->GetTab()->Connect("Selected(Int_t)", "TRootanaDisplay", this, "UpdatePlotsAction()");
 
+  // The quit button
+  fMainWindow->GetQuitButton()->Connect("Clicked()", "TRootanaDisplay", this, "QuitButtonAction()");
+
 
   // The next button
   if(IsOffline())
@@ -213,4 +216,17 @@ void TRootanaDisplay::Reset(){
   for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)
       fCanvasHandlers[i].second->ResetCanvasHistograms();
   UpdatePlotsAction();
+}
+
+
+void TRootanaDisplay::QuitButtonAction()
+{
+  // If we are offline, then we close the ROOT file here.
+  // If we are online then the control will return to TRootanaEventLoop::ProcessMidasOnline
+  // which will take care of closing the file.
+  if(!IsOnline()){
+    EndRun(0,GetCurrentRunNumber(),0);
+    CloseRootFile();  
+  }
+  gApplication->Terminate(0);   
 }

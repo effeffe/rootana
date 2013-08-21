@@ -79,7 +79,6 @@ TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool
 
 
   fQuitButton = new TGTextButton(fHframe,"&Quit");
-  fQuitButton->Connect("Clicked()", "TMainDisplayWindow", this, "QuitButtonAction()");
   fHframe->AddFrame(fQuitButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
 
 
@@ -262,12 +261,6 @@ TMainDisplayWindow::~TMainDisplayWindow() {
 
 }
 
-
-
-void TMainDisplayWindow::QuitButtonAction()
-{
-   gApplication->Terminate(0);   
-}
 
 
 const char *filetypes[] = { "GIF files",    "*.gif",

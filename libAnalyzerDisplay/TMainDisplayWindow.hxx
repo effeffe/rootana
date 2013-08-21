@@ -56,14 +56,14 @@ class TMainDisplayWindow {
   
   TGTextButton* GetNextButton(){ return fNextButton;}
   
+  TGTextButton* GetQuitButton(){ return fQuitButton;}
+
   TGNumberEntry* GetSkipEventButton(){ return fNumberSkipEventButton;}
 
   TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool isOffline);
   virtual ~TMainDisplayWindow();
 
 
-  /// Method to call when 'quit' button is pressed.
-  void QuitButtonAction();
   
   /// Method to call when 'save pad' button is pressed.
   void SavePadButtonAction();
