@@ -36,7 +36,7 @@ void TV1190Histograms::CreateHistograms(){
     
     sprintf(title,"V1190 histogram for channel=%i",i);	
     
-    TH1D *tmp = new TH1D(name,title,500000,0,500000);
+    TH1D *tmp = new TH1D(name,title,5000,0,500000);
     tmp->SetXTitle("TDC value");
     tmp->SetYTitle("Number of Entries");
     push_back(tmp);
