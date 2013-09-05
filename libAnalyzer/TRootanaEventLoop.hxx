@@ -133,7 +133,16 @@ public:
   /// Cloe output ROOT file
   void CloseRootFile();
   
+  /// Check if output ROOT file is valid and open
+  bool IsRootFileValid(){    
+    if(fOutputFile) return true;
+    return false;
+  }
+  
+  
   void DisableRootOutput(bool disable=true){fDisableRootOutput = disable;};
+
+  int IsRootOutputEnabled(){return !fDisableRootOutput;};
 
   void SetOnlineName(std::string name){fOnlineName = name;};
 
@@ -146,6 +155,13 @@ public:
 
   /// Little helper method to check if EventID matchs requested EventID list.
   bool CheckEventID(int eventId);
+
+  /// Suppress the warning methods regarding old timestamp events for online 
+  /// ie warnings about analyzer falling behind data taking.
+  void SuppressTimestampWarnings(){ fSuppressTimestampWarnings = true;};
+
+  /// Suppress timestamp warnings?  true = suppress warnings
+  bool GetSuppressTimestampWarnings(){ return fSuppressTimestampWarnings;};
 
 protected:
 
@@ -213,6 +229,9 @@ private:
   /// Name of program, as seen by MIDAS.
   std::string fOnlineName;
     
+  /// Bool for suppressing the warnings about old timestamps.
+  bool fSuppressTimestampWarnings;
+
   // ________________________________________________
   // Variables for offline analysis
   int fMaxEvents;

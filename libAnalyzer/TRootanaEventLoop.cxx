@@ -47,7 +47,9 @@ TRootanaEventLoop::TRootanaEventLoop (){
   fMaxEvents = 0;
   fCurrentRunNumber = 0;
   fIsOffline = true;
+
   fCreateMainWindow = true;
+  fSuppressTimestampWarnings = false;    
 
   fBufferName = std::string("SYSTEM");
   fOnlineName = std::string("rootana");
@@ -386,6 +388,16 @@ void TRootanaEventLoop::CloseRootFile(){
 // of analyzing a particular event. 
 static bool onlineEventLock = false;
 
+#include "sys/time.h"
+
+// number of events consecutively skipped.
+int numberConsSkipped=0;
+double nextWarn = 1.0;
+
+// number of events with late (>10sec old) timestamp.
+int numberOldTimestamps=0;
+double nextWarnTimestamps = 1.0;
+
 /// We need to use a regular function, so that it can be passed 
 /// to the TMidasOnline event handler.  This function calles the 
 /// event loop singleton, allowing the user to add their own function code. 
@@ -397,6 +409,27 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
   // !!!!!!!!!!! Need to think hard if this is safe!!!!!!!!!!!!!!!!!!!!!!
   if(onlineEventLock) return;
   onlineEventLock = true;
+
+  // Do a check; if the we are using output files, but the output file is null
+  // then dump the event.  This will usually occur if we try to process additional
+  // events after the end of the run.  Trying to fill a histogram will result in
+  // seg-faults, since the histograms will have been deleted when the last ROOT file
+  // was closed.
+  if(TRootanaEventLoop::Get().IsRootOutputEnabled() 
+     && !TRootanaEventLoop::Get().IsRootFileValid()){
+
+    numberConsSkipped++;
+    if(numberConsSkipped >= nextWarn){
+      printf("onlineEventHandler Warning:  Output ROOT file is not validly open, so can't fill histograms. Have skipped %i events now.\n",
+             numberConsSkipped);
+      nextWarn *= 3.16227;
+    }
+
+    onlineEventLock = false;
+    return;
+  }
+  numberConsSkipped = 0;
+  nextWarn = 1.0;
 
   // Make a MIDAS event.
   TMidasEvent event;
@@ -419,7 +452,26 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
   // Cleanup the information for this event.
   TRootanaEventLoop::Get().GetDataContainer()->CleanupEvent();
 
-  //TRootanaEventLoop::Get().ProcessEvent(event);
+  // Do another check.  If the event timestamp is more than 10 sec older than the current timestamp,
+  // then the analyzer is probably falling behind the data taking.  Warn user.
+  if(!TRootanaEventLoop::Get().GetSuppressTimestampWarnings()){
+    struct timeval now;  
+    gettimeofday(&now, NULL);
+    if(event.GetTimeStamp() < now.tv_sec - 10){      
+      numberOldTimestamps++;
+      if(numberOldTimestamps >= nextWarnTimestamps){
+        printf("onlineEventHandler Warning: the time for this bank (%i) is more than 10 sec older \nthan current time (%i). Has happenned %i times now.",       
+               event.GetTimeStamp(),(int) now.tv_sec,numberOldTimestamps);
+        printf("Either the analyzer is falling behind the data taking \n(try modifying the fraction of events plotted) or times on different computers are not synchronized.\n");  
+        
+        int buffer_level = TMidasOnline::instance()->getBufferLevel();
+        int buffer_size = TMidasOnline::instance()->getBufferSize();
+        printf("Buffer level = %i bytes out of %i bytes maximum \n\n",buffer_level,buffer_size);        
+        nextWarnTimestamps *= 3.16227;
+      }      
+    }
+  }
+
   onlineEventLock = false;
 }
 
@@ -441,6 +493,7 @@ void onlineEndRunHandler(int transition,int run,int time)
 
 void MidasPollHandlerLocal()
 {
+
   if (!(TMidasOnline::instance()->poll(0)))
     gSystem->ExitLoop();
 }
