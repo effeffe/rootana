@@ -106,6 +106,12 @@ public:
   /// Receive event by polling
   int receiveEvent(int requestId, void* pevent, int size, bool async);
 
+  /// Get buffer level (ie the number of bytes in buffer)
+  int getBufferLevel();
+
+  /// Get buffer size
+  int getBufferSize();
+
   // ODB functions required by VirtualOdb
 
   int      odbReadArraySize(const char*name);
