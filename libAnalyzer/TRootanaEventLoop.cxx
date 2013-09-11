@@ -41,6 +41,7 @@ TRootanaEventLoop& TRootanaEventLoop::Get(void) {
 TRootanaEventLoop::TRootanaEventLoop (){
 
   fOutputFile = 0;
+  fOutputFilename = std::string("output");
   fDisableRootOutput = false;
   fODB = 0;
   fOnlineHistDir = 0;
@@ -353,7 +354,7 @@ void TRootanaEventLoop::OpenRootFile(int run){
   }  
   
   char filename[1024];
-  sprintf(filename, "output%05d.root", run);
+  sprintf(filename, "%s%05d.root",fOutputFilename.c_str(), run);
   fOutputFile = new TFile(filename,"RECREATE");
   std::cout << "Opened output file with name : " << filename << std::endl;
 

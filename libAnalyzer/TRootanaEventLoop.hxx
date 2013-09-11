@@ -144,6 +144,10 @@ public:
 
   int IsRootOutputEnabled(){return !fDisableRootOutput;};
 
+  /// Set the output filename.
+  /// File name will be $(fOutputFilename)XXX.root, where XXX is run number  
+  void SetOutputFilename(std::string name){fOutputFilename = name;};
+
   void SetOnlineName(std::string name){fOnlineName = name;};
 
   /// Provide a way to force program to only process certain event IDs.
@@ -162,6 +166,7 @@ public:
 
   /// Suppress timestamp warnings?  true = suppress warnings
   bool GetSuppressTimestampWarnings(){ return fSuppressTimestampWarnings;};
+
 
 protected:
 
@@ -196,6 +201,10 @@ private:
 
   /// Output ROOT file
   TFile *fOutputFile;
+
+  /// Base part of the output filename
+  /// File name will be $(fOutputFilename)XXX.root, where XXX is run number
+  std::string fOutputFilename;
 
   /// Variable for disabling/enabling Root output
   bool fDisableRootOutput;
