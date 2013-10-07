@@ -10,6 +10,7 @@
 \********************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 
 #include "xmlServer.h"
@@ -79,6 +80,25 @@ static std::map<std::string,std::string> gExportNames;
 /*------------------------------------------------------------------*/
 
 static std::string HtmlEncode(const char* s)
+{
+   std::string r;
+   while (*s) {
+      char c = *s;
+      if (c == '<') {
+         r += "&lt;";
+      } else if (c == '>') {
+         r += "&gt;";
+      } else if (c == '&') {
+         r += "&amp;";
+      } else {
+         r += c;
+      }
+      s++;
+   }
+   return r;
+}
+
+static std::string UrlEncode(const char* s)
 {
    std::string r;
    while (*s) {
@@ -211,13 +231,15 @@ static TObject* TopLevel(char* path, char**opath)
       *opath = NULL;
     }
 
+  std::string xpath = HtmlDecode(path);
+
   TObject *obj = NULL;
 
   for (unsigned int i=0; i<gExports.size(); i++)
     {
       const char* ename = gExports[i].c_str();
-      //printf("Compare [%s] and [%s]\n", path, ename);
-      if (strcmp(path, ename) == 0)
+      //printf("Compare [%s] and [%s]\n", xpath.c_str(), ename);
+      if (strcmp(xpath.c_str(), ename) == 0)
         {
           const char* xname = gExportNames[ename].c_str();
           obj = FindTopLevelObject(xname);
@@ -228,7 +250,7 @@ static TObject* TopLevel(char* path, char**opath)
 
   if (!obj)
     {
-      fprintf(stderr, "XmlServer: ERROR: Top level object \'%s\' not found in exports list\n", path);
+      fprintf(stderr, "XmlServer: ERROR: Top level object \'%s\' not found in exports list\n", xpath.c_str());
       return NULL;
     }
 
@@ -303,7 +325,7 @@ static void SendHttpReply(TSocket* sock, const char* mimetype, const char* messa
    //charset=iso-8859-1\n
    SendString(sock, "\n");
    SendString(sock, message);
-   printf("SendHttpReply: content-length %d, content-type %s\n", len, mimetype);
+   printf("XmlServer: Reply content-length %d, content-type %s\n", len, mimetype);
 }
 
 static void SendHttpReply(TSocket* sock, const char* mimetype, const std::string& str)
@@ -390,7 +412,7 @@ std::string MakeHtmlEntry(const TObject* obj, const char* path)
    s += "<a href=\"";
    s += path; //dir->GetName();
    s += "/";
-   s += HtmlEncode(objname);
+   s += UrlEncode(objname);
    s += "\">";
    s += objname;
    s += "</a>\n";
@@ -403,7 +425,7 @@ std::string MakeHtmlEntry(const TObject* obj, const char* path)
    s += "<a href=\"";
    s += path; //dir->GetName();
    s += "/";
-   s += HtmlEncode(objname);
+   s += UrlEncode(objname);
    s += ".xml";
    s += "\">";
    s += "XML</a>\n";
@@ -415,9 +437,15 @@ std::string MakeHtmlEntry(const TObject* obj, const char* path)
 
 static void SendFile(TSocket* sock, const char* filename, const char* mimetype)
 {
+   std::string f = filename;
    std::string reply;
-   FILE *fp = fopen(filename, "r");
-   printf("sending file %s, fp %p\n", filename, fp);
+   FILE *fp = fopen(f.c_str(), "r");
+   if (!fp) {
+      std::string home = getenv("HOME");
+      f = home + "/packages/rootana/libXmlServer/" + filename;
+      fp = fopen(f.c_str(), "r");
+   }
+   printf("sending file %s, fp %p\n", f.c_str(), fp);
    if (fp) {
       while (1) {
          char buf[1024+1];
@@ -495,12 +523,12 @@ static THREADTYPE xroot_server_thread(void *arg)
                 std::string s;
                 s += " ";
                 s += "<a href=\"";
-                s += HtmlEncode(ename);
+                s += UrlEncode(ename);
                 s += "\">";
                 s += ename;
                 s += "</a>\n";
                 s += "<a href=\"";
-                s += HtmlEncode(ename);
+                s += UrlEncode(ename);
                 s += ".xml";
                 s += "\">";
                 s += "XML</a>\n";
@@ -604,6 +632,8 @@ static THREADTYPE xroot_server_thread(void *arg)
           path += dirname;
 
           std::string xpath = HtmlDecode(dirname);
+
+	  //printf("path [%s] dirname [%s] xpath [%s]\n", path.c_str(), dirname, xpath.c_str());
 
           TObject* obj = FollowPath(dirname);
 
@@ -1022,4 +1052,10 @@ void XmlServer::Start(int port)
 #endif
 }
 
-// end
+/* emacs
+ * Local Variables:
+ * tab-width: 8
+ * c-basic-offset: 3
+ * indent-tabs-mode: nil
+ * End:
+ */
