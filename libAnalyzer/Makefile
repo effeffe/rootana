@@ -43,6 +43,7 @@ OBJS += TRootanaEventLoop.o
 OBJS += TDataContainer.o
 OBJS += TV1190Data.o
 OBJS += TV792Data.o
+OBJS += TL2249Data.o
 OBJS += TMesytecData.o
 endif
 
