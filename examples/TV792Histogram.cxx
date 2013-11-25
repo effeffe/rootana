@@ -4,6 +4,7 @@
 #include "TDirectory.h"
 
 const int Nchannels = 32;
+ #include <sys/time.h>
 
 /// Reset the histograms for this canvas
 TV792Histograms::TV792Histograms(){  
@@ -49,6 +50,10 @@ void TV792Histograms::CreateHistograms(){
 /// Update the histograms for this canvas.
 void TV792Histograms::UpdateHistograms(TDataContainer& dataContainer){
 
+  struct timeval start,stop;
+ gettimeofday(&start,NULL);
+ //printf ("About to sert rtrequest: %f\n",start.tv_sec
+ //    + 0.000001*start.tv_usec); 
 
   TV792Data *data = dataContainer.GetEventData<TV792Data>("ADC0");
   if(!data) return;

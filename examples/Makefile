@@ -40,6 +40,7 @@ ROOTANALIBS = ../lib/librootana.a
 
 OBJS:=
 OBJS += TV792Histogram.o TV1190Histogram.o
+OBJS += TL2249Histogram.o TAgilentHistogram.o
 
 all: $(OBJS) ana.exe anaDisplay.exe
 
