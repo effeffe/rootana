@@ -218,8 +218,14 @@ int TMidasOnline::receiveEvent(int requestId, void* pevent, int size, bool async
     }
 
   int flag = 0;
-  if (async)
+  if (async){
+#ifdef BM_NO_WAIT
+    flag = BM_NO_WAIT;
+#else
     flag = ASYNC;
+#endif
+  }
+
 
   int status = bm_receive_event(r->fBufferHandle, pevent, &size, flag);
 
