@@ -23,6 +23,36 @@
 #include <assert.h>
 #include <signal.h>
 
+#include "sys/time.h"
+/// Little function for printing the number of processed events and processing rate.
+struct timeval raLastTime;  
+int raTotalEventsProcessed = 0;
+void PrintCurrentStats(){
+
+  if((raTotalEventsProcessed%500)==0){
+    if(raTotalEventsProcessed==0){
+      gettimeofday(&raLastTime, NULL);
+      printf("Processed %d events.\n",raTotalEventsProcessed);
+    }else{
+
+      struct timeval nowTime;  
+      gettimeofday(&nowTime, NULL);
+      
+      double dtime = nowTime.tv_sec - raLastTime.tv_sec + (nowTime.tv_usec - raLastTime.tv_usec)/1000000.0;
+      double rate = 0;
+      if (time !=0)
+        rate = 500.0/(dtime);
+      printf("Processed %d events.  Analysis rate = %f events/seconds. \n",raTotalEventsProcessed,rate,dtime);
+      gettimeofday(&raLastTime, NULL);
+    }
+  }
+  
+  raTotalEventsProcessed++;
+
+}
+ 
+
+
 
 TRootanaEventLoop* TRootanaEventLoop::fTRootanaEventLoop = NULL;
 
@@ -318,11 +348,9 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
         fDataContainer->CleanupEvent();
         
       }
- 	
-      if((i%500)==0){
-	printf("Processing event %d\n",i);
-      }
-      
+ 
+      PrintCurrentStats();
+
       // Check if we have processed desired number of events.
       i++;
       if ((fMaxEvents!=0)&&(i>=fMaxEvents)){
@@ -389,7 +417,6 @@ void TRootanaEventLoop::CloseRootFile(){
 // of analyzing a particular event. 
 static bool onlineEventLock = false;
 
-#include "sys/time.h"
 
 // number of events consecutively skipped.
 int numberConsSkipped=0;
@@ -449,6 +476,7 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
 
   // Now pass this to the user event function.
   TRootanaEventLoop::Get().ProcessMidasEvent(*TRootanaEventLoop::Get().GetDataContainer());
+  PrintCurrentStats();
 
   // Cleanup the information for this event.
   TRootanaEventLoop::Get().GetDataContainer()->CleanupEvent();
