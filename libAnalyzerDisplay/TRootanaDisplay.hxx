@@ -154,6 +154,9 @@ private:
   // Variable to keep track of number of processed events.
   int fNumberProcessed;
 
+	/// Flag to keep track of if quite button has been pushed.
+	bool fQuitPushed;
+
   /// The pointer to our display window
   TMainDisplayWindow* fMainWindow;
 

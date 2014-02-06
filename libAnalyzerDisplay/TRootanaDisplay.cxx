@@ -13,6 +13,8 @@ TRootanaDisplay::TRootanaDisplay()
   fCachedDataContainer = 0;
   SetDisplayName("Rootana Display");
 
+	fQuitPushed = false;
+
   // Don't create second main window.
   DisableAutoMainWindow();
 
@@ -126,17 +128,16 @@ fMainWindow->ResetSize();
 
     // ROOT signal/slot trick; this variable will magically 
     // get changed to false once the next button is pushed.
-    if(!waitingForNextButton){
-      break;
-    }
+    if(!waitingForNextButton) break;
 
     // Alternately, break out if in online mode and 
     // no longer in paused state.  Again, the state of variable
     // will be changed by ROOT signal/slot callback.
-    if(IsOnline() && !fMainWindow->IsDisplayPaused()){
-      break;
-    }
+    if(IsOnline() && !fMainWindow->IsDisplayPaused()) break;    
       
+		// Check if quit button has been pushed.  See QuitButtonAction() for details
+		if(IsOnline() && fQuitPushed) break;
+
     // Resize windows, if needed.
     fMainWindow->ResetSize();
 
@@ -224,9 +225,17 @@ void TRootanaDisplay::QuitButtonAction()
   // If we are offline, then we close the ROOT file here.
   // If we are online then the control will return to TRootanaEventLoop::ProcessMidasOnline
   // which will take care of closing the file.
+
   if(!IsOnline()){
     EndRun(0,GetCurrentRunNumber(),0);
     CloseRootFile();  
   }
+
+	// Set a flag so that we can breakout of loop if 
+	// we are ONLINE and PAUSED.
+	// It is odd that gApplication->Terminate(0) doesn't 
+	// finish, but somehow it seems to wait for the the 
+	// RootanaDisplay::ProcessMidasEvent() to finish.
+	fQuitPushed = true;
   gApplication->Terminate(0);   
 }
