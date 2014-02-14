@@ -47,7 +47,13 @@ class TCanvasHandleBase;
 /// 
 /// in order to grab the particular canvas that we want plot on.
 ///
+/// There is also the functionality to add sub-tab groups to a 
+/// particular tab, so that you can have a set of tabs of tabs.
+/// To use this functionality you use the syntax
 ///
+/// AddSingleCanvas(..., <tab name string>) 
+/// 
+/// to add a new tab to the top level tab named 'tab name string'.
 class TRootanaDisplay: public TRootanaEventLoop {
 
 
@@ -61,14 +67,14 @@ public:
   virtual void AddAllCanvases() = 0;
 
   /// Add a new canvas; user will interactively fill it.
-  void AddSingleCanvas(std::string name){
-    fMainWindow->AddCanvas(name);
+  void AddSingleCanvas(std::string name, std::string subtab_name = std::string("")){
+    fMainWindow->AddCanvas(name,subtab_name);
   }
 
   /// Add a new canvas, using a TCanvasHandleBase class.
   /// TRootanaDisplay will take ownership of pointer
   /// and delete memory it points to.
-  void AddSingleCanvas(TCanvasHandleBase* handleClass);
+  void AddSingleCanvas(TCanvasHandleBase* handleClass, std::string subtab_name = std::string(""));
 
 
   /// Retrieve the main display window, so that users can 
@@ -190,7 +196,7 @@ private:
 
   /// This is a vector of user-defined canvas handler classes.
   /// The first part of pair is the tab number.
-  std::vector< std::pair<int,TCanvasHandleBase*> > fCanvasHandlers;
+  std::vector< std::pair<std::pair<int,int> ,TCanvasHandleBase*> > fCanvasHandlers;
 
   ClassDef(TRootanaDisplay,1)
 }; 

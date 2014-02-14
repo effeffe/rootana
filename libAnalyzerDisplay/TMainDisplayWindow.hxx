@@ -22,6 +22,8 @@ class TMainDisplayWindow {
   
   TGMainFrame *fMain;
   TGTab *fTab;
+  
+  // We have option to have a whole vector of subtabs; this is list of sub-tabs that hang off the main tab...
   TGFrame *fFrame;
   TGHorizontalFrame *fHframe;
 
@@ -50,6 +52,24 @@ class TMainDisplayWindow {
   // Button to set how many events to skip before plotting
   TGNumberEntry *fNumberSkipEventButton;
 
+
+  // Add a couple methods for dealing with sub-tabs
+
+  // Helper: get TGTab for a particular tab index.
+  TGTab* GetTab(std::pair<int,int> tabindex);
+
+  // Helper: get the current tab for particular tab group
+  // If index is unset, get name for the current tab.
+  std::string GetTabName(TGTab *tab, int index = -1);
+
+  // Returns the number of sub-tabs for the given tab index.
+  // If there are no sub-tabs (ie, this tab actually has a 
+  // display), then returns 0.
+  int GetNumberSubTabs(int i);
+
+  // Helper : get a particular embedded canvas, based on name.
+  TRootEmbeddedCanvas* GetEmbeddedCanvas(const char *name);
+
  public:
 
   TGTextButton* GetResetButton(){ return fResetButton;}
@@ -62,7 +82,6 @@ class TMainDisplayWindow {
 
   TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool isOffline);
   virtual ~TMainDisplayWindow();
-
 
   
   /// Method to call when 'save pad' button is pressed.
@@ -79,7 +98,9 @@ class TMainDisplayWindow {
     return fProcessingPaused;
   }
 
-  void AddCanvas(std::string name);
+  std::pair<int,int> AddSingleTab(std::string name, TGTab * tab= 0, int mainTabIndex = -1);
+  
+  std::pair<int,int> AddCanvas(std::string subtabname, std::string tabname=std::string(""));
   
   /// This method should be called just once, after you have added all 
   /// the canvases and tabs that you want.
@@ -87,23 +108,35 @@ class TMainDisplayWindow {
 
   void ResetSize();
   
-  TRootEmbeddedCanvas* GetEmbeddedCanvas(int iTab);
-  TRootEmbeddedCanvas* GetEmbeddedCanvas(const char *name);
 
-  /// Get a particular canvas based on index number.
-  TCanvas* GetCanvas(int iTab);
   /// Get a particular canvas based on canvas name.
   TCanvas* GetCanvas(const char *name);
   
-  /// Return the index number for the current tab.
-  int GetCurrentTabNumber(){return fTab->GetCurrent();}
+ 
+  /// Return the current embedded canvas.
+  TRootEmbeddedCanvas* GetCurrentEmbeddedCanvas();
+
+  // REturn the current composite frame.
+  TGCompositeFrame* GetCurrentCompositeFrame();
+
+  // Return the composite frame for a particular tab index.
+  TGCompositeFrame* GetCompositeFrame(std::pair<int,int> index);
+
+  /// Return an pair<int> index for current tab/sub-tab;
+  std::pair<int,int> GetCurrentTabIndex();
 
   /// Return the canvas name for the current tab.
   std::string GetCurrentTabName();
 
+  // Return the sub-tab-group for a particular tab.
+  // Returns 0 if that tab doesn't have a sub-tab group.
+  TGTab* GetSubTab(int index);
+
   // Get the main window.
   TGMainFrame* GetMain(){return fMain;};
   TGTab* GetTab(){return fTab;};
+
+
 
   ClassDef(TMainDisplayWindow,1)
 };

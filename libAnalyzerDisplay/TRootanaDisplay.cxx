@@ -66,25 +66,36 @@ void TRootanaDisplay::InitializeMainWindow(){
 
   // Now map out window.
   GetDisplayWindow()->BuildWindow();
+
+
 }
  
 
-void TRootanaDisplay::AddSingleCanvas(TCanvasHandleBase* handleClass){
+void TRootanaDisplay::AddSingleCanvas(TCanvasHandleBase* handleClass, std::string subtab_name){
   
-  GetDisplayWindow()->AddCanvas(handleClass->GetTabName());
-  int tab_index = GetDisplayWindow()->GetTab()->GetNumberOfTabs() - 1;
-  fCanvasHandlers.push_back(std::pair<int,TCanvasHandleBase*>(tab_index,handleClass));
+  std::pair<int,int> index = GetDisplayWindow()->AddCanvas(handleClass->GetTabName(),subtab_name);
 
+  std::pair< std::pair<int,int>, TCanvasHandleBase*> tmp(index,handleClass);
+  
+  fCanvasHandlers.push_back(tmp);
   // Now set up the embedded canvas, if user so desires.
-  TGCompositeFrame* embed = GetDisplayWindow()->GetTab()->GetTabContainer(tab_index);
+  TGCompositeFrame* embed = GetDisplayWindow()->GetCompositeFrame(index);//ssGetTab()->GetTabContainer(tab_index);
   handleClass->SetUpCompositeFrame(embed,this);
- 
+
+  // If we just created a new sub-tab, grab the tab and add
+  // call-back to UpdatePlot
+  if(index.second == 0){
+    TGTab* tab = GetDisplayWindow()->GetSubTab(index.first);
+    tab->Connect("Selected(Int_t)", "TRootanaDisplay", this, "UpdatePlotsAction()");
+  }
+
 
 }
 
 
 bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
-fMainWindow->ResetSize();
+
+  fMainWindow->ResetSize();
   fNumberProcessed++;
 
   // Only update histograms if we are "offline" or "online and but paused".
@@ -145,7 +156,6 @@ fMainWindow->ResetSize();
     bool result = gSystem->ProcessEvents(); 
     
   }
-
   return true;
 
 }
@@ -183,10 +193,10 @@ void TRootanaDisplay::UpdatePlotsAction(){
   PlotCanvas(*fCachedDataContainer);
   
   // See if we find a user class that describes this tab.
-  int currentTab = GetDisplayWindow()->GetCurrentTabNumber();
+  std::pair<int,int> tabdex = GetDisplayWindow()->GetCurrentTabIndex();
   for(unsigned int i = 0; i < fCanvasHandlers.size(); i++){
-    if(currentTab == fCanvasHandlers[i].first){
-      TRootEmbeddedCanvas* embed = GetDisplayWindow()->GetEmbeddedCanvas(currentTab);
+    if(tabdex == fCanvasHandlers[i].first){
+      TRootEmbeddedCanvas* embed = GetDisplayWindow()->GetCurrentEmbeddedCanvas();
       fCanvasHandlers[i].second->PlotCanvas(*fCachedDataContainer,embed);
     }
   }
@@ -207,7 +217,8 @@ void TRootanaDisplay::UpdatePlotsAction(){
 
 
   // Update canvas and window sizes    
-   fMainWindow->ResetSize();
+  fMainWindow->ResetSize();
+  
 }
 
 void TRootanaDisplay::Reset(){
