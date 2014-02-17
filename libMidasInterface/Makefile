@@ -24,6 +24,12 @@ OBJS += TMidasFile.o
 ifdef MIDASSYS
 CXXFLAGS += -I$(MIDASSYS)/include
 OBJS += TMidasOnline.o
+UNAME=$(shell uname)
+ifeq ($(UNAME),Darwin)
+CXXFLAGS += -DOS_LINUX -DOS_DARWIN
+#MIDASLIBS = $(MIDASSYS)/darwin/lib/libmidas.a
+RPATH= 
+endif                                                                                                                                                        
 endif
 
 ifdef ROOTSYS
