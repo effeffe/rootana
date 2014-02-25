@@ -76,7 +76,7 @@ ALL+= tests/testODB.exe
 endif
 endif
 
-ALL+= html/index.html
+
 
 ifdef ROOTSYS
 ALL+= analyzer.exe
@@ -133,6 +133,9 @@ clean::
 
 clean::
 	make -C libNetDirectory clean
+
+clean::
+	make -C libXmlServer clean
 
 clean::
 	make -C libAnalyzer clean
