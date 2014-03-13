@@ -86,6 +86,17 @@ public:
   /// failure).
   virtual bool CheckOption(std::string option);
 
+	/// The PreFilter method allows user to specify whether to ignore a particular event.
+	/// Specifically, if PreFilter returns
+	///
+	/// true -> then ProcessMidasEvent will be called
+	/// or
+	/// false -> then ProcessMidasEvent will not be called
+	/// 
+	/// This is particularly useful for the RootanaDisplay, where you might 
+	/// want to only process and plot certain events.
+	virtual bool PreFilter(TDataContainer& dataContainer){return true;}
+
   /// Are we processing online data?
   bool IsOnline() const {return !fIsOffline;};
   

@@ -42,7 +42,7 @@ void PrintCurrentStats(){
       double rate = 0;
       if (time !=0)
         rate = 500.0/(dtime);
-      printf("Processed %d events.  Analysis rate = %f events/seconds. \n",raTotalEventsProcessed,rate,dtime);
+      printf("Processed %d events.  Analysis rate = %f events/seconds. \n",raTotalEventsProcessed,rate);
       gettimeofday(&raLastTime, NULL);
     }
   }
@@ -92,7 +92,7 @@ TRootanaEventLoop::TRootanaEventLoop (){
   fApp = new TApplication("rootana", 0, argv2);
 
 }
- 
+
 TRootanaEventLoop::~TRootanaEventLoop (){
 
   if(fODB) delete fODB;
@@ -341,8 +341,9 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
         // Set the midas event pointer in the physics event.
         fDataContainer->SetMidasEventPointer(event);
         
-        //ProcessEvent(event);
-        ProcessMidasEvent(*fDataContainer);
+        //ProcessEvent if prefilter is satisfied...
+				if(PreFilter(*fDataContainer))
+					 ProcessMidasEvent(*fDataContainer);
         
         // Cleanup the information for this event.
         fDataContainer->CleanupEvent();
@@ -474,8 +475,11 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
   /// Set the midas event pointer in the physics event.
   TRootanaEventLoop::Get().GetDataContainer()->SetMidasEventPointer(event);
 
-  // Now pass this to the user event function.
-  TRootanaEventLoop::Get().ProcessMidasEvent(*TRootanaEventLoop::Get().GetDataContainer());
+  // Now pass this to the user event function, if pre-filter is satisfied
+	if(TRootanaEventLoop::Get().PreFilter(*TRootanaEventLoop::Get().GetDataContainer())){		
+		TRootanaEventLoop::Get().ProcessMidasEvent(*TRootanaEventLoop::Get().GetDataContainer());
+	}
+
   PrintCurrentStats();
 
   // Cleanup the information for this event.
@@ -557,6 +561,7 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    midas->setEventHandler(onlineEventHandler);
 
    midas->eventRequest(fBufferName.c_str(),-1,-1,(1<<1));  
+   //midas->eventRequest(fBufferName.c_str(),-1,-1,(2<<1));  
 
    // printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
    
