@@ -194,6 +194,17 @@ You can also get access to the raw information in the MIDAS banks, if you haven'
 written a decoder for a particular bank type.  You do this by doing accessing a bank using 
 the TGenericData class.
 
+\section analyzerFlowControl Program Flow Control
+
+The following images try to describe the program flow graphically. This is largely the same information
+as what is described above, but presently differently.
+
+
+\image html event_loop_offline_diagram.png "Program flow for offline rootana analyzer" width=10cm
+
+\image html event_loop_online_diagram.png "Program flow for online rootana analyzer" width=10cm
+
+
 \section histogram Histogram Classes
 
 We also provide an ABC class for set of histograms: THistogramArrayBase.

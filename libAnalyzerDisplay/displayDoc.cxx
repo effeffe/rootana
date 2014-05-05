@@ -47,6 +47,21 @@ in order to grab the particular canvas that we want plot on.
 The program display_example.cxx shows an nice example plot using all three 
 methods for histogram filling.
 
+\section displayFlowControl Program Flow Control
+
+The following images try to describe the program flow graphically. This is largely the same information
+as what is described above, but presently differently.
+
+
+
+
+\image html event_display_offline_diagram.png "Program flow for offline rootana display" width=10cm
+
+\image html event_display_online_diagram.png "Program flow for online rootana display" width=10cm
+
+
+
+
 \section roodyComp Comparison of RootanaDisplay and Roody
 
 rootana also provides a different way of visualizing histograms
@@ -72,6 +87,9 @@ to go.
 
 Of course, the user can easily have a program that implements both solutions 
 and get the best of both worlds.
+
+
+
 
 
 T. Lindner
