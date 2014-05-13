@@ -139,7 +139,7 @@ public:
 
 
   /// Open output ROOT file
-  void OpenRootFile(int run);
+  void OpenRootFile(int run, std::string midasFilename = std::string(""));
 
   /// Cloe output ROOT file
   void CloseRootFile();
@@ -158,6 +158,13 @@ public:
   /// Set the output filename.
   /// File name will be $(fOutputFilename)XXX.root, where XXX is run number  
   void SetOutputFilename(std::string name){fOutputFilename = name;};
+
+	/// This is an alternative, more complicated way of setting the output ROOT filename.
+	/// In this case the user is given the run number and the midas file name and,
+	/// from that information, constructs the output ROOT filename themselves.
+	virtual std::string SetFullOutputFileName(int run, std::string midasFilename){
+		return std::string("");
+	}
 
   void SetOnlineName(std::string name){fOnlineName = name;};
 

@@ -312,19 +312,19 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
 
       if ((eventId & 0xFFFF) == 0x8000){// begin run event
 	
-	event.Print();
-	
-	// Load ODB contents from the ODB XML file
-	if (fODB) delete fODB;
-	fODB = new XmlOdb(event.GetData(),event.GetDataSize());
-	
-	fCurrentRunNumber = event.GetSerialNumber();
-	OpenRootFile(fCurrentRunNumber);
-	BeginRun(0,event.GetSerialNumber(),0);
-
+				event.Print();
+				
+				// Load ODB contents from the ODB XML file
+				if (fODB) delete fODB;
+				fODB = new XmlOdb(event.GetData(),event.GetDataSize());
+				
+				fCurrentRunNumber = event.GetSerialNumber();
+				OpenRootFile(fCurrentRunNumber,fname);
+				BeginRun(0,event.GetSerialNumber(),0);
+				
       } else if ((eventId & 0xFFFF) == 0x8001){// end run event
 	  
-	event.Print();
+				event.Print();
         //EndRun(0,fCurrentRunNumber,0);
 	
 
@@ -372,7 +372,7 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
 }
 
 
-void TRootanaEventLoop::OpenRootFile(int run){
+void TRootanaEventLoop::OpenRootFile(int run, std::string midasFilename){
 
   if(fDisableRootOutput) return;
 
@@ -381,9 +381,21 @@ void TRootanaEventLoop::OpenRootFile(int run){
     fOutputFile->Close();
     fOutputFile=0;
   }  
-  
+
   char filename[1024];
-  sprintf(filename, "%s%05d.root",fOutputFilename.c_str(), run);
+	// This is the default filename, using fOutputFilename
+	sprintf(filename, "%s%08d.root",fOutputFilename.c_str(), run);
+
+	// See if user has implemented a function where they specify 
+	// the root file name using the midas file name...
+	// Only works offline, because we need midas file name
+	if(midasFilename.compare("") != 0){
+		std::string fullname = SetFullOutputFileName(run,midasFilename);
+		if(fullname.compare("") != 0){
+			sprintf(filename, "%s",fullname.c_str());
+		}
+	}
+	
   fOutputFile = new TFile(filename,"RECREATE");
   std::cout << "Opened output file with name : " << filename << std::endl;
 
@@ -466,6 +478,8 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
   event.SetData(size, (char*)pdata);
   event.SetBankList();
   
+	//std::cout << "Data size " << size << std::endl;
+
   // Make sure that this is an event that we actually want to process.
   if(!TRootanaEventLoop::Get().CheckEventID(event.GetEventId())){
     onlineEventLock = false;
