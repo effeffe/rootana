@@ -134,6 +134,9 @@ public:
   /// Disable automatic creation of MainWindow
   void DisableAutoMainWindow(){  fCreateMainWindow = false;}
 
+  /// Use a batch mode, where we don't check ROOT status
+  void UseBatchMode(){  fUseBatchMode = true;}
+
   /// Get pointer to ODB variables
   VirtualOdb* GetODB(){return fODB;}
 
@@ -268,6 +271,9 @@ private:
 
   // Should we automatically create a Main Window?
   bool fCreateMainWindow;
+
+  // Use a batch mode.
+  bool fUseBatchMode;
 
   
 

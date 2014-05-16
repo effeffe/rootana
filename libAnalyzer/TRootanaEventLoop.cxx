@@ -80,6 +80,7 @@ TRootanaEventLoop::TRootanaEventLoop (){
   fIsOffline = true;
 
   fCreateMainWindow = true;
+  fUseBatchMode = false;
   fSuppressTimestampWarnings = false;    
 
   fBufferName = std::string("SYSTEM");
@@ -174,7 +175,7 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
     }
   
   
-  if(gROOT->IsBatch()) {
+  if(gROOT->IsBatch() && !fUseBatchMode) {
     printf("Cannot run in batch mode\n");
     return 1;
   }
