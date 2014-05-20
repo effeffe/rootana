@@ -91,7 +91,6 @@ TRootanaEventLoop::TRootanaEventLoop (){
   /// Create the TApplication
   char **argv2 = NULL;
   fApp = new TApplication("rootana", 0, argv2);
-
 }
 
 TRootanaEventLoop::~TRootanaEventLoop (){
@@ -175,6 +174,10 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
     }
   
   
+  if(fUseBatchMode){ // Disable creating extra window if batch mode requested.
+    fCreateMainWindow = false;
+  }
+    
   if(gROOT->IsBatch() && !fUseBatchMode) {
     printf("Cannot run in batch mode\n");
     return 1;
@@ -273,7 +276,7 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
      if(fCreateMainWindow) delete mainWindow;
      return 0;
    }
-	   
+ 
 #ifdef HAVE_MIDAS
    ProcessMidasOnline(fApp, hostname, exptname);;
 #endif
