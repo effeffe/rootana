@@ -41,6 +41,8 @@ ROOTANALIBS = ../lib/librootana.a
 OBJS:=
 OBJS += TV792Histogram.o TV1190Histogram.o
 OBJS += TL2249Histogram.o TAgilentHistogram.o
+OBJS += TV1720Waveform.o
+OBJS += TV1730DppWaveform.o TV1730RawWaveform.o
 
 all: $(OBJS) ana.exe anaDisplay.exe
 
