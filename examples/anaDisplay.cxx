@@ -14,6 +14,7 @@
 #define USE_V1720
 //#define USE_V1730DPP
 #define USE_V1730RAW
+#define USE_DT724
 
 #ifdef  USE_V792
 #include "TV792Histogram.h"
@@ -36,7 +37,9 @@
 #ifdef  USE_V1730RAW
 #include "TV1730RawWaveform.h"
 #endif 
-
+#ifdef  USE_DT724
+#include "TDT724Waveform.h"
+#endif 
 
 
 class MyTestLoop: public TRootanaDisplay { 
@@ -80,10 +83,14 @@ public:
 #endif 
 
 #ifdef  USE_V1730RAW
-		std::cout << "Adding V1730 Raw waveforms" << std::endl;
 		TFancyHistogramCanvas* v1730_raw_waveform = new TFancyHistogramCanvas(new TV1730RawWaveform(),"V1730 Waveforms");
     AddSingleCanvas(v1730_raw_waveform);
 #endif 
+#ifdef  USE_DT724
+		TFancyHistogramCanvas* dt724_raw_waveform = new TFancyHistogramCanvas(new TDT724Waveform(),"DT724 Waveforms");
+    AddSingleCanvas(dt724_raw_waveform);
+#endif 
+
 
 
     SetDisplayName("Example Display");

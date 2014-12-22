@@ -56,10 +56,6 @@ void TV1720Waveform::UpdateHistograms(TDataContainer& dataContainer){
 
 	TV1720RawData *v1720 = dataContainer.GetEventData<TV1720RawData>("W200");
 	
-	if(v1720)
-		std::cout << "Got V1720 data" << std::endl;
-	else
-		std::cout << "Nope " << std::endl;
 	if(v1720 && v1720->IsZLECompressed()){      
 		
 		for(int i = 0; i < 8; i++){ // loop over channels
