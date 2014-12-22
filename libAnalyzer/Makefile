@@ -45,6 +45,7 @@ OBJS += TV1190Data.o
 OBJS += TV1720RawData.o
 OBJS += TV1730DppData.o
 OBJS += TV1730RawData.o
+OBJS += TDT724RawData.o
 OBJS += TV792Data.o
 OBJS += TL2249Data.o
 OBJS += TMesytecData.o
