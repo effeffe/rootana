@@ -33,10 +33,14 @@ CXXFLAGS += -DHAVE_LIBNETDIRECTORY -IlibNetDirectory
 endif
 
 
-
-
+# Check for ROOTANASYS env variable.
+ifdef ROOTANASYS
+ROOTANAINC = -I$(ROOTANASYS)/include
+ROOTANALIBS = $(ROOTANASYS)/lib/librootana.a
+else
 ROOTANAINC = -I../include
 ROOTANALIBS = ../lib/librootana.a
+endif
 
 OBJS:=
 OBJS += TV792Histogram.o TV1190Histogram.o
