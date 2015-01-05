@@ -39,11 +39,12 @@ ALL  += libAnalyzerDisplay.a display_example.exe
 OBJS += TComplicatedExampleCanvas.o TMainDisplayWindow.o TRootanaDisplay.o TSimpleExampleCanvas.o
 OBJS += TMainDisplayWindowDict.o TRootanaDisplayDict.o
 OBJS += TFancyHistogramCanvas.o TFancyHistogramCanvasDict.o
+OBJS += TMulticanvas.o
 endif
 
 ifdef ROOTSYS
-CXXFLAGS += -DHAVE_LIBNETDIRECTORY -I../libNetDirectory -I../
-LIBS     += ../libNetDirectory/libNetDirectory.a
+#CXXFLAGS += -DHAVE_LIBNETDIRECTORY -I../libNetDirectory -I../
+#LIBS     += ../libNetDirectory/libNetDirectory.a
 endif
 
 all: $(ALL)
