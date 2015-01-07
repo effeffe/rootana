@@ -8,18 +8,22 @@ TV1730RawData::TV1730RawData(int bklen, int bktype, const char* name, void *pdat
     TGenericData(bklen, bktype, name, pdata)
 {
   
+  // Do some sanity checking.  
+  // Make sure first word has right identifier
+	if( (GetData32()[0] & 0xf0000000) != 0xa0000000){ 
+	  std::cerr << "First word has wrong identifier; first word = 0x" 
+		    << std::hex << GetData32()[0] << std::dec << std::endl;
+	  return;
+	}
+
 	fGlobalHeader.push_back(GetData32()[0]);
 	fGlobalHeader.push_back(GetData32()[1]);
 	fGlobalHeader.push_back(GetData32()[2]);
 	fGlobalHeader.push_back(GetData32()[3]);
   
-  // Do some sanity checking.  
-  // Make sure first word has right identifier
-  if( (GetData32()[0] & 0xf0000000) != 0xa0000000) 
-    std::cerr << "First word has wrong identifier; first word = 0x" 
-	      << std::hex << GetData32()[0] << std::dec << std::endl;
 
-	int counter = 4;
+  
+  int counter = 4;
 	
 	int number_available_channels = 0;
 	for(int ch = 0; ch < 16; ch++){		
