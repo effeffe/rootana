@@ -43,8 +43,8 @@ OBJS += TMulticanvas.o
 endif
 
 ifdef ROOTSYS
-#CXXFLAGS += -DHAVE_LIBNETDIRECTORY -I../libNetDirectory -I../
-#LIBS     += ../libNetDirectory/libNetDirectory.a
+CXXFLAGS += -DHAVE_LIBNETDIRECTORY -I../libNetDirectory -I../
+LIBS     += ../libNetDirectory/libNetDirectory.a
 endif
 
 all: $(ALL)
