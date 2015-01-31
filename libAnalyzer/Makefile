@@ -64,7 +64,7 @@ libAnalyzer.a: $(OBJS)
 	ar -rv $@ $^
 
 analyzer_example.exe: analyzer_example.cxx libAnalyzer.a ../libMidasInterface/libMidasInterface.a
-	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH) $(LIBS)
+	$(CXX) -o $@ $(CXXFLAGS) $^ $(MIDASLIBS) $(LIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
 
 
 
