@@ -11,6 +11,8 @@
 #include <assert.h>
 #include <signal.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "TMidasOnline.h"
 #include "TMidasEvent.h"
