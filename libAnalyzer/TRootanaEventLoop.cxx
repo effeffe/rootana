@@ -83,6 +83,8 @@ TRootanaEventLoop::TRootanaEventLoop (){
   fUseBatchMode = false;
   fSuppressTimestampWarnings = false;    
 
+	fUseOnlyRecent = false;
+
   fBufferName = std::string("SYSTEM");
   fOnlineName = std::string("rootana");
 
@@ -578,8 +580,12 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    /* reqister event requests */
    midas->setEventHandler(onlineEventHandler);
 
-   midas->eventRequest(fBufferName.c_str(),-1,-1,(1<<1));  
-   //midas->eventRequest(fBufferName.c_str(),-1,-1,(2<<1));  
+	 // use different options if user requested only recent data.
+	 if(fUseOnlyRecent){
+		 midas->eventRequest(fBufferName.c_str(),-1,-1,(1<<2));  
+	 }else{
+		 midas->eventRequest(fBufferName.c_str(),-1,-1,(1<<1)); 
+	 }
 
    // printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
    

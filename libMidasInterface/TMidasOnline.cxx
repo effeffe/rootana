@@ -270,9 +270,11 @@ int TMidasOnline::eventRequest(const char* bufferName, int eventId, int triggerM
       return -1;
     }
   
-  /* set the default buffer cache size */
-  status = bm_set_cache_size(r->fBufferHandle, 100000, 0);
-  assert(status == BM_SUCCESS);
+  /* set the default buffer cache size (but not GET_RECENT sampling type*/
+	if(samplingType != GET_RECENT){
+		status = bm_set_cache_size(r->fBufferHandle, 100000, 0);
+		assert(status == BM_SUCCESS);
+	}
 
   if (poll)
     status = bm_request_event(r->fBufferHandle, r->fEventId, r->fTriggerMask, r->fSamplingType, &r->fRequestId, NULL);
