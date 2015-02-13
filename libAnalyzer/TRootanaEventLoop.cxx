@@ -27,6 +27,11 @@
 /// Little function for printing the number of processed events and processing rate.
 struct timeval raLastTime;  
 int raTotalEventsProcessed = 0;
+int raTotalEventsSkippedForAge = 0;
+
+// Use only recent data (less than 1 second old) when processing online
+bool gUseOnlyRecent;
+
 void PrintCurrentStats(){
 
   if((raTotalEventsProcessed%500)==0){
@@ -44,6 +49,11 @@ void PrintCurrentStats(){
         rate = 500.0/(dtime);
       printf("Processed %d events.  Analysis rate = %f events/seconds. \n",raTotalEventsProcessed,rate);
       gettimeofday(&raLastTime, NULL);
+
+      if(gUseOnlyRecent){
+        printf("Skipped %i events that were too old (>1sec old) out of %i events\n",
+               raTotalEventsSkippedForAge, raTotalEventsSkippedForAge+raTotalEventsProcessed);
+      }
     }
   }
   
@@ -83,7 +93,7 @@ TRootanaEventLoop::TRootanaEventLoop (){
   fUseBatchMode = false;
   fSuppressTimestampWarnings = false;    
 
-	fUseOnlyRecent = false;
+  gUseOnlyRecent = false;
 
   fBufferName = std::string("SYSTEM");
   fOnlineName = std::string("rootana");
@@ -234,6 +244,7 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
 
   MainWindow *mainWindow=0;
   if(fCreateMainWindow){
+    std::cout << "Create main window! " << std::endl;
     mainWindow = new MainWindow(gClient->GetRoot(), 200, 300);
   }
 
@@ -302,7 +313,9 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
     printf("Cannot open input file \"%s\"\n",fname);
     return -1;
   }
- 
+
+  // This parameter is irrelevant for offline processing.
+  gUseOnlyRecent = false;
 
   int i=0;
   while (1)
@@ -318,16 +331,18 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
 
       if ((eventId & 0xFFFF) == 0x8000){// begin run event
 	
-				event.Print();
-				
-				// Load ODB contents from the ODB XML file
-				if (fODB) delete fODB;
-				fODB = new XmlOdb(event.GetData(),event.GetDataSize());
-				
-				fCurrentRunNumber = event.GetSerialNumber();
-				OpenRootFile(fCurrentRunNumber,fname);
-				BeginRun(0,event.GetSerialNumber(),0);
-				
+        event.Print();
+	
+        // Load ODB contents from the ODB XML file
+        if (fODB) delete fODB;
+        fODB = new XmlOdb(event.GetData(),event.GetDataSize());
+	
+        fCurrentRunNumber = event.GetSerialNumber();
+        OpenRootFile(fCurrentRunNumber,fname);
+        BeginRun(0,event.GetSerialNumber(),0);
+        raTotalEventsProcessed = 0;
+        raTotalEventsSkippedForAge = 0;
+	
       } else if ((eventId & 0xFFFF) == 0x8001){// end run event
 	  
 				event.Print();
@@ -376,6 +391,11 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
 
   return 0;
 }
+
+void TRootanaEventLoop::UseOnlyRecent(bool setting){ 
+
+  gUseOnlyRecent = setting;
+};
 
 
 void TRootanaEventLoop::OpenRootFile(int run, std::string midasFilename){
@@ -471,12 +491,29 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
              numberConsSkipped);
       nextWarn *= 3.16227;
     }
-
+    
     onlineEventLock = false;
     return;
   }
   numberConsSkipped = 0;
   nextWarn = 1.0;
+
+  // If user asked for only recent events, throw out any events
+  // that are more than 1 second old.
+  if(gUseOnlyRecent){
+    TMidas_EVENT_HEADER *header = (TMidas_EVENT_HEADER*)pheader;
+
+    struct timeval now;  
+    gettimeofday(&now, NULL);
+    //    std::cout << "header " << header->fTimeStamp << " "  << now.tv_sec << std::endl;
+    if(header->fTimeStamp < now.tv_sec - 1){      
+      //std::cout <<" AH! " << std::endl;
+      raTotalEventsSkippedForAge++;
+      onlineEventLock = false;
+      return;
+      
+    }
+  }
 
   // Make a MIDAS event.
   TMidasEvent event;
@@ -504,6 +541,7 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
 
   // Cleanup the information for this event.
   TRootanaEventLoop::Get().GetDataContainer()->CleanupEvent();
+
 
   // Do another check.  If the event timestamp is more than 10 sec older than the current timestamp,
   // then the analyzer is probably falling behind the data taking.  Warn user.
@@ -534,6 +572,8 @@ void onlineBeginRunHandler(int transition,int run,int time)
   TRootanaEventLoop::Get().OpenRootFile(run);
   TRootanaEventLoop::Get().SetCurrentRunNumber(run);
   TRootanaEventLoop::Get().BeginRun(transition,run,time);
+  raTotalEventsProcessed = 0;
+  raTotalEventsSkippedForAge = 0;
 }
 
 void onlineEndRunHandler(int transition,int run,int time)
@@ -580,13 +620,19 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    /* reqister event requests */
    midas->setEventHandler(onlineEventHandler);
 
-	 // use different options if user requested only recent data.
-	 if(fUseOnlyRecent){
-		 midas->eventRequest(fBufferName.c_str(),-1,-1,(1<<2));  
-	 }else{
-		 midas->eventRequest(fBufferName.c_str(),-1,-1,(1<<1)); 
-	 }
-
+   // 2015-02-12: this doesn't seem to work, at least not when looking 
+   // at remote mserver.
+   // use different options if user requested only recent data.
+   //if(fUseOnlyRecent){
+   //midas->eventRequest(fBufferName.c_str(),-1,-1,(1<<2));  
+   //}else{
+   midas->eventRequest(fBufferName.c_str(),-1,-1,(1<<1)); 
+   //}
+   
+   if(gUseOnlyRecent){
+     std::cout << "Using 'Only Recent' mode; all events more than 1 second old will be discarded." << std::endl;
+   }
+   
    // printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
    
    TPeriodicClass tm(100,MidasPollHandlerLocal);

@@ -191,7 +191,7 @@ public:
 	/// Method to set whether analyzer should operate in GET_RECENT mode, 
 	/// where we only process data that is less than 1 second old (this is not default).
 	/// Setting true will use this option.
-	void UseOnlyRecent(bool setting = true){ fUseOnlyRecent = setting;};
+  void UseOnlyRecent(bool setting = true);//{ fUseOnlyRecent = setting;};
 
 protected:
 
@@ -279,8 +279,6 @@ private:
   // Use a batch mode.
   bool fUseBatchMode;
 
-	// Use only recent data (less than 1 second old) when processing online
-	bool fUseOnlyRecent;
   
 
 
