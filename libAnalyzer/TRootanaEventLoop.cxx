@@ -37,7 +37,6 @@ void PrintCurrentStats(){
   if((raTotalEventsProcessed%500)==0){
     if(raTotalEventsProcessed==0){
       gettimeofday(&raLastTime, NULL);
-      printf("Processed %d events.\n",raTotalEventsProcessed);
     }else{
 
       struct timeval nowTime;  
@@ -464,6 +463,9 @@ double nextWarn = 1.0;
 // number of events with late (>10sec old) timestamp.
 int numberOldTimestamps=0;
 double nextWarnTimestamps = 1.0;
+bool disableOnlyRecentMode = false;
+struct timeval lastTimeProcessed;  
+
 
 /// We need to use a regular function, so that it can be passed 
 /// to the TMidasOnline event handler.  This function calles the 
@@ -500,14 +502,24 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
 
   // If user asked for only recent events, throw out any events
   // that are more than 1 second old.
-  if(gUseOnlyRecent){
+  if(gUseOnlyRecent && !disableOnlyRecentMode){
     TMidas_EVENT_HEADER *header = (TMidas_EVENT_HEADER*)pheader;
 
     struct timeval now;  
     gettimeofday(&now, NULL);
-    //    std::cout << "header " << header->fTimeStamp << " "  << now.tv_sec << std::endl;
     if(header->fTimeStamp < now.tv_sec - 1){      
-      //std::cout <<" AH! " << std::endl;
+      
+      // We need to add a check here: if you are connecting to MIDAS data remotely 
+      // and the network link is being saturated, you will never get the most recent
+      // data and so will never have any data.
+      // This seems worse than getting old data, so disable these GET_RECENT checks if you haven't gotten
+      // any new data for 5 seconds.
+      if(lastTimeProcessed.tv_sec < now.tv_sec - 5 && raTotalEventsProcessed > 0){
+        printf("You are running in 'Only Recent Data' mode, but you haven't gotten any new data in more than 5 seconds.\n");
+        printf("Disabling 'Only Recent Data' mode for this run.\n");
+        disableOnlyRecentMode = true;
+      }
+
       raTotalEventsSkippedForAge++;
       onlineEventLock = false;
       return;
@@ -521,7 +533,7 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
   event.SetData(size, (char*)pdata);
   event.SetBankList();
   
-	//std::cout << "Data size " << size << std::endl;
+
 
   // Make sure that this is an event that we actually want to process.
   if(!TRootanaEventLoop::Get().CheckEventID(event.GetEventId())){
@@ -533,10 +545,11 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
   TRootanaEventLoop::Get().GetDataContainer()->SetMidasEventPointer(event);
 
   // Now pass this to the user event function, if pre-filter is satisfied
-	if(TRootanaEventLoop::Get().PreFilter(*TRootanaEventLoop::Get().GetDataContainer())){		
-		TRootanaEventLoop::Get().ProcessMidasEvent(*TRootanaEventLoop::Get().GetDataContainer());
-	}
+  if(TRootanaEventLoop::Get().PreFilter(*TRootanaEventLoop::Get().GetDataContainer())){		
+    TRootanaEventLoop::Get().ProcessMidasEvent(*TRootanaEventLoop::Get().GetDataContainer());
+  }
 
+  gettimeofday(&lastTimeProcessed,NULL);
   PrintCurrentStats();
 
   // Cleanup the information for this event.
@@ -574,6 +587,10 @@ void onlineBeginRunHandler(int transition,int run,int time)
   TRootanaEventLoop::Get().BeginRun(transition,run,time);
   raTotalEventsProcessed = 0;
   raTotalEventsSkippedForAge = 0;
+  numberOldTimestamps = 0;
+  nextWarnTimestamps = 1.0;
+  gettimeofday(&raLastTime, NULL);
+  disableOnlyRecentMode = false;
 }
 
 void onlineEndRunHandler(int transition,int run,int time)
@@ -630,7 +647,7 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    //}
    
    if(gUseOnlyRecent){
-     std::cout << "Using 'Only Recent' mode; all events more than 1 second old will be discarded." << std::endl;
+     std::cout << "Using 'Only Recent Data' mode; all events more than 1 second old will be discarded." << std::endl;
    }
    
    // printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
