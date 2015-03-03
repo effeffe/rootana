@@ -1,6 +1,6 @@
 # README #
 
-Welcome to ROOTANA, the ROOT (http://root.cern.ch) based data analysis package for the MIDAS Data Acquisition system (http://midas.trimf.ca).
+Welcome to ROOTANA, the ROOT (https://root.cern.ch) based data analysis package for the MIDAS Data Acquisition system (https://midas.trimf.ca).
 
 ### Introduction ###
 
@@ -21,8 +21,8 @@ The ROOTANA package can be used without installing ROOT and MIDAS:
 
 ### Quick start guide ###
 
-* install ROOT (http://root.cern.ch), make sure ROOTSYS is defined ($ROOTSYS/include is accessible) or root-config is in the PATH
-* (optional) install MIDAS (http://midas.triumf.ca), make sure MIDASSYS is defined ($MIDASSYS/include is accessible)
+* install ROOT (https://root.cern.ch), make sure ROOTSYS is defined ($ROOTSYS/include is accessible) or root-config is in the PATH
+* (optional) install MIDAS (https://midas.triumf.ca), make sure MIDASSYS is defined ($MIDASSYS/include is accessible)
 * git clone https://bitbucket.org/tmidas/rootana.git
 * cd rootana
 * make
