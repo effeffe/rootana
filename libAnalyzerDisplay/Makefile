@@ -1,6 +1,6 @@
 # Makefile
 
-CXXFLAGS = -g -O2 -Wall -Wuninitialized -I../libMidasInterface/ -I../libAnalyzer/
+CXXFLAGS_BASE = -g -O2 -Wall -Wuninitialized -I../libMidasInterface/ -I../libAnalyzer/
 
 # optional ZLIB library
 
@@ -13,18 +13,17 @@ ROOTLIBDIR := $(shell $(ROOTSYS)/bin/root-config --libdir)
 #ROOTLIBS  = -L$(ROOTLIBDIR) $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread
 ROOTGLIBS = -L$(ROOTLIBDIR) $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread
 #RPATH    += -Wl,-rpath,$(ROOTLIBDIR)
-CXXFLAGS += -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
 endif
 
 # optional MIDAS libraries
 
 ifdef MIDASSYS
 MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil -lrt
-CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
+CXXFLAGS_BASE += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 
 UNAME=$(shell uname)
 ifeq ($(UNAME),Darwin)
-CXXFLAGS += -DOS_LINUX -DOS_DARWIN
+CXXFLAGS_BASE += -DOS_LINUX -DOS_DARWIN
 MIDASLIBS = $(MIDASSYS)/darwin/lib/libmidas.a
 RPATH=
 endif
@@ -45,6 +44,9 @@ endif
 ifdef ROOTSYS
 CXXFLAGS += -DHAVE_LIBNETDIRECTORY -I../libNetDirectory -I../
 LIBS     += ../libNetDirectory/libNetDirectory.a
+#CXXFLAGS_ROOTCINT = $(CXXFLAGS) -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config) 
+CXXFLAGS_ROOTCINT = $(CXXFLAGS_BASE) -DHAVE_ROOT 
+CXXFLAGS = $(CXXFLAGS_BASE) -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
 endif
 
 all: $(ALL)
@@ -61,7 +63,7 @@ display_example.exe: display_example.cxx libAnalyzerDisplay.a ../libAnalyzer/lib
 	$(CXX) $(CXXFLAGS) -c $<
 
 %Dict.cxx: %.hxx %_LinkDef.h
-	LD_LIBRARY_PATH=$(ROOTLIBDIR) $(ROOTSYS)/bin/rootcint -f $@ -c -p $(CXXFLAGS) $^
+	LD_LIBRARY_PATH=$(ROOTLIBDIR) $(ROOTSYS)/bin/rootcint -f $@ -c -p $(CXXFLAGS_ROOTCINT) $^
 
 
 %.o: %.cxx

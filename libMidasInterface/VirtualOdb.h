@@ -11,7 +11,6 @@
 #define INCLUDE_VirtualOdb_H
 
 /// Interface class for ODB access
-#include <stdint.h>
 
 struct VirtualOdb
 {
