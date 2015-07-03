@@ -40,19 +40,3 @@ The ROOTANA package can be used without installing ROOT and MIDAS:
 
 The origins of this package date back a few years when I wrote some C++ classes to read MIDAS files for the Dragon experiment. Jonty Pearson and Joe Chuma have since improved and added to my work. Then during the Summer of 2006, I wrote some more C++ classes for access to live data and for access to the live ODB, for use by the ALPHA experiment at CERN. This code was then reused for couple of test DAQ stations at TRIUMF. With the addition of ROODY access using the "midas server", ripped out from mana.c, it is now used for the PIENU beam test.
 
-### Historical change log ###
-
-(UPDATE 26-MAR-2007) The code was tested on 32-bit and 64-bit Linux/x86 and on 32-bit MacOS/PPC. The 64-bit compilation issues have been mostly cleaned up. MacosX/x86 not tested yet.
-
-(UPDATE 01-JUL-2007) Added ability to read gzipped midas files (using zlib).
-
-(UPDATE 16-AUG-2007) Added ODB access functions odbReadArraySize() and odbReadDouble(). Fully implemented the XmlOdb interface (Except for odbReadAny()).
-
-(UPDATE 02-OCT-2007) Tested with ROOT version 5.16. Implemented enough TNetDirectory code to replace the midasServer code for serving data to ROODY.
-
-(UPDATE 04-MAR-2008) Implemented option for polling midas events, updated documentation.
-
-(UPDATE 06-OCT-2008) Implemented pipes for reading remote midas files through ssh and dcache tunnels.
-
-(UPDATE 21-DEC-2008) Implemented HttpOdb to access ODB through MIDAS HTTP server mhttpd
-
