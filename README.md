@@ -1,6 +1,6 @@
 # README #
 
-Welcome to ROOTANA, the ROOT (https://root.cern.ch) based data analysis package for the MIDAS Data Acquisition system (https://midas.trimf.ca).
+Welcome to ROOTANA, the ROOT (https://root.cern.ch) based data analysis package for the MIDAS Data Acquisition system (https://midas.triumf.ca).
 
 ### Introduction ###
 
