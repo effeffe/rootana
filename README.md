@@ -28,6 +28,7 @@ The ROOTANA package can be used without installing ROOT and MIDAS:
 * make
 * examine simple examples: more event_dump.cxx, more analyzer.cxx
 * examine more complex examples: cd examples; make; more README.txt; more TAnaManager.cxx, etc
+  More documentation [Analyzer Framework](http://ladd00.triumf.ca/~lindner/rootana/html/analyzerClass.html) and [Display Framework] (http://ladd00.triumf.ca/~lindner/rootana/html/displayClass.html)
 
 ### Contacts ###
 
@@ -39,4 +40,3 @@ The ROOTANA package can be used without installing ROOT and MIDAS:
 ### Historical note by Konstantin Olchanski ###
 
 The origins of this package date back a few years when I wrote some C++ classes to read MIDAS files for the Dragon experiment. Jonty Pearson and Joe Chuma have since improved and added to my work. Then during the Summer of 2006, I wrote some more C++ classes for access to live data and for access to the live ODB, for use by the ALPHA experiment at CERN. This code was then reused for couple of test DAQ stations at TRIUMF. With the addition of ROODY access using the "midas server", ripped out from mana.c, it is now used for the PIENU beam test.
-
