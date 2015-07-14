@@ -28,7 +28,7 @@ The ROOTANA package can be used without installing ROOT and MIDAS:
 * make
 * examine simple examples: more event_dump.cxx, more analyzer.cxx
 * examine more complex examples: cd examples; make; more README.txt; more TAnaManager.cxx, etc
-  More documentation [Analyzer Framework](http://ladd00.triumf.ca/~lindner/rootana/html/analyzerClass.html) and [Display Framework] (http://ladd00.triumf.ca/~lindner/rootana/html/displayClass.html)
+  More documentation [Analyzer Framework](http://ladd00.triumf.ca/~lindner/rootana/html/analyzerClass.html) and [Display Framework](http://ladd00.triumf.ca/~lindner/rootana/html/displayClass.html)
 
 ### Contacts ###
 
