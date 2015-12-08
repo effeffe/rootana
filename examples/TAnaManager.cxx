@@ -64,16 +64,17 @@ TAnaManager::TAnaManager(){
 
 
 int TAnaManager::ProcessMidasEvent(TDataContainer& dataContainer){
-	
-	if(fV792Histogram) fV792Histogram->UpdateHistograms(dataContainer); 
-	if(fV1190Histogram)  fV1190Histogram->UpdateHistograms(dataContainer); 
-	if(fL2249Histogram)  fL2249Histogram->UpdateHistograms(dataContainer); 
-	if(fAgilentHistogram)  fAgilentHistogram->UpdateHistograms(dataContainer); 
-	if(fV1720Waveform)  fV1720Waveform->UpdateHistograms(dataContainer); 
-	if(fV1730DppWaveform)  fV1730DppWaveform->UpdateHistograms(dataContainer); 
-	if(fV1730RawWaveform)  fV1730RawWaveform->UpdateHistograms(dataContainer); 
-	if(fDT724Waveform)  fDT724Waveform->UpdateHistograms(dataContainer); 
 
+
+	if(fV792Histogram) fV792Histogram->UpdateHistograms(dataContainer); 
+  	if(fV1190Histogram)  fV1190Histogram->UpdateHistograms(dataContainer); 
+	if(fL2249Histogram)  fL2249Histogram->UpdateHistograms(dataContainer); 
+  	if(fAgilentHistogram)  fAgilentHistogram->UpdateHistograms(dataContainer); 
+	if(fV1720Waveform)  fV1720Waveform->UpdateHistograms(dataContainer); 
+  	if(fV1730DppWaveform)  fV1730DppWaveform->UpdateHistograms(dataContainer); 
+	if(fV1730RawWaveform)  fV1730RawWaveform->UpdateHistograms(dataContainer);
+	
+	if(fDT724Waveform)  fDT724Waveform->UpdateHistograms(dataContainer); 
 	return 1;
 }
 
