@@ -5,26 +5,7 @@
 #ifndef INCLUDE_TMidasBanksH
 #define INCLUDE_TMidasBanksH
 
-
-
-#ifdef OS_DARWIN 
-#ifndef _UINT32_T
-#define _UINT32_T
-typedef unsigned int uint32_t;
-#endif /* _UINT32_T */
-
-#ifndef _UINT16_T
-#define _UINT16_T
-typedef unsigned short uint16_t;
-#endif /* _UINT16_T */
-
-#else
-
-#include <stdint.h>
-
-#endif
-
-
+#include "rootana_stdint.h"
 
 // This file defines the data structures written
 // into MIDAS .mid files. They define the on-disk
