@@ -11,10 +11,10 @@
 #define INCLUDE_XmlOdb_H
 
 #include <stdlib.h>
-#include <stdint.h>
 #include "TXMLNode.h"
 #include "TXMLAttr.h"
 #include "TDOMParser.h"
+#include "rootana_stdint.h"
 
 #include "VirtualOdb.h"
 

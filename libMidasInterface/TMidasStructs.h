@@ -5,7 +5,7 @@
 #ifndef INCLUDE_TMidasBanksH
 #define INCLUDE_TMidasBanksH
 
-#include <stdint.h>
+#include "rootana_stdint.h"
 
 // This file defines the data structures written
 // into MIDAS .mid files. They define the on-disk

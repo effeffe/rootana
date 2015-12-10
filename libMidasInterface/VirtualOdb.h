@@ -10,8 +10,8 @@
 #ifndef INCLUDE_VirtualOdb_H
 #define INCLUDE_VirtualOdb_H
 
+#include "rootana_stdint.h"
 /// Interface class for ODB access
-#include <stdint.h>
 
 struct VirtualOdb
 {
