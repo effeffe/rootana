@@ -9,9 +9,12 @@ CXXFLAGS += -DHAVE_ZLIB
 # ROOT libraries
 
 ifdef ROOTSYS
-#ROOTLIBS  = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --libs)  -lXMLParser -lThread
-ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread
-#RPATH    += -Wl,-rpath,$(ROOTSYS)/lib
+ROOTGLIBS = -L$(ROOTSYS)/lib $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread 
+HAVE_RHTTP = $(shell $(ROOTSYS)/bin/root-config --has-http)
+ifeq ($(HAVE_RHTTP),yes)
+ROOTGLIBS += -lRHTTP
+CXXFLAGS += -DHAVE_THTTP_SERVER
+endif
 CXXFLAGS += -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
 endif
 

@@ -23,6 +23,10 @@
 #include <assert.h>
 #include <signal.h>
 
+#ifdef HAVE_THTTP_SERVER
+#include "THttpServer.h"
+#endif
+
 #include "sys/time.h"
 /// Little function for printing the number of processed events and processing rate.
 struct timeval raLastTime;  
@@ -154,6 +158,9 @@ void TRootanaEventLoop::PrintHelp(){
   printf("\t-bbuffer: connect to this MIDAS buffer\n");
   printf("\t-P: Start the TNetDirectory server on specified tcp port (for use with roody -Plocalhost:9091)\n");
   printf("\t-p: Start the old midas histogram server on specified tcp port (for use with roody -Hlocalhost:9090)\n");
+#ifdef HAVE_THTTP_SERVER
+  printf("\t-r: Start THttpServer on specified tcp port\n");
+#endif
   printf("\t-eXXX: Number of events XXX to read from input data files\n");
   //printf("\t-m: Enable memory leak debugging\n");
   printf("\t-g: Enable graphics display when processing data files\n");
@@ -197,6 +204,7 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
   bool forceEnableGraphics = false;
   bool testMode = false;
   int  tcpPort = 0;
+  int  rhttpdPort = 0; // ROOT THttpServer port
   const char* hostname = NULL;
   const char* exptname = NULL;
   
@@ -211,6 +219,10 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
 	;//	 gEnableShowMem = true;
       else if (strncmp(arg,"-P",2)==0) // Set the histogram server port
 	tcpPort = atoi(arg+2);
+#ifdef HAVE_THTTP_SERVER
+      else if (strncmp(arg,"-r",2)==0) // Set the THttpdServer port
+	rhttpdPort = atoi(arg+2);
+#endif
       else if (strcmp(arg,"-T")==0)
 	testMode = true;
       else if (strcmp(arg,"-g")==0)
@@ -257,7 +269,17 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
    if (tcpPort)
      fprintf(stderr,"ERROR: No support for the TNetDirectory server!\n");
 #endif
-   
+
+#ifdef HAVE_THTTP_SERVER
+
+   THttpServer *root_http_serv; // = new THttpServer("http:8080");
+   if(rhttpdPort){
+     char address[100];
+     sprintf(address,"http:%i",rhttpdPort);
+     root_http_serv = new THttpServer(address);
+   }
+#endif
+  
    // Initialize the event loop with user initialization.
    Initialize();
 

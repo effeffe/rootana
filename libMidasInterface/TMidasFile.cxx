@@ -136,6 +136,11 @@ bool TMidasFile::Open(const char *filename)
       pipe = "bzip2 -dc ";
       pipe += filename;
     }
+  else if (hasSuffix(filename, ".lz4"))
+    {
+      pipe = "lz4 -d ";
+      pipe += filename;
+    }
 
   if (pipe.length() > 0)
     {
