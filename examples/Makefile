@@ -54,7 +54,7 @@ OBJS += TV1720Waveform.o TDT724Waveform.o
 OBJS += TV1730DppWaveform.o TV1730RawWaveform.o
 OBJS += TAnaManager.o
 
-all: $(OBJS) ana.exe anaDisplay.exe
+all: $(OBJS) ana.exe anaDisplay.exe midas2root.exe
 
 ana.exe: ana.cxx $(OBJS) 
 	$(CXX) -o $@ $(CXXFLAGS) $(ROOTANAINC) $^ $(ROOTANALIBS) $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH) -lssl $(RTLIB) -lutil
@@ -62,6 +62,8 @@ ana.exe: ana.cxx $(OBJS)
 anaDisplay.exe: anaDisplay.cxx $(OBJS) 
 	$(CXX) -o $@ $(CXXFLAGS) $(ROOTANAINC) $^ $(ROOTANALIBS) $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH) -lssl $(RTLIB) -lutil
 
+midas2root.exe: midas2root.cxx $(OBJS) 
+	$(CXX) -o $@ $(CXXFLAGS) $(ROOTANAINC) $^ $(ROOTANALIBS) $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH) -lssl $(RTLIB) -lutil
 
 %Dict.o: %Dict.cxx
 	$(CXX) $(CXXFLAGS) $(ROOTANAINC) -c $<
