@@ -15,6 +15,7 @@ TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool
   fIsOffline = isOffline;
   fProcessingPaused = false;
   fNumberSkipEventButton = 0;
+  fTBrowser = 0;
 
   // Create a main frame
   fMain = new TGMainFrame(p,w,h);
@@ -66,10 +67,15 @@ TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool
   fSaveCanvasButton->Connect("Clicked()", "TMainDisplayWindow", this, "SaveCanvasButtonAction()");
   fHframe->AddFrame(fSaveCanvasButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
 
+  fOpenNewTBrowser = new TGTextButton(fHframe,"&Open TBrowser");
+  fOpenNewTBrowser->Connect("Clicked()", "TMainDisplayWindow", this, "NewTBrowserButtonAction()");
+  fHframe->AddFrame(fOpenNewTBrowser, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
+
   // Disable the save buttons if online
   if(!fIsOffline){
     fSavePadButton->SetEnabled(false);
     fSaveCanvasButton->SetEnabled(false);
+    fOpenNewTBrowser->SetEnabled(false);
   }
   
 
@@ -426,6 +432,7 @@ std::string TMainDisplayWindow::GetCurrentTabName(){
 
 TMainDisplayWindow::~TMainDisplayWindow() {
 
+  std::cout << "Destructor! " << std::endl;
   delete fMain;
   delete fTab;  
 
@@ -473,6 +480,10 @@ void TMainDisplayWindow::SaveCanvasButtonAction(){
 
 }
 
+void TMainDisplayWindow::NewTBrowserButtonAction(){
+  fTBrowser = new TBrowser();
+}
+
 void TMainDisplayWindow::PauseResumeButtonAction(){
 
   if(fProcessingPaused){
@@ -480,11 +491,13 @@ void TMainDisplayWindow::PauseResumeButtonAction(){
     fPauseButton->SetText("Pause");
     fSavePadButton->SetEnabled(false);
     fSaveCanvasButton->SetEnabled(false);
+    fOpenNewTBrowser->SetEnabled(false);
   }else{
     fProcessingPaused = true;
     fPauseButton->SetText("Resume");
     fSavePadButton->SetEnabled(true);
     fSaveCanvasButton->SetEnabled(true);
+    fOpenNewTBrowser->SetEnabled(true);
   }
 }
 

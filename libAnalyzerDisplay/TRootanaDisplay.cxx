@@ -242,11 +242,17 @@ void TRootanaDisplay::QuitButtonAction()
     CloseRootFile();  
   }
 
-	// Set a flag so that we can breakout of loop if 
-	// we are ONLINE and PAUSED.
-	// It is odd that gApplication->Terminate(0) doesn't 
-	// finish, but somehow it seems to wait for the the 
-	// RootanaDisplay::ProcessMidasEvent() to finish.
-	fQuitPushed = true;
+  // Set a flag so that we can breakout of loop if 
+  // we are ONLINE and PAUSED.
+  // It is odd that gApplication->Terminate(0) doesn't 
+  // finish, but somehow it seems to wait for the the 
+  // RootanaDisplay::ProcessMidasEvent() to finish.
+  fQuitPushed = true;
   gApplication->Terminate(0);   
+
+  // Hmm, don't quite understand this.
+  // If we opened a TBrowser, we need to delete it before 
+  // we close the ROOT file... hmm, ROOT...
+  GetDisplayWindow()->CleanTBrowser();
+    
 }

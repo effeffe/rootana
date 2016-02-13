@@ -10,6 +10,7 @@
 #include <TGTab.h>
 #include <TGNumberEntry.h>
 #include <TGLabel.h>
+#include <TBrowser.h>
 #include <TFile.h>
 #include <TApplication.h>
 //#include <TGTextButton.h>
@@ -36,6 +37,7 @@ class TMainDisplayWindow {
   /// Buttons to make plots of current pad/canvas
   TGTextButton  *fSavePadButton;
   TGTextButton  *fSaveCanvasButton;
+  TGTextButton  *fOpenNewTBrowser;
 
   // Button to reset histograms.
   TGTextButton  *fNextButton;
@@ -52,6 +54,8 @@ class TMainDisplayWindow {
   // Button to set how many events to skip before plotting
   TGNumberEntry *fNumberSkipEventButton;
 
+  // save tbrowser to be able to delete.
+  TBrowser* fTBrowser;
 
   // Add a couple methods for dealing with sub-tabs
 
@@ -90,6 +94,9 @@ class TMainDisplayWindow {
   /// Method to call when 'save canvas' button is pressed.
   void SaveCanvasButtonAction();
 
+  // Method to call when 'open tbrowser' button is pressed.
+  void NewTBrowserButtonAction();
+
   /// Method to call when 'pause/resume' button is pressed.
   void PauseResumeButtonAction();
 
@@ -108,6 +115,8 @@ class TMainDisplayWindow {
 
   void ResetSize();
   
+  // Need this function to be able to delete TBrowser if we created one, before shutting down.
+  void CleanTBrowser(){ if(fTBrowser) delete fTBrowser;};
 
   /// Get a particular canvas based on canvas name.
   TCanvas* GetCanvas(const char *name);
