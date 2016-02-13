@@ -95,7 +95,6 @@ void TRootanaDisplay::AddSingleCanvas(TCanvasHandleBase* handleClass, std::strin
 
 bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 
-  fMainWindow->ResetSize();
   fNumberProcessed++;
 
   // Only update histograms if we are "offline" or "online and but paused".
@@ -130,7 +129,7 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
   UpdatePlotsAction();
 
   // If offline, then keep looping till the next event button is pushed.
-  // If online, then keep looping till the resume button is pushed.
+  // If online and paused, then keep looping till the resume button is pushed.
   waitingForNextButton = true;
   while(1){
     
@@ -146,12 +145,12 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
     // will be changed by ROOT signal/slot callback.
     if(IsOnline() && !fMainWindow->IsDisplayPaused()) break;    
       
-		// Check if quit button has been pushed.  See QuitButtonAction() for details
-		if(IsOnline() && fQuitPushed) break;
-
+    // Check if quit button has been pushed.  See QuitButtonAction() for details
+    if(IsOnline() && fQuitPushed) break;
+    
     // Resize windows, if needed.
     fMainWindow->ResetSize();
-
+    
     // handle GUI events
     bool result = gSystem->ProcessEvents(); 
     
