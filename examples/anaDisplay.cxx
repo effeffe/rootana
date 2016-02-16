@@ -22,7 +22,6 @@ public:
   MyTestLoop() {
     SetOutputFilename("example_output");
     DisableRootOutput(false);
-
 		anaManager = new TAnaManager();
 		
   }

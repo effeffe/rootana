@@ -14,6 +14,7 @@ TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool
 {
   fIsOffline = isOffline;
   fProcessingPaused = false;
+  fProcessingFreeRunning = false;
   fNumberSkipEventButton = 0;
   fTBrowser = 0;
 
@@ -80,9 +81,15 @@ TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool
   
 
   if(!fIsOffline){
-    fPauseButton = new TGTextButton(fHframe,"&Pause");
+    fPauseButton = new TGTextButton(fHframe,"&Pause ");
     fHframe->AddFrame(fPauseButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
     fPauseButton->Connect("Clicked()", "TMainDisplayWindow", this, "PauseResumeButtonAction()");
+  }
+
+  if(fIsOffline){
+    fFreeRunningButton = new TGTextButton(fHframe,"&Free Running");
+    fHframe->AddFrame(fFreeRunningButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
+    fFreeRunningButton->Connect("Clicked()", "TMainDisplayWindow", this, "FreeRunningButtonAction()");
   }
 
 
@@ -488,16 +495,34 @@ void TMainDisplayWindow::PauseResumeButtonAction(){
 
   if(fProcessingPaused){
     fProcessingPaused = false;
-    fPauseButton->SetText("Pause");
+    fPauseButton->SetText(TString("Pause"));
     fSavePadButton->SetEnabled(false);
     fSaveCanvasButton->SetEnabled(false);
     fOpenNewTBrowser->SetEnabled(false);
   }else{
     fProcessingPaused = true;
-    fPauseButton->SetText("Resume");
+    fPauseButton->SetText(TString("Resume"));
     fSavePadButton->SetEnabled(true);
     fSaveCanvasButton->SetEnabled(true);
     fOpenNewTBrowser->SetEnabled(true);
+  }
+}
+
+
+void TMainDisplayWindow::FreeRunningButtonAction(){
+
+  if(fProcessingFreeRunning){
+    fProcessingFreeRunning = false;
+    fFreeRunningButton->SetText(TString("Free Running"));
+    fSavePadButton->SetEnabled(true);
+    fSaveCanvasButton->SetEnabled(true);
+    fOpenNewTBrowser->SetEnabled(true);
+  }else{
+    fProcessingFreeRunning = true;
+    fFreeRunningButton->SetText(TString("Stop FreeRun"));
+    fSavePadButton->SetEnabled(false);
+    fSaveCanvasButton->SetEnabled(false);
+    fOpenNewTBrowser->SetEnabled(false);
   }
 }
 

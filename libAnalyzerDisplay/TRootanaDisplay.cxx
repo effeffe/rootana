@@ -11,9 +11,11 @@ TRootanaDisplay::TRootanaDisplay()
   fNumberSkipEventsOffline = 0;
   fNumberProcessed = 0;
   fCachedDataContainer = 0;
+  fSecondsBeforeUpdating = 2.0;
+  
   SetDisplayName("Rootana Display");
 
-	fQuitPushed = false;
+  fQuitPushed = false;
 
   // Don't create second main window.
   DisableAutoMainWindow();
@@ -93,24 +95,32 @@ void TRootanaDisplay::AddSingleCanvas(TCanvasHandleBase* handleClass, std::strin
 }
 
 
+/// Make separate treatment of online and offline data, since both are quite different
 bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 
   fNumberProcessed++;
 
-  // Only update histograms if we are "offline" or "online and but paused".
-  // This ensures that we don't update if the user pressed 'pause' since the 
-  // last event.
-  if(!IsOnline() || (IsOnline() && !fMainWindow->IsDisplayPaused())){
+  if(IsOnline()){
+    return ProcessMidasEventOnline(dataContainer);
+  }else{
+    return ProcessMidasEventOffline(dataContainer);
+  }
+  
+
+}
+
+
+/// Handle online processing of MIDAS events.
+bool TRootanaDisplay::ProcessMidasEventOnline(TDataContainer& dataContainer){
+
+  // If processing is not paused, then just update plot and return
+  if(!fMainWindow->IsDisplayPaused()){
     SetCachedDataContainer(dataContainer);
     
     // Perform any histogram updating from user code.
     UpdateHistograms(*fCachedDataContainer);
     for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)
       fCanvasHandlers[i].second->UpdateCanvasHistograms(*fCachedDataContainer);
-  }  
-
-  // If processing online and if processing is not paused, then just plot and return
-  if(IsOnline() && !fMainWindow->IsDisplayPaused() ){
        
     // Do canvas plotting from user code; 
     // only do plot if we have processed enough events
@@ -121,15 +131,54 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
     return true;
   }
 
-  // If processing offline, make sure we have skipped the right number of events.
-  if(!IsOnline() && fNumberSkipEventsOffline >= fNumberProcessed){
+  UpdatePlotsAction();
+
+  // If online and paused, then keep looping till the resume button is pushed.
+  while(1){
+    
+    // Add some sleeps; otherwise program takes 100% of CPU...
+    usleep(10000);
+
+    // Break out if no longer in paused state.
+    if(!fMainWindow->IsDisplayPaused()) break;    
+      
+    // Check if quit button has been pushed.  See QuitButtonAction() for details
+    if(fQuitPushed) break;
+    
+    // Resize windows, if needed.
+    fMainWindow->ResetSize();
+    
+    // handle GUI events
+    bool result = gSystem->ProcessEvents(); 
+    
+  }
+  return true;
+
+}
+
+
+
+bool TRootanaDisplay::ProcessMidasEventOffline(TDataContainer& dataContainer){
+
+
+  SetCachedDataContainer(dataContainer);
+  
+  // Perform any histogram updating from user code.
+  UpdateHistograms(*fCachedDataContainer);
+  for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)
+    fCanvasHandlers[i].second->UpdateCanvasHistograms(*fCachedDataContainer);
+
+  // Keep skipping if we haven't processed enough
+  if(fNumberSkipEventsOffline >= fNumberProcessed){
     return true;
   }
 
   UpdatePlotsAction();
 
+  // Reset clock for next time 'FreeRunning' is pushed.
+  double firstFreeRunningTime = 0.0;
+  
   // If offline, then keep looping till the next event button is pushed.
-  // If online and paused, then keep looping till the resume button is pushed.
   waitingForNextButton = true;
   while(1){
     
@@ -140,30 +189,26 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
     // get changed to false once the next button is pushed.
     if(!waitingForNextButton) break;
 
-    // Alternately, break out if in online mode and 
-    // no longer in paused state.  Again, the state of variable
-    // will be changed by ROOT signal/slot callback.
-    if(IsOnline() && !fMainWindow->IsDisplayPaused()) break;    
+    // In offline free-running mode, go to next event after a couple seconds.
+    if(fMainWindow->IsDisplayFreeRunning()){
+      struct timeval nowTime;  
+      gettimeofday(&nowTime, NULL);
       
-    // Check if quit button has been pushed.  See QuitButtonAction() for details
-    if(IsOnline() && fQuitPushed) break;
-    
-    // In offline free-running mode, go to next event after 5 second.
-    static double firstFreeRunningTime = 0.0;
-    struct timeval nowTime;  
-    gettimeofday(&nowTime, NULL);
-    
-    double dnowtime = nowTime.tv_sec  + (nowTime.tv_usec)/1000000.0;
-    if(fabs(firstFreeRunningTime) < 0.00000001){
-      firstFreeRunningTime = dnowtime;
-    }else{
-      double diffTime = dnowtime - firstFreeRunningTime;
-      if(diffTime > 2.0){
-	firstFreeRunningTime = 0.0;
-	break;
+      double dnowtime = nowTime.tv_sec  + (nowTime.tv_usec)/1000000.0;
+      if(fabs(firstFreeRunningTime) < 0.00000001){ // first event of free-running...
+	firstFreeRunningTime = dnowtime; // ... so, start the clock
+      }else{ // otherwise, check if enough seconds elapsed.
+	double diffTime = dnowtime - firstFreeRunningTime;
+	if(diffTime > fSecondsBeforeUpdating){
+	  firstFreeRunningTime = 0.0;
+	  break;
+	}
       }
+    }else{
+      firstFreeRunningTime = 0.0;
     }
 
+    
     // Resize windows, if needed.
     fMainWindow->ResetSize();
     

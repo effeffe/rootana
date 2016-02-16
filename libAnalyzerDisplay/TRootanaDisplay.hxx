@@ -119,6 +119,11 @@ public:
       fMainWindow->GetSkipEventButton()->GetNumberEntry()->SetIntNumber(number);
   }
 
+  /// Function so that user can skip how many seconds to wait in free-running mode
+  void SetSecondsBeforeUpdating(double SecondsBeforeUpdating){
+    fSecondsBeforeUpdating = SecondsBeforeUpdating;
+  }
+  
   /// Get Display name
   std::string GetDisplayName(){return fDisplayName;}
   /// Set Display name
@@ -160,8 +165,11 @@ private:
   // Variable to keep track of number of processed events.
   int fNumberProcessed;
 
-	/// Flag to keep track of if quite button has been pushed.
-	bool fQuitPushed;
+  // Seconds to wait in free-running mode before updating
+  double fSecondsBeforeUpdating;
+  
+  /// Flag to keep track of if quite button has been pushed.
+  bool fQuitPushed;
 
   /// The pointer to our display window
   TMainDisplayWindow* fMainWindow;
@@ -169,6 +177,12 @@ private:
   /// Process each midas event
   bool ProcessMidasEvent(TDataContainer& dataContainer);
 
+    /// Process each online midas event
+  bool ProcessMidasEventOnline(TDataContainer& dataContainer);
+  
+  /// Process each offline midas event
+  bool ProcessMidasEventOffline(TDataContainer& dataContainer);
+  
   /// Called before the first event of a file is read, but you should prefer
   /// Initialize() for general initialization.  This method will be called
   /// once for each input file.  

@@ -31,8 +31,11 @@ class TMainDisplayWindow {
   /// Variables to keep track of state of display
   /// Are we processing offline?
   bool fIsOffline;
-  /// Is processing paused?
+  /// Is processing paused? (online)
   bool fProcessingPaused;
+
+    /// Is processing free-running? (offline)
+  bool fProcessingFreeRunning;
 
   /// Buttons to make plots of current pad/canvas
   TGTextButton  *fSavePadButton;
@@ -50,6 +53,9 @@ class TMainDisplayWindow {
   
   // Button to pause updating (online)
   TGTextButton *fPauseButton;
+
+  // Button to start free running (offline)
+  TGTextButton *fFreeRunningButton;
 
   // Button to set how many events to skip before plotting
   TGNumberEntry *fNumberSkipEventButton;
@@ -100,9 +106,17 @@ class TMainDisplayWindow {
   /// Method to call when 'pause/resume' button is pressed.
   void PauseResumeButtonAction();
 
+  /// Method to call when 'free-running/resume' button is pressed.
+  void FreeRunningButtonAction();
+
   // Is the display paused?
   bool IsDisplayPaused(){
     return fProcessingPaused;
+  }
+
+  // Is the display free running
+  bool IsDisplayFreeRunning(){
+    return fProcessingFreeRunning;
   }
 
   std::pair<int,int> AddSingleTab(std::string name, TGTab * tab= 0, int mainTabIndex = -1);
