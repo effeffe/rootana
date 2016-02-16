@@ -64,8 +64,7 @@ void TDT724Waveform::UpdateHistograms(TDataContainer& dataContainer){
 			
 			int chan = measurements[i].GetChannel();
 			
-			std::cout << "TDT724Waveform Handling first... " << std::endl;
-
+			
 			// Reset the histogram...
 			for(int ib = 0; ib < GetHistogram(chan)->GetNbinsX(); ib++)
 				GetHistogram(chan)->SetBinContent(ib+1,0);
