@@ -95,7 +95,6 @@ void TRootanaDisplay::AddSingleCanvas(TCanvasHandleBase* handleClass, std::strin
 
 bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 
-  fMainWindow->ResetSize();
   fNumberProcessed++;
 
   // Only update histograms if we are "offline" or "online and but paused".
@@ -130,7 +129,7 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
   UpdatePlotsAction();
 
   // If offline, then keep looping till the next event button is pushed.
-  // If online, then keep looping till the resume button is pushed.
+  // If online and paused, then keep looping till the resume button is pushed.
   waitingForNextButton = true;
   while(1){
     
@@ -167,7 +166,7 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 
     // Resize windows, if needed.
     fMainWindow->ResetSize();
-
+    
     // handle GUI events
     bool result = gSystem->ProcessEvents(); 
     
@@ -258,11 +257,17 @@ void TRootanaDisplay::QuitButtonAction()
     CloseRootFile();  
   }
 
-	// Set a flag so that we can breakout of loop if 
-	// we are ONLINE and PAUSED.
-	// It is odd that gApplication->Terminate(0) doesn't 
-	// finish, but somehow it seems to wait for the the 
-	// RootanaDisplay::ProcessMidasEvent() to finish.
-	fQuitPushed = true;
+  // Set a flag so that we can breakout of loop if 
+  // we are ONLINE and PAUSED.
+  // It is odd that gApplication->Terminate(0) doesn't 
+  // finish, but somehow it seems to wait for the the 
+  // RootanaDisplay::ProcessMidasEvent() to finish.
+  fQuitPushed = true;
   gApplication->Terminate(0);   
+
+  // Hmm, don't quite understand this.
+  // If we opened a TBrowser, we need to delete it before 
+  // we close the ROOT file... hmm, ROOT...
+  GetDisplayWindow()->CleanTBrowser();
+    
 }
