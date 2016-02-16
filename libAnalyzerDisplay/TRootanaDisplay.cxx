@@ -66,6 +66,12 @@ void TRootanaDisplay::InitializeMainWindow(){
   // Let the user add all the canvases they want.
   AddAllCanvases();
 
+  // Check: make sure we have at least one canvas.
+  if(GetDisplayWindow()->GetTab()->GetNumberOfTabs() <= 0){
+    std::cerr << "Error in TRootanaDisplay: you have not created any canvases; you must create at least one canvas. Exiting. " << std::endl;
+    exit(0);
+    
+  }
   // Now map out window.
   GetDisplayWindow()->BuildWindow();
 
