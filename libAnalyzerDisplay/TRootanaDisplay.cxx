@@ -135,7 +135,7 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
   while(1){
     
     // Add some sleeps; otherwise program takes 100% of CPU...
-    usleep(1000);
+    usleep(10000);
 
     // ROOT signal/slot trick; this variable will magically 
     // get changed to false once the next button is pushed.
@@ -146,8 +146,24 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
     // will be changed by ROOT signal/slot callback.
     if(IsOnline() && !fMainWindow->IsDisplayPaused()) break;    
       
-		// Check if quit button has been pushed.  See QuitButtonAction() for details
-		if(IsOnline() && fQuitPushed) break;
+    // Check if quit button has been pushed.  See QuitButtonAction() for details
+    if(IsOnline() && fQuitPushed) break;
+    
+    // In offline free-running mode, go to next event after 5 second.
+    static double firstFreeRunningTime = 0.0;
+    struct timeval nowTime;  
+    gettimeofday(&nowTime, NULL);
+    
+    double dnowtime = nowTime.tv_sec  + (nowTime.tv_usec)/1000000.0;
+    if(fabs(firstFreeRunningTime) < 0.00000001){
+      firstFreeRunningTime = dnowtime;
+    }else{
+      double diffTime = dnowtime - firstFreeRunningTime;
+      if(diffTime > 2.0){
+	firstFreeRunningTime = 0.0;
+	break;
+      }
+    }
 
     // Resize windows, if needed.
     fMainWindow->ResetSize();
