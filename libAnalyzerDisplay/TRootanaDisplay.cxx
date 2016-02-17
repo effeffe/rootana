@@ -7,7 +7,7 @@ ClassImp(TRootanaDisplay)
 
 TRootanaDisplay::TRootanaDisplay() 
 {
-  fNumberSkipEventsOnline = 1; 
+  fNumberSkipEventsOnline = 5; 
   fNumberSkipEventsOffline = 0;
   fNumberProcessed = 0;
   fCachedDataContainer = 0;
@@ -60,7 +60,8 @@ void TRootanaDisplay::InitializeMainWindow(){
     TGNumberEntry *skipButton = fMainWindow->GetSkipEventButton();
     skipButton->Connect("ValueSet(Long_t)", "TRootanaDisplay",this, "EventSkipButtonPushed()");
     skipButton->GetNumberEntry()->Connect("ReturnPressed()", "TRootanaDisplay", this, "EventSkipButtonPushed()");
-    fNumberSkipEventsOnline = skipButton->GetNumberEntry()->GetIntNumber();    
+    // set the initial value of this field
+    skipButton->GetNumberEntry()->SetIntNumber(fNumberSkipEventsOnline);    
   }
 
   // Let the user add all the canvases they want.

@@ -115,7 +115,9 @@ public:
   /// refreshing display (in online mode).
   void SetNumberSkipEvent(int number){
     fNumberSkipEventsOnline = number;
-    if(fMainWindow->GetSkipEventButton())
+    // check that window has been created; window will not have been created if
+    // this function in called in constructor.
+    if(fMainWindow && fMainWindow->GetSkipEventButton())
       fMainWindow->GetSkipEventButton()->GetNumberEntry()->SetIntNumber(number);
   }
 

@@ -22,18 +22,15 @@ public:
   MyTestLoop() {
     SetOutputFilename("example_output");
     DisableRootOutput(false);
-		anaManager = new TAnaManager();
-		
+    anaManager = new TAnaManager();
+    // Number of events to skip before plotting one.
+    SetNumberSkipEvent(10);
   }
 
   void AddAllCanvases(){
 
-    // Number of events to skip before plotting one.
-    SetNumberSkipEvent(10);
-
     // Set up tabbed canvases
-    
-    
+        
     if(anaManager->HaveV792Histograms()) 
       AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetV792Histograms(),"V792"));
     
