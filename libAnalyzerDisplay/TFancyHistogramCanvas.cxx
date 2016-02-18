@@ -1,6 +1,7 @@
 #include "TFancyHistogramCanvas.hxx"
 
 #include "TMesytecData.hxx"
+#include "TH2.h"
 
 ClassImp(TFancyHistogramCanvas)
 
@@ -188,7 +189,20 @@ void TFancyHistogramCanvas::UpdateCanvasHistograms(TDataContainer& dataContainer
 
   fHistoArray->UpdateHistograms(dataContainer);
 }
+
+
+// Helper method to be able to treat TH2 histograms differently
+void DrawHistogram(TH1* histo, std::string option = std::string("")){
+
+  if(dynamic_cast<TH2*>(histo)){
+    std::string fulloption = std::string("COLZ") + option;   
+    histo->Draw(fulloption.c_str());
+  }else{
+    histo->Draw(option.c_str());
+  }  
   
+}
+
 /// Plot the histograms for this canvas
 void TFancyHistogramCanvas::PlotCanvas(TDataContainer& dataContainer, TRootEmbeddedCanvas *embedCanvas){
 
@@ -228,7 +242,7 @@ void TFancyHistogramCanvas::PlotCanvas(TDataContainer& dataContainer, TRootEmbed
       c1->cd(i+1);
       int index = i + channel;
       if(index >=0 && index < (int)fHistoArray->size() && (*fHistoArray)[index]){
-	(*fHistoArray)[index]->Draw();
+	DrawHistogram((*fHistoArray)[index]);
 	(*fHistoArray)[index]->SetLineColor(1);
       }
     }
@@ -255,7 +269,8 @@ void TFancyHistogramCanvas::PlotCanvas(TDataContainer& dataContainer, TRootEmbed
     }
 
     // New loop again and draw as we go.
-    max_histo->Draw();
+
+    DrawHistogram(max_histo);
     fNHistoLegend->Clear(); 
     char name[100];
     for(int ichan = first_channel; ichan < last_channel; ichan++){
@@ -265,7 +280,8 @@ void TFancyHistogramCanvas::PlotCanvas(TDataContainer& dataContainer, TRootEmbed
       fNHistoLegend->AddEntry((*fHistoArray)[ichan],(*fHistoArray)[ichan]->GetTitle());
 
       if((*fHistoArray)[ichan] == max_histo) continue;      
-      (*fHistoArray)[ichan]->Draw("SAME");      
+
+      DrawHistogram((*fHistoArray)[ichan],"SAME");      
     }
 
     fNHistoLegend->Draw("SAME");
@@ -274,7 +290,9 @@ void TFancyHistogramCanvas::PlotCanvas(TDataContainer& dataContainer, TRootEmbed
 
 
     if(channel >=0 && channel < (int) fHistoArray->size() && (*fHistoArray)[channel]){
-      (*fHistoArray)[channel]->Draw();
+
+      DrawHistogram((*fHistoArray)[channel]);
+      
       (*fHistoArray)[channel]->SetLineColor(1);
     }
 
