@@ -34,6 +34,12 @@ TAnaManager::TAnaManager(){
 	fV1720Waveform->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
 #endif
 
+	fV1720Correlations = 0;
+#ifdef USE_V1720
+	fV1720Correlations = new TV1720Correlations();
+	fV1720Correlations->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
+#endif
+
 	fV1730DppWaveform = 0;
 #ifdef USE_V1730DPP
   fV1730DppWaveform = new TV1730DppWaveform();
@@ -63,7 +69,8 @@ int TAnaManager::ProcessMidasEvent(TDataContainer& dataContainer){
   	if(fV1190Histogram)  fV1190Histogram->UpdateHistograms(dataContainer); 
 	if(fL2249Histogram)  fL2249Histogram->UpdateHistograms(dataContainer); 
   	if(fAgilentHistogram)  fAgilentHistogram->UpdateHistograms(dataContainer); 
-	if(fV1720Waveform)  fV1720Waveform->UpdateHistograms(dataContainer); 
+	if(fV1720Waveform)  fV1720Waveform->UpdateHistograms(dataContainer);
+	if(fV1720Correlations)  fV1720Correlations->UpdateHistograms(dataContainer); 
   	if(fV1730DppWaveform)  fV1730DppWaveform->UpdateHistograms(dataContainer); 
 	if(fV1730RawWaveform)  fV1730RawWaveform->UpdateHistograms(dataContainer);
 	
@@ -93,6 +100,10 @@ bool TAnaManager::HaveV1720Histograms(){
 	if(fV1720Waveform) return true; 
 	return false;
 };
+bool TAnaManager::HaveV1720Correlations(){
+	if(fV1720Correlations) return true; 
+	return false;
+};
 bool TAnaManager::HaveV1730DPPistograms(){
 	if(fV1730DppWaveform) return true; 
 	return false;
@@ -111,6 +122,7 @@ TV1190Histograms* TAnaManager::GetV1190Histograms(){return fV1190Histogram;}
 TL2249Histograms* TAnaManager::GetL2249Histograms(){return fL2249Histogram;}
 TAgilentHistograms* TAnaManager::GetAgilentistograms(){return fAgilentHistogram;}
 TV1720Waveform* TAnaManager::GetV1720Histograms(){return fV1720Waveform;}
+TV1720Correlations* TAnaManager::GetV1720Correlations(){return fV1720Correlations;}
 TV1730DppWaveform* TAnaManager::GetV1730DPPistograms(){return fV1730DppWaveform;}
 TV1730RawWaveform* TAnaManager::GetV1730Rawistograms(){return fV1730RawWaveform;}
 TDT724Waveform* TAnaManager::GetDT724Histograms(){return fDT724Waveform;}

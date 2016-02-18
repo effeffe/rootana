@@ -45,6 +45,9 @@ public:
     
     if(anaManager->HaveV1720Histograms()) 
       AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetV1720Histograms(),"V1720 Waveforms"));
+
+    if(anaManager->HaveV1720Correlations()) 
+      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetV1720Correlations(),"V1720 Correlations"));
     
     if(anaManager->HaveV1730DPPistograms()) 
       AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetV1730DPPistograms(),"V1730 Waveforms"));
