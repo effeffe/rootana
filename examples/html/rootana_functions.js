@@ -156,6 +156,87 @@ function getAJAXData( histo_address,  histogramName){
 
 }
 
+function fillHistogranPlot1D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph){
+
+  var title = histoObject["_title"];
+      
+  // Fill the CSV array to make the histogram.
+  // Need to recalculate the bin centers.
+  var bin_width = (histoInfoJSON["fXaxis"]["fXmax"] - histoInfoJSON["fXaxis"]["fXmin"]) / histoInfoJSON["fXaxis"]["fNbins"]
+    var csv_array = "ADC value, Number Entries\n";
+  for (i = 0; i < histoInfoJSON["fXaxis"]["fNbins"]; i++){
+    // remember, we skip the first bin of data, since it is the underflow bin...
+    var bin_center = (i*bin_width) + bin_width/2.0;
+    csv_array += bin_center + "," +   histoInfoJSON["fArray"][i+1] + "\n";    
+  }
+  //alert("DDDDoing this index " + divName + " " + dygraphIndex)
+  if(deleteDygraph || gDygraphPointer[dygraphIndex] == 0){
+    delete gDygraphPointer[dygraphIndex] ;
+    gDygraphPointer[dygraphIndex]  = new Dygraph(document.getElementById(divName),csv_array,{title: title, 'labelsSeparateLines' : true, 'legend' : 'always'});
+    //alert("Doing this index " + divName + " " + dygraphIndex)
+  }else{
+    gDygraphPointer[dygraphIndex].updateOptions( { file: csv_array} );
+  }
+
+}
+
+gPlotlyPointer = 0;
+
+function fillHistogranPlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph){
+  
+  var title = histoObject["_title"];
+      
+  // Need to recalculate the bin centers.
+  var bin_widthX = (histoInfoJSON["fXaxis"]["fXmax"] - histoInfoJSON["fXaxis"]["fXmin"]) / histoInfoJSON["fXaxis"]["fNbins"];
+  var bin_widthY = (histoInfoJSON["fYaxis"]["fYmax"] - histoInfoJSON["fYaxis"]["fYmin"]) / histoInfoJSON["fYaxis"]["fNbins"];
+
+  var x = [];
+  var y = [];
+  var z = new Array(histoInfoJSON["fYaxis"]["fNbins"]);
+  for (var i=0; i<histoInfoJSON["fYaxis"]["fNbins"]; i++){
+    z[i] = new Array(histoInfoJSON["fXaxis"]);
+  }
+      
+  // Urgh, plot.ly seems to define arrays opposite to ROOT
+  for (var iyy = 1; iyy <= histoInfoJSON["fYaxis"]["fNbins"]; iyy++){
+    for (var ixx = 1; ixx <= histoInfoJSON["fXaxis"]["fNbins"]; ixx++){
+      var index = iyy*(histoInfoJSON["fXaxis"]["fNbins"] +2) + ixx;
+      z[iyy-1][ixx-1] = Number(histoInfoJSON["fArray"][index]);
+    }
+  }
+
+
+  //document.getElementById("readstatus").innerHTML = z;
+  var data = [
+              {
+                z: z,
+                type: 'heatmap'
+              }
+              ];
+  var layout = {
+    title: histoObject["_title"],
+    xaxis: {
+      title: histoInfoJSON["fXaxis"]["fTitle"],
+    },
+    yaxis: {
+      title: histoInfoJSON["fYaxis"]["fTitle"],
+    },
+    showlegend: false
+  };
+
+  //  delete gDygraphPointer[dygraphIndex] ;
+  if(gDygraphPointer[dygraphIndex]){
+    gDygraphPointer[dygraphIndex].destroy();
+    gDygraphPointer[dygraphIndex] = 0;
+  }
+  //if(gPlotlyPointer) delete gPlotlyPointer;
+  //gd2 = document.getElementById(divName);
+  //purge(gd2);
+
+  Plotly.newPlot(divName, data,layout);
+
+}
+
 
 
 // This method will create a dygraph plot in the requested 
@@ -175,33 +256,22 @@ function fillHistogramPlot(divName, histogramName, dygraphIndex, deleteDygraph){
     return;
   }
   
-  // Check that this is a TH1... otherwise don't know how to plot it...
-  if(histoObject["_kind"].search("ROOT.TH1") == -1){
-    document.getElementById("readstatus").innerHTML = "Histogram with name " 
+
+  // Handle either TH1 or TH2... otherwise don't know how to plot it...
+  if(histoObject["_kind"].search("ROOT.TH1") != -1){
+    fillHistogranPlot1D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph);
+  }else if(histoObject["_kind"].search("ROOT.TH2") != -1){
+    fillHistogranPlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph);
+  }else{
+    document.getElementById("readstatus").innerHTML = "Overlaid histogram with name " 
       + histogramName + " is not TH1... don't know how to handle.";
     document.getElementById("readstatus").style.color = 'red';
     
     return;
   }
-  var title = histoObject["_title"];
-      
-  // Fill the CSV array to make the histogram.
-  // Need to recalculate the bin centers.
-  var bin_width = (histoInfoJSON["fXaxis"]["fXmax"] - histoInfoJSON["fXaxis"]["fXmin"]) / histoInfoJSON["fXaxis"]["fNbins"]
-    var csv_array = "ADC value, Number Entries\n";
-  for (i = 0; i < histoInfoJSON["fXaxis"]["fNbins"]; i++){
-    // remember, we skip the first bin of data, since it is the underflow bin...
-    var bin_center = (i*bin_width) + bin_width/2.0;
-    csv_array += bin_center + "," +   histoInfoJSON["fArray"][i+1] + "\n";    
-  }
-  //xsalert("DDDDoing this index " + divName + " " + dygraphIndex)
-  if(deleteDygraph || gDygraphPointer[dygraphIndex] == 0){
-    delete gDygraphPointer[dygraphIndex] ;
-    gDygraphPointer[dygraphIndex]  = new Dygraph(document.getElementById(divName),csv_array,{title: title, 'labelsSeparateLines' : true, 'legend' : 'always'});
-    //alert("Doing this index " + divName + " " + dygraphIndex)
-  }else{
-    gDygraphPointer[dygraphIndex].updateOptions( { 'file': csv_array} );
-  }
+
+  //  fillHistogranPlot1D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph);
+
   document.getElementById("readstatus").innerHTML = "Rootana data correctly read";
   document.getElementById("readstatus").style.color = 'black';
       
@@ -238,7 +308,19 @@ function fillMultipleHistogramPlot(divName, histogramNameList, dygraphIndex, del
   
       return;
     }
-    
+
+    // Check that this is a TH2... otherwise don't know how to plot it...
+    if(histoObject["_kind"].search("ROOT.TH2") != -1){
+      document.getElementById("readstatus").innerHTML = "Can't meaningfully overlay 2D histogram. Not plotting. ";
+      document.getElementById("readstatus").style.color = 'orange';      
+      // delete old plot first
+      if(deleteDygraph || gDygraphPointer[dygraphIndex] == 0){
+        //delete gDygraphPointer[dygraphIndex];
+        gDygraphPointer[dygraphIndex].destroy();
+        
+      }
+      return;
+    }    
     // Check that this is a TH1... otherwise don't know how to plot it...
     if(histoObject["_kind"].search("ROOT.TH1") == -1){
       document.getElementById("readstatus").innerHTML = "Histogram with name " 

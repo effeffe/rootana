@@ -8,7 +8,7 @@
   <script language="javascript" type="text/javascript" src="mhttpd.js"></script>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <script language="javascript" type="text/javascript" src="rootana_functions.js"></script>
 <style type="text/css">
 input[type=number]{
@@ -20,6 +20,8 @@ input[type=number]{
 #graphdiv22 {min-height:250px}
 #graphdiv {min-width:100%}
 #graphdiv {min-height:500px}
+#plotlydiv {min-width:100%}
+#plotlydiv {min-height:500px}
 
 
 </style>
@@ -39,6 +41,7 @@ function pause_resume(){
    document.getElementById("HistoDisplay").disabled = false;
    document.getElementById("v792_select").disabled = false;
    document.getElementById("v1720_select").disabled = false;
+   document.getElementById("v1720C_select").disabled = false;
 
  }else{
    gIsPaused = true;
@@ -49,6 +52,7 @@ function pause_resume(){
    document.getElementById("HistoDisplay").disabled = true;
    document.getElementById("v792_select").disabled = true;
    document.getElementById("v1720_select").disabled = true;
+   document.getElementById("v1720C_select").disabled = true;
  }
 
 }
@@ -76,6 +80,17 @@ function midasStatus(){
   var gHistoName = "V792_0_";
   var gMaxChannel = 32;
 
+function disableOverlayState(state){
+  var displayEl = document.getElementById('HistoDisplay');
+  for(var i = 0; i < displayEl.options.length; i++){
+    if(displayEl.options[i].value == "Overlay"){
+      displayEl.options[i].disabled = state;
+    }
+  }
+
+}
+
+
   function usev792(){
     gHistoName = "V792_0_";
     gMaxChannel = 32;
@@ -83,6 +98,8 @@ function midasStatus(){
     document.getElementById("channel_number").value = 0;
     document.getElementById("v792_select").style.backgroundColor = "lightgreen";
     document.getElementById("v1720_select").style.backgroundColor = "white";
+    document.getElementById("v1720C_select").style.backgroundColor = "white";
+    disableOverlayState(false);
   }
 
   function usev1720(){
@@ -92,6 +109,21 @@ function midasStatus(){
     document.getElementById("channel_number").max = 8;
     document.getElementById("v792_select").style.backgroundColor = "white";
     document.getElementById("v1720_select").style.backgroundColor = "lightgreen";
+    document.getElementById("v1720C_select").style.backgroundColor = "white";
+    disableOverlayState(false);
+  }
+
+  function usev1720C(){
+    gHistoName = "V1720_Correlations_";
+    gMaxChannel = 8;
+    document.getElementById("channel_number").value = 0;
+    document.getElementById("channel_number").max = 8;
+    document.getElementById("v792_select").style.backgroundColor = "white";
+    document.getElementById("v1720_select").style.backgroundColor = "white";
+    document.getElementById("v1720C_select").style.backgroundColor = "lightgreen";
+    document.getElementById("HistoDisplay").options[0].selected = true;
+    disableOverlayState(true);
+    
   }
 
   function updatePlots(deleteDygraph){
@@ -150,7 +182,6 @@ function midasStatus(){
   }
 
 
-
 function ShowParams() {
    var scan_type = document.getElementById("HistoDisplay").value;
    <!--document.getElementById("params").innerHTML = "You chose: " + scan_type; -->
@@ -195,10 +226,12 @@ setInterval(updatePlots,5000);
     <!--- Top banner --> 
     <div class="page-header">
       <font size="6"><b>Rootana Display</b></font>
-      <button id="v792_select" style="background-color: lightgreen" onclick="usev792();updatePlots(true);"> 
+      <button id="v792_select" style="background-color: lightgreen" onclick="usev792();ShowParams();updatePlots(true);"> 
         V792 </button>
-      <button id="v1720_select"  onclick="usev1720();updatePlots(true);"> 
+      <button id="v1720_select"  onclick="usev1720();ShowParams();updatePlots(true);"> 
         V1720 </button>
+      <button id="v1720C_select"  onclick="usev1720C();ShowParams();updatePlots(true);"> 
+        V1720 Correlations </button>
       
     </div>
 
@@ -213,7 +246,6 @@ setInterval(updatePlots,5000);
 
           Channel:
           <input type="number" id="channel_number" min="0" max="31" value="0" onchange="updatePlots(true);"><p>
-          
           Select Display Type
           <select id="HistoDisplay" onchange="ShowParams()">
             <option value="Single">Single</option>
@@ -252,7 +284,8 @@ setInterval(updatePlots,5000);
         <div id="graphdiv22" style="display:none"></div>
         
         <div id="OverlayParams22" style="display:none"> 
-        </div>        
+        </div>
+        
         
       </div>
       
