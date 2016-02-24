@@ -27,6 +27,7 @@ void TV1720Correlations::CreateHistograms(){
     sprintf(title,"V1720 Max ADC vs Max ADC time ch=%i",i);	
     
     TH2D *tmp = new TH2D(name, title, 100,0,2000,100,0,1000);
+    //TH2D *tmp = new TH2D(name, title, 4,0,2000,5,0,1000);
     tmp->SetXTitle("max ADC time (ns)");
     tmp->SetYTitle("max bin value");
     
@@ -71,6 +72,7 @@ void TV1720Correlations::UpdateHistograms(TDataContainer& dataContainer){
       GetHistogram(i)->Fill(max_adc_time,max_adc_value);
     }
   }
+  
 
 }
 
