@@ -23,7 +23,7 @@ function XMLHttpRequestGeneric(){
 }
 
 // This variable keeps track of the webdirectory that the rootana THttpServer is posting to
-rootana_dir = "http://neut18.triumf.ca/rootana/";
+rootana_dir = location.protocol + '//' + location.host + "/rootana/";
 gFoundRootanaDir = false;
 // This is the ROOT directory where we are looking for histograms.  Form is either 'rootana' or 'Files/somenameXXX.root'
 active_directory = "";
