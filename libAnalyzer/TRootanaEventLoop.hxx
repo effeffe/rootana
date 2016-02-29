@@ -13,6 +13,10 @@
 #include "TDirectory.h"
 #include <TTimer.h>
 #include <TFile.h>
+#ifdef HAVE_THTTP_SERVER
+#include "THttpServer.h"
+#endif
+
 
 // C++ includes
 #include <stdio.h>
@@ -188,10 +192,23 @@ public:
   /// Suppress timestamp warnings?  true = suppress warnings
   bool GetSuppressTimestampWarnings(){ return fSuppressTimestampWarnings;};
 
-	/// Method to set whether analyzer should operate in GET_RECENT mode, 
-	/// where we only process data that is less than 1 second old (this is not default).
-	/// Setting true will use this option.
+  /// Method to set whether analyzer should operate in GET_RECENT mode, 
+  /// where we only process data that is less than 1 second old (this is not default).
+  /// Setting true will use this option.
   void UseOnlyRecent(bool setting = true);//{ fUseOnlyRecent = setting;};
+
+#ifdef HAVE_THTTP_SERVER
+  
+  // Get the THttpServer object
+  THttpServer * GetTHttpServer(){return fRoot_http_serv;};
+
+  // Set ReadWrite mode fot THttpServer (to allow operation on histograms through web; like histogram reset).
+  void SetTHttpServerReadWrite(bool readwrite = true){ 
+    if(fRoot_http_serv) fRoot_http_serv->SetReadOnly(!readwrite);
+  }
+  
+#endif
+
 
 protected:
 
@@ -244,6 +261,9 @@ private:
   int fCurrentRunNumber;
 
 
+#ifdef HAVE_THTTP_SERVER
+  THttpServer *fRoot_http_serv;  // pointer to THttpServer object.
+#endif
   /// Pointer to the physics event; the physics event is what we pass to user.
   /// The midas event is accessible through physics event.
   /// We make a single instance of the physics event for whole execution,

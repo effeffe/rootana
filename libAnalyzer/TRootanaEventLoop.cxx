@@ -23,10 +23,6 @@
 #include <assert.h>
 #include <signal.h>
 
-#ifdef HAVE_THTTP_SERVER
-#include "THttpServer.h"
-#endif
-
 #include "sys/time.h"
 /// Little function for printing the number of processed events and processing rate.
 struct timeval raLastTime;  
@@ -100,6 +96,8 @@ TRootanaEventLoop::TRootanaEventLoop (){
 
   fBufferName = std::string("SYSTEM");
   fOnlineName = std::string("rootana");
+
+  fRoot_http_serv = 0;
 
   fDataContainer = new TDataContainer();
 
@@ -271,12 +269,10 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
 #endif
 
 #ifdef HAVE_THTTP_SERVER
-
-   THttpServer *root_http_serv; // = new THttpServer("http:8080");
    if(rhttpdPort){
      char address[100];
-     sprintf(address,"http:%i",rhttpdPort);
-     root_http_serv = new THttpServer(address);
+     sprintf(address,"http:%i",rhttpdPort); 
+     fRoot_http_serv = new THttpServer(address);
    }
 #endif
   

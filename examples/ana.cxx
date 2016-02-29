@@ -25,7 +25,7 @@ public:
   Analyzer() {
     //DisableAutoMainWindow();
 
-		anaManager = 0;
+    anaManager = 0;
     
   };
 
@@ -33,14 +33,19 @@ public:
 
   void Initialize(){
 
+#ifdef HAVE_THTTP_SERVER
+    std::cout << "Using THttpServer in read/write mode" << std::endl;
+    SetTHttpServerReadWrite();
+#endif
 
   }
 
 	void Init(){
 
-		if(anaManager)
-			delete anaManager;
-		anaManager = new TAnaManager();
+          if(anaManager)
+            delete anaManager;
+          anaManager = new TAnaManager();
+
 	}
 
 
