@@ -136,10 +136,11 @@ function rootanaResetHistogram(histogramName){
   request.open('GET', histo_address + "/" + histogramName +"/exe.json?method=Reset", false);
   request.send(null);
   if(request.status != 200){ 
-    document.getElementById("readstatus").innerHTML = histo_address + "/" + histogramName +"/exe.json?method=Reset"; //"Failed to reset histogram " + histogramName;
+    document.getElementById("readstatus").innerHTML = "Failed to reset histogram " + histogramName;
     document.getElementById("readstatus").style.color = 'red';
     return false;
   }
+  document.getElementById("readstatus").innerHTML = "Reset histogram " + histogramName;
 
   return true;
 
