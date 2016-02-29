@@ -124,6 +124,37 @@ function find_active_root_directory(){
   }
 }
 
+function rootanaResetHistogram(histogramName){
+
+  // Find the directory structure, if it is not yet found.
+  if(!gFoundRootanaDir){
+    find_active_root_directory();
+  }
+
+  // Send the request for data for this plot
+  var request = XMLHttpRequestGeneric();
+  request.open('GET', histo_address + "/" + histogramName +"/exe.json?method=Reset", false);
+  request.send(null);
+  if(request.status != 200){ 
+    document.getElementById("readstatus").innerHTML = histo_address + "/" + histogramName +"/exe.json?method=Reset"; //"Failed to reset histogram " + histogramName;
+    document.getElementById("readstatus").style.color = 'red';
+    return false;
+  }
+
+  return true;
+
+}
+
+function rootanaResetAllHistograms(){
+
+  for(var j = 0; j < gHistogramList.length; j++){
+    var object = gHistogramList[j];
+    
+    rootanaResetHistogram(object["_name"]);
+
+  }
+}
+
 function getAJAXData( histo_address,  histogramName){
 
   // Find the directory structure, if it is not yet found.
