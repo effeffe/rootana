@@ -166,14 +166,16 @@ function getAJAXData( histo_address,  histogramName){
 
   // Send the request for data for this plot
     var request = XMLHttpRequestGeneric();
-    request.open('GET', histo_address + "/" + histogramName +"/root.json", false);
+    request.open('GET', histo_address + "/" + histogramName +"/root.json.gz?compact=3", false);
+    //request.open('GET', histo_address + "/" + histogramName +"/root.json", false);
     request.send(null);
     if(request.status != 200){ 
       
       // try re-reading the directory tree... see if that allows us to find the histogram...
       find_active_root_directory();
       var request2 = XMLHttpRequestGeneric();
-      request2.open('GET', histo_address + "/" + histogramName +"/root.json", false);
+      request2.open('GET', histo_address + "/" + histogramName +"/root.json.gz?compact=3", false);
+      // request2.open('GET', histo_address + "/" + histogramName +"/root.json", false);
       request2.send(null);
       if(request2.status != 200){ 
         document.getElementById("readstatus").innerHTML = "Couldn't get histogram data; status = " + request.status + ". Did rootana httpserver die?";
