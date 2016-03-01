@@ -18,13 +18,13 @@ class Analyzer: public TRootanaEventLoop {
 
 public:
 
-	// An analysis manager.  Define and fill histograms in 
-	// analysis manager.
-	TAnaManager *anaManager;
-
+  // An analysis manager.  Define and fill histograms in 
+  // analysis manager.
+  TAnaManager *anaManager;
+  
   Analyzer() {
     //DisableAutoMainWindow();
-
+    UseBatchMode();
     anaManager = 0;
     
   };
@@ -40,27 +40,27 @@ public:
 
   }
 
-	void Init(){
-
-          if(anaManager)
-            delete anaManager;
-          anaManager = new TAnaManager();
-
-	}
-
-
+  void InitManager(){
+    
+    if(anaManager)
+      delete anaManager;
+    anaManager = new TAnaManager();
+    
+  }
+  
+  
   void BeginRun(int transition,int run,int time){
-
-		Init();
-
+    
+    InitManager();
+    
   }
 
 
   bool ProcessMidasEvent(TDataContainer& dataContainer){
 
-		if(!anaManager) Init();
-
-		anaManager->ProcessMidasEvent(dataContainer);
+    if(!anaManager) InitManager();
+    
+    anaManager->ProcessMidasEvent(dataContainer);
 
     return true;
   }

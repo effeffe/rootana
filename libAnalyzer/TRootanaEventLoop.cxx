@@ -191,6 +191,7 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
   
   
   if(fUseBatchMode){ // Disable creating extra window if batch mode requested.
+    gROOT->SetBatch();
     fCreateMainWindow = false;
   }
     
