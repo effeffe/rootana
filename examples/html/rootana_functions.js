@@ -22,6 +22,39 @@ function XMLHttpRequestGeneric(){
   return request;
 }
 
+
+// Promisified XLMHttpRequest wrapper...
+function getUrl(url) {
+  // Return a new promise.
+  return new Promise(function(resolve, reject) {
+    // Do the usual XHR stuff
+    var req = new XMLHttpRequest();
+    req.open('GET', url);
+
+    req.onload = function() {
+      // This is called even on 404 etc
+      // so check the status
+      if (req.status == 200) {
+        // Resolve the promise with the response text
+        resolve(req.response);
+      }
+      else {
+        // Otherwise reject with the status text
+        // which will hopefully be a meaningful error
+        reject(req.statusText);
+      }
+    };
+
+    // Handle network errors
+    req.onerror = function() {
+      reject("Network Error");
+    };
+
+    // Make the request
+    req.send();
+  });
+}
+
 // This variable keeps track of the webdirectory that the rootana THttpServer is posting to
 rootana_dir = location.protocol + '//' + location.host + "/rootana/";
 gFoundRootanaDir = false;
@@ -79,49 +112,58 @@ function check_for_histograms(subdir_tree){
 // If we don't find any histograms there, then look in the file directories.
 function find_active_root_directory(){
 
-  // Get the JSON description of current ROOT directory
-  var request = XMLHttpRequestGeneric();
-  request.open('GET', rootana_dir + "h.json", false);
-  request.send(null);
-  
-  if(request.status != 200){
-    document.getElementById("readstatus").innerHTML = "Couldn't get basic ROOT structure back; status = " + request.status + ". Is rootana httpserver running?";   
-    document.getElementById("readstatus").style.color = 'red';
-    return;
-  }
+  // Wrap the XHR request in promise.
+  getUrl(rootana_dir + "h.json").then(function(response) {
 
-  var rootStructureJSON = JSON.parse(request.responseText);
   
-  // Loop over the objects in child object, looking for either the rootana directory
-  // or Files directory
-  
-  
-  for(var i = 0; i < rootStructureJSON["_childs"].length; i++){
-    var testDir = rootStructureJSON["_childs"][i];
-    var name = testDir["_name"];
-    
-    // Check for histograms in the rootana directory
-    if( name == "rootana"){
-      
+    var rootStructureJSON;
+
+    try {
+      rootStructureJSON = JSON.parse(response);
+
     }
-
-    // Check for histograms in the Files directory
-    if( name == "Files"){
-      for(var j = 0; j < testDir["_childs"].length; j++){
-        var fileDir = testDir["_childs"][j];
-        var foundHistograms = check_for_histograms(fileDir);
-        // If we found a valid ROOT directory, save information for later plotting
-        if(foundHistograms){
-          active_directory = "Files/" + fileDir["_name"];
-          histo_address = rootana_dir  + active_directory;
-          document.getElementById("readstatus").innerHTML = histo_address;
-          // Get the full list of histograms, so we can check them later
-          gHistogramList = fileDir["_childs"];
-          gFoundRootanaDir = true;
+    catch(err) {
+      document.getElementById("readstatus").innerHTML = err.message;
+      return;
+    }
+    
+  
+    // Loop over the objects in child object, looking for either the rootana directory
+    // or Files directory
+    
+    
+    for(var i = 0; i < rootStructureJSON["_childs"].length; i++){
+      var testDir = rootStructureJSON["_childs"][i];
+      var name = testDir["_name"];
+      
+      // Check for histograms in the rootana directory
+      if( name == "rootana"){
+        
+      }
+      
+      // Check for histograms in the Files directory
+      if( name == "Files"){
+        for(var j = 0; j < testDir["_childs"].length; j++){
+          var fileDir = testDir["_childs"][j];
+          var foundHistograms = check_for_histograms(fileDir);
+          // If we found a valid ROOT directory, save information for later plotting
+          if(foundHistograms){
+            active_directory = "Files/" + fileDir["_name"];
+            histo_address = rootana_dir  + active_directory;
+            document.getElementById("readstatus").innerHTML = "Getting list of available histograms...";
+            // Get the full list of histograms, so we can check them later
+            gHistogramList = fileDir["_childs"];
+            gFoundRootanaDir = true;
+          }
         }
       }
     }
-  }
+  }).catch(function(error) { // Handle exception if we didn't find ROOT structure
+
+    document.getElementById("readstatus").innerHTML = "Couldn't get basic ROOT structure back; status = " + error + ". Is rootana httpserver running?";   
+    document.getElementById("readstatus").style.color = 'red';
+
+  });
 }
 
 function rootanaResetHistogram(histogramName){
@@ -189,6 +231,7 @@ function getAJAXData( histo_address,  histogramName){
     return JSON.parse(request.responseText);
 
 }
+
 
 function fillHistogranPlot1D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph){
 
@@ -277,37 +320,50 @@ function fillHistogranPlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,de
 // div for the requested histogram.
 function fillHistogramPlot(divName, histogramName, dygraphIndex, deleteDygraph){
   
-  var rvalue = getAJAXData(histo_address, histogramName);
-  if(rvalue == false) return;
-  var histoInfoJSON = rvalue;
-  
-  // Check that we can find this histogram in current directory list
-  var histoObject = findHistogram(histogramName);
-  if(histoObject == false){
-    document.getElementById("readstatus").innerHTML = "Failed to find histogram with name " 
-      + histogramName + " in current ROOT directory";
-    document.getElementById("readstatus").style.color = 'red';    
+  // Find the directory structure, if it is not yet found.
+  if(!gFoundRootanaDir){
+    find_active_root_directory();
+    // return this time, since the directory structure won't be defined in time for this execution (async request)
     return;
   }
-  
 
-  // Handle either TH1 or TH2... otherwise don't know how to plot it...
-  if(histoObject["_kind"].search("ROOT.TH1") != -1){
-    fillHistogranPlot1D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph);
-  }else if(histoObject["_kind"].search("ROOT.TH2") != -1){
-    fillHistogranPlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph);
-  }else{
-    document.getElementById("readstatus").innerHTML = "Overlaid histogram with name " 
-      + histogramName + " is not TH1... don't know how to handle.";
-    document.getElementById("readstatus").style.color = 'red';
+  // Wrap the request in promise.
+  getUrl(histo_address + "/" + histogramName +"/root.json.gz?compact=3").then(function(response) {
+
+    var histoInfoJSON = JSON.parse(response);
     
-    return;
-  }
+    // Check that we can find this histogram in current directory list
+    var histoObject = findHistogram(histogramName);
+    if(histoObject == false){
+      document.getElementById("readstatus").innerHTML = "Failed to find histogram with name " 
+        + histogramName + " in current ROOT directory";
+      document.getElementById("readstatus").style.color = 'red';    
+      return;
+    }
+        
+    // Handle either TH1 or TH2... otherwise don't know how to plot it...
+    if(histoObject["_kind"].search("ROOT.TH1") != -1){
+      fillHistogranPlot1D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph);
+    }else if(histoObject["_kind"].search("ROOT.TH2") != -1){
+      fillHistogranPlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph);
+    }else{
+      document.getElementById("readstatus").innerHTML = "Overlaid histogram with name " 
+        + histogramName + " is not TH1... don't know how to handle.";
+      document.getElementById("readstatus").style.color = 'red';      
+      return;
+    }
 
-  //  fillHistogranPlot1D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph);
-
-  document.getElementById("readstatus").innerHTML = "Rootana data correctly read";
-  document.getElementById("readstatus").style.color = 'black';
+    document.getElementById("readstatus").innerHTML = "Rootana data correctly read";
+    document.getElementById("readstatus").style.color = 'black';
+    
+  }).catch(function(error) { // Handle exception if we didn't find the histogram...
+    
+    document.getElementById("readstatus").innerHTML = "Couldn't get histogram data; status = " + error + ". Did rootana httpserver die?";
+    document.getElementById("readstatus").style.color = 'red';    
+    console.error('Augh, there was an error!', error);
+    // If we couldn't find histogram, try forcing re-find of rootana directory
+    gFoundRootanaDir = false;
+  });
       
 }
 
