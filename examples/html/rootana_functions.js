@@ -1,29 +1,7 @@
 
-// XML AJAX request.
-function XMLHttpRequestGeneric(){
-  var request;
-  try {
-    request = new XMLHttpRequest(); // Firefox, Opera 8.0+, Safari
-  }
-  catch (e) {
-    try {
-      request = new ActiveXObject('Msxml2.XMLHTTP'); // Internet Explorer 
-    }
-    catch (e) {
-      try {
-        request = new ActiveXObject('Microsoft.XMLHTTP');
-      }
-      catch (e) {
-        alert('Your browser does not support AJAX!');
-      return undefined;
-      }
-    } 
-  }
-  return request;
-}
-
 
 // Promisified XLMHttpRequest wrapper...
+// stolen from http://www.html5rocks.com/en/tutorials/es6/promises/
 function getUrl(url) {
   // Return a new promise.
   return new Promise(function(resolve, reject) {
@@ -207,7 +185,7 @@ function getAJAXData( histo_address,  histogramName){
   
 
   // Send the request for data for this plot
-    var request = XMLHttpRequestGeneric();
+    var request = new XMLHttpRequest();
     request.open('GET', histo_address + "/" + histogramName +"/root.json.gz?compact=3", false);
     //request.open('GET', histo_address + "/" + histogramName +"/root.json", false);
     request.send(null);
@@ -215,7 +193,7 @@ function getAJAXData( histo_address,  histogramName){
       
       // try re-reading the directory tree... see if that allows us to find the histogram...
       find_active_root_directory();
-      var request2 = XMLHttpRequestGeneric();
+      var request2 = new XMLHttpRequest();
       request2.open('GET', histo_address + "/" + histogramName +"/root.json.gz?compact=3", false);
       // request2.open('GET', histo_address + "/" + histogramName +"/root.json", false);
       request2.send(null);
@@ -367,13 +345,116 @@ function fillHistogramPlot(divName, histogramName, dygraphIndex, deleteDygraph){
       
 }
 
+// This method will create a dygraph plot in the requested 
+// div for each of the requested histogram in list.
+// use chained promises.
+function fillMultipleHistogramPlot(divName, histogramNameList, dygraphIndex, deleteDygraph){
 
+  // arrays for storing the bin contents
+  histoNames = [];
+  histoValues = [];
+  histoBinCenters = [];
+  histoXTitle = ""
 
+  for(var index = 0; index < histogramNameList.length; index++){
+    histogramName = histogramNameList[index];
+
+    // Send the request for data for this plot
+    var rvalue = getAJAXData(histo_address, histogramName);
+    if(rvalue == false) return;
+    var histoInfoJSON = rvalue;
+
+    // Check that we can find this histogram in current directory list
+    var histoObject = findHistogram(histogramName);
+    if(histoObject == false){
+      document.getElementById("readstatus").innerHTML = "Failed to find histogram with name " 
+        + histogramName + " in current ROOT directory";
+      document.getElementById("readstatus").style.color = 'red';
+  
+      return;
+    }
+
+    // Check that this is a TH2... otherwise don't know how to plot it...
+    if(histoObject["_kind"].search("ROOT.TH2") != -1){
+      document.getElementById("readstatus").innerHTML = "Can't meaningfully overlay 2D histogram. Not plotting. ";
+      document.getElementById("readstatus").style.color = 'orange';      
+      // delete old plot first
+      if(deleteDygraph || gDygraphPointer[dygraphIndex] == 0){
+        //delete gDygraphPointer[dygraphIndex];
+        gDygraphPointer[dygraphIndex].destroy();
+        
+      }
+      return;
+    }    
+    // Check that this is a TH1... otherwise don't know how to plot it...
+    if(histoObject["_kind"].search("ROOT.TH1") == -1){
+      document.getElementById("readstatus").innerHTML = "Histogram with name " 
+        + histogramName + " is not TH1... don't know how to handle.";
+      document.getElementById("readstatus").style.color = 'red';
+      
+      return;
+    }
+    var title = histoObject["_title"];
+
+    
+    // Fill the CSV array to make the histogram.
+    // Need to recalculate the bin centers.
+    var bin_width = (histoInfoJSON["fXaxis"]["fXmax"] - histoInfoJSON["fXaxis"]["fXmin"]) / histoInfoJSON["fXaxis"]["fNbins"];
+    var csv_array = "ADC value, Number Entries\n";
+    histoNames.push(title);
+    
+    if(index == 0)
+      histoXTitle = histoInfoJSON["fXaxis"]["fTitle"]
+    arrayValues = [];
+    for (i = 0; i < histoInfoJSON["fXaxis"]["fNbins"]; i++){
+      // remember, we skip the first bin of data, since it is the underflow bin...
+      var bin_center = (i*bin_width) + bin_width/2.0;
+      
+      if(index == 0){
+        histoBinCenters.push(bin_center);
+      }
+      
+      arrayValues.push(histoInfoJSON["fArray"][i+1]);
+
+      csv_array += bin_center + "," +   histoInfoJSON["fArray"][i+1] + "\n";    
+    }
+    histoValues.push(arrayValues);
+
+  }
+
+  // Create the CVS array for the combined information.
+  var csv_array_multi = histoXTitle;
+  for(var ii = 0; ii < histoNames.length; ii++){
+    csv_array_multi += ", " + histoNames[ii];
+  }
+  csv_array_multi += "\n";
+  for(var ii = 0; ii < histoValues[0].length; ii++){
+  //for(var ii = 0; ii < 5; ii++){
+    csv_array_multi += histoBinCenters[ii];
+    for(var jj = 0; jj < histoValues.length; jj++){
+      csv_array_multi += ", " + histoValues[jj][ii];
+    }
+    csv_array_multi += "\n";    
+  }
+
+  
+  //  g = new Dygraph(document.getElementById(divName),csv_array_multi,{title: 'multiple histograms'});
+  if(deleteDygraph || gDygraphPointer[dygraphIndex] == 0){
+    delete gDygraphPointer[dygraphIndex] ;
+    gDygraphPointer[dygraphIndex]  = new Dygraph(document.getElementById(divName),csv_array_multi,
+                                                 {title: 'multiple histograms', 'labelsSeparateLines' : true, 'legend' : 'always' });
+  }else{
+    gDygraphPointer[dygraphIndex].updateOptions( { 'file': csv_array_multi} );
+  }
+  document.getElementById("readstatus").innerHTML = "Rootana data correctly read";
+  document.getElementById("readstatus").style.color = 'black';
+
+}
 
 
 // This method will create a dygraph plot in the requested 
 // div for each of the requested histogram in list.
-function fillMultipleHistogramPlot(divName, histogramNameList, dygraphIndex, deleteDygraph){
+function fillMultipleHistogramPlot2(divName, histogramNameList, dygraphIndex, deleteDygraph){
 
   // arrays for storing the bin contents
   histoNames = [];
