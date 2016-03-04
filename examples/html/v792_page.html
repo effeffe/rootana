@@ -252,8 +252,8 @@ setInterval(updatePlots,5000);
 
 
 </head>
-
-<body onload="find_active_root_directory(); updatePlots(false);">
+<!-- call to find_active_root_directory will take a moment to do the first read of ROOT tree; so wait 2sec before doing first call to plot -->
+<body onload="find_active_root_directory(); updatePlots(false); setTimeout(updatePlots(false),1000);">
   <div class="container-fluid">
     
     <!--- Top banner --> 
