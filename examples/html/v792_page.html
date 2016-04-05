@@ -265,7 +265,7 @@ function changeUpdateTime() {
 
 </head>
 <!-- call to find_active_root_directory will take a moment to do the first read of ROOT tree; so wait 2sec before doing first call to plot -->
-<body onload="find_active_root_directory(); midasStatus();updatePlots(false); setTimeout(updatePlots(false),1000);">
+<body onload="find_active_root_directory(false); midasStatus();updatePlots(false); setTimeout(updatePlots(false),1000);">
   <div class="container-fluid">
     
     <!--- Top banner --> 

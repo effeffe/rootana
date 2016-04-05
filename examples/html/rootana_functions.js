@@ -85,15 +85,8 @@ function check_for_histograms(subdir_tree){
     
 };
 
-// This method will search the root directory structure.
-// Start by looking for histograms in the rootana directory.
-// If we don't find any histograms there, then look in the file directories.
-function find_active_root_directory(){
+function parseRootDirectory(response){
 
-  // Wrap the XHR request in promise.
-  getUrl(rootana_dir + "h.json").then(function(response) {
-
-  
     var rootStructureJSON;
 
     try {
@@ -136,6 +129,39 @@ function find_active_root_directory(){
         }
       }
     }
+
+}
+
+
+// This method will search the root directory structure.
+// Start by looking for histograms in the rootana directory.
+// If we don't find any histograms there, then look in the file directories.
+// Can request to make the call asynchronously or synchronously; default is async with promise 
+function find_active_root_directory(async = true){
+
+  if(!async){
+
+    // Get the JSON description of current ROOT directory
+    var request = XMLHttpRequestGeneric();
+    request.open('GET', rootana_dir + "h.json", false);
+    request.send(null);
+  
+    if(request.status != 200){
+      document.getElementById("readstatus").innerHTML = "Couldn't get basic ROOT structure back; status = " + request.status + ". Is rootana httpserver running?"; 
+      document.getElementById("readstatus").style.color = 'red';
+      return;
+    }
+    parseRootDirectory(request.responseText);
+
+    return
+  }
+
+
+  // Wrap the XHR request in promise.
+  getUrl(rootana_dir + "h.json").then(function(response) {
+
+    parseRootDirectory(response);
+
   }).catch(function(error) { // Handle exception if we didn't find ROOT structure
 
     document.getElementById("readstatus").innerHTML = "Couldn't get basic ROOT structure back; status = " + error + ". Is rootana httpserver running?";   
