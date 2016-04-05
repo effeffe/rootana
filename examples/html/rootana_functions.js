@@ -260,10 +260,16 @@ function fillHistogranPlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,de
 
 
 
+var promiseInflight = false;
 // This method will create a dygraph plot in the requested 
 // div for the requested histogram.
 function fillHistogramPlot(divName, histogramName, dygraphIndex, deleteDygraph){
   
+  // Ignore this request if a previous promise has not yet been returned...
+  if(promiseInflight){
+   return;
+  } 
+
   // Find the directory structure, if it is not yet found.
   if(!gFoundRootanaDir){
     find_active_root_directory();
@@ -271,9 +277,12 @@ function fillHistogramPlot(divName, histogramName, dygraphIndex, deleteDygraph){
     return;
   }
 
+  promiseInflight = true;
   // Wrap the request in promise.
   getUrl(histo_address + "/" + histogramName +"/root.json.gz?compact=3").then(function(response) {
 
+    promiseInflight = false;
+ 
     var histoInfoJSON = JSON.parse(response);
     
     // Check that we can find this histogram in current directory list
