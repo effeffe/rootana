@@ -8,7 +8,7 @@
   <script language="javascript" type="text/javascript" src="mhttpd.js"></script>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="plotly-latest.min.js"></script>
   <script language="javascript" type="text/javascript" src="rootana_functions.js"></script>
 <style type="text/css">
 input[type=number]{
@@ -25,7 +25,7 @@ input[type=number]{
 
 
 </style>
-<script src="//cdnjs.cloudflare.com/ajax/libs/dygraph/1.1.1/dygraph-combined.js"></script>
+<script src="dygraph-combined.js"></script>
 <script>
 
 // Function to disable updating.
@@ -57,6 +57,8 @@ function pause_resume(){
 
 }
 
+
+gRunOngoing = false;
 function midasStatus(){
   // Make an array of the other ODB variable that we want
   var req = new Array();
@@ -67,12 +69,11 @@ function midasStatus(){
   document.getElementById("current_run").innerHTML = "Current run is " + result[1]
   if(result[0] == 3){
     document.getElementById("daq_running").innerHTML = "DAQ is running"
+    gRunOngoing = true;
   }else{
     document.getElementById("daq_running").innerHTML = "DAQ run is stopped"
-    return false;
+    gRunOngoing = false;
   }
- 
-  return true;
 
 }
 
@@ -158,13 +159,14 @@ function reset_histogram(){
 }
 
 
+                             
 
   function updatePlots(deleteDygraph){
 
    // update the MIDAS status
-   var status = midasStatus()
+   //var status = midasStatus()
    // don't bother updating if run is not ongoing.
-   if(status == false){
+   if(gRunOngoing == false){
      document.getElementById("readstatus").innerHTML = "No updates when run stopped.";
      document.getElementById("readstatus").style.color = "black";
      document.getElementById("datetime").innerHTML = Date();
@@ -246,14 +248,24 @@ function ShowParams() {
    }
    updatePlots(true);
 }
+var gIntervalID = 0; 
+gIntervalID = setInterval(updatePlots,5000);
+setInterval(midasStatus,5000);   
+function changeUpdateTime() {
+   <!-- Delete old update interval -->
+   clearInterval(gIntervalID);
 
-setInterval(updatePlots,5000);
+   <!-- set new interval -->   
+   var currentUpdateTime = Number(document.getElementById("updatePeriod").value);
+   gIntervalID = setInterval(updatePlots,currentUpdateTime);
+}
+
 </script>
 
 
 </head>
 <!-- call to find_active_root_directory will take a moment to do the first read of ROOT tree; so wait 2sec before doing first call to plot -->
-<body onload="find_active_root_directory(); updatePlots(false); setTimeout(updatePlots(false),1000);">
+<body onload="find_active_root_directory(); midasStatus();updatePlots(false); setTimeout(updatePlots(false),1000);">
   <div class="container-fluid">
     
     <!--- Top banner --> 
@@ -294,6 +306,9 @@ setInterval(updatePlots,5000);
           </div>
           <div id="MultipleParams" style="display:none"> 
           </div>
+
+          <p> Refresh period (ms):
+            <input type="number" id="updatePeriod" min="100" max="100000" value="5000" onchange="changeUpdateTime();"><p>
           
           <br> <b>MIDAS Status</b><br>
           <ul>
