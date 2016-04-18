@@ -81,7 +81,13 @@ function midasStatus(){
     }
     gStatusInflight = false; // finished async routine
   }).catch(function(error) {
-       console.log("midasStatus error: " + error);
+    if (error.request) {
+      var s = mjsonrpc_decode_error(error);
+      console.log("mjsonrpc_error_alert: " + s);
+    } else {
+       console.log("mjsonroc_error_alert: " + error);
+    }
+
   });
 
 
