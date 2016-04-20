@@ -175,6 +175,15 @@ function reset_histogram(){
 }
 
 
+
+
+function setRootanaDirectory(webdir_end){
+   
+  var webdir = location.protocol + '//' + location.host + "/" + webdir_end + "/";
+  console.log("Setting to " +webdir);
+  rootana_dir = webdir;
+
+}
                              
 
   function updatePlots(deleteDygraph){
@@ -281,7 +290,7 @@ function changeUpdateTime() {
 
 </head>
 <!-- call to find_active_root_directory will take a moment to do the first read of ROOT tree; so wait 2sec before doing first call to plot -->
-<body onload="find_active_root_directory(false); midasStatus();updatePlots(false); setTimeout(updatePlots(false),1000);">
+<body onload="setRootanaDirectory('rootana');find_active_root_directory(false); midasStatus();updatePlots(false); setTimeout(updatePlots(false),1000);">
   <div class="container-fluid">
     
     <!--- Top banner --> 
