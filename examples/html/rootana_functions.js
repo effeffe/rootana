@@ -5,6 +5,7 @@
 function getUrl(url) {
   // Return a new promise.
   return new Promise(function(resolve, reject) {
+
     // Do the usual XHR stuff
     var req = new XMLHttpRequest();
     req.open('GET', url);
@@ -34,7 +35,8 @@ function getUrl(url) {
 }
 
 // This variable keeps track of the webdirectory that the rootana THttpServer is posting to
-rootana_dir = location.protocol + '//' + location.host + "/rootana/";
+rootana_dir = "";
+//location.protocol + '//' + location.host + "/rootana_dnf/";
 gFoundRootanaDir = false;
 // This is the ROOT directory where we are looking for histograms.  Form is either 'rootana' or 'Files/somenameXXX.root'
 active_directory = "";
@@ -44,18 +46,31 @@ histo_address = "";
 gHistogramList = {};
 
 // Global pointer to dygraph objects
-// Currently supports 16 dygraph objects
-gDygraphPointer = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+// Currently supports 4 dygraph objects
+gDygraphPointer = [0,0,0,0];
 
 // Find the correct histogram in current ROOT directory list
 function findHistogram(histogramName){
     
+
+	// Try stripping a directory part of histogram name...
+	histogramName2 = histogramName.split("/").pop();
+
   for(var j = 0; j < gHistogramList.length; j++){
     var object = gHistogramList[j];
     
     if(object["_name"] == histogramName){
       return object;      
     }
+		// Check the DirectoryFile sub-directories too... 
+    if(object["_kind"] == "ROOT.TDirectoryFile"){     
+				for(var k = 0; k < object["_childs"].length; k++){
+						var object2 = object["_childs"][k]; 
+						if(object2["_name"] == histogramName2 ){
+								return object2;
+						}
+				}
+		}                                                                                                                  
   }
 
   return false;
@@ -64,6 +79,7 @@ function findHistogram(histogramName){
 
 
 // Check the objects in a ROOT directory tree; return true if one of them is a TH1D
+// Also check for sub-directories in file 
 function check_for_histograms(subdir_tree){
 
   if(! '_child' in subdir_tree){
@@ -79,6 +95,19 @@ function check_for_histograms(subdir_tree){
       document.getElementById("readstatus").innerHTML = "Have child with histo" + object["_name"] ;
       return true;
     }
+
+		// Check the DirectoryFile sub-directories too...
+    if(object["_kind"] == "ROOT.TDirectoryFile"){    
+			for(var k = 0; k < object["_childs"].length; k++){                                                                             
+					var object2 = object["_childs"][k];
+					if(object2["_kind"] == "ROOT.TH1D"){ 
+							// Found a histogram object. 
+							document.getElementById("readstatus").innerHTML = "Have child with histo" + object2["_name"] ;
+							return true; 
+					}  
+
+			}
+		}
   }
 
 
@@ -94,7 +123,7 @@ function parseRootDirectory(response){
 
     }
     catch(err) {
-      document.getElementById("readstatus").innerHTML = err.message;
+      document.getElementById("readstatus").innerHTML = "err " + err.message;
       return;
     }
     
@@ -164,7 +193,7 @@ function find_active_root_directory(async = true){
 
   }).catch(function(error) { // Handle exception if we didn't find ROOT structure
 
-    document.getElementById("readstatus").innerHTML = "Couldn't get basic ROOT structure back; status = " + error + ". Is rootana httpserver running?";   
+    document.getElementById("readstatus").innerHTML = "ASYNC Couldn't get basic ROOT structure back; status = " + error + ". Is rootana httpserver running?";   
     document.getElementById("readstatus").style.color = 'red';
 
   });
@@ -285,14 +314,16 @@ function fillHistogranPlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,de
 }
 
 
-
-var promiseInflight = false;
+// Make a separate check for each graph, since we don't want to clobber a
+// request for a different div...
+var promiseInflight = [false,false,false,false];
 // This method will create a dygraph plot in the requested 
 // div for the requested histogram.
 function fillHistogramPlot(divName, histogramName, dygraphIndex, deleteDygraph){
   
-  // Ignore this request if a previous promise has not yet been returned...
-  if(promiseInflight){
+	// Ignore this request if a previous promise has not yet been returned...
+	if(promiseInflight[dygraphIndex]){
+			//console.log("ignore... in flight " + histogramName);
    return;
   } 
 
@@ -303,11 +334,11 @@ function fillHistogramPlot(divName, histogramName, dygraphIndex, deleteDygraph){
     return;
   }
 
-  promiseInflight = true;
+  promiseInflight[dygraphIndex] = true;
   // Wrap the request in promise.
   getUrl(histo_address + "/" + histogramName +"/root.json.gz?compact=3").then(function(response) {
 
-    promiseInflight = false;
+    promiseInflight[dygraphIndex] = false;
  
     var histoInfoJSON = JSON.parse(response);
     
@@ -315,9 +346,9 @@ function fillHistogramPlot(divName, histogramName, dygraphIndex, deleteDygraph){
     var histoObject = findHistogram(histogramName);
     if(histoObject == false){
       document.getElementById("readstatus").innerHTML = "Failed to find histogram with name " 
-        + histogramName + " in current ROOT directory";
+					+ histogramName + " in current ROOT directory" + gHistogramList;
       document.getElementById("readstatus").style.color = 'red';    
-      return;
+			return;
     }
         
     // Handle either TH1 or TH2... otherwise don't know how to plot it...
