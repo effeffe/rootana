@@ -367,7 +367,6 @@ function makeCSVArray(plotType,histoInfoJSON,histoObject,dataIndex = 0){
       }
     
       histoValues.push(arrayValues);
-      console.log("Handling index " + String(index));
 
     }
 
@@ -410,10 +409,8 @@ function plotAllHistograms(plotType,divNames, histogramNameList, deleteDygraph){
   var listDirectories = "";
   for(var index = 0; index < histogramNameList.length; index++){
     var name = active_directory + "/" + histogramNameList[index];
-    console.log("This " +  name);
     listDirectories += name + "/root.json\n";
   }    
-  console.log(listDirectories);
 
   // Make the promise XHR
   var url = rootana_dir + "multi.json?number="+String(histogramNameList.length);
