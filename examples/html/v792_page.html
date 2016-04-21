@@ -204,19 +204,15 @@ function setRootanaDirectory(webdir_end){
    }
 
 
-  var channel = Number(document.getElementById("channel_number").value);
-
-
+   var channel = Number(document.getElementById("channel_number").value);
    var scan_type = document.getElementById("HistoDisplay").value;
-   <!--document.getElementById("params").innerHTML = "You chose: " + scan_type; -->
 
    switch (scan_type) {
       case "Single":
-        fillHistogramPlot("graphdiv",gHistoName+channel,0,deleteDygraph);
+        plotAllHistograms("single",["graphdiv"],[gHistoName+channel],deleteDygraph);
         break;
      case "Overlay":
        var numberOverlay = Number(document.getElementById("overlay_number").value);
-
        var histograms = [];
        for(var ii = 0; ii < numberOverlay; ii++){
          var index = channel + ii;
@@ -224,16 +220,14 @@ function setRootanaDirectory(webdir_end){
            histograms.push(gHistoName+index);
          }
        }          
- 
-       fillMultipleHistogramPlot("graphdiv",histograms,0,deleteDygraph);
+       plotAllHistograms("overlay",["graphdiv"],histograms,deleteDygraph);
        break;
      case "Multiple":
-        fillHistogramPlot("graphdiv21",gHistoName+channel,0,deleteDygraph);
-        if(Number(channel) < 31){
-          fillHistogramPlot("graphdiv22",gHistoName+Number(channel+1),1,deleteDygraph);
-        }else{
-          fillHistogramPlot("graphdiv22",gHistoName+"0",1,deleteDygraph);
-        }
+        // create lists of histograms and divs.
+        var histograms = []; var divnames = [];
+        histograms.push(gHistoName+channel); divnames.push("graphdiv21")
+        histograms.push(gHistoName+Number(channel+1)); divnames.push("graphdiv22")
+        plotAllHistograms("multiple",divnames,histograms,deleteDygraph);
         break;
    }
 

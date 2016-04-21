@@ -2,13 +2,19 @@
 
 // Promisified XLMHttpRequest wrapper...
 // stolen from http://www.html5rocks.com/en/tutorials/es6/promises/
-function getUrl(url) {
+function getUrl(url, postData = false) {
   // Return a new promise.
   return new Promise(function(resolve, reject) {
 
     // Do the usual XHR stuff
     var req = new XMLHttpRequest();
-    req.open('GET', url);
+
+    if(postData != false){
+      req.open('POST', url);
+    }else{
+      req.open('GET', url);
+    }
+
 
     req.onload = function() {
       // This is called even on 404 etc
@@ -30,7 +36,11 @@ function getUrl(url) {
     };
 
     // Make the request
-    req.send();
+    if(postData != false){
+      req.send(postData);
+    }else{
+      req.send();
+    }
   });
 }
 
@@ -53,8 +63,8 @@ gDygraphPointer = [0,0,0,0];
 function findHistogram(histogramName){
     
 
-	// Try stripping a directory part of histogram name...
-	histogramName2 = histogramName.split("/").pop();
+  // Try stripping a directory part of histogram name...
+  histogramName2 = histogramName.split("/").pop();
 
   for(var j = 0; j < gHistogramList.length; j++){
     var object = gHistogramList[j];
@@ -62,15 +72,15 @@ function findHistogram(histogramName){
     if(object["_name"] == histogramName){
       return object;      
     }
-		// Check the DirectoryFile sub-directories too... 
+    // Check the DirectoryFile sub-directories too... 
     if(object["_kind"] == "ROOT.TDirectoryFile"){     
-				for(var k = 0; k < object["_childs"].length; k++){
-						var object2 = object["_childs"][k]; 
-						if(object2["_name"] == histogramName2 ){
-								return object2;
-						}
-				}
-		}                                                                                                                  
+      for(var k = 0; k < object["_childs"].length; k++){
+	var object2 = object["_childs"][k]; 
+	if(object2["_name"] == histogramName2 ){
+	  return object2;
+	}
+      }
+    }                                                                                                                  
   }
 
   return false;
@@ -96,21 +106,18 @@ function check_for_histograms(subdir_tree){
       return true;
     }
 
-		// Check the DirectoryFile sub-directories too...
+    // Check the DirectoryFile sub-directories too...
     if(object["_kind"] == "ROOT.TDirectoryFile"){    
-			for(var k = 0; k < object["_childs"].length; k++){                                                                             
-					var object2 = object["_childs"][k];
-					if(object2["_kind"] == "ROOT.TH1D"){ 
-							// Found a histogram object. 
-							document.getElementById("readstatus").innerHTML = "Have child with histo" + object2["_name"] ;
-							return true; 
-					}  
-
-			}
-		}
+      for(var k = 0; k < object["_childs"].length; k++){                                                                             
+	var object2 = object["_childs"][k];
+	if(object2["_kind"] == "ROOT.TH1D"){ 
+	  // Found a histogram object. 
+	  document.getElementById("readstatus").innerHTML = "Have child with histo" + object2["_name"] ;
+	  return true; 
+	}          
+      }
+    }
   }
-
-
     
 };
 
@@ -232,33 +239,9 @@ function rootanaResetAllHistograms(){
 }
 
 
-function fillHistogranPlot1D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph){
-
-  var title = histoObject["_title"];
-      
-  // Fill the CSV array to make the histogram.
-  // Need to recalculate the bin centers.
-  var bin_width = (histoInfoJSON["fXaxis"]["fXmax"] - histoInfoJSON["fXaxis"]["fXmin"]) / histoInfoJSON["fXaxis"]["fNbins"]
-    var csv_array = "ADC value, Number Entries\n";
-  for (i = 0; i < histoInfoJSON["fXaxis"]["fNbins"]; i++){
-    // remember, we skip the first bin of data, since it is the underflow bin...
-    var bin_center = (i*bin_width) + bin_width/2.0;
-    csv_array += bin_center + "," +   histoInfoJSON["fArray"][i+1] + "\n";    
-  }
-  //alert("DDDDoing this index " + divName + " " + dygraphIndex)
-  if(deleteDygraph || gDygraphPointer[dygraphIndex] == 0){
-    delete gDygraphPointer[dygraphIndex] ;
-    gDygraphPointer[dygraphIndex]  = new Dygraph(document.getElementById(divName),csv_array,{title: title, 'labelsSeparateLines' : true, 'legend' : 'always'});
-    //alert("Doing this index " + divName + " " + dygraphIndex)
-  }else{
-    gDygraphPointer[dygraphIndex].updateOptions( { file: csv_array} );
-  }
-
-}
-
 gPlotlyPointer = 0;
 
-function fillHistogranPlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph){
+function makePlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph){
   
   var title = histoObject["_title"];
       
@@ -314,115 +297,133 @@ function fillHistogranPlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,de
 }
 
 
-// Make a separate check for each graph, since we don't want to clobber a
-// request for a different div...
-var promiseInflight = [false,false,false,false];
-// This method will create a dygraph plot in the requested 
-// div for the requested histogram.
-function fillHistogramPlot(divName, histogramName, dygraphIndex, deleteDygraph){
-  
-	// Ignore this request if a previous promise has not yet been returned...
-	if(promiseInflight[dygraphIndex]){
-			//console.log("ignore... in flight " + histogramName);
-   return;
-  } 
+function makePlot1D(histoInfoJSONFirst,plotType,divName,csv_array,deleteDygraph,dygraphIndex){  
 
-  // Find the directory structure, if it is not yet found.
-  if(!gFoundRootanaDir){
-    find_active_root_directory();
-    // return this time, since the directory structure won't be defined in time for this execution (async request)
-    return;
+  var title = histoInfoJSONFirst["fName"];
+  if(plotType == "overlay"){
+    title = "Overlay Histograms";
+  }
+  
+  //  g = new Dygraph(document.getElementById(divName),csv_array_multi,{title: 'multiple histograms'});
+  if(deleteDygraph || gDygraphPointer[dygraphIndex] == 0){
+    delete gDygraphPointer[dygraphIndex] ;
+    gDygraphPointer[dygraphIndex]  = new Dygraph(document.getElementById(divName),csv_array,
+                                                 {title: title, 'labelsSeparateLines' : true, 'legend' : 'always', ylabel : histoInfoJSONFirst["fYaxis"]["fTitle"], xlabel : histoInfoJSONFirst["fXaxis"]["fTitle"]});
+  }else{
+    gDygraphPointer[dygraphIndex].updateOptions( { 'file': csv_array} );
+  }
+  document.getElementById("readstatus").innerHTML = "Rootana data correctly read";
+  document.getElementById("readstatus").style.color = 'black';
+
+}
+
+
+
+// This function handles making a CSV object for use in dygraph 1D plot...
+// The process for making the CSV is different for a single plot vs overlay plot.
+function makeCSVArray(plotType,histoInfoJSON,histoObject,dataIndex = 0){
+
+  if(plotType == "single" || plotType == "multiple"){
+      
+    // Fill the CSV array to make the histogram.
+
+    // Need to recalculate the bin centers.
+    var bin_width = (histoInfoJSON[dataIndex]["fXaxis"]["fXmax"] - histoInfoJSON[dataIndex]["fXaxis"]["fXmin"]) / histoInfoJSON[dataIndex]["fXaxis"]["fNbins"]
+    var csv_array = histoInfoJSON[dataIndex]["fXaxis"]["fTitle"] + ", " + histoInfoJSON[dataIndex]["fYaxis"]["fTitle"] + "\n";
+
+    for (i = 0; i < histoInfoJSON[dataIndex]["fXaxis"]["fNbins"]; i++){
+      // remember, we skip the first bin of data, since it is the underflow bin...
+      var bin_center = (i*bin_width) + bin_width/2.0;
+      csv_array += bin_center + "," +   histoInfoJSON[dataIndex]["fArray"][i+1] + "\n";    
+    }
+    return csv_array;
+    
+  }else{ // handle consolidating data in N-dimensional CSV array...
+
+    histoNames = [];
+    histoValues = [];
+    histoBinCenters = [];
+    histoXTitle = ""
+
+
+    // loop over all the results, consolidating them into CSV
+    var title = histoObject["_title"];
+    for(var index = 0; index < histoInfoJSON.length; index++){
+      histoNames.push(histoInfoJSON[index]["fTitle"]);
+      
+      // Need to recalculate the bin centers.
+      var bin_width = (histoInfoJSON[index]["fXaxis"]["fXmax"] - histoInfoJSON[index]["fXaxis"]["fXmin"]) / histoInfoJSON[index]["fXaxis"]["fNbins"];
+      
+      if(index == 0)
+        histoXTitle = histoInfoJSON[index]["fXaxis"]["fTitle"]
+      arrayValues = [];
+      for (i = 0; i < histoInfoJSON[index]["fXaxis"]["fNbins"]; i++){
+        // remember, we skip the first bin of data, since it is the underflow bin...
+        var bin_center = (i*bin_width) + bin_width/2.0;
+
+        // same the bin centers using first histogram
+        if(index == 0){ histoBinCenters.push(bin_center);}      
+        arrayValues.push(histoInfoJSON[index]["fArray"][i+1]);
+      }
+    
+      histoValues.push(arrayValues);
+      console.log("Handling index " + String(index));
+
+    }
+
+    // Create the CVS array for the combined information.
+    var csv_array_multi = histoXTitle;
+    for(var ii = 0; ii < histoNames.length; ii++){
+      csv_array_multi += ", " + histoNames[ii];
+    }
+    csv_array_multi += "\n";
+    for(var ii = 0; ii < histoValues[0].length; ii++){
+      csv_array_multi += histoBinCenters[ii];
+      for(var jj = 0; jj < histoValues.length; jj++){
+        csv_array_multi += ", " + histoValues[jj][ii];
+      }
+      csv_array_multi += "\n";    
+    }
+
+    return csv_array_multi;
+    
   }
 
-  promiseInflight[dygraphIndex] = true;
-  // Wrap the request in promise.
-  getUrl(histo_address + "/" + histogramName +"/root.json.gz?compact=3").then(function(response) {
+}
 
-    promiseInflight[dygraphIndex] = false;
- 
+var promiseAlreadyInFligth = false;
+
+// This method will create a plot in the requested 
+// divs using the requested histograms.
+// We use a multi.json to get the data for all the histograms we want to plot;
+// we wrap this in a promise to provide async response.
+// Then handle the data we get back differently for single histogram vs overlay vs multiple,
+// as well as handling 1D vs 2D...
+function plotAllHistograms(plotType,divNames, histogramNameList, deleteDygraph){
+
+  // Don't make another request if last request isn't finished.
+  if(promiseAlreadyInFligth) return;
+  promiseAlreadyInFligth = true;
+
+  
+  // Wrap the request in promise; will combine multiple items (if there are more than 1) into single XHR request
+  var listDirectories = "";
+  for(var index = 0; index < histogramNameList.length; index++){
+    var name = active_directory + "/" + histogramNameList[index];
+    console.log("This " +  name);
+    listDirectories += name + "/root.json\n";
+  }    
+  console.log(listDirectories);
+
+  // Make the promise XHR
+  var url = rootana_dir + "multi.json?number="+String(histogramNameList.length);
+  getUrl(url, listDirectories).then(function(response) {
+
+    promiseAlreadyInFligth = false;
+
     var histoInfoJSON = JSON.parse(response);
     
     // Check that we can find this histogram in current directory list
-    var histoObject = findHistogram(histogramName);
-    if(histoObject == false){
-      document.getElementById("readstatus").innerHTML = "Failed to find histogram with name " 
-					+ histogramName + " in current ROOT directory" + gHistogramList;
-      document.getElementById("readstatus").style.color = 'red';    
-			return;
-    }
-        
-    // Handle either TH1 or TH2... otherwise don't know how to plot it...
-    if(histoObject["_kind"].search("ROOT.TH1") != -1){
-      fillHistogranPlot1D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph);
-    }else if(histoObject["_kind"].search("ROOT.TH2") != -1){
-      fillHistogranPlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph);
-    }else{
-      document.getElementById("readstatus").innerHTML = "Overlaid histogram with name " 
-        + histogramName + " is not TH1... don't know how to handle.";
-      document.getElementById("readstatus").style.color = 'red';      
-      return;
-    }
-
-    document.getElementById("readstatus").innerHTML = "Rootana data correctly read";
-    document.getElementById("readstatus").style.color = 'black';
-    
-  }).catch(function(error) { // Handle exception if we didn't find the histogram...
-    
-    document.getElementById("readstatus").innerHTML = "Couldn't get histogram data; status = " + error + ". Did rootana httpserver die?";
-    document.getElementById("readstatus").style.color = 'red';    
-    console.error('Augh, there was an error!', error);
-    // If we couldn't find histogram, try forcing re-find of rootana directory
-    gFoundRootanaDir = false;
-  });
-      
-}
-
-// This method will create a dygraph plot in the requested 
-// div for each of the requested histogram in list.
-// use chained promises.
-function fillMultipleHistogramPlot(divName, histogramNameList, dygraphIndex, deleteDygraph){
-
-  // arrays for storing the bin contents
-  histoNames = [];
-  histoValues = [];
-  histoBinCenters = [];
-  histoXTitle = ""
-
-  for(var index = 0; index < histogramNameList.length; index++){
-    histogramName = histogramNameList[index];
-
-    // Send the request for data for this plot
-    // Find the directory structure, if it is not yet found.
-    if(!gFoundRootanaDir){
-      find_active_root_directory();
-    }
-    
-    
-    // Send the request for data for this plot
-    var histoInfoJSON;  
-    var request = new XMLHttpRequest();
-    request.open('GET', histo_address + "/" + histogramName +"/root.json.gz?compact=3", false);
-    request.send(null);
-    if(request.status != 200){ 
-      
-      // try re-reading the directory tree... see if that allows us to find the histogram...
-      find_active_root_directory();
-      var request2 = new XMLHttpRequest();
-      request2.open('GET', histo_address + "/" + histogramName +"/root.json.gz?compact=3", false);
-      request2.send(null);
-      if(request2.status != 200){ 
-        document.getElementById("readstatus").innerHTML = "Couldn't get histogram data; status = " + request.status + ". Did rootana httpserver die?";
-        document.getElementById("readstatus").style.color = 'red';
-        return;
-      }
-      
-      histoInfoJSON = JSON.parse(request2.responseText);
-    }
-    
-    histoInfoJSON = JSON.parse(request.responseText);
-    
-    // Check that we can find this histogram in current directory list
-    var histoObject = findHistogram(histogramName);
     if(histoObject == false){
       document.getElementById("readstatus").innerHTML = "Failed to find histogram with name " 
         + histogramName + " in current ROOT directory";
@@ -431,80 +432,41 @@ function fillMultipleHistogramPlot(divName, histogramNameList, dygraphIndex, del
       return;
     }
 
-    // Check that this is a TH2... otherwise don't know how to plot it...
-    if(histoObject["_kind"].search("ROOT.TH2") != -1){
-      document.getElementById("readstatus").innerHTML = "Can't meaningfully overlay 2D histogram. Not plotting. ";
-      document.getElementById("readstatus").style.color = 'orange';      
-      // delete old plot first
-      if(deleteDygraph || gDygraphPointer[dygraphIndex] == 0){
-        //delete gDygraphPointer[dygraphIndex];
-        gDygraphPointer[dygraphIndex].destroy();
+    // Loop over the divs
+    for(var index = 0; index < divNames.length; index++){
+            
+      var histoObject = findHistogram(histoInfoJSON[0]["fName"]);
+      
+      // handle 1D vs 2D histograms differently; check first histogram for type
+      if(histoObject["_kind"].search("ROOT.TH2") != -1){
+        
+        // Make the plot-ly 2D plot
+        makePlot2D(divNames[index], histoObject,histoInfoJSON[index], index,deleteDygraph);
+        
+      }else if(histoObject["_kind"].search("ROOT.TH1") != -1){
+        
+        // Create the CSV array; this happens differently for single/multiple vs overlay histograms.
+        var csv_array = makeCSVArray(plotType,histoInfoJSON,histoObject,index);
+        // Make the dygraph 1D plot
+        makePlot1D(histoInfoJSON[index],plotType,divNames[index],csv_array,deleteDygraph,index)
+        
+      }else{
+        
+        document.getElementById("readstatus").innerHTML = "Histogram with name " 
+          + histoInfoJSON[0]["fName"] + " is not TH1 or TH2... don't know how to handle.";
+        document.getElementById("readstatus").style.color = 'red';
         
       }
-      return;
-    }    
-    // Check that this is a TH1... otherwise don't know how to plot it...
-    if(histoObject["_kind"].search("ROOT.TH1") == -1){
-      document.getElementById("readstatus").innerHTML = "Histogram with name " 
-        + histogramName + " is not TH1... don't know how to handle.";
-      document.getElementById("readstatus").style.color = 'red';
-      
-      return;
+               
     }
-    var title = histoObject["_title"];
 
     
-    // Fill the CSV array to make the histogram.
-    // Need to recalculate the bin centers.
-    var bin_width = (histoInfoJSON["fXaxis"]["fXmax"] - histoInfoJSON["fXaxis"]["fXmin"]) / histoInfoJSON["fXaxis"]["fNbins"];
-    var csv_array = "ADC value, Number Entries\n";
-    histoNames.push(title);
+  }).catch(function(error) { // Handle exception if we didn't find the histogram...
     
-    if(index == 0)
-      histoXTitle = histoInfoJSON["fXaxis"]["fTitle"]
-    arrayValues = [];
-    for (i = 0; i < histoInfoJSON["fXaxis"]["fNbins"]; i++){
-      // remember, we skip the first bin of data, since it is the underflow bin...
-      var bin_center = (i*bin_width) + bin_width/2.0;
-      
-      if(index == 0){
-        histoBinCenters.push(bin_center);
-      }
-      
-      arrayValues.push(histoInfoJSON["fArray"][i+1]);
-
-      csv_array += bin_center + "," +   histoInfoJSON["fArray"][i+1] + "\n";    
-    }
-    histoValues.push(arrayValues);
-
-  }
-
-  // Create the CVS array for the combined information.
-  var csv_array_multi = histoXTitle;
-  for(var ii = 0; ii < histoNames.length; ii++){
-    csv_array_multi += ", " + histoNames[ii];
-  }
-  csv_array_multi += "\n";
-  for(var ii = 0; ii < histoValues[0].length; ii++){
-  //for(var ii = 0; ii < 5; ii++){
-    csv_array_multi += histoBinCenters[ii];
-    for(var jj = 0; jj < histoValues.length; jj++){
-      csv_array_multi += ", " + histoValues[jj][ii];
-    }
-    csv_array_multi += "\n";    
-  }
-
-  
-  //  g = new Dygraph(document.getElementById(divName),csv_array_multi,{title: 'multiple histograms'});
-  if(deleteDygraph || gDygraphPointer[dygraphIndex] == 0){
-    delete gDygraphPointer[dygraphIndex] ;
-    gDygraphPointer[dygraphIndex]  = new Dygraph(document.getElementById(divName),csv_array_multi,
-                                                 {title: 'multiple histograms', 'labelsSeparateLines' : true, 'legend' : 'always' });
-  }else{
-    gDygraphPointer[dygraphIndex].updateOptions( { 'file': csv_array_multi} );
-  }
-  document.getElementById("readstatus").innerHTML = "Rootana data correctly read";
-  document.getElementById("readstatus").style.color = 'black';
+    document.getElementById("readstatus").innerHTML = "Couldn't get histogram data; status = " + error + ". Did rootana httpserver die?";
+    document.getElementById("readstatus").style.color = 'red';    
+    // If we couldn't find histogram, try forcing re-find of rootana directory
+    gFoundRootanaDir = false;
+  });
 
 }
-
