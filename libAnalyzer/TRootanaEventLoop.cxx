@@ -97,8 +97,9 @@ TRootanaEventLoop::TRootanaEventLoop (){
   fBufferName = std::string("SYSTEM");
   fOnlineName = std::string("rootana");
 
+#ifdef HAVE_THTTP_SERVER
   fRoot_http_serv = 0;
-
+#endif
   fDataContainer = new TDataContainer();
 
   /// Create the TApplication
@@ -203,7 +204,9 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
   bool forceEnableGraphics = false;
   bool testMode = false;
   int  tcpPort = 0;
+#ifdef HAVE_THTTP_SERVER
   int  rhttpdPort = 0; // ROOT THttpServer port
+#endif
   const char* hostname = NULL;
   const char* exptname = NULL;
   
