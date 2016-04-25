@@ -411,13 +411,12 @@ function plotAllHistograms(plotType,divNames, histogramNameList, deleteDygraph){
     var name = active_directory + "/" + histogramNameList[index];
     listDirectories += name + "/root.json\n";
   }    
-
+  console.log(listDirectories);
   // Make the promise XHR
   var url = rootana_dir + "multi.json?number="+String(histogramNameList.length);
   getUrl(url, listDirectories).then(function(response) {
 
     promiseAlreadyInFligth = false;
-
     var histoInfoJSON = JSON.parse(response);
     
     // Check that we can find this histogram in current directory list

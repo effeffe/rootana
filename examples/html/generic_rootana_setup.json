@@ -1,0 +1,19 @@
+{ 
+  "V792" : { 
+    "MaxChannels" : 32,
+    "WebserverName" : "V792_0"
+  },  
+  "V1720" : { 
+    "MaxChannels" : 8,
+    "WebserverName" : "V1720"
+  },
+    "V1720 Correlations" : { 
+    "MaxChannels" : 8,
+    "WebserverName" : "V1720_Correlations"
+  },  
+  "PMTDarkRates" : { 
+    "MaxChannels" : 1,
+    "MaxModules" : 1,
+    "WebserverName" : "PMT/fDarkNoiseRate"
+  }
+} 
