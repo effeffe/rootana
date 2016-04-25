@@ -2,6 +2,7 @@
 #include "TPad.h"
 #include "TSystem.h"
 #include <stdlib.h>
+#include "math.h"
 
 ClassImp(TRootanaDisplay)
 
