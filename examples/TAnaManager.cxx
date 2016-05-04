@@ -1,5 +1,5 @@
 #include "TAnaManager.hxx"
-
+#include "TV1720RawData.h"
 
 
 TAnaManager::TAnaManager(){
@@ -30,8 +30,16 @@ TAnaManager::TAnaManager(){
 
 	fV1720Waveform = 0;
 #ifdef USE_V1720
+
 	fV1720Waveform = new TV1720Waveform();
 	fV1720Waveform->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
+
+        fV1720PHCompare = new TH2F("V1720PHCompare","Pulse Height: Channel 1 vs 0",100,300,700,100,300,700);
+        fV1720PHCompare->SetXTitle("Channel 0");
+        fV1720PHCompare->SetYTitle("Channel 1");
+        fV1720TimeCompare = new TH2F("V1720TimeCompare","Time: Channel 1 vs 0",100,0,2000,100,0,2000);
+        fV1720TimeCompare->SetXTitle("Channel 0");
+        fV1720TimeCompare->SetYTitle("Channel 1");
 #endif
 
 	fV1720Correlations = 0;
@@ -73,9 +81,42 @@ int TAnaManager::ProcessMidasEvent(TDataContainer& dataContainer){
 	if(fV1720Correlations)  fV1720Correlations->UpdateHistograms(dataContainer); 
   	if(fV1730DppWaveform)  fV1730DppWaveform->UpdateHistograms(dataContainer); 
 	if(fV1730RawWaveform)  fV1730RawWaveform->UpdateHistograms(dataContainer);
-	
+
+        
 	if(fDT724Waveform)  fDT724Waveform->UpdateHistograms(dataContainer); 
-	return 1;
+
+        // Do little analysis of the V1720 data, as example...
+        if(fV1720Waveform){
+          
+          TV1720RawData *v1720 = dataContainer.GetEventData<TV1720RawData>("W200");
+
+          if(v1720 && !v1720->IsZLECompressed()){      
+
+            double time[2],ph[2];
+            
+            for(int i = 0; i < 2; i++){ // loop first two channels
+              
+              TV1720RawChannel channelData = v1720->GetChannelData(i);
+              if(channelData.GetNSamples() <= 0) continue;
+              
+              double max_adc_value = -1.0;
+              double max_adc_time = -1;
+              for(int j = 0; j < channelData.GetNSamples(); j++){
+                double adc = channelData.GetADCSample(j);
+                if(adc > max_adc_value){
+                  max_adc_value = adc;
+                  max_adc_time = j * 4.0; // 4ns per bin
+                }
+              }
+              time[i] = max_adc_time;
+              ph[i] = max_adc_value;
+              //std::cout << i << " "  << max_adc_time << " " << max_adc_value << std::endl;
+            }
+            fV1720PHCompare->Fill(ph[0],ph[1]);
+            fV1720TimeCompare->Fill(time[0],time[1]);
+          }
+        }
+        return 1;
 }
 
 

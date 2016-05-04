@@ -70,7 +70,9 @@ private:
 	TV1730RawWaveform *fV1730RawWaveform;
 	TDT724Waveform *fDT724Waveform;
 
-
+  // Make some cross-channel histograms
+  TH2F *fV1720PHCompare;
+  TH2F *fV1720TimeCompare;
 };
 
 
