@@ -91,9 +91,11 @@ function midasStatus(){
 
 <!-- This function sets the directory at which to find the ROOT HTTP server, in form <myhost>/webdir_end/ -->
 function setRootanaDirectory(webdir_end){
-  var webdir = location.protocol + '//' + location.host + "/" + webdir_end + "/";
-  console.log("Setting to " +webdir);
-  rootana_dir = webdir;
+   var webdir = location.protocol + '//' + location.host + "/" + webdir_end + "/";
+   console.log("Setting to " +webdir);
+   rootana_dir = webdir;
+   document.getElementById('rootanaLink').href = webdir;
+   document.getElementById('midasLink').href = location.protocol + '//' + location.host + "/";
 }
 
 
@@ -427,8 +429,8 @@ function changeUpdateTime() {
           </ul>
           
           <br> <b>Links</b><br>
-          <a href="https://deapdaqgw.snolab.ca">MIDAS Status Page</a> <br>
-          <a id="rootanaLink" href="https://deapdaqgw.snolab.ca/rootana/">Root Online Browser</a> <br>
+          <a id="midasLink"  href="https://localhost">MIDAS Status Page</a> <br>
+          <a id="rootanaLink" href="https://localhost/rootana/">Root Online Browser</a> <br>
           
 
           <br><br>
