@@ -11,9 +11,13 @@
     "MaxChannels" : 8,
     "WebserverName" : "V1720_Correlations"
   },  
-  "PMTDarkRates" : { 
+  "V1720 Comparison" : { 
     "MaxChannels" : 1,
-    "MaxModules" : 1,
-    "WebserverName" : "PMT/fDarkNoiseRate"
+    "WebserverName" : {"Pulse Height Comparison" : "V1720PHCompare",
+                       "Time Comparison" : "V1720TimeCompare"}
+  },
+  "V1720 Pulse Height Comparison" : { 
+    "MaxChannels" : 1,
+    "WebserverName" : "V1720PHCompare"
   }
 } 

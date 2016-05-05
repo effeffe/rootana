@@ -56,7 +56,6 @@ function pause_resume(){
 
 }
 
-<!-- Need to update to new MIDAS, then can use promisify request
 gRunOngoing = false;
 var gStatusInflight = false;
 function midasStatus(){
@@ -88,24 +87,7 @@ function midasStatus(){
     }
   });
 }
--->
-gRunOngoing = false;                                                            
-function midasStatus(){   
-  // Make an array of the other ODB variable that we want
-  var req = new Array();   
-  req[0]=  "/Runinfo/State"; 
-  req[1]=  "/Runinfo/Run number";   
-  var result = ODBMGet(req);        
-  // Update the status tab          
-  document.getElementById("current_run").innerHTML = "Current run is " + result[1]                                                        
-  if(result[0] == 3){      
-    document.getElementById("daq_running").innerHTML = "DAQ is running"         
-    gRunOngoing = true;    
-  }else{                   
-    document.getElementById("daq_running").innerHTML = "DAQ run is stopped"     
-    gRunOngoing = false;   
-  }                        
-}  
+
 
 <!-- This function sets the directory at which to find the ROOT HTTP server, in form <myhost>/webdir_end/ -->
 function setRootanaDirectory(webdir_end){
@@ -132,26 +114,38 @@ function configureDisplay(histogramsSetupInfo, histogramID){
   currentHistogramInfo = histogramsSetupInfo[histogramID];
 
 
-  <!-- set channel button -->
+  <!-- set channel button; if channel <= 1, then handle individual histograms -->
   if(currentHistogramInfo["MaxChannels"] <= 1){
     document.getElementById("ChannelSelectionDiv").style.display = "none";
-    document.getElementById("DisplaySelectionDiv").style.display = "none"; 
-console.log("disanling channel");
-                                            }else{
+    document.getElementById("DisplaySelectionDiv").style.display = "none";
+     // Treat it differently if it is a single histogram or a list of 
+     if( typeof currentHistogramInfo["WebserverName"] == 'string'){
+        document.getElementById("listedHistoDisplayDiv").style.display = "none";
+     }else{
+        document.getElementById("listedHistoDisplayDiv").style.display = "block";
+        $("#listedHistoMenu").empty();
+        for (var key in currentHistogramInfo["WebserverName"]){
+           var option = document.createElement("option");
+           option.text = key;
+           document.getElementById("listedHistoMenu").add(option); 
+        }
+     }
+  }else{
     document.getElementById("DisplaySelectionDiv").style.display = "block"; 
     document.getElementById("ChannelSelectionDiv").style.display = "block"; 
     document.getElementById("channel_number").max = currentHistogramInfo["MaxChannels"] -1;
+    document.getElementById("listedHistoDisplayDiv").style.display = "none";
     document.getElementById("channel_number").value = 0;  
-  }
-
-  <!-- set module button -->
-  if(!("MaxModules" in currentHistogramInfo) || ( currentHistogramInfo["MaxModules"] <= 1 ) ){
-		document.getElementById("ModuleSelectionDiv").style.display = "none"; 
-      console.log("disabling module");
-    }else{
-		document.getElementById("ModuleSelectionDiv").style.display = "block"; 
-    document.getElementById("module_number").max = currentHistogramInfo["MaxModules"] -1;
-    document.getElementById("module_number").value = 0;  
+  
+     <!-- set module button -->
+     if(!("MaxModules" in currentHistogramInfo) || ( currentHistogramInfo["MaxModules"] <= 1 ) ){
+        document.getElementById("ModuleSelectionDiv").style.display = "none"; 
+        console.log("disabling module");
+     }else{
+        document.getElementById("ModuleSelectionDiv").style.display = "block"; 
+        document.getElementById("module_number").max = currentHistogramInfo["MaxModules"] -1;
+        document.getElementById("module_number").value = 0;  
+     }
   }
 
   invalidSetup = false;
@@ -161,73 +155,66 @@ console.log("disanling channel");
 
 <!-- main method to setup which histograms to display, using JSON formatted data -->
 function selectHistogramsFromJSON(){
-
-  <!-- get the data used to do setup -->
-  var request = new XMLHttpRequest();
-  request.open('GET', "generic_rootana_setup.json", false);
-  request.send(null);
-
- if(request.status != 200){ 
-    document.getElementById("readstatus").innerHTML = "Couldn't get data describing set of histograms";
-    document.getElementById("readstatus").style.color = 'red'; 
-    console.log("Couldn't get data describing set of histograms ");
-    return;                                                  
-  }    
-
-  histogramsSetupInfo = JSON.parse(request.responseText);
-  console.log("return: " + request.responseText);
-
-  <!-- create button for each element in json -->
-  <!--   for(var index = 0; index < histogramNameList.length; index++){ -->
-
-
-  var buttonString = "";
-  var first = true;
-  for (var key in histogramsSetupInfo){
-    console.log("key " + key);
-    buttonString += "<button class='displayControlEl select_buttons";
-    if(first){
-      buttonString += " selected";
-       first = false;
-                               }
-    buttonString += "' id='"+key+"' > "+key+" </button>";
-  }
-
-  document.getElementById("displayControlButtons").innerHTML = buttonString;
-                             //document.getElementById("displayControlButtons").innerHTML =  "<button class='displayControlEl select_buttons selected' id='v792' > V792 </button> <button class='displayControlEl select_buttons' id='v1720Waveforms' > V1720 </button> <button class='displayControlEl select_buttons' id='v1720WaveformsCorrelations' > V1720 Correlations </button>";
-
-  console.log(buttonString);
-  console.log($(":button.displayControlEl.select_buttons.selected").attr('id'));
-  configureDisplay(histogramsSetupInfo,$(":button.displayControlEl.select_buttons.selected").attr('id')); 
+   
+   <!-- get the data used to do setup -->
+   var request = new XMLHttpRequest();
+   request.open('GET', "generic_rootana_setup.json", false);
+   request.send(null);
+   
+   if(request.status != 200){ 
+      document.getElementById("readstatus").innerHTML = "Couldn't get data describing set of histograms";
+      document.getElementById("readstatus").style.color = 'red'; 
+      console.log("Couldn't get data describing set of histograms ");
+      return;                                                  
+   }    
+   
+   histogramsSetupInfo = JSON.parse(request.responseText);
+   console.log("return: " + request.responseText);
+   
+   <!-- create button for each element in json -->
+   var buttonString = "";
+   var first = true;
+   for (var key in histogramsSetupInfo){
+      console.log("key " + key);
+      buttonString += "<button class='displayControlEl select_buttons";
+      if(first){
+         buttonString += " selected";
+         first = false;
+      }
+      buttonString += "' id='"+key+"' > "+key+" </button>";
+   }
+   
+   document.getElementById("displayControlButtons").innerHTML = buttonString;
+   configureDisplay(histogramsSetupInfo,$(":button.displayControlEl.select_buttons.selected").attr('id')); 
 
 
-  <!-- set up what happens for display button clicks -->
-  $(":button.displayControlEl,select_buttons").click(function(){
-    $(":button.displayControlEl.select_buttons.selected").removeClass("selected");
-    $(this).addClass("selected");
-	  
-	  <!-- find the configuration for this button -->
-	  configureDisplay(histogramsSetupInfo,this.id);
-
-    ShowParams();
-    updatePlots(true);
-  });
-
-
-          
-  <!-- set up what happens for DTM source button clicks -->
-  $(":button.triggerControlEl,select_buttons").click(function(){
-    $(":button.triggerControlEl.select_buttons.selected").removeClass("selected");
-    $(this).addClass("selected");
-	  
-	  <!-- find the configuration for this button -->
-		setRootanaDirectory(this.id);
-
-    ShowParams();
-    updatePlots(true);
-  });
-
-
+   <!-- set up what happens for display button clicks -->
+   $(":button.displayControlEl,select_buttons").click(function(){
+      $(":button.displayControlEl.select_buttons.selected").removeClass("selected");
+      $(this).addClass("selected");
+      
+      <!-- find the configuration for this button -->
+      configureDisplay(histogramsSetupInfo,this.id);
+      
+      ShowParams();
+      updatePlots(true);
+   });
+   
+   
+   
+   <!-- set up what happens for DTM source button clicks -->
+   $(":button.triggerControlEl,select_buttons").click(function(){
+      $(":button.triggerControlEl.select_buttons.selected").removeClass("selected");
+      $(this).addClass("selected");
+      
+      <!-- find the configuration for this button -->
+      setRootanaDirectory(this.id);
+      
+      ShowParams();
+      updatePlots(true);
+   });
+   
+   
 }
 
 
@@ -267,11 +254,19 @@ function getNumericString(channel){
 
    <!-- Check for single histogram; if so, just plot -->
    if(currentHistogramInfo["MaxChannels"] == 1){
-    fillHistogramPlot("graphdiv",currentHistogramInfo["WebserverName"],0,deleteDygraph);
-    document.getElementById("datetime").innerHTML = Date();
-    return;
+
+     if(typeof currentHistogramInfo["WebserverName"] == 'string'){   
+       plotAllHistograms("single",["graphdiv"],[currentHistogramInfo["WebserverName"]],deleteDygraph);
+     }else{
+        // find the histogram name using drop-down menu
+        var menukey = document.getElementById("listedHistoMenu").value;
+        plotAllHistograms("single",["graphdiv"],[currentHistogramInfo["WebserverName"][menukey]],deleteDygraph);
+     }
+     document.getElementById("datetime").innerHTML = Date();
+     return;
    }
 
+   <!-- handle multiple channel histograms --> 
    var channel = Number(document.getElementById("channel_number").value);
    var scan_type = document.getElementById("HistoDisplay").value;
 
@@ -371,12 +366,6 @@ function changeUpdateTime() {
       </div>      
       Plots: 
       <div id="displayControlButtons"></div>
-<!--      <button class="displayControlEl select_buttons selected" id="v792" > 
-        V792 </button>
-      <button class="displayControlEl select_buttons" id="v1720Waveforms" > 
-        V1720 </button>
-      <button class="displayControlEl select_buttons" id="v1720WaveformsCorrelations" > 
-        V1720 Correlations </button> -->
       <p>Read back status: <span id="readstatus"></span> 
       <p>
       
@@ -411,7 +400,8 @@ function changeUpdateTime() {
             <option value="Single">Single</option>
             <option value="Overlay">Overlay </option>
             <option value="Multiple">Multiple </option>
-        </select><p>
+          </select><p>
+          
           <div id="OverlayParams" style="display:none"> 
             Overlay N histos (2-8):
             <input  class="displayControlEl" type="number" id="overlay_number" min="2" max="8" value="2" onchange="updatePlots(true);"><p>
@@ -419,9 +409,16 @@ function changeUpdateTime() {
           </div>
           <div id="MultipleParams" style="display:none"> 
           </div>
+          </div>
 
-          </div>
-          </div>
+          <div id="listedHistoDisplayDiv">
+            Histogram List: <select  id="listedHistoMenu" onchange="updatePlots(true);">
+              
+            </select><p>
+              </div>
+
+        </div>
+        
           
           <br> <b>MIDAS Status</b><br>
           <ul>
