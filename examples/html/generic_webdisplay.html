@@ -56,7 +56,7 @@ function pause_resume(){
 
 }
 
-gRunOngoing = false;
+gRunOngoing = true;
 var gStatusInflight = false;
 function midasStatus(){
 
@@ -183,7 +183,7 @@ function selectHistogramsFromJSON(){
          buttonString += " selected";
          first = false;
       }
-      buttonString += "' id='"+key+"' > "+key+" </button>";
+      buttonString += "' id='"+key+"' > "+key+" </button>\n";
    }
    
    document.getElementById("displayControlButtons").innerHTML = buttonString;

@@ -158,6 +158,7 @@ function parseRootDirectory(response){
             active_directory = "Files/" + fileDir["_name"];
             histo_address = rootana_dir  + active_directory;
             document.getElementById("readstatus").innerHTML = "Getting list of available histograms...";
+            document.getElementById("readstatus").style.color = 'black';    
             // Get the full list of histograms, so we can check them later
             gHistogramList = fileDir["_childs"];
             gFoundRootanaDir = true;
@@ -404,6 +405,10 @@ function plotAllHistograms(plotType,divNames, histogramNameList, deleteDygraph){
   if(promiseAlreadyInFligth) return;
   promiseAlreadyInFligth = true;
 
+  // Find the directory structure, if it is not yet found.
+  if(!gFoundRootanaDir){
+    find_active_root_directory();
+  }
   
   // Wrap the request in promise; will combine multiple items (if there are more than 1) into single XHR request
   var listDirectories = "";
@@ -411,7 +416,7 @@ function plotAllHistograms(plotType,divNames, histogramNameList, deleteDygraph){
     var name = active_directory + "/" + histogramNameList[index];
     listDirectories += name + "/root.json\n";
   }    
-  console.log(listDirectories);
+
   // Make the promise XHR
   var url = rootana_dir + "multi.json?number="+String(histogramNameList.length);
   getUrl(url, listDirectories).then(function(response) {
@@ -463,6 +468,7 @@ function plotAllHistograms(plotType,divNames, histogramNameList, deleteDygraph){
     document.getElementById("readstatus").style.color = 'red';    
     // If we couldn't find histogram, try forcing re-find of rootana directory
     gFoundRootanaDir = false;
+    find_active_root_directory();
   });
 
 }
