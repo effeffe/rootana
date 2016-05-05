@@ -142,7 +142,6 @@ function configureDisplay(histogramsSetupInfo, histogramID){
      <!-- set module button -->
      if(!("MaxModules" in currentHistogramInfo) || ( currentHistogramInfo["MaxModules"] <= 1 ) ){
         document.getElementById("ModuleSelectionDiv").style.display = "none"; 
-        console.log("disabling module");
      }else{
         document.getElementById("ModuleSelectionDiv").style.display = "block"; 
         document.getElementById("module_number").max = currentHistogramInfo["MaxModules"] -1;
@@ -171,13 +170,13 @@ function selectHistogramsFromJSON(){
    }    
    
    histogramsSetupInfo = JSON.parse(request.responseText);
-   console.log("return: " + request.responseText);
+   //console.log("return: " + request.responseText);
    
    <!-- create button for each element in json -->
    var buttonString = "";
    var first = true;
    for (var key in histogramsSetupInfo){
-      console.log("key " + key);
+      //console.log("key " + key);
       buttonString += "<button class='displayControlEl select_buttons";
       if(first){
          buttonString += " selected";

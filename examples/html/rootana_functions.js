@@ -102,7 +102,6 @@ function check_for_histograms(subdir_tree){
     var object = subdir_tree["_childs"][j];
     if(object["_kind"] == "ROOT.TH1D"){
       // Found a histogram object.
-      document.getElementById("readstatus").innerHTML = "Have child with histo" + object["_name"] ;
       return true;
     }
 
@@ -112,7 +111,6 @@ function check_for_histograms(subdir_tree){
 	var object2 = object["_childs"][k];
 	if(object2["_kind"] == "ROOT.TH1D"){ 
 	  // Found a histogram object. 
-	  document.getElementById("readstatus").innerHTML = "Have child with histo" + object2["_name"] ;
 	  return true; 
 	}          
       }
@@ -157,8 +155,8 @@ function parseRootDirectory(response){
           if(foundHistograms){
             active_directory = "Files/" + fileDir["_name"];
             histo_address = rootana_dir  + active_directory;
-            document.getElementById("readstatus").innerHTML = "Getting list of available histograms...";
-            document.getElementById("readstatus").style.color = 'black';    
+            //document.getElementById("readstatus").innerHTML = "Getting list of available histograms...";
+            //document.getElementById("readstatus").style.color = 'black';    
             // Get the full list of histograms, so we can check them later
             gHistogramList = fileDir["_childs"];
             gFoundRootanaDir = true;
@@ -464,7 +462,7 @@ function plotAllHistograms(plotType,divNames, histogramNameList, deleteDygraph){
     
   }).catch(function(error) { // Handle exception if we didn't find the histogram...
     
-    document.getElementById("readstatus").innerHTML = "Couldn't get histogram data; status = " + error + ". Did rootana httpserver die?";
+    document.getElementById("readstatus").innerHTML = "Couldn't get histogram data; request = "+ listDirectories + "; error = " + error + ". Did rootana httpserver die?";
     document.getElementById("readstatus").style.color = 'red';    
     // If we couldn't find histogram, try forcing re-find of rootana directory
     gFoundRootanaDir = false;
