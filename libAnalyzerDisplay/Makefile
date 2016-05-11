@@ -14,6 +14,8 @@ ROOTGLIBS = -L$(ROOTLIBDIR) $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLPar
 HAVE_RHTTP = $(shell $(ROOTSYS)/bin/root-config --has-http)
 ifeq ($(HAVE_RHTTP),yes)
 ROOTGLIBS += -lRHTTP
+CXXFLAGS += -DHAVE_THTTP_SERVER
+CXXFLAGS_BASE += -DHAVE_THTTP_SERVER
 endif
 CXXFLAGS += -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
 endif
