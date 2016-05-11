@@ -73,6 +73,13 @@ public:
   /// for each input file.
   virtual void EndRun(int transition,int run,int time);
   
+  /// Special version of BOR method, to be used only by TRootanaDisplay
+  /// This is just so that users still have ability to set their own
+  /// BOR methods, in addition to what TRootanaDisplay needs to do at BOR
+  virtual void BeginRunRAD(int transition,int run,int time){};
+  /// Also special version of EOR method, to be used only by TRootanaDisplay
+  virtual void EndRunRAD(int transition,int run,int time){};
+
   /// Called after the last event has been processed, but before any open
   /// output files are closed.
   virtual void Finalize();
@@ -235,7 +242,7 @@ protected:
 
   /// Also a special version of usage for TRootanaDisplay.  See CheckOptionRAD
   virtual void UsageRAD(void);
-
+ 
 private:
   
   /// Help Message

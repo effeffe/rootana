@@ -63,6 +63,14 @@ public:
 
   virtual ~MyTestLoop() {};
 
+  void BeginRun(int transition,int run,int time) {
+    std::cout << "User BOR method" << std::endl;
+  }
+
+  void EndRun(int transition,int run,int time) {
+    std::cout << "User EOR method" << std::endl;
+  }
+
   void ResetHistograms(){}
 
   void UpdateHistograms(TDataContainer& dataContainer){

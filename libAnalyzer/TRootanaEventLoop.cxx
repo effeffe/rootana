@@ -361,6 +361,7 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
         fCurrentRunNumber = event.GetSerialNumber();
         OpenRootFile(fCurrentRunNumber,fname);
         BeginRun(0,event.GetSerialNumber(),0);
+        BeginRunRAD(0,event.GetSerialNumber(),0);
         raTotalEventsProcessed = 0;
         raTotalEventsSkippedForAge = 0;
 	
@@ -404,6 +405,7 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
   
   f.Close(); 
 
+  EndRunRAD(0,fCurrentRunNumber,0);
   EndRun(0,fCurrentRunNumber,0);
   CloseRootFile();  
 
@@ -607,6 +609,7 @@ void onlineBeginRunHandler(int transition,int run,int time)
   TRootanaEventLoop::Get().OpenRootFile(run);
   TRootanaEventLoop::Get().SetCurrentRunNumber(run);
   TRootanaEventLoop::Get().BeginRun(transition,run,time);
+  TRootanaEventLoop::Get().BeginRunRAD(transition,run,time);
   raTotalEventsProcessed = 0;
   raTotalEventsSkippedForAge = 0;
   numberOldTimestamps = 0;
@@ -618,6 +621,7 @@ void onlineBeginRunHandler(int transition,int run,int time)
 void onlineEndRunHandler(int transition,int run,int time)
 {
   TRootanaEventLoop::Get().SetCurrentRunNumber(run);
+  TRootanaEventLoop::Get().EndRunRAD(transition,run,time);
   TRootanaEventLoop::Get().EndRun(transition,run,time);
   TRootanaEventLoop::Get().CloseRootFile();
 }
@@ -651,6 +655,7 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    //startRun(0,gRunNumber,0);
    OpenRootFile(fCurrentRunNumber);
    BeginRun(0,fCurrentRunNumber,0);
+   BeginRunRAD(0,fCurrentRunNumber,0);
 
    // Register begin and end run handlers.
    midas->setTransitionHandlers(onlineBeginRunHandler,onlineEndRunHandler,NULL,NULL);
@@ -682,6 +687,7 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    app->Run(kTRUE); // kTRUE means return to here after finished with online processing... this ensures that we can disconnect.
    
    // Call user-defined EndRun and close the ROOT file.
+   EndRunRAD(0,fCurrentRunNumber,0);
    EndRun(0,fCurrentRunNumber,0);
    CloseRootFile();  
 

@@ -188,12 +188,12 @@ private:
   /// Called before the first event of a file is read, but you should prefer
   /// Initialize() for general initialization.  This method will be called
   /// once for each input file.  
-  void BeginRun(int transition,int run,int time);
+  void BeginRunRAD(int transition,int run,int time);
   
   /// Called after the last event of a file is read, but you should prefer
   /// Finalize() for general finalization.  This method will be called once
   /// for each input file.
-  void EndRun(int transition,int run,int time);
+  void EndRunRAD(int transition,int run,int time);
   
 
   /// We keep a cached copy of the midas event (so that it can used for callback).

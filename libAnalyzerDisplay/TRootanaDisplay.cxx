@@ -228,7 +228,7 @@ bool TRootanaDisplay::ProcessMidasEventOffline(TDataContainer& dataContainer){
 
 }
 
-void TRootanaDisplay::BeginRun(int transition,int run,int time){
+void TRootanaDisplay::BeginRunRAD(int transition,int run,int time){
   
   std::cout << "Begin of run " << run << " at time " << time << std::endl;
   for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)    
@@ -236,7 +236,7 @@ void TRootanaDisplay::BeginRun(int transition,int run,int time){
   UpdatePlotsAction();
 }
 
-void TRootanaDisplay::EndRun(int transition,int run,int time){
+void TRootanaDisplay::EndRunRAD(int transition,int run,int time){
 
   std::cout << "End of run " << run << " at time " << time << std::endl;
   for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)
