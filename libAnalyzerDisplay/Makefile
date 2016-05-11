@@ -2,22 +2,6 @@
 
 CXXFLAGS_BASE = -g -O2 -Wall -Wuninitialized -I../libMidasInterface/ -I../libAnalyzer/
 
-# optional ZLIB library
-
-CXXFLAGS += -DHAVE_ZLIB
-
-# ROOT libraries
-
-ifdef ROOTSYS
-ROOTLIBDIR := $(shell $(ROOTSYS)/bin/root-config --libdir)
-ROOTGLIBS = -L$(ROOTLIBDIR) $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread
-HAVE_RHTTP = $(shell $(ROOTSYS)/bin/root-config --has-http)
-ifeq ($(HAVE_RHTTP),yes)
-ROOTGLIBS += -lRHTTP
-endif
-CXXFLAGS += -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
-endif
-
 # optional MIDAS libraries
 
 ifdef MIDASSYS
@@ -26,11 +10,14 @@ CXXFLAGS_BASE += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 
 UNAME=$(shell uname)
 ifeq ($(UNAME),Darwin)
-CXXFLAGS_BASE += -DOS_LINUX -DOS_DARWIN
 MIDASLIBS = $(MIDASSYS)/darwin/lib/libmidas.a
-RPATH=
 endif
 
+endif
+
+ifeq ($(UNAME),Darwin)
+CXXFLAGS_BASE += -DOS_LINUX -DOS_DARWIN
+RPATH=
 endif
 
 
@@ -44,10 +31,17 @@ OBJS += TFancyHistogramCanvas.o TFancyHistogramCanvasDict.o
 OBJS += TMulticanvas.o
 endif
 
+# ROOT libraries
 ifdef ROOTSYS
-CXXFLAGS += -DHAVE_LIBNETDIRECTORY -I../libNetDirectory -I../
+ROOTLIBDIR := $(shell $(ROOTSYS)/bin/root-config --libdir)
+ROOTGLIBS = -L$(ROOTLIBDIR) $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLParser -lThread
+HAVE_RHTTP = $(shell $(ROOTSYS)/bin/root-config --has-http)
+ifeq ($(HAVE_RHTTP),yes)
+ROOTGLIBS += -lRHTTP
+CXXFLAGS_BASE += -DHAVE_THTTP_SERVER
+endif
+CXXFLAGS_BASE += -DHAVE_LIBNETDIRECTORY -I../libNetDirectory -I../
 LIBS     += ../libNetDirectory/libNetDirectory.a
-#CXXFLAGS_ROOTCINT = $(CXXFLAGS) -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config) 
 CXXFLAGS_ROOTCINT = $(CXXFLAGS_BASE) -DHAVE_ROOT 
 CXXFLAGS = $(CXXFLAGS_BASE) -DHAVE_ROOT $(shell $(ROOTSYS)/bin/root-config --cflags)
 endif
