@@ -9,6 +9,9 @@
 #ifdef HAVE_LIBNETDIRECTORY
 #include "libNetDirectory/netDirectoryServer.h"
 #endif
+#ifdef HAVE_THTTP_SERVER
+#include "THttpServer.h"
+#endif
 #include "TPeriodicClass.hxx"
 #include "MainWindow.hxx"
 
@@ -75,6 +78,10 @@ TRootanaEventLoop& TRootanaEventLoop::Get(void) {
   return *fTRootanaEventLoop;
 }
   
+// ROOT THttpServer... leave as global variable, so others don't need to know about this.
+#ifdef HAVE_THTTP_SERVER
+  THttpServer* gRoot_http_serv = 0;
+#endif
 
 
 TRootanaEventLoop::TRootanaEventLoop (){
@@ -97,9 +104,6 @@ TRootanaEventLoop::TRootanaEventLoop (){
   fBufferName = std::string("SYSTEM");
   fOnlineName = std::string("rootana");
 
-#ifdef HAVE_THTTP_SERVER
-  fRoot_http_serv = 0;
-#endif
   fDataContainer = new TDataContainer();
 
   /// Create the TApplication
@@ -143,6 +147,10 @@ bool TRootanaEventLoop::CheckEventID(int eventId){
   }
   
   return false;
+}
+
+void TRootanaEventLoop::SetTHttpServerReadWrite(bool readwrite){ 
+  if(gRoot_http_serv) gRoot_http_serv->SetReadOnly(!readwrite);
 }
 
 void TRootanaEventLoop::PrintHelp(){
@@ -276,7 +284,7 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
    if(rhttpdPort){
      char address[100];
      sprintf(address,"http:%i",rhttpdPort); 
-     fRoot_http_serv = new THttpServer(address);
+     gRoot_http_serv = new THttpServer(address);
    }
 #endif
   

@@ -13,10 +13,6 @@
 #include "TDirectory.h"
 #include <TTimer.h>
 #include <TFile.h>
-#ifdef HAVE_THTTP_SERVER
-#include "THttpServer.h"
-#endif
-
 
 // C++ includes
 #include <stdio.h>
@@ -204,18 +200,8 @@ public:
   /// Setting true will use this option.
   void UseOnlyRecent(bool setting = true);//{ fUseOnlyRecent = setting;};
 
-#ifdef HAVE_THTTP_SERVER
-  
-  // Get the THttpServer object
-  THttpServer * GetTHttpServer(){return fRoot_http_serv;};
-
   // Set ReadWrite mode fot THttpServer (to allow operation on histograms through web; like histogram reset).
-  void SetTHttpServerReadWrite(bool readwrite = true){ 
-    if(fRoot_http_serv) fRoot_http_serv->SetReadOnly(!readwrite);
-  }
-  
-#endif
-
+  void SetTHttpServerReadWrite(bool readwrite = true);
 
 protected:
 
@@ -268,9 +254,6 @@ private:
   int fCurrentRunNumber;
 
 
-#ifdef HAVE_THTTP_SERVER
-  THttpServer *fRoot_http_serv;  // pointer to THttpServer object.
-#endif
   /// Pointer to the physics event; the physics event is what we pass to user.
   /// The midas event is accessible through physics event.
   /// We make a single instance of the physics event for whole execution,

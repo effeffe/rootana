@@ -38,7 +38,6 @@ ROOTGLIBS = -L$(ROOTLIBDIR) $(shell $(ROOTSYS)/bin/root-config --glibs) -lXMLPar
 HAVE_RHTTP = $(shell $(ROOTSYS)/bin/root-config --has-http)
 ifeq ($(HAVE_RHTTP),yes)
 ROOTGLIBS += -lRHTTP
-CXXFLAGS_BASE += -DHAVE_THTTP_SERVER
 endif
 CXXFLAGS_BASE += -DHAVE_LIBNETDIRECTORY -I../libNetDirectory -I../
 LIBS     += ../libNetDirectory/libNetDirectory.a
