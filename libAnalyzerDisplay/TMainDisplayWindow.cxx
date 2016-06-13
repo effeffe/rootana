@@ -62,6 +62,18 @@ TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool
   fResetButton = new TGTextButton(fHframe,"&Reset Histograms");
   fHframe->AddFrame(fResetButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
 
+  // Add pause button
+  if(!fIsOffline){
+    fPauseButton = new TGTextButton(fHframe,"&Pause updates");
+    fHframe->AddFrame(fPauseButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
+    fPauseButton->Connect("Clicked()", "TMainDisplayWindow", this, "PauseResumeButtonAction()");
+
+    fNextButton = new TGTextButton(fHframe,"&Next");
+    fHframe->AddFrame(fNextButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
+    
+    fNextButton->SetEnabled(false);
+
+   }
 
   // Add buttons to save current pad or current canvas.
   fSavePadButton = new TGTextButton(fHframe,"&Save Active Pad");
@@ -81,14 +93,7 @@ TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool
     fSavePadButton->SetEnabled(false);
     fSaveCanvasButton->SetEnabled(false);
     fOpenNewTBrowser->SetEnabled(false);
-  }
-  
-
-  if(!fIsOffline){
-    fPauseButton = new TGTextButton(fHframe,"&Pause ");
-    fHframe->AddFrame(fPauseButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
-    fPauseButton->Connect("Clicked()", "TMainDisplayWindow", this, "PauseResumeButtonAction()");
-  }
+  }  
 
   if(fIsOffline){
     fFreeRunningButton = new TGTextButton(fHframe,"&Free Running");
@@ -499,16 +504,18 @@ void TMainDisplayWindow::PauseResumeButtonAction(){
 
   if(fProcessingPaused){
     fProcessingPaused = false;
-    fPauseButton->SetText(TString("Pause"));
+    fPauseButton->SetText(TString("Pause updates"));
     fSavePadButton->SetEnabled(false);
     fSaveCanvasButton->SetEnabled(false);
     fOpenNewTBrowser->SetEnabled(false);
-  }else{
+    fNextButton->SetEnabled(false);
+ }else{
     fProcessingPaused = true;
-    fPauseButton->SetText(TString("Resume"));
+    fPauseButton->SetText(TString("Free Running"));
     fSavePadButton->SetEnabled(true);
     fSaveCanvasButton->SetEnabled(true);
     fOpenNewTBrowser->SetEnabled(true);
+    fNextButton->SetEnabled(true);
   }
 }
 

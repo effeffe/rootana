@@ -54,8 +54,8 @@ void TRootanaDisplay::InitializeMainWindow(){
   fMainWindow->GetQuitButton()->Connect("Clicked()", "TRootanaDisplay", this, "QuitButtonAction()");
 
   // The next button
-  if(IsOffline())
-    fMainWindow->GetNextButton()->Connect("Clicked()", "TRootanaDisplay", this, "NextButtonPushed()");
+  //  if(IsOffline())
+  fMainWindow->GetNextButton()->Connect("Clicked()", "TRootanaDisplay", this, "NextButtonPushed()");
 
   // The event skip counter
   if(IsOnline()){
@@ -126,8 +126,8 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 /// Handle online processing of MIDAS events.
 bool TRootanaDisplay::ProcessMidasEventOnline(TDataContainer& dataContainer){
 
-  // If processing is not paused, then just update plot and return
-  if(!fMainWindow->IsDisplayPaused()){
+  // If processing is not paused or the next button was previously pressed, then update plots.
+  if(!fMainWindow->IsDisplayPaused() || !waitingForNextButton){
     SetCachedDataContainer(dataContainer);
     
     // Perform any histogram updating from user code.
@@ -135,6 +135,12 @@ bool TRootanaDisplay::ProcessMidasEventOnline(TDataContainer& dataContainer){
     for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)
       fCanvasHandlers[i].second->UpdateCanvasHistograms(*fCachedDataContainer);
        
+
+  }
+
+  // If processing is not paused, then just update plot and return
+  if(!fMainWindow->IsDisplayPaused()){
+    SetCachedDataContainer(dataContainer);
     // Do canvas updating from user code; 
     // we have two modes; we can either update after X seconds or X events
     if(fUpdatingBasedSeconds){
@@ -160,7 +166,9 @@ bool TRootanaDisplay::ProcessMidasEventOnline(TDataContainer& dataContainer){
 
   UpdatePlotsAction();
 
-  // If online and paused, then keep looping till the resume button is pushed.
+  // If online and paused, then keep looping till the free-flowing button or
+  // next button is pushed.
+  waitingForNextButton = true;
   while(1){
     
     // Add some sleeps; otherwise program takes 100% of CPU...
@@ -168,7 +176,10 @@ bool TRootanaDisplay::ProcessMidasEventOnline(TDataContainer& dataContainer){
 
     // Break out if no longer in paused state.
     if(!fMainWindow->IsDisplayPaused()) break;    
-      
+
+    // Break out if next button pressed.
+    if(!waitingForNextButton) break;
+     
     // Check if quit button has been pushed.  See QuitButtonAction() for details
     if(fQuitPushed) break;
     
