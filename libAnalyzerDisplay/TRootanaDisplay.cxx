@@ -13,9 +13,11 @@ TRootanaDisplay::TRootanaDisplay()
   fNumberProcessed = 0;
   fCachedDataContainer = 0;
   fSecondsBeforeUpdating = 2.0;
-  
-  SetDisplayName("Rootana Display");
+  fLastUpdateTime = 0.0;
 
+  SetDisplayName("Rootana Display");
+  
+  fUpdatingBasedSeconds = false;
   fQuitPushed = false;
 
   // Don't create second main window.
@@ -36,7 +38,7 @@ TRootanaDisplay::~TRootanaDisplay() {
 
 void TRootanaDisplay::InitializeMainWindow(){
 
-  fMainWindow = new TMainDisplayWindow(gClient->GetRoot(),1200,800,IsOffline()); 
+  fMainWindow = new TMainDisplayWindow(gClient->GetRoot(),1200,800,IsOffline(),fUpdatingBasedSeconds); 
   
   // Link the a bunch of buttons in TMainWindowDisplay to functions in TRootanaDisplay.
   // This bit of ROOT magic requires that the TRootanaDisplay class get rootcint-ed.
@@ -51,7 +53,6 @@ void TRootanaDisplay::InitializeMainWindow(){
   // The quit button
   fMainWindow->GetQuitButton()->Connect("Clicked()", "TRootanaDisplay", this, "QuitButtonAction()");
 
-
   // The next button
   if(IsOffline())
     fMainWindow->GetNextButton()->Connect("Clicked()", "TRootanaDisplay", this, "NextButtonPushed()");
@@ -62,7 +63,11 @@ void TRootanaDisplay::InitializeMainWindow(){
     skipButton->Connect("ValueSet(Long_t)", "TRootanaDisplay",this, "EventSkipButtonPushed()");
     skipButton->GetNumberEntry()->Connect("ReturnPressed()", "TRootanaDisplay", this, "EventSkipButtonPushed()");
     // set the initial value of this field
-    skipButton->GetNumberEntry()->SetIntNumber(fNumberSkipEventsOnline);    
+    if(fUpdatingBasedSeconds){
+      skipButton->GetNumberEntry()->SetIntNumber((int)fSecondsBeforeUpdating);
+    }else{
+      skipButton->GetNumberEntry()->SetIntNumber(fNumberSkipEventsOnline);    
+    }
   }
 
   // Let the user add all the canvases they want.
@@ -130,10 +135,24 @@ bool TRootanaDisplay::ProcessMidasEventOnline(TDataContainer& dataContainer){
     for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)
       fCanvasHandlers[i].second->UpdateCanvasHistograms(*fCachedDataContainer);
        
-    // Do canvas plotting from user code; 
-    // only do plot if we have processed enough events
-    if(fNumberSkipEventsOnline == 1 || fNumberProcessed % fNumberSkipEventsOnline  == 1){      
-      UpdatePlotsAction();
+    // Do canvas updating from user code; 
+    // we have two modes; we can either update after X seconds or X events
+    if(fUpdatingBasedSeconds){
+      struct timeval nowTime;  
+      gettimeofday(&nowTime, NULL);
+      
+      double dnowtime = nowTime.tv_sec  + (nowTime.tv_usec)/1000000.0;
+      double diffTime = dnowtime - fLastUpdateTime;
+      if(diffTime > fSecondsBeforeUpdating){
+        UpdatePlotsAction();
+        fLastUpdateTime = dnowtime;
+      }
+
+    }else{      
+      // only do plot if we have processed enough events
+      if(fNumberSkipEventsOnline == 1 || fNumberProcessed % fNumberSkipEventsOnline  == 1){      
+        UpdatePlotsAction();
+      }
     }
     
     return true;

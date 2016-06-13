@@ -96,7 +96,13 @@ public:
   }
   /// Method for when skip event button is pushed (online mode)
   void EventSkipButtonPushed(){
-    fNumberSkipEventsOnline = fMainWindow->GetSkipEventButton()->GetNumberEntry()->GetIntNumber();
+    //fNumberSkipEventsOnline = fMainWindow->GetSkipEventButton()->GetNumberEntry()->GetIntNumber();
+    
+    if(fUpdatingBasedSeconds){
+      fSecondsBeforeUpdating = (double)fMainWindow->GetSkipEventButton()->GetNumberEntry()->GetIntNumber();
+    }else{
+      fNumberSkipEventsOnline = fMainWindow->GetSkipEventButton()->GetNumberEntry()->GetIntNumber();
+    }
   }
 
   /// This method calls a couple other methods for resets the histograms.
@@ -126,6 +132,12 @@ public:
     fSecondsBeforeUpdating = SecondsBeforeUpdating;
   }
   
+  /// Function so user can chose to update display after X seconds, rather than
+  /// X events in online mode.  Must be called in constructor of the display program.
+  void SetOnlineUpdatingBasedSeconds(bool updateBasedSeconds = true){
+    fUpdatingBasedSeconds = updateBasedSeconds;
+  }
+
   /// Get Display name
   std::string GetDisplayName(){return fDisplayName;}
   /// Set Display name
@@ -164,12 +176,18 @@ private:
   /// defined by command line argument.
   int fNumberSkipEventsOffline;
 
+  /// Flag to keep track of whether user wants to update (online) based on time passed
+  /// (rather than based on number of events
+  bool fUpdatingBasedSeconds;
+
+  double fLastUpdateTime;
+
   // Variable to keep track of number of processed events.
   int fNumberProcessed;
 
   // Seconds to wait in free-running mode before updating
   double fSecondsBeforeUpdating;
-  
+
   /// Flag to keep track of if quite button has been pushed.
   bool fQuitPushed;
 

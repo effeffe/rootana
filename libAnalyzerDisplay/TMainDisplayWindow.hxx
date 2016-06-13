@@ -90,7 +90,7 @@ class TMainDisplayWindow {
 
   TGNumberEntry* GetSkipEventButton(){ return fNumberSkipEventButton;}
 
-  TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool isOffline);
+  TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool isOffline, bool updatingBasedSeconds);
   virtual ~TMainDisplayWindow();
 
   

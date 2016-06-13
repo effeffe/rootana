@@ -9,7 +9,7 @@ ClassImp(TMainDisplayWindow)
 static int fDefaultWidth = 1200;
 static int fDefaultHeight = 800;
 
-TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool isOffline)
+TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool isOffline, bool updatingBasedSeconds)
   
 {
   fIsOffline = isOffline;
@@ -48,9 +48,13 @@ TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool
     fNumberSkipEventButton->SetIntNumber(5);
     fHframe->AddFrame(fNumberSkipEventButton, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
 
-    TGLabel *labelEv = new TGLabel(fHframe, "Plot every Xth events");
-    fHframe->AddFrame(labelEv, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
-
+    if(updatingBasedSeconds){
+      TGLabel *labelEv = new TGLabel(fHframe, "Refresh each Xth second");
+      fHframe->AddFrame(labelEv, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
+    }else{
+      TGLabel *labelEv = new TGLabel(fHframe, "Plot every Xth events");
+      fHframe->AddFrame(labelEv, new TGLayoutHints(kLHintsTop | kLHintsLeft, 5, 5, 5, 5));
+    }
   }
 
 
