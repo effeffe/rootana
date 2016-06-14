@@ -42,8 +42,11 @@ class TMainDisplayWindow {
   TGTextButton  *fSaveCanvasButton;
   TGTextButton  *fOpenNewTBrowser;
 
-  // Button to reset histograms.
+  // Button to go to next event
   TGTextButton  *fNextButton;
+
+  // Button to go to next interesting event
+  TGTextButton  *fNextInterestingButton;
 
   // Button to reset histograms.
   TGTextButton  *fResetButton;
@@ -85,6 +88,8 @@ class TMainDisplayWindow {
   TGTextButton* GetResetButton(){ return fResetButton;}
   
   TGTextButton* GetNextButton(){ return fNextButton;}
+  
+  TGTextButton* GetNextInterestingButton(){ return fNextInterestingButton;}
   
   TGTextButton* GetQuitButton(){ return fQuitButton;}
 

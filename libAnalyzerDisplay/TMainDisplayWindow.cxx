@@ -4,6 +4,7 @@
 #include <TGFileDialog.h>
 #include "TMainDisplayWindow.hxx"
 #include <TObject.h>
+#include "TInterestingEventManager.hxx"
 
 ClassImp(TMainDisplayWindow)
 static int fDefaultWidth = 1200;
@@ -17,6 +18,7 @@ TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool
   fProcessingFreeRunning = false;
   fNumberSkipEventButton = 0;
   fTBrowser = 0;
+  fNextInterestingButton = 0;
 
   // Create a main frame
   fMain = new TGMainFrame(p,w,h);
@@ -39,6 +41,11 @@ TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool
     fNextButton = new TGTextButton(fHframe,"&Next");
     fHframe->AddFrame(fNextButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
       
+    if(iem_t::instance()->IsEnabled()){
+      fNextInterestingButton = new TGTextButton(fHframe,"&Next Interesting");
+      fHframe->AddFrame(fNextInterestingButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));    
+    }
+
   }else{
 
     fNumberSkipEventButton = new TGNumberEntry(fHframe, 0, 9,999, TGNumberFormat::kNESInteger,
@@ -69,10 +76,14 @@ TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool
     fPauseButton->Connect("Clicked()", "TMainDisplayWindow", this, "PauseResumeButtonAction()");
 
     fNextButton = new TGTextButton(fHframe,"&Next");
-    fHframe->AddFrame(fNextButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));
-    
+    fHframe->AddFrame(fNextButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));    
     fNextButton->SetEnabled(false);
 
+    if(iem_t::instance()->IsEnabled()){
+      fNextInterestingButton = new TGTextButton(fHframe,"&Next Interesting");
+      fHframe->AddFrame(fNextInterestingButton, new TGLayoutHints(kLHintsCenterX,5,5,3,4));    
+      fNextInterestingButton->SetEnabled(false);
+    }
    }
 
   // Add buttons to save current pad or current canvas.
@@ -509,6 +520,7 @@ void TMainDisplayWindow::PauseResumeButtonAction(){
     fSaveCanvasButton->SetEnabled(false);
     fOpenNewTBrowser->SetEnabled(false);
     fNextButton->SetEnabled(false);
+    if(fNextInterestingButton)fNextInterestingButton->SetEnabled(false);
  }else{
     fProcessingPaused = true;
     fPauseButton->SetText(TString("Free Running"));
@@ -516,6 +528,7 @@ void TMainDisplayWindow::PauseResumeButtonAction(){
     fSaveCanvasButton->SetEnabled(true);
     fOpenNewTBrowser->SetEnabled(true);
     fNextButton->SetEnabled(true);
+    if(fNextInterestingButton) fNextInterestingButton->SetEnabled(true);
   }
 }
 

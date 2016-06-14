@@ -16,6 +16,8 @@ TRootanaDisplay::TRootanaDisplay()
   fLastUpdateTime = 0.0;
 
   SetDisplayName("Rootana Display");
+  waitingForNextButton = true;
+  waitingForNextInterestingButton = true;
   
   fUpdatingBasedSeconds = false;
   fQuitPushed = false;
@@ -54,8 +56,11 @@ void TRootanaDisplay::InitializeMainWindow(){
   fMainWindow->GetQuitButton()->Connect("Clicked()", "TRootanaDisplay", this, "QuitButtonAction()");
 
   // The next button
-  //  if(IsOffline())
   fMainWindow->GetNextButton()->Connect("Clicked()", "TRootanaDisplay", this, "NextButtonPushed()");
+
+  // The next interesting button
+  if(iem_t::instance()->IsEnabled())
+    fMainWindow->GetNextInterestingButton()->Connect("Clicked()", "TRootanaDisplay", this, "NextInterestingButtonPushed()");
 
   // The event skip counter
   if(IsOnline()){
@@ -113,6 +118,8 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 
   fNumberProcessed++;
 
+  iem_t::instance()->Reset(); // Reset the interesting event manager each event.
+
   if(IsOnline()){
     return ProcessMidasEventOnline(dataContainer);
   }else{
@@ -127,14 +134,13 @@ bool TRootanaDisplay::ProcessMidasEvent(TDataContainer& dataContainer){
 bool TRootanaDisplay::ProcessMidasEventOnline(TDataContainer& dataContainer){
 
   // If processing is not paused or the next button was previously pressed, then update plots.
-  if(!fMainWindow->IsDisplayPaused() || !waitingForNextButton){
+  if(!fMainWindow->IsDisplayPaused() || !waitingForNextButton || !waitingForNextInterestingButton){
     SetCachedDataContainer(dataContainer);
     
     // Perform any histogram updating from user code.
     UpdateHistograms(*fCachedDataContainer);
     for(unsigned int i = 0; i < fCanvasHandlers.size(); i++)
-      fCanvasHandlers[i].second->UpdateCanvasHistograms(*fCachedDataContainer);
-       
+      fCanvasHandlers[i].second->UpdateCanvasHistograms(*fCachedDataContainer);       
 
   }
 
@@ -164,11 +170,25 @@ bool TRootanaDisplay::ProcessMidasEventOnline(TDataContainer& dataContainer){
     return true;
   }
 
-  UpdatePlotsAction();
+  if(!waitingForNextButton)
+    UpdatePlotsAction();
+
+  // If we pressed the next interesting button, then check if this event was
+  // interesting; if yes, then update plot and let user look at it.
+  // If no, then just return (and check again for next event).
+  if(!waitingForNextInterestingButton){
+    if(iem_t::instance()->IsInteresting()){
+      std::cout << "Found next interesting event " << std::endl;
+      UpdatePlotsAction();
+    }else{
+      return true;
+    }
+  }
 
   // If online and paused, then keep looping till the free-flowing button or
   // next button is pushed.
   waitingForNextButton = true;
+  waitingForNextInterestingButton = true;
   while(1){
     
     // Add some sleeps; otherwise program takes 100% of CPU...
@@ -177,8 +197,8 @@ bool TRootanaDisplay::ProcessMidasEventOnline(TDataContainer& dataContainer){
     // Break out if no longer in paused state.
     if(!fMainWindow->IsDisplayPaused()) break;    
 
-    // Break out if next button pressed.
-    if(!waitingForNextButton) break;
+    // Break out if next button or next interesting button pressed.
+    if(!waitingForNextButton || !waitingForNextInterestingButton) break;
      
     // Check if quit button has been pushed.  See QuitButtonAction() for details
     if(fQuitPushed) break;
@@ -211,6 +231,17 @@ bool TRootanaDisplay::ProcessMidasEventOffline(TDataContainer& dataContainer){
     return true;
   }
 
+  // If we pressed the next interesting button, then check if this event was
+  // interesting; if yes, then update plot and let user look at it.
+  // If no, then just return (and check again for next event).
+  if(!waitingForNextInterestingButton){
+    if(!iem_t::instance()->IsInteresting()){
+      return true;
+    }else{
+      std::cout << "Found next interesting event " << std::endl;
+    }
+  }
+
   UpdatePlotsAction();
 
   // Reset clock for next time 'FreeRunning' is pushed.
@@ -218,14 +249,14 @@ bool TRootanaDisplay::ProcessMidasEventOffline(TDataContainer& dataContainer){
   
   // If offline, then keep looping till the next event button is pushed.
   waitingForNextButton = true;
+  waitingForNextInterestingButton = true;
   while(1){
     
     // Add some sleeps; otherwise program takes 100% of CPU...
     usleep(10000);
 
-    // ROOT signal/slot trick; this variable will magically 
-    // get changed to false once the next button is pushed.
-    if(!waitingForNextButton) break;
+    // Break out if next button or next interesting button pressed.
+    if(!waitingForNextButton || !waitingForNextInterestingButton) break;
 
     // In offline free-running mode, go to next event after a couple seconds.
     if(fMainWindow->IsDisplayFreeRunning()){

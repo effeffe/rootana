@@ -10,6 +10,7 @@
 #include "TMainDisplayWindow.hxx"
 
 #include "TCanvasHandleBase.hxx"
+#include "TInterestingEventManager.hxx"
 
 class TCanvasHandleBase;
 
@@ -90,10 +91,19 @@ public:
   /// This method can be implemented by users to plotting of current canvas
   virtual void ResetHistograms(){};
 
-  /// Method for when next button is pushed (offline mode)
+  /// Method for when next button is pushed 
   void NextButtonPushed(){
     waitingForNextButton = false;
+    waitingForNextInterestingButton = true;
   }
+
+  /// Method for when next interesting button is pushed 
+  void NextInterestingButtonPushed(){
+    std::cout << "Looking for next interesting event " << std::endl;
+    waitingForNextInterestingButton = false;
+    waitingForNextButton = true;
+  }
+
   /// Method for when skip event button is pushed (online mode)
   void EventSkipButtonPushed(){
     //fNumberSkipEventsOnline = fMainWindow->GetSkipEventButton()->GetNumberEntry()->GetIntNumber();
@@ -165,8 +175,11 @@ private:
   /// Method to initialize the Main display window.
   void InitializeMainWindow();
 
-  // Variable to keep track of waiting for next event button (offline mode)
+  // Variable to keep track of waiting for next event button 
   bool waitingForNextButton; 
+
+  // Variable to keep track of waiting for next interesting event button 
+  bool waitingForNextInterestingButton; 
 
   /// Variable to keep track of how many events to skip before updating display;
   /// we have separate variable for online and offline modes.
