@@ -7,8 +7,8 @@
 #include "TInterestingEventManager.hxx"
 
 ClassImp(TMainDisplayWindow)
-static int fDefaultWidth = 1200;
-static int fDefaultHeight = 800;
+static int fDefaultWidth = 1100;
+static int fDefaultHeight = 750;
 
 TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool isOffline, bool updatingBasedSeconds)
   
