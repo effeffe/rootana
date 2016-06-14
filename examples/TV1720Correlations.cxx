@@ -3,6 +3,7 @@
 #include "TV1720RawData.h"
 #include "TDirectory.h"
 
+#include "TInterestingEventManager.hxx"
 
 
 
@@ -63,13 +64,15 @@ void TV1720Correlations::UpdateHistograms(TDataContainer& dataContainer){
 	if(adc > max_adc_value){
 	  max_adc_value = adc;
 	  max_adc_time = j * 4.0; // 4ns per bin
-
-
 	}
 	
       }
 
       GetHistogram(i)->Fill(max_adc_time,max_adc_value);
+
+      // As test, set any event where time for max bin < 200 as 'interesting'
+      if(max_adc_time < 400) iem_t::instance()->SetInteresting();
+
     }
   }
   

@@ -6,6 +6,7 @@
 #include "TV792Data.hxx"
 
 #include "TFancyHistogramCanvas.hxx"
+#include "TInterestingEventManager.hxx"
 
 
 #include "TAnaManager.hxx"
@@ -24,7 +25,11 @@ public:
     DisableRootOutput(false);
     anaManager = new TAnaManager();
     // Number of events to skip before plotting one.
-    SetNumberSkipEvent(10);
+    //SetNumberSkipEvent(10);
+    // Choose to use functionality to update after X seconds
+    SetOnlineUpdatingBasedSeconds();
+    // Uncomment this to enable the 'interesting event' functionality.
+    //iem_t::instance()->Enable();
   }
 
   void AddAllCanvases(){
