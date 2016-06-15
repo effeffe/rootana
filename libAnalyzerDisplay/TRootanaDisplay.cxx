@@ -40,7 +40,8 @@ TRootanaDisplay::~TRootanaDisplay() {
 
 void TRootanaDisplay::InitializeMainWindow(){
 
-  fMainWindow = new TMainDisplayWindow(gClient->GetRoot(),1200,800,IsOffline(),fUpdatingBasedSeconds); 
+  fMainWindow = new TMainDisplayWindow(gClient->GetRoot(),gMainDisplayDefaultWidth,
+                                       gMainDisplayDefaultHeight,IsOffline(),fUpdatingBasedSeconds); 
   
   // Link the a bunch of buttons in TMainWindowDisplay to functions in TRootanaDisplay.
   // This bit of ROOT magic requires that the TRootanaDisplay class get rootcint-ed.

@@ -7,8 +7,6 @@
 #include "TInterestingEventManager.hxx"
 
 ClassImp(TMainDisplayWindow)
-static int fDefaultWidth = 1100;
-static int fDefaultHeight = 750;
 
 TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool isOffline, bool updatingBasedSeconds)
   
@@ -234,10 +232,11 @@ std::pair<int,int> TMainDisplayWindow::AddSingleTab(std::string name, TGTab * ta
   }else{
     sprintf(cname,"Canvas_%i_%i",mainTabIndex,tab->GetNumberOfTabs() - 1);
     //sprintf(cname,"Canvas_%i_%i",fTab->GetNumberOfTabs() - 1,tab->GetNumberOfTabs() - 1);
-    index.first = mainTabIndex; // fTab->GetNumberOfTabs() - 1;
+    index.first = mainTabIndex; 
     index.second = tab->GetNumberOfTabs() - 1;
   }
-  TRootEmbeddedCanvas *embed_canvas  = new TRootEmbeddedCanvas(cname, compositeFrame,fDefaultWidth,fDefaultHeight);
+  TRootEmbeddedCanvas *embed_canvas  = new TRootEmbeddedCanvas(cname, compositeFrame,
+                                                               gMainDisplayDefaultWidth,gMainDisplayDefaultHeight);
   compositeFrame->AddFrame(embed_canvas, new TGLayoutHints(kLHintsTop | kLHintsExpandX,5,5,5,0));
 
   return index;
