@@ -150,7 +150,9 @@ bool TRootanaEventLoop::CheckEventID(int eventId){
 }
 
 void TRootanaEventLoop::SetTHttpServerReadWrite(bool readwrite){ 
+#ifdef HAVE_THTTP_SERVER
   if(gRoot_http_serv) gRoot_http_serv->SetReadOnly(!readwrite);
+#endif
 }
 
 void TRootanaEventLoop::PrintHelp(){
