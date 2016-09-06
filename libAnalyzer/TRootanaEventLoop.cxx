@@ -7,7 +7,7 @@
 #include "midasServer.h"
 #endif
 #ifdef HAVE_LIBNETDIRECTORY
-#include "libNetDirectory/netDirectoryServer.h"
+#include "netDirectoryServer.h"
 #endif
 #ifdef HAVE_THTTP_SERVER
 #include "THttpServer.h"

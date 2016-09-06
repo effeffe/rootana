@@ -1,6 +1,12 @@
 # Makefile
 
-CXXFLAGS = -g -O2 -Wall -Wuninitialized -I../libMidasInterface/
+CXXFLAGS = -g -O2 -Wall -Wuninitialized
+
+#ifndef ROOTANASYS
+ROOTANASYS := ..
+#endif
+
+CXXFLAGS += -I$(ROOTANASYS)/include
 
 # optional ZLIB library
 
