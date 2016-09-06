@@ -1,0 +1,168 @@
+# Makefile
+
+CXXFLAGS = -g -O2 -Wall -Wuninitialized -I./include
+
+# MIDAS interface library
+
+CXXFLAGS += -I./libMidasInterface
+ALL+=  libMidasInterface/libMidasInterface.a
+LIBS+= libMidasInterface/libMidasInterface.a
+
+# optional ROOT libraries
+
+ROOTVERSION := $(shell root-config --version)
+
+ifdef ROOTVERSION
+HAVE_ROOT=1
+ROOTFEATURES := $(shell root-config --features)
+ROOTLIBDIR := $(shell root-config --libdir)
+ROOTLIBS   := -L$(ROOTLIBDIR) $(shell root-config --libs) -lThread
+ROOTGLIBS  := -L$(ROOTLIBDIR) $(shell root-config --glibs) -lThread
+ROOTCFLAGS := $(shell root-config --cflags)
+RPATH    += -Wl,-rpath,$(ROOTLIBDIR)
+CXXFLAGS += -DHAVE_ROOT $(ROOTCFLAGS)
+ROOT_HAS_HTTP := $(findstring http,$(ROOTFEATURES))
+ROOT_HAS_XML := $(findstring xml,$(ROOTFEATURES))
+ifdef ROOT_HAS_XML
+ROOTLIBS += -lXMLParser -lXMLIO
+ROOTGLIBS += -lXMLParser -lXMLIO
+endif
+ifdef ROOT_HAS_HTTP
+CXXFLAGS += -DHAVE_THTTP_SERVER
+endif
+#xhere: ; @echo Have ROOT: features: $(ROOTFEATURES), libdir: $(ROOTLIBDIR), libs: $(ROOTLIBS) cflags: $(CXXFLAGS)
+else
+xnoroot: ; @echo ROOT not available, please run: make minimal
+endif
+
+# optional MIDAS libraries
+
+ifdef MIDASSYS
+HAVE_MIDAS=1
+MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil -lrt
+CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
+
+UNAME=$(shell uname)
+ifeq ($(UNAME),Darwin)
+CXXFLAGS += -DOS_LINUX -DOS_DARWIN
+MIDASLIBS = $(MIDASSYS)/darwin/lib/libmidas.a
+RPATH=
+endif
+
+endif
+
+# optional TNetDirectory code
+
+ifdef HAVE_ROOT
+CXXFLAGS += -DHAVE_LIBNETDIRECTORY -IlibNetDirectory
+OBJS     += ./libNetDirectory/netDirectoryServer.o
+LIBS     += libNetDirectory/libNetDirectory.a
+
+ALL+= libNetDirectory/libNetDirectory.a
+endif
+
+# optional XmlServer code
+
+ifdef HAVE_ROOT
+ifdef HAVE_XML
+CXXFLAGS += -DHAVE_XMLSERVER -IlibXmlServer
+OBJS     += ./libXmlServer/xmlServer.o
+endif
+endif
+
+# optional old midas server
+
+HAVE_MIDASSERVER = 1
+
+ifdef HAVE_MIDASSERVER
+CXXFLAGS += -DOLD_SERVER -DHAVE_MIDASSERVER
+OBJS     += ./libMidasServer/midasServer.o
+endif
+
+# optional libAnalyzer and libAnalyzerDisplay code
+ifdef HAVE_ROOT
+LIBS     += libAnalyzer/libAnalyzer.a libAnalyzerDisplay/libAnalyzerDisplay.a
+ALL+= libAnalyzer/libAnalyzer.a libAnalyzerDisplay/libAnalyzerDisplay.a
+endif
+
+ALL+= lib/librootana.a
+ALL+= event_dump.exe
+ALL+= event_skim.exe
+
+ifdef HAVE_ROOT
+ifdef HAVE_MIDAS
+ALL+= tests/testODB.exe
+endif
+endif
+
+
+
+ifdef HAVE_ROOT
+ALL+= analyzer.exe
+ALL+= tests/test_midasServer.exe
+endif
+
+all: $(ALL)
+
+$(ALL): include
+
+include:
+	mkdir -p include
+	cd include; ln -sfv ../lib*/*.h .
+	cd include; ln -sfv ../lib*/*.hxx .
+
+lib/librootana.a: $(LIBS) $(OBJS)
+	mkdir -p lib
+	-rm -f $@
+	ar -rv $@ lib*/*.o
+
+libMidasInterface/libMidasInterface.a:
+	make -C libMidasInterface
+
+libNetDirectory/libNetDirectory.a:
+	make -C libNetDirectory
+
+libAnalyzer/libAnalyzer.a:
+	make -C libAnalyzer
+
+libAnalyzerDisplay/libAnalyzerDisplay.a:
+	make -C libAnalyzerDisplay
+
+%.exe: %.o lib/librootana.a
+	$(CXX) -o $@ $(CXXFLAGS) $< lib/librootana.a $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
+
+%.o: %.cxx
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+html/index.html:
+	-mkdir html
+	-make -k dox
+	touch html/index.html
+
+dox:
+	doxygen
+
+clean::
+	-rm -f *.o *.a *.exe $(ALL)
+	-rm -rf lib
+	-rm -rf include
+
+clean::
+	make -C libMidasInterface clean
+
+clean::
+	make -C libNetDirectory clean
+
+clean::
+	make -C libXmlServer clean
+
+clean::
+	make -C libAnalyzer clean
+
+clean::
+	make -C libAnalyzerDisplay clean
+
+clean::
+	-rm -rf html
+
+# end
