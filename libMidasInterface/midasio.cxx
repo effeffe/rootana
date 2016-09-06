@@ -4,6 +4,9 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <stdlib.h> // malloc()
+#include <string.h> // memcpy()
+
 #include <string>
 
 class FileReader: public TMReaderInterface
@@ -117,12 +120,12 @@ public:
       if (LZ4F_isError(errorCode))
          printf("Can't create LZ4F context : %s", LZ4F_getErrorName(errorCode));
 
-      fBufSize = 1024*1024;
+      fBufSize = 10*1024*1024;
       fBuf = (char*) malloc(fBufSize);
       fBufStart = 0;
       fBufHave = 0;
 
-      fSrcBufSize = 1024*1024;
+      fSrcBufSize = 10*1024*1024;
       fSrcBuf = (char*) malloc(fSrcBufSize);
       fSrcBufStart = 0;
       fSrcBufHave = 0;
