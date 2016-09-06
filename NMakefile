@@ -31,6 +31,8 @@ ROOTGLIBS += -lXMLParser -lXMLIO
 endif
 ifdef ROOT_HAS_HTTP
 CXXFLAGS += -DHAVE_THTTP_SERVER
+ROOTLIBS += -lRHTTP
+ROOTGLIBS += -lRHTTP
 endif
 #xhere: ; @echo Have ROOT: features: $(ROOTFEATURES), libdir: $(ROOTLIBDIR), libs: $(ROOTLIBS) cflags: $(CXXFLAGS)
 else
