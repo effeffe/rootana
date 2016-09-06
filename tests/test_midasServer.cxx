@@ -238,8 +238,10 @@ int main(int argc, char *argv[])
 
    NetDirectoryExport(f, "outputFile");
 
+#ifdef HAVE_XMLSERVER
    if (xmlServer)
       xmlServer->Export(f, "outputFile");
+#endif
 
    TH1D* hh = new TH1D("test1", "test1", 100, 0, 100);
    hh->Fill(1);
@@ -281,10 +283,12 @@ int main(int argc, char *argv[])
    //NetDirectoryExport(gROOT->GetListOfFiles(), "ListOfFiles");
    //NetDirectoryExport(gROOT->GetListOfGlobals(), "ListOfGlobals");
 
+#ifdef HAVE_XML_SERVER
    if (xmlServer) {
       xmlServer->Export(gROOT->GetListOfFiles(), "ListOfFiles");
       //xmlServer->Export(gROOT->GetListOfGlobals(), "ListOfGlobals");
    }
+#endif
 
    new MyPeriodic(100, IncrFunc);
    
