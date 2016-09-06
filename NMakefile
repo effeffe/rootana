@@ -124,9 +124,9 @@ endif
 
 OBJS += obj/TMidasEvent.o
 OBJS += obj/TMidasFile.o
-#ifdef HAVE_MIDAS
-XOBJS += obj/TMidasOnline.o
-#endif
+ifdef HAVE_MIDAS
+OBJS += obj/TMidasOnline.o
+endif
 OBJS += obj/HttpOdb.o
 OBJS += obj/XmlOdb.o
 
