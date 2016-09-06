@@ -7,6 +7,8 @@
 
 #include <string>
 
+#include "midasio.h"
+
 class TMidasEvent;
 
 /// Reader for MIDAS .mid files
@@ -45,6 +47,8 @@ protected:
   void*       fPoFile; ///< popen() input file reader
   int         fOutFile; ///< open output file descriptor
   void*       fOutGzFile; ///< zlib compressed output file reader
+
+  TMReaderInterface *fReader;
 };
 
 #endif // TMidasFile.h

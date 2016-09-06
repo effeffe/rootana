@@ -36,6 +36,8 @@ ifdef ROOTSYS
 OBJS += XmlOdb.o HttpOdb.o
 endif
 
+OBJS += midasio.o lz4.o lz4hc.o lz4frame.o xxhash.o
+
 all: $(ALL)
 
 libMidasInterface.a: $(OBJS)

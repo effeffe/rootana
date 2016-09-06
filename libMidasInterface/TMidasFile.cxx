@@ -29,6 +29,8 @@ TMidasFile::TMidasFile()
   fOutFile = -1;
   fOutGzFile = NULL;
 
+  fReader = NULL;
+
   fDoByteSwap = *(char*)(&endian) != 0x78;
 }
 
@@ -138,8 +140,12 @@ bool TMidasFile::Open(const char *filename)
     }
   else if (hasSuffix(filename, ".lz4"))
     {
-      pipe = "lz4 -d ";
-      pipe += filename;
+#if 0
+        pipe = "lz4 -d ";
+        pipe += filename;
+#else
+        fReader = TMNewReader(filename);
+#endif
     }
 
   if (pipe.length() > 0)
@@ -290,7 +296,9 @@ bool TMidasFile::Read(TMidasEvent *midasEvent)
 
   int rd = 0;
 
-  if (fGzFile)
+  if (fReader)
+    rd = fReader->Read((char*)midasEvent->GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
+  else if (fGzFile)
 #ifdef HAVE_ZLIB
     rd = gzread(*(gzFile*)fGzFile, (char*)midasEvent->GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
 #else
@@ -322,7 +330,9 @@ bool TMidasFile::Read(TMidasEvent *midasEvent)
       return false;
     }
 
-  if (fGzFile)
+  if (fReader)
+    rd = fReader->Read((char*)midasEvent->GetData(), midasEvent->GetDataSize());
+  else if (fGzFile)
 #ifdef HAVE_ZLIB
     rd = gzread(*(gzFile*)fGzFile, midasEvent->GetData(), midasEvent->GetDataSize());
 #else
@@ -378,6 +388,11 @@ bool TMidasFile::Write(TMidasEvent *midasEvent)
 
 void TMidasFile::Close()
 {
+  if (fReader) {
+    fReader->Close();
+    delete fReader;
+    fReader = NULL;
+  }
   if (fPoFile)
     pclose((FILE*)fPoFile);
   fPoFile = NULL;

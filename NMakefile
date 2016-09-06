@@ -131,6 +131,11 @@ OBJS += obj/TMidasOnline.o
 endif
 OBJS += obj/HttpOdb.o
 OBJS += obj/XmlOdb.o
+OBJS += obj/midasio.o
+OBJS += obj/lz4.o
+OBJS += obj/lz4hc.o
+OBJS += obj/xxhash.o
+OBJS += obj/lz4frame.o
 
 all: $(ALL)
 
@@ -163,6 +168,10 @@ lib/librootana.a: $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: libMidasInterface/%.cxx
+	mkdir -p obj
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+obj/%.o: libMidasInterface/%.c
 	mkdir -p obj
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
