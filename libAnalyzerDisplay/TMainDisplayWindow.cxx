@@ -6,7 +6,9 @@
 #include <TObject.h>
 #include "TInterestingEventManager.hxx"
 
+#ifndef NO_CINT
 ClassImp(TMainDisplayWindow)
+#endif
 
 TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool isOffline, bool updatingBasedSeconds)
   

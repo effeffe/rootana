@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include "math.h"
 
+#ifndef NO_CINT
 ClassImp(TRootanaDisplay)
+#endif
 
 TRootanaDisplay::TRootanaDisplay() 
 {

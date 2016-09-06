@@ -172,8 +172,9 @@ class TMainDisplayWindow {
   TGTab* GetTab(){return fTab;};
 
 
-
+#ifndef NO_CINT
   ClassDef(TMainDisplayWindow,1)
+#endif
 };
 
 

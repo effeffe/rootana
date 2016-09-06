@@ -245,7 +245,9 @@ private:
   /// The first part of pair is the tab number.
   std::vector< std::pair<std::pair<int,int> ,TCanvasHandleBase*> > fCanvasHandlers;
 
+#ifndef NO_CINT
   ClassDef(TRootanaDisplay,1)
+#endif
 }; 
 
 
