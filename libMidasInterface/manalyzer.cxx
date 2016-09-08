@@ -409,9 +409,11 @@ public:
 
    void Analyze(TARunInfo* runinfo, TMEvent* event)
    {
-      printf("EventDumpModule::Analyze, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
-      event->old_event.SetBankList();
-      event->old_event.Print();
+      printf("EventDumpModule::Analyze, run %d, ", runinfo->fRunNo);
+      event->FindAllBanks();
+      std::string h = event->HeaderToString();
+      std::string b = event->BankListToString();
+      printf("%s: %s\n", h.c_str(), b.c_str());
    }
 
    void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)

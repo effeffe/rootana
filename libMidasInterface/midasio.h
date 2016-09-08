@@ -13,8 +13,6 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 #endif
 
-#include "TMidasEvent.h"
-
 #define TID_BYTE      1       /**< unsigned byte         0       255    */
 #define TID_SBYTE     2       /**< signed byte         -128      127    */
 #define TID_CHAR      3       /**< single character      0       255    */
@@ -32,7 +30,7 @@ struct TMBank
 {
    std::string name; ///< bank name, 4 characters max
    u32         type; ///< type of data, enum of TID_xxx
-   u32         num_items; ///< number of data items
+   //u32         num_values; ///< number of data items
    u32         data_size; ///< total data size in bytes
    u32         data_offset; ///< offset of data for this bank in the event data buffer
 };
@@ -40,6 +38,7 @@ struct TMBank
 struct TMEvent
 {
    bool error; ///< event has an error - incomplete, truncated, inconsistent or corrupted
+   bool found_all_banks; ///< all the banks in the event data have been discovered
    
    u16 event_id; 
    u16 trigger_mask;
@@ -50,17 +49,18 @@ struct TMEvent
    u32 bank_header_flags;
 
    std::vector<TMBank> banks;
-
    std::vector<u8> data;
 
-   TMidasEvent old_event;
-
 public:
-   void Print() const;
+   std::string HeaderToString() const;
+   std::string BankListToString() const;
+   std::string BankToString(const TMBank*) const;
+   
+   void FindAllBanks();
    TMBank* FindBank(const char* bank_name);
    char* GetBankData(const TMBank*);
    void DeleteBank(const TMBank*);
-   void AddBank(const char* bank_name, int tid, const char* data, int size);
+   void AddBank(const char* bank_name, int tid, int num_items, const char* data, int size);
 };
 
 class TMReaderInterface

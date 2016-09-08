@@ -271,6 +271,16 @@ TMReaderInterface* TMNewReader(const char* source)
    }
 }
 
+u16 GetU16(void*ptr)
+{
+   return *(u16*)ptr;
+}
+
+u32 GetU32(void*ptr)
+{
+   return *(u32*)ptr;
+}
+
 TMEvent* TMReadEvent(TMReaderInterface* reader)
 {
    bool gOnce = true;
@@ -284,6 +294,7 @@ TMEvent* TMReadEvent(TMReaderInterface* reader)
    TMEvent* e = new TMEvent;
 
    e->error = false;
+   e->found_all_banks = false;
    e->event_id = 0;
    e->trigger_mask = 0;
    e->serial_number = 0;
@@ -291,42 +302,180 @@ TMEvent* TMReadEvent(TMReaderInterface* reader)
    e->data_size = 0;
    e->bank_header_flags = 0;
 
-   e->old_event.Clear();
+   const int event_header_size = 4*4;
+   char event_header[event_header_size];
 
-   int rd = reader->Read((char*)e->old_event.GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
+   int rd = reader->Read(event_header, event_header_size);
 
    if (rd == 0) { // end of file
       delete e;
       return NULL;
-   } else if (rd != sizeof(TMidas_EVENT_HEADER)) { // truncated data in file
+   } else if (rd != event_header_size) { // truncated data in file
       e->error = true;
       return e;
    }
 
-   //if (fDoByteSwap)
-   //   e->old_event.SwapBytesEventHeader();
+   e->event_id      = GetU16(event_header+0);
+   e->trigger_mask  = GetU16(event_header+2);
+   e->serial_number = GetU32(event_header+4);
+   e->time_stamp    = GetU32(event_header+8);
+   e->data_size     = GetU32(event_header+12);
 
-   if (!e->old_event.IsGoodSize()) { // invalid event size
+   e->bank_header_flags = 0;
+
+   //if (!e->old_event.IsGoodSize()) { // invalid event size
+   //   e->error = true;
+   //   return e;
+   //}
+
+   int to_read = e->data_size;
+
+   e->data.resize(event_header_size + to_read);
+
+   memcpy(&e->data[0], event_header, event_header_size);
+
+   rd = reader->Read(&e->data[event_header_size], to_read);
+
+   if (rd != to_read) { // truncated data in file
       e->error = true;
       return e;
    }
-
-   rd = reader->Read((char*)e->old_event.GetData(), e->old_event.GetDataSize());
-
-   if (rd != (int)e->old_event.GetDataSize()) { // truncated data in file
-      e->error = true;
-      return e;
-   }
-
-   e->old_event.SwapBytes(false);
-
-   e->event_id = e->old_event.GetEventId();
-   e->trigger_mask = e->old_event.GetTriggerMask();
-   e->serial_number = e->old_event.GetSerialNumber();
-   e->time_stamp = e->old_event.GetTimeStamp();
-   e->data_size = e->old_event.GetDataSize();
 
    return e;
+}
+
+std::string TMEvent::HeaderToString() const
+{
+   char buf[1024];
+   sprintf(buf, "event: id %d, mask 0x%04x, serial %d, time %d, size %d, error %d, banks %d", event_id, trigger_mask, serial_number, time_stamp, data_size, error, (int)banks.size());
+   return buf;
+}
+
+std::string TMEvent::BankListToString() const
+{
+   std::string s;
+   for (unsigned i=0; i<banks.size(); i++) {
+      if (i>0)
+         s += ",";
+      s += banks[i].name;
+   }
+   return s;
+}
+
+std::string TMEvent::BankToString(const TMBank*b) const
+{
+   char buf[1024];
+   sprintf(buf, "name \"%s\", type %d, size %d, offset %d\n", b->name.c_str(), b->type, b->data_size, b->data_offset);
+   return buf;
+}
+
+static int FindFirstBank(TMEvent* e)
+{
+   u32 bank_header_data_size = GetU32(&e->data[16]);
+   u32 bank_header_flags     = GetU32(&e->data[16+4]);
+
+   printf("bank header: data size %d, flags 0x%08x\n", bank_header_data_size, bank_header_flags);
+
+   if (bank_header_data_size + 8 != e->data_size) {
+      e->error = true;
+      return -1;
+   }
+
+   e->bank_header_flags = bank_header_flags;
+
+   return 16+8;
+}
+
+static int FindNextBank(TMEvent* e, int pos, TMBank** pb)
+{
+   if (e->error)
+      return -1;
+
+   //printf("pos %d, event data_size %d, size %d\n", pos, e->data_size, (int)e->data.size());
+
+   int remaining = e->data.size() - pos;
+
+   if (remaining < 8) {
+      // end of data, no more banks to find
+      e->found_all_banks = true;
+      return -1;
+   }
+
+   int ibank = e->banks.size();
+   e->banks.resize(ibank+1);
+
+   TMBank* b = &e->banks[ibank];
+
+   b->name.resize(4);
+   b->name[0] = e->data[pos+0];
+   b->name[1] = e->data[pos+1];
+   b->name[2] = e->data[pos+2];
+   b->name[3] = e->data[pos+3];
+   b->name[4] = 0;
+
+   u32 data_offset = 0;
+
+   if (e->bank_header_flags & (1<<4)) {
+      b->type      = GetU32(&e->data[pos+4+0]);
+      b->data_size = GetU32(&e->data[pos+4+4]);
+      data_offset = pos+4+4+4;
+   } else {
+      b->type      = GetU16(&e->data[pos+4+0]);
+      b->data_size = GetU16(&e->data[pos+4+2]);
+      data_offset = pos+4+2+2;
+   }
+
+   b->data_offset = data_offset;
+
+   //printf("found bank at pos %d: %s\n", pos, e->BankToString(b).c_str());
+
+   int npos = data_offset + b->data_size;
+
+   if (npos > e->data.size()) {
+      e->error = true;
+      return -1;
+   }
+
+   return npos;
+}
+
+TMBank* TMEvent::FindBank(const char* bank_name)
+{
+   if (error)
+      return NULL;
+
+   for (unsigned i=0; i<banks.size(); i++) {
+      if (banks[i].name == bank_name)
+         return &banks[i];
+   }
+
+   if (found_all_banks)
+      return NULL;
+   
+   int pos = FindFirstBank(this);
+
+   // FIXME: FindFirstBank should start looking from last bank found, not from beginning of event
+
+   while (pos > 0) {
+      TMBank* b = NULL;
+      pos = FindNextBank(this, pos, &b);
+      if (pos>0 && b) {
+         if (b->name == bank_name)
+            return b;
+      }
+   }
+
+   return NULL;
+}
+
+void TMEvent::FindAllBanks()
+{
+   if (found_all_banks)
+      return;
+
+   FindBank(NULL);
+
+   assert(found_all_banks);
 }
 
 /* emacs
