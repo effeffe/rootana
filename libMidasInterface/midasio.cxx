@@ -271,6 +271,64 @@ TMReaderInterface* TMNewReader(const char* source)
    }
 }
 
+TMEvent* TMReadEvent(TMReaderInterface* reader)
+{
+   bool gOnce = true;
+   if (gOnce) {
+      gOnce = false;
+      assert(sizeof(u8)==1);
+      assert(sizeof(u16)==2);
+      assert(sizeof(u32)==4);
+   }
+   
+   TMEvent* e = new TMEvent;
+
+   e->error = false;
+   e->event_id = 0;
+   e->trigger_mask = 0;
+   e->serial_number = 0;
+   e->time_stamp = 0;
+   e->data_size = 0;
+   e->bank_header_flags = 0;
+
+   e->old_event.Clear();
+
+   int rd = reader->Read((char*)e->old_event.GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
+
+   if (rd == 0) { // end of file
+      delete e;
+      return NULL;
+   } else if (rd != sizeof(TMidas_EVENT_HEADER)) { // truncated data in file
+      e->error = true;
+      return e;
+   }
+
+   //if (fDoByteSwap)
+   //   e->old_event.SwapBytesEventHeader();
+
+   if (!e->old_event.IsGoodSize()) { // invalid event size
+      e->error = true;
+      return e;
+   }
+
+   rd = reader->Read((char*)e->old_event.GetData(), e->old_event.GetDataSize());
+
+   if (rd != (int)e->old_event.GetDataSize()) { // truncated data in file
+      e->error = true;
+      return e;
+   }
+
+   e->old_event.SwapBytes(false);
+
+   e->event_id = e->old_event.GetEventId();
+   e->trigger_mask = e->old_event.GetTriggerMask();
+   e->serial_number = e->old_event.GetSerialNumber();
+   e->time_stamp = e->old_event.GetTimeStamp();
+   e->data_size = e->old_event.GetDataSize();
+
+   return e;
+}
+
 /* emacs
  * Local Variables:
  * tab-width: 8
