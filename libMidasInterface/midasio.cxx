@@ -374,7 +374,7 @@ static int FindFirstBank(TMEvent* e)
    u32 bank_header_data_size = GetU32(&e->data[16]);
    u32 bank_header_flags     = GetU32(&e->data[16+4]);
 
-   printf("bank header: data size %d, flags 0x%08x\n", bank_header_data_size, bank_header_flags);
+   //printf("bank header: data size %d, flags 0x%08x\n", bank_header_data_size, bank_header_flags);
 
    if (bank_header_data_size + 8 != e->data_size) {
       e->error = true;
@@ -436,7 +436,23 @@ static int FindNextBank(TMEvent* e, int pos, TMBank** pb)
       return -1;
    }
 
+   if (pb)
+      *pb = b;
+
    return npos;
+}
+
+char* TMEvent::GetBankData(const TMBank* b)
+{
+   if (error)
+      return NULL;
+   if (!b)
+      return NULL;
+   if (b->data_offset <= 0)
+      return NULL;
+   if (b->data_offset >= data.size())
+      return NULL;
+   return (char*)&data[b->data_offset];
 }
 
 TMBank* TMEvent::FindBank(const char* bank_name)
@@ -449,6 +465,8 @@ TMBank* TMEvent::FindBank(const char* bank_name)
          return &banks[i];
    }
 
+   //printf("found_all_banks %d\n", found_all_banks);
+
    if (found_all_banks)
       return NULL;
    
@@ -456,9 +474,12 @@ TMBank* TMEvent::FindBank(const char* bank_name)
 
    // FIXME: FindFirstBank should start looking from last bank found, not from beginning of event
 
+   //printf("pos %d\n", pos);
+
    while (pos > 0) {
       TMBank* b = NULL;
       pos = FindNextBank(this, pos, &b);
+      //printf("pos %d, b %p\n", pos, b);
       if (pos>0 && b) {
          if (b->name == bank_name)
             return b;

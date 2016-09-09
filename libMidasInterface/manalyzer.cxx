@@ -31,6 +31,10 @@ TARunInfo::~TARunInfo()
    }
 }
 
+TARunInterface::TARunInterface(TARunInfo* runinfo)
+{
+   printf("TARunInterface::ctor, run %d\n", runinfo->fRunNo);
+}
 
 std::vector<TAModuleInterface*> *gModules = NULL;
 
@@ -216,6 +220,7 @@ int ProcessMidasOnline(const char* hostname, const char* exptname)
 
 #endif
 
+#if 1
 int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int num_analyze)
 {
    for (unsigned i=0; i<(*gModules).size(); i++)
@@ -223,8 +228,9 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
 
    TARunInfo* runinfo = NULL;
 
+   std::vector<TARunInterface*> runrun;
+
    bool done = false;
-   bool need_end_run = true;
 
    for (unsigned i=1; i<args.size(); i++) {
       if (args[i][0] == '-') // skip command line options
@@ -255,10 +261,19 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
                      runinfo->fFileName = filename;
                   } else {
                      // file with a different run number
-                     if (need_end_run) {
-                        need_end_run = false;
-                        for (unsigned i=0; i<(*gModules).size(); i++)
-                           (*gModules)[i]->EndRun(runinfo);
+
+                     if (runrun.size() > 0) {
+                        for (unsigned i=0; i<runrun.size(); i++) {
+                           if (runinfo)
+                              runrun[i]->EndRun(runinfo);
+                           delete runrun[i];
+                           runrun[i] = NULL;
+                        }
+                        runrun.clear();
+                        assert(runrun.size() == 0);
+                     }
+
+                     if (runinfo) {
                         delete runinfo;
                         runinfo = NULL;
                      }
@@ -274,51 +289,52 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
 
                if (!runinfo) {
                   runinfo = new TARunInfo(runno, filename);
+                  assert(runrun.size() == 0);
                   for (unsigned i=0; i<(*gModules).size(); i++)
-                     (*gModules)[i]->BeginRun(runinfo);
-                  need_end_run = true;
+                     runrun.push_back((*gModules)[i]->NewRun(runinfo));
+                  for (unsigned i=0; i<runrun.size(); i++)
+                     runrun[i]->BeginRun(runinfo);
                }
 
-               for (unsigned i=0; i<(*gModules).size(); i++)
-                  (*gModules)[i]->AnalyzeSpecialEvent(runinfo, event);
+               for (unsigned i=0; i<runrun.size(); i++)
+                  runrun[i]->AnalyzeSpecialEvent(runinfo, event);
             }
          else if (event->event_id == 0x8001) // end of run event
             {
-               for (unsigned i=0; i<(*gModules).size(); i++)
-                  (*gModules)[i]->AnalyzeSpecialEvent(runinfo, event);
+               for (unsigned i=0; i<runrun.size(); i++)
+                  runrun[i]->AnalyzeSpecialEvent(runinfo, event);
 
                //int runno = event->serial_number;
-               
-               for (unsigned i=0; i<(*gModules).size(); i++)
-                  (*gModules)[i]->EndRun(runinfo);
-               
-               need_end_run = false;
             }
          else if (event->event_id == 0x8002) // message event
             {
-               for (unsigned i=0; i<(*gModules).size(); i++)
-                  (*gModules)[i]->AnalyzeSpecialEvent(runinfo, event);
+               for (unsigned i=0; i<runrun.size(); i++)
+                  runrun[i]->AnalyzeSpecialEvent(runinfo, event);
             }
          else
             {
                if (!runinfo) {
-                  // missing the begin of run
+                  // create a fake begin of run
                   runinfo = new TARunInfo(0, filename);
+                  assert(runrun.size() == 0);
                   for (unsigned i=0; i<(*gModules).size(); i++)
-                     (*gModules)[i]->BeginRun(runinfo);
-                  need_end_run = true;
+                     runrun.push_back((*gModules)[i]->NewRun(runinfo));
+                  for (unsigned i=0; i<runrun.size(); i++)
+                     runrun[i]->BeginRun(runinfo);
                }
 
                if (num_skip > 0) {
                   num_skip--;
                } else {
+                  for (unsigned i=0; i<runrun.size(); i++) {
+                     TAFlags f = runrun[i]->Analyze(runinfo, event);
+                     if (f && TAFlag_DONE)
+                        done = true;
+                  }
                   if (num_analyze > 0) {
                      num_analyze--;
-                     for (unsigned i=0; i<(*gModules).size(); i++)
-                        (*gModules)[i]->Analyze(runinfo, event);
-                  } else {
-                     done = true;
-                     break;
+                     if (num_analyze == 0)
+                        done = true;
                   }
                }
             }
@@ -335,18 +351,28 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
          break;
    }
 
-   if (runinfo && need_end_run)
-      for (unsigned i=0; i<(*gModules).size(); i++)
-         (*gModules)[i]->EndRun(runinfo);
+   if (runrun.size() > 0) {
+      for (unsigned i=0; i<runrun.size(); i++) {
+         if (runinfo)
+            runrun[i]->EndRun(runinfo);
+         delete runrun[i];
+         runrun[i] = NULL;
+      }
+      runrun.clear();
+      assert(runrun.size() == 0);
+   }
 
-   delete runinfo;
-   runinfo = NULL;
+   if (runinfo) {
+      delete runinfo;
+      runinfo = NULL;
+   }
    
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Finish();
    
    return 0;
 }
+#endif
 
 static bool gEnableShowMem = false;
 
@@ -369,14 +395,60 @@ int ShowMem(const char* label)
   return mem;
 }
 
+class EventDumpRun: public TARunInterface
+{
+public:
+   EventDumpRun(TARunInfo* runinfo)
+      : TARunInterface(runinfo)
+   {
+      printf("EventDumpRun::ctor, run %d\n", runinfo->fRunNo);
+   }
+   
+   ~EventDumpRun()
+   {
+      printf("EventDumpRun::dtor!\n");
+   }
+
+   void BeginRun(TARunInfo* runinfo)
+   {
+      printf("EventDumpRun::BeginRun, run %d\n", runinfo->fRunNo);
+   }
+
+   void EndRun(TARunInfo* runinfo)
+   {
+      printf("EventDumpRun::EndRun, run %d\n", runinfo->fRunNo);
+   }
+
+   void PauseRun(TARunInfo* runinfo)
+   {
+      printf("EventDumpRun::PauseRun, run %d\n", runinfo->fRunNo);
+   }
+
+   void ResumeRun(TARunInfo* runinfo)
+   {
+      printf("EventDumpRun::ResumeRun, run %d\n", runinfo->fRunNo);
+   }
+
+   TAFlags Analyze(TARunInfo* runinfo, TMEvent* event)
+   {
+      printf("EventDumpRun::Analyze, run %d, ", runinfo->fRunNo);
+      event->FindAllBanks();
+      std::string h = event->HeaderToString();
+      std::string b = event->BankListToString();
+      printf("%s: %s\n", h.c_str(), b.c_str());
+      return TAFlag_OK;
+   }
+
+   void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)
+   {
+      printf("EventDumpRun::AnalyzeSpecialEvent, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
+   }
+};
+
 class EventDumpModule: public TAModuleInterface
 {
 public:
-   //TARunInfo* NewRunInfo()
-   //{
-   //   return new TARunInfo;
-   //}
-   
+
    void Init(const std::vector<std::string> &args)
    {
       printf("EventDumpModule::Init!\n");
@@ -387,38 +459,10 @@ public:
       printf("EventDumpModule::Finish!\n");
    }
    
-   void BeginRun(TARunInfo* runinfo)
+   TARunInterface* NewRun(TARunInfo* runinfo)
    {
-      printf("EventDumpModule::BeginRun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
-   }
-
-   void EndRun(TARunInfo* runinfo)
-   {
-      printf("EventDumpModule::EndRun, run %d\n", runinfo->fRunNo);
-   }
-
-   void PauseRun(TARunInfo* runinfo)
-   {
-      printf("EventDumpModule::PauseRun, run %d\n", runinfo->fRunNo);
-   }
-
-   void ResumeRun(TARunInfo* runinfo)
-   {
-      printf("EventDumpModule::ResumeRun, run %d\n", runinfo->fRunNo);
-   }
-
-   void Analyze(TARunInfo* runinfo, TMEvent* event)
-   {
-      printf("EventDumpModule::Analyze, run %d, ", runinfo->fRunNo);
-      event->FindAllBanks();
-      std::string h = event->HeaderToString();
-      std::string b = event->BankListToString();
-      printf("%s: %s\n", h.c_str(), b.c_str());
-   }
-
-   void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)
-   {
-      printf("EventDumpModule::AnalyzeSpecialEvent, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
+      printf("EventDumpModule::NewRun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
+      return new EventDumpRun(runinfo);
    }
 };
 

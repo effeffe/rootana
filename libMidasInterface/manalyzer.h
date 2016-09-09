@@ -18,10 +18,37 @@ class TARunInfo
 
  public:
    TARunInfo(int runno, const std::string& filename);
-   virtual ~TARunInfo();
+   ~TARunInfo();
 
  private:
    TARunInfo() {}; // hidden default constructor
+};
+
+typedef int TAFlags;
+
+#define TAFlag_OK         0
+#define TAFlag_DONE   (1<<0)
+#define TAFlag_WRITE  (1<<1)
+#define TAFlag_DISLAY (1<<2)
+
+class TARunInterface
+{
+ public:
+   TARunInterface(TARunInfo* runinfo); // ctor
+   virtual ~TARunInterface() {}; // dtor
+
+ public:
+   virtual void BeginRun(TARunInfo* runinfo) = 0; // begin of run
+   virtual void EndRun(TARunInfo* runinfo) = 0; // end of run
+
+   virtual void PauseRun(TARunInfo* runinfo) = 0; // pause of run (if online)
+   virtual void ResumeRun(TARunInfo* runinfo) = 0; // resume of run (if online)
+
+   virtual TAFlags Analyze(TARunInfo* runinfo, TMEvent* event) = 0;
+   virtual void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event) = 0;
+
+ private:
+   TARunInterface(); // hidden default constructor
 };
 
 class TAModuleInterface
@@ -30,21 +57,12 @@ class TAModuleInterface
    TAModuleInterface() {}; // ctor
    virtual ~TAModuleInterface() {}; // dtor
 
-   //public:
-   //virtual TARunInfo* NewRunInfo() = 0; // factory for module-specific RunInfo objects
+ public:
+   virtual TARunInterface* NewRun(TARunInfo* runinfo) = 0; // factory for module-specific Run objects
 
  public:
    virtual void Init(const std::vector<std::string> &args) = 0; // start of analysis
    virtual void Finish() = 0; // end of analysis
-
-   virtual void BeginRun(TARunInfo* runinfo) = 0; // begin of run
-   virtual void EndRun(TARunInfo* runinfo) = 0; // end of run
-
-   virtual void PauseRun(TARunInfo* runinfo) = 0; // pause of run (if online)
-   virtual void ResumeRun(TARunInfo* runinfo) = 0; // resume of run (if online)
-
-   virtual void Analyze(TARunInfo* runinfo, TMEvent* event) = 0;
-   virtual void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event) = 0;
 };
 
 class TARegisterModule
