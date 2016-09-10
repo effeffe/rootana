@@ -47,7 +47,7 @@ void PrintCurrentStats(){
       
       double dtime = nowTime.tv_sec - raLastTime.tv_sec + (nowTime.tv_usec - raLastTime.tv_usec)/1000000.0;
       double rate = 0;
-      if (time !=0)
+      if (dtime !=0)
         rate = 500.0/(dtime);
       printf("Processed %d events.  Analysis rate = %f events/seconds. \n",raTotalEventsProcessed,rate);
       gettimeofday(&raLastTime, NULL);
@@ -158,7 +158,7 @@ void TRootanaEventLoop::SetTHttpServerReadWrite(bool readwrite){
 void TRootanaEventLoop::PrintHelp(){
 
   printf("\nUsage:\n");
-  printf("\n./analyzer.exe [-h] [-Hhostname] [-Eexptname] [-eMaxEvents] [-P9091] [-p9090] [-m] [-g] [file1 file2 ...]\n");
+  printf("\n./analyzer.exe [-h] [-Hhostname] [-Eexptname] [-eMaxEvents] [-P9091] [-p9090] [-m] [file1 file2 ...]\n");
   printf("\n");
   printf("\t-h: print this help message\n");
   printf("\t-T: test mode - start and serve a test histogram\n");
@@ -172,7 +172,6 @@ void TRootanaEventLoop::PrintHelp(){
 #endif
   printf("\t-eXXX: Number of events XXX to read from input data files\n");
   //printf("\t-m: Enable memory leak debugging\n");
-  printf("\t-g: Enable graphics display when processing data files\n");
   UsageRAD();  // Print description of TRootanaDisplay options.
   Usage();  // Print description of user options.
   printf("\n");
@@ -211,7 +210,6 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
     return 1;
   }
 
-  bool forceEnableGraphics = false;
   bool testMode = false;
   int  tcpPort = 0;
 #ifdef HAVE_THTTP_SERVER
@@ -237,8 +235,6 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
 #endif
       else if (strcmp(arg,"-T")==0)
 	testMode = true;
-      else if (strcmp(arg,"-g")==0)
-	forceEnableGraphics = true;
       else if (strncmp(arg,"-H",2)==0)
 	hostname = strdup(arg+2);
       else if (strncmp(arg,"-E",2)==0)

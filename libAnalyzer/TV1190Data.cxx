@@ -64,7 +64,7 @@ TV1190Data::TV1190Data(int bklen, int bktype, const char* name, void *pdata):
 
   uint32_t current_tdc_header =0;
   int index_for_trailer = 0;
-  int index_for_error = 0;
+  //int index_for_error = 0;
   int numberEventsInBank = 0;
   fWordCountTotal =0;
   for(int i = 0; i < GetSize(); i++){
@@ -104,7 +104,7 @@ TV1190Data::TV1190Data(int bklen, int bktype, const char* name, void *pdata):
       for(unsigned int i = index_for_trailer; i < fMeasurements.size(); i++){
 	fMeasurements[i].SetErrors(word);
       }
-      index_for_error = fMeasurements.size();    
+      //index_for_error = fMeasurements.size();    
     }
 
 

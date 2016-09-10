@@ -210,7 +210,7 @@ bool TRootanaDisplay::ProcessMidasEventOnline(TDataContainer& dataContainer){
     fMainWindow->ResetSize();
     
     // handle GUI events
-    bool result = gSystem->ProcessEvents(); 
+    gSystem->ProcessEvents(); 
     
   }
   return true;
@@ -285,7 +285,7 @@ bool TRootanaDisplay::ProcessMidasEventOffline(TDataContainer& dataContainer){
     fMainWindow->ResetSize();
     
     // handle GUI events
-    bool result = gSystem->ProcessEvents(); 
+    gSystem->ProcessEvents(); 
     
   }
   return true;

@@ -254,7 +254,6 @@ std::pair<int,int> TMainDisplayWindow::AddCanvas(std::string subtabname, std::st
   }
 
   // Otherwise we try to find an existing tab with that name.
-  bool foundTab = false;
   TGTab *subtab = 0;
   int mainTabIndex = 0;
   for(int itab = 0; itab < fTab->GetNumberOfTabs() ; itab++){    
@@ -377,8 +376,8 @@ TRootEmbeddedCanvas* TMainDisplayWindow::GetEmbeddedCanvas(const char *name){
       return GetTRootEmbeddedCanvasFromTGCompositeFrame(frame);
     }
 
-    TGTab *subtab = 0;
-    if(subtab = GetSubTab(itab)){
+    TGTab *subtab = GetSubTab(itab);
+    if(subtab){
       for (int isubtab = 0; isubtab < subtab->GetNumberOfTabs() ; isubtab++){    
     
         //std::cout << itab << " " << isubtab << " Name! " << GetTabName(subtab, isubtab) << std::endl;
@@ -430,13 +429,13 @@ std::string TMainDisplayWindow::GetTabName(TGTab *tab, int index){
     index = tab->GetCurrent();
   TGFrameElement *el;
   TGTabElement *tabel = 0;
-  TGCompositeFrame *comp = 0;
+  //TGCompositeFrame *comp = 0;
   // Loop over the number of tabs, until we find the right one.
   for(int i = 0; i <= index; i++){
     el = (TGFrameElement *) nextTab();
     tabel  = (TGTabElement *) el->fFrame;
     el   = (TGFrameElement *) nextTab();
-    comp = (TGCompositeFrame *) el->fFrame;
+    //comp = (TGCompositeFrame *) el->fFrame;
   }
   if(tabel){
     return std::string(*tabel->GetText());

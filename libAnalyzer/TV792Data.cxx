@@ -35,7 +35,7 @@ void TV792Data::Print(){
   std::cout << "Geo-Add = " << GetGeoAddress() << ", crate number =  " << GetCrate() 
 	    << ", Number of channels= " << GetNumberChannels() << ", event counter = "
 	    << GetEventCounter() << std::endl;
-  for(int i = 0; i < fMeasurements.size(); i++){
+  for(unsigned i = 0; i < fMeasurements.size(); i++){
     std::cout << "chan " << fMeasurements[i].GetChannel() 
 	      << " meas = " << fMeasurements[i].GetMeasurement() << " " ;
     std::cout << " [UN/OV=" << fMeasurements[i].IsUnderThreshold() << "/" << fMeasurements[i].IsOverFlow() << "],  ";

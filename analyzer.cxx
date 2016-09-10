@@ -543,7 +543,7 @@ int main(int argc, char *argv[])
 	return 1;
    }
 
-   bool forceEnableGraphics = false;
+   //bool forceEnableGraphics = false;
    bool testMode = false;
    int  oldTcpPort = 0;
    int  tcpPort = 0;
@@ -568,8 +568,8 @@ int main(int argc, char *argv[])
 	 xmlTcpPort = atoi(arg+2);
        else if (strcmp(arg,"-T")==0)
 	 testMode = true;
-       else if (strcmp(arg,"-g")==0)
-	 forceEnableGraphics = true;
+       //else if (strcmp(arg,"-g")==0)
+       //	 forceEnableGraphics = true;
        else if (strncmp(arg,"-H",2)==0)
 	 hostname = strdup(arg+2);
        else if (strncmp(arg,"-E",2)==0)
