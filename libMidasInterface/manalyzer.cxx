@@ -326,11 +326,20 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
                if (num_skip > 0) {
                   num_skip--;
                } else {
+                  TAFlags flags = 0;
+                  TAFlowEvent* flow = NULL;
+                  
                   for (unsigned i=0; i<runrun.size(); i++) {
-                     TAFlags f = runrun[i]->Analyze(runinfo, event);
-                     if (f && TAFlag_DONE)
+                     flow = runrun[i]->Analyze(runinfo, event, &flags, flow);
+                     if (flags & TAFlag_QUIT)
                         done = true;
+                     if (flags & TAFlag_SKIP)
+                        break;
                   }
+
+                  if (flow)
+                     delete flow;
+                  
                   if (num_analyze > 0) {
                      num_analyze--;
                      if (num_analyze == 0)
@@ -429,14 +438,14 @@ public:
       printf("EventDumpRun::ResumeRun, run %d\n", runinfo->fRunNo);
    }
 
-   TAFlags Analyze(TARunInfo* runinfo, TMEvent* event)
+   TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
    {
       printf("EventDumpRun::Analyze, run %d, ", runinfo->fRunNo);
       event->FindAllBanks();
       std::string h = event->HeaderToString();
       std::string b = event->BankListToString();
       printf("%s: %s\n", h.c_str(), b.c_str());
-      return TAFlag_OK;
+      return flow;
    }
 
    void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)

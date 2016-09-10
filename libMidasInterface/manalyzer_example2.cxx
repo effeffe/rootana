@@ -57,7 +57,7 @@ struct ExampleRootRun: public TARunInterface
       printf("ResumeRun, run %d\n", runinfo->fRunNo);
    }
 
-   TAFlags Analyze(TARunInfo* runinfo, TMEvent* event)
+   TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
    {
       printf("Analyze, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
       if (event->event_id != 2)
@@ -69,11 +69,11 @@ struct ExampleRootRun: public TARunInterface
 
       TMBank* bslow = event->FindBank("SLOW");
       if (!bslow)
-         return TAFlag_OK;
+         return flow;
 
       float* dslow = (float*)event->GetBankData(bslow);
       if (!dslow)
-         return TAFlag_OK;
+         return flow;
 
       double v = *dslow;
 
@@ -85,7 +85,7 @@ struct ExampleRootRun: public TARunInterface
       fCounter++;
       fModule->fTotalEventCounter++;
       
-      return TAFlag_OK;
+      return flow;
    }
 
    void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)

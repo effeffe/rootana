@@ -24,12 +24,26 @@ class TARunInfo
    TARunInfo() {}; // hidden default constructor
 };
 
+class TAFlowEvent
+{
+ public:
+   TAFlowEvent* fNext;
+
+ public:
+   TAFlowEvent(TAFlowEvent*);
+   virtual ~TAFlowEvent();
+
+ private:
+   TAFlowEvent() {}; // hidden default constructor 
+};
+
 typedef int TAFlags;
 
-#define TAFlag_OK         0
-#define TAFlag_DONE   (1<<0)
-#define TAFlag_WRITE  (1<<1)
-#define TAFlag_DISLAY (1<<2)
+#define TAFlag_OK          0
+#define TAFlag_SKIP    (1<<0)
+#define TAFlag_QUIT    (1<<1)
+#define TAFlag_WRITE   (1<<2)
+#define TAFlag_DISPLAY (1<<3)
 
 class TARunInterface
 {
@@ -44,7 +58,7 @@ class TARunInterface
    virtual void PauseRun(TARunInfo* runinfo) = 0; // pause of run (if online)
    virtual void ResumeRun(TARunInfo* runinfo) = 0; // resume of run (if online)
 
-   virtual TAFlags Analyze(TARunInfo* runinfo, TMEvent* event) = 0;
+   virtual TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow) = 0;
    virtual void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event) = 0;
 
  private:
