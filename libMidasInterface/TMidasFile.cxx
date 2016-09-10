@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <assert.h>
+#include <unistd.h> // close()
 
 #ifdef HAVE_ZLIB
 #include <zlib.h>
