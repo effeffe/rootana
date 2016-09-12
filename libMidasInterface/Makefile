@@ -41,6 +41,7 @@ OBJS += midasio.o lz4.o lz4hc.o lz4frame.o xxhash.o
 ALL  += manalyzer.o manalyzer.exe
 ALL  += manalyzer_example1.o manalyzer_example1.exe
 ALL  += manalyzer_example2.o manalyzer_example2.exe
+ALL  += manalyzer_example3.o manalyzer_example3.exe
 
 all: $(ALL)
 
@@ -61,6 +62,9 @@ manalyzer_example1.exe: %.exe: %.o manalyzer.o midasio.o TMidasEvent.o
 	$(CXX) -o $@ $(CXXFLAGS) $^ -L../lib -lrootana -lz $(ROOTLIBS)
 
 manalyzer_example2.exe: %.exe: %.o manalyzer.o midasio.o TMidasEvent.o
+	$(CXX) -o $@ $(CXXFLAGS) $^ -L../lib -lrootana -lz $(ROOTLIBS)
+
+manalyzer_example3.exe: %.exe: %.o manalyzer.o midasio.o TMidasEvent.o
 	$(CXX) -o $@ $(CXXFLAGS) $^ -L../lib -lrootana -lz $(ROOTLIBS)
 
 dox:

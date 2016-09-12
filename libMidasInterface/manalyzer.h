@@ -33,6 +33,17 @@ class TAFlowEvent
    TAFlowEvent(TAFlowEvent*);
    virtual ~TAFlowEvent();
 
+   template<class T> T* Find()
+      {
+         TAFlowEvent* f = this;
+         while (f) {
+            T *ptr = dynamic_cast<T*>(f);
+            if (ptr) return ptr;
+            f = f->fNext;
+         }
+         return NULL;
+      }
+
  private:
    TAFlowEvent() {}; // hidden default constructor 
 };

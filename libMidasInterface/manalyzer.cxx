@@ -39,6 +39,26 @@ TARunInfo::~TARunInfo()
 
 //////////////////////////////////////////////////////////
 //
+// Methods of TAFlowEvent
+//
+//////////////////////////////////////////////////////////
+
+TAFlowEvent::TAFlowEvent(TAFlowEvent* flow) // ctor
+{
+   printf("TAFlowEvent::ctor: chain %p\n", flow);
+   fNext = flow;
+}
+
+TAFlowEvent::~TAFlowEvent() // dtor
+{
+   printf("TAFlowEvent::dtor: this %p, next %p\n", this, fNext);
+   if (fNext)
+      delete fNext;
+   fNext = NULL;
+}
+
+//////////////////////////////////////////////////////////
+//
 // Methods of TARunInterace
 //
 //////////////////////////////////////////////////////////
