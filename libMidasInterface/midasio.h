@@ -92,6 +92,7 @@ class TMWriterInterface
 };
 
 TMReaderInterface* TMNewReader(const char* source);
+TMWriterInterface* TMNewWriter(const char* destination);
 
 TMEvent* TMReadEvent(TMReaderInterface* reader);
 void TMWriteEvent(TMWriterInterface* writer, const TMEvent* event);

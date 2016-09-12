@@ -305,8 +305,7 @@ int ProcessMidasOnline(const char* hostname, const char* exptname)
 
 #endif
 
-#if 1
-int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int num_analyze)
+int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer)
 {
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Init(args);
@@ -383,6 +382,9 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
 
                for (unsigned i=0; i<runrun.size(); i++)
                   runrun[i]->AnalyzeSpecialEvent(runinfo, event);
+
+               if (writer)
+                  TMWriteEvent(writer, event);
             }
          else if (event->event_id == 0x8001) // end of run event
             {
@@ -390,11 +392,17 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
                   runrun[i]->AnalyzeSpecialEvent(runinfo, event);
 
                //int runno = event->serial_number;
+
+               if (writer)
+                  TMWriteEvent(writer, event);
             }
          else if (event->event_id == 0x8002) // message event
             {
                for (unsigned i=0; i<runrun.size(); i++)
                   runrun[i]->AnalyzeSpecialEvent(runinfo, event);
+
+               if (writer)
+                  TMWriteEvent(writer, event);
             }
          else
             {
@@ -421,6 +429,10 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
                      if (flags & TAFlag_SKIP)
                         break;
                   }
+
+                  if (flags & TAFlag_WRITE)
+                     if (writer)
+                        TMWriteEvent(writer, event);
 
                   if (flow)
                      delete flow;
@@ -466,7 +478,6 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
    
    return 0;
 }
-#endif
 
 static bool gEnableShowMem = false;
 
@@ -563,12 +574,13 @@ public:
 void help()
 {
   printf("\nUsage:\n");
-  printf("\n./analyzer.exe [-h] [-Hhostname] [-Eexptname] [-eMaxEvents] [-P9091] [-p9090] [-m] [file1 file2 ...]\n");
+  printf("\n./analyzer.exe [-h] [-Hhostname] [-Eexptname] [-eMaxEvents] [-P9091] [-p9090] [-m] [-oOutputfile.mid] [file1 file2 ...]\n");
   printf("\n");
   printf("\t-h: print this help message\n");
   printf("\t-T: test mode - start and serve a test histogram\n");
   printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
   printf("\t-Eexptname: connect to this MIDAS experiment\n");
+  printf("\t-oOutputfile.mid: write selected events into this file\n");
   printf("\t-P: Start the TNetDirectory server on specified tcp port (for use with roody -Plocalhost:9091)\n");
   printf("\t-p: Start the old midas histogram server on specified tcp port (for use with roody -Hlocalhost:9090)\n");
   printf("\t-eNNN: Number of events to analyze\n");
@@ -611,6 +623,8 @@ int main(int argc, char *argv[])
    int num_skip = 0;
    int num_analyze = 0;
 
+   TMWriterInterface *writer = NULL;
+
    bool event_dump = false;
 
    for (unsigned int i=1; i<args.size(); i++) { // loop over the commandline options
@@ -620,6 +634,8 @@ int main(int argc, char *argv[])
       if (0) {
       } else if (args[i] == "--dump") {
          event_dump = true;
+      } else if (strncmp(arg,"-o",2)==0) {
+         writer = TMNewWriter(arg+2);
       } else if (strncmp(arg,"-s",2)==0) {
          num_skip = atoi(arg+2);
       } else if (strncmp(arg,"-e",2)==0) {
@@ -694,11 +710,17 @@ int main(int argc, char *argv[])
    }
 
    if (run_from_file) {
-      ProcessMidasFiles(args, num_skip, num_analyze);
+      ProcessMidasFiles(args, num_skip, num_analyze, writer);
    } else {
 #ifdef HAVE_MIDAS
       ProcessMidasOnline(hostname, exptname, num_analyze);
 #endif
+   }
+
+   if (writer) {
+      writer->Close();
+      delete writer;
+      writer = NULL;
    }
 
    return 0;

@@ -246,6 +246,34 @@ public:
    char* fSrcBuf;
 };
 
+class FileWriter: public TMWriterInterface
+{
+ public:
+   FileWriter(const char* filename)
+   {
+      fFilename = filename;
+      fFp = fopen(filename, "w");
+      assert(fFp != NULL); // FIXME: check for error
+   }
+
+   int Write(const void* buf, int count)
+   {
+      assert(fFp != NULL);
+      return fwrite(buf, 1, count, fFp);
+   }
+
+   int Close()
+   {
+      assert(fFp != NULL);
+      fclose(fFp);
+      fFp = NULL;
+      return 0;
+   }
+
+   std::string fFilename;
+   FILE* fFp;
+};
+
 static int hasSuffix(const char*name,const char*suffix)
 {
    const char* s = strstr(name,suffix);
@@ -268,6 +296,24 @@ TMReaderInterface* TMNewReader(const char* source)
       return new Lz4Reader(new FileReader(source));
    } else {
       return new FileReader(source);
+   }
+}
+
+TMWriterInterface* TMNewWriter(const char* destination)
+{
+   if (0) {
+#if 0
+#if HAVE_ZLIB
+   } else if (hasSuffix(source, ".gz")) {
+      return new ZlibReader(source);
+#endif
+   } else if (hasSuffix(source, ".bz2")) {
+      return new PipeReader((std::string("bzip2 -dc ") + source).c_str());
+   } else if (hasSuffix(source, ".lz4")) {
+      return new Lz4Reader(new FileReader(source));
+#endif
+   } else {
+      return new FileWriter(destination);
    }
 }
 
@@ -342,6 +388,11 @@ TMEvent* TMReadEvent(TMReaderInterface* reader)
    }
 
    return e;
+}
+
+void TMWriteEvent(TMWriterInterface* writer, const TMEvent* event)
+{
+   writer->Write(&(event->data[0]), event->data.size());
 }
 
 std::string TMEvent::HeaderToString() const
