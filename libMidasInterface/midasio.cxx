@@ -369,6 +369,19 @@ std::string TMEvent::BankToString(const TMBank*b) const
    return buf;
 }
 
+TMEvent::TMEvent() // ctor
+{
+   error = false;
+   found_all_banks = false;
+   event_id      = 0;
+   trigger_mask  = 0;
+   serial_number = 0;
+   time_stamp    = 0;
+   data_size     = 0;
+   bank_header_flags  = 0;
+   bank_scan_position = 0;
+}
+
 static int FindFirstBank(TMEvent* e)
 {
    u32 bank_header_data_size = GetU32(&e->data[16]);
@@ -386,18 +399,37 @@ static int FindFirstBank(TMEvent* e)
    return 16+8;
 }
 
+#if 0
+static char xchar(char c)
+{
+   if (c>='0' && c<='9')
+      return c;
+   if (c>='a' && c<='z')
+      return c;
+   if (c>='A' && c<='Z')
+      return c;
+   return '$';
+}
+#endif
+
 static int FindNextBank(TMEvent* e, int pos, TMBank** pb)
 {
    if (e->error)
       return -1;
 
-   //printf("pos %d, event data_size %d, size %d\n", pos, e->data_size, (int)e->data.size());
-
    int remaining = e->data.size() - pos;
 
-   if (remaining < 8) {
+   //printf("pos %d, event data_size %d, size %d, remaining %d\n", pos, e->data_size, (int)e->data.size(), remaining);
+
+   if (remaining == 0) {
       // end of data, no more banks to find
       e->found_all_banks = true;
+      return -1;
+   }
+
+   if (remaining < 8) {
+      printf("too few bytes remaining at the end of event: %d\n", remaining);
+      e->error = true;
       return -1;
    }
 
@@ -428,10 +460,23 @@ static int FindNextBank(TMEvent* e, int pos, TMBank** pb)
    b->data_offset = data_offset;
 
    //printf("found bank at pos %d: %s\n", pos, e->BankToString(b).c_str());
+   
+   if (b->type < 1 || b->type >= TID_LAST) {
+      printf("invalid tid %d\n", b->type);
+      e->error = true;
+      return -1;
+   }
 
-   int npos = data_offset + b->data_size;
+   int aligned_data_size = (b->data_size + 7) & ~7;
+
+   //printf("data_size %d, alignemnt: %d %d, aligned %d\n", b->data_size, align, b->data_size%align, aligned_data_size);
+
+   int npos = data_offset + aligned_data_size;
+
+   //printf("pos %d, next bank at %d: [%c%c%c%c]\n", pos, npos, xchar(e->data[npos+0]), xchar(e->data[npos+1]), xchar(e->data[npos+2]), xchar(e->data[npos+3]));
 
    if (npos > e->data.size()) {
+      printf("invalid bank data size %d\n", b->data_size);
       e->error = true;
       return -1;
    }
@@ -460,31 +505,36 @@ TMBank* TMEvent::FindBank(const char* bank_name)
    if (error)
       return NULL;
 
-   for (unsigned i=0; i<banks.size(); i++) {
-      if (banks[i].name == bank_name)
-         return &banks[i];
-   }
+   if (bank_name)
+      for (unsigned i=0; i<banks.size(); i++) {
+         if (banks[i].name == bank_name)
+            return &banks[i];
+      }
 
    //printf("found_all_banks %d\n", found_all_banks);
 
    if (found_all_banks)
       return NULL;
    
-   int pos = FindFirstBank(this);
+   int pos = bank_scan_position;
 
-   // FIXME: FindFirstBank should start looking from last bank found, not from beginning of event
+   if (pos == 0)
+      pos = FindFirstBank(this);
 
    //printf("pos %d\n", pos);
 
    while (pos > 0) {
       TMBank* b = NULL;
       pos = FindNextBank(this, pos, &b);
+      bank_scan_position = pos;
       //printf("pos %d, b %p\n", pos, b);
-      if (pos>0 && b) {
+      if (pos>0 && b && bank_name) {
          if (b->name == bank_name)
             return b;
       }
    }
+
+   found_all_banks = true;
 
    return NULL;
 }

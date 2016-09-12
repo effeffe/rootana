@@ -13,6 +13,9 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 #endif
 
+#ifndef TID_LAST
+/**
+Data types Definition                         min      max    */
 #define TID_BYTE      1       /**< unsigned byte         0       255    */
 #define TID_SBYTE     2       /**< signed byte         -128      127    */
 #define TID_CHAR      3       /**< single character      0       255    */
@@ -25,6 +28,12 @@ typedef uint32_t u32;
 #define TID_DOUBLE   10       /**< 8 Byte float format                  */
 #define TID_BITFIELD 11       /**< 32 Bits Bitfield      0  111... (32) */
 #define TID_STRING   12       /**< zero terminated string               */
+#define TID_ARRAY    13       /**< array with unknown contents          */
+#define TID_STRUCT   14       /**< structure with fixed length          */
+#define TID_KEY      15       /**< key in online database               */
+#define TID_LINK     16       /**< link in online database              */
+#define TID_LAST     17       /**< end of TID list indicator            */
+#endif
 
 struct TMBank
 {
@@ -51,11 +60,14 @@ struct TMEvent
    std::vector<TMBank> banks;
    std::vector<u8> data;
 
+   u32 bank_scan_position;
+
 public:
    std::string HeaderToString() const;
    std::string BankListToString() const;
    std::string BankToString(const TMBank*) const;
-   
+
+   TMEvent(); // ctor
    void FindAllBanks();
    TMBank* FindBank(const char* bank_name);
    char* GetBankData(const TMBank*);
