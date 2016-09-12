@@ -52,14 +52,14 @@ class TARunInterface
    virtual ~TARunInterface() {}; // dtor
 
  public:
-   virtual void BeginRun(TARunInfo* runinfo) = 0; // begin of run
-   virtual void EndRun(TARunInfo* runinfo) = 0; // end of run
+   virtual void BeginRun(TARunInfo* runinfo); // begin of run
+   virtual void EndRun(TARunInfo* runinfo); // end of run
 
-   virtual void PauseRun(TARunInfo* runinfo) = 0; // pause of run (if online)
-   virtual void ResumeRun(TARunInfo* runinfo) = 0; // resume of run (if online)
+   virtual void PauseRun(TARunInfo* runinfo); // pause of run (if online)
+   virtual void ResumeRun(TARunInfo* runinfo); // resume of run (if online)
 
-   virtual TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow) = 0;
-   virtual void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event) = 0;
+   virtual TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow);
+   virtual void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event);
 
  private:
    TARunInterface(); // hidden default constructor
@@ -75,8 +75,8 @@ class TAModuleInterface
    virtual TARunInterface* NewRun(TARunInfo* runinfo) = 0; // factory for module-specific Run objects
 
  public:
-   virtual void Init(const std::vector<std::string> &args) = 0; // start of analysis
-   virtual void Finish() = 0; // end of analysis
+   virtual void Init(const std::vector<std::string> &args); // start of analysis
+   virtual void Finish(); // end of analysis
 };
 
 class TARegisterModule

@@ -13,6 +13,12 @@
 #include "manalyzer.h"
 #include "midasio.h"
 
+//////////////////////////////////////////////////////////
+//
+// Methods of TARunInfo
+//
+//////////////////////////////////////////////////////////
+
 TARunInfo::TARunInfo(int runno, const std::string& filename)
 {
    printf("TARunInfo::ctor!\n");
@@ -31,10 +37,69 @@ TARunInfo::~TARunInfo()
    }
 }
 
+//////////////////////////////////////////////////////////
+//
+// Methods of TARunInterace
+//
+//////////////////////////////////////////////////////////
+
 TARunInterface::TARunInterface(TARunInfo* runinfo)
 {
    printf("TARunInterface::ctor, run %d\n", runinfo->fRunNo);
 }
+
+void TARunInterface::BeginRun(TARunInfo* runinfo)
+{
+   printf("TARunInterface::BeginRun, run %d\n", runinfo->fRunNo);
+}
+
+void TARunInterface::EndRun(TARunInfo* runinfo)
+{
+   printf("TARunInterface::EndRun, run %d\n", runinfo->fRunNo);
+}
+
+void TARunInterface::PauseRun(TARunInfo* runinfo)
+{
+   printf("TARunInterface::PauseRun, run %d\n", runinfo->fRunNo);
+}
+
+void TARunInterface::ResumeRun(TARunInfo* runinfo)
+{
+   printf("TARunInterface::ResumeRun, run %d\n", runinfo->fRunNo);
+}
+
+TAFlowEvent* TARunInterface::Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
+{
+   printf("TARunInterface::Analyze!\n");
+   return flow;
+}
+
+void TARunInterface::AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)
+{
+   printf("TARunInterface::AnalyzeSpecialEvent!\n");
+}
+
+//////////////////////////////////////////////////////////
+//
+// Methods of TAModuleInterface
+//
+//////////////////////////////////////////////////////////
+
+void TAModuleInterface::Init(const std::vector<std::string> &args)
+{
+   printf("TAModuleInterface::Init!\n");
+}
+
+void TAModuleInterface::Finish()
+{
+   printf("TAModuleInterface::Finish!\n");
+}
+
+//////////////////////////////////////////////////////////
+//
+// Methods of TARegisterModule
+//
+//////////////////////////////////////////////////////////
 
 std::vector<TAModuleInterface*> *gModules = NULL;
 
