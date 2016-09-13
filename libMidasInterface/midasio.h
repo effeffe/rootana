@@ -68,6 +68,7 @@ public:
    std::string BankToString(const TMBank*) const;
 
    TMEvent(); // ctor
+   TMEvent(const void* data, int data_size); // ctor
    void FindAllBanks();
    TMBank* FindBank(const char* bank_name);
    char* GetBankData(const TMBank*);

@@ -13,7 +13,8 @@
 
 #include <string>
 #include <assert.h>
-#include "midas.h"
+
+//#include "midas.h"
 #include "msystem.h"
 //#include "hardware.h"
 //#include "ybos.h"
@@ -126,31 +127,34 @@ bool TMidasOnline::checkTransitions()
     return false;
   
   //printf("cm_query_transition: status %d, tr %d, run %d, time %d\n",status,transition,run_number,trans_time);
+
+  for (unsigned i=0; i<fHandlers.size(); i++)
+    fHandlers[i]->Transition(transition, run_number, trans_time);
   
   if (transition == TR_START)
     {
       if (fStartHandler)
-	(*fStartHandler)(transition,run_number,trans_time);
+        (*fStartHandler)(transition,run_number,trans_time);
       return true;
     }
   else if (transition == TR_STOP)
     {
       if (fStopHandler)
-	(*fStopHandler)(transition,run_number,trans_time);
+        (*fStopHandler)(transition,run_number,trans_time);
       return true;
       
     }
   else if (transition == TR_PAUSE)
     {
       if (fPauseHandler)
-	(*fPauseHandler)(transition,run_number,trans_time);
+        (*fPauseHandler)(transition,run_number,trans_time);
       return true;
       
     }
   else if (transition == TR_RESUME)
     {
       if (fResumeHandler)
-	(*fResumeHandler)(transition,run_number,trans_time);
+        (*fResumeHandler)(transition,run_number,trans_time);
       return true;
     }
   
@@ -194,9 +198,14 @@ static void eventCallback(HNDLE buffer_handle, HNDLE request_id, EVENT_HEADER* p
 	 pheader->data_size,
 	 pevent);
 #endif
+
+  TMidasOnline* midas = TMidasOnline::instance();
   
-  if (TMidasOnline::instance()->fEventHandler)
-    TMidasOnline::instance()->fEventHandler(pheader,pevent,pheader->data_size);
+  for (unsigned i=0; i<midas->fHandlers.size(); i++)
+    midas->fHandlers[i]->Event(pheader, sizeof(EVENT_HEADER) + pheader->data_size);
+
+  if (midas->fEventHandler)
+    midas->fEventHandler(pheader,pevent,pheader->data_size);
 }
 
 int TMidasOnline::receiveEvent(int requestId, void* pevent, int size, bool async)
@@ -324,8 +333,14 @@ void TMidasOnline::deleteEventRequest(int requestId)
       }
 }
 
+TMHandlerInterface::~TMHandlerInterface()
+{
+}
 
-
+void TMidasOnline::RegisterHandler(TMHandlerInterface* h)
+{
+  fHandlers.push_back(h);
+}
 
 int TMidasOnline::odbReadInt(const char*name,int index,int defaultValue)
 {

@@ -19,11 +19,12 @@
 //
 //////////////////////////////////////////////////////////
 
-TARunInfo::TARunInfo(int runno, const std::string& filename)
+TARunInfo::TARunInfo(int runno, const char* filename)
 {
    printf("TARunInfo::ctor!\n");
    fRunNo = runno;
-   fFileName = filename;
+   if (filename)
+      fFileName = filename;
    fOdb = NULL;
 }
 
@@ -159,8 +160,6 @@ TARegisterModule::TARegisterModule(TAModuleInterface* m)
 TDirectory* gOnlineHistDir = NULL;
 #endif
 
-VirtualOdb* gOdb = NULL;
-
 double GetTimeSec()
 {
   struct timeval tv;
@@ -194,109 +193,210 @@ TARootRunInfo::~TARootRunInfo() // dtor
 }
 #endif
 
-#ifdef HAVE_MIDAS
-//#ifdef HAVE_ROOT
-//static TARootRunInfo* gRunInfo = NULL;
-//#else
-static TARunInfo* gRunInfo = NULL;
-//#endif
-
-void startRun(int transition,int run,int time)
+class RunHandler
 {
-  if (gRunInfo) {
-    if (gRunInfo->fRunNo != run) {
-      delete gRunInfo;
-      gRunInfo = NULL;
-    }
-  }
+public:
+   TARunInfo* fRunInfo;
+   std::vector<TARunInterface*> fRunRun;
 
-  if (!gRunInfo) {
-#ifdef HAVE_ROOT
-    gRunInfo = new TARootRunInfo(run, "unknown");
-#else
-    gRunInfo = new TARunInfo(run, "unknown");
-#endif
-  }
-  
-  printf("Begin run: %d\n", run);
+   RunHandler() // ctor
+   {
+      fRunInfo = NULL;
+   }
+
+   ~RunHandler() // dtor
+   {
+      if (fRunInfo) {
+         delete fRunInfo;
+         fRunInfo = NULL;
+      }
+   }
+
+   void CreateRun(int run_number, const char* file_name)
+   {
+      assert(fRunInfo == NULL);
+      assert(fRunRun.size() == 0);
+      
+      fRunInfo = new TARunInfo(run_number, file_name);
+
+      for (unsigned i=0; i<(*gModules).size(); i++)
+         fRunRun.push_back((*gModules)[i]->NewRun(fRunInfo));
+   }
+
+   void BeginRun()
+   {
+      assert(fRunInfo != NULL);
+      for (unsigned i=0; i<fRunRun.size(); i++)
+         fRunRun[i]->BeginRun(fRunInfo);
+   }
+
+   void EndRun()
+   {
+      assert(fRunInfo);
+      
+      for (unsigned i=0; i<fRunRun.size(); i++)
+         fRunRun[i]->EndRun(fRunInfo);
+
+      for (unsigned i=0; i<fRunRun.size(); i++) {
+         delete fRunRun[i];
+         fRunRun[i] = NULL;
+      }
+
+      fRunRun.clear();
+      assert(fRunRun.size() == 0);
+
+      delete fRunInfo;
+      fRunInfo = NULL;
+   }
+
+   void AnalyzeSpecialEvent(TMEvent* event)
+   {
+      for (unsigned i=0; i<fRunRun.size(); i++)
+         fRunRun[i]->AnalyzeSpecialEvent(fRunInfo, event);
+   }
+
+   void AnalyzeEvent(TMEvent* event, TAFlags* flags, TMWriterInterface *writer)
+   {
+      assert(fRunInfo != NULL);
+      
+      TAFlowEvent* flow = NULL;
+                  
+      for (unsigned i=0; i<fRunRun.size(); i++) {
+         flow = fRunRun[i]->Analyze(fRunInfo, event, flags, flow);
+         if (*flags & TAFlag_SKIP)
+            break;
+      }
+      
+      if (*flags & TAFlag_WRITE)
+         if (writer)
+            TMWriteEvent(writer, event);
+      
+      if (flow)
+         delete flow;
+   }
+};
+
+#ifdef HAVE_MIDAS
+
+class OnlineHandler: public TMHandlerInterface
+{
+public:
+   RunHandler fRun;
+   int fNumAnalyze;
+   TMWriterInterface* fWriter;
+   bool fQuit;
+
+   OnlineHandler(int num_analyze, TMWriterInterface* writer) // ctor
+   {
+      fQuit = false;
+      fNumAnalyze = num_analyze;
+      fWriter = writer;
+   }
+
+   ~OnlineHandler() // dtor
+   {
+      fWriter = NULL;
+   }
+
+   void StartRun(int run_number)
+   {
+      fRun.CreateRun(run_number, NULL);
 
 #ifdef HAVE_LIBNETDIRECTORY
-  NetDirectoryExport(gOutputFile, "outputFile");
+      NetDirectoryExport(gOutputFile, "outputFile");
 #endif
 
-  for (unsigned i=0; i<(*gModules).size(); i++)
-    (*gModules)[i]->StartRun(gRunInfo);
-}
+      fRun.BeginRun();
+   }
 
-void endRun(int transition,int run,int time)
-{
-  for (unsigned i=0; i<(*gModules).size(); i++)
-    (*gModules)[i]->EndRun(gRunInfo);
+   void Transition(int transition, int run_number, int transition_time)
+   {
+      printf("OnlineHandler::Transtion: transition %d, run %d, time %d\n", transition, run_number, transition_time);
+      
+      if (transition == TR_START) {
+         if (fRun.fRunInfo)
+            fRun.EndRun();
+         assert(fRun.fRunInfo == NULL);
 
-  printf("End of run %d\n", run);
-}
+         StartRun(run_number);
+         printf("Begin run: %d\n", run_number);
+      } else if (transition == TR_STOP) {
+         fRun.EndRun();
+         printf("End of run %d\n", run_number);
+      }
+   }
 
-void HandleMidasEvent(TMidasEvent& event)
-{
-   for (unsigned i=0; i<(*gModules).size(); i++)
-      (*gModules)[i]->Analyze(gRunInfo, &event);
-}
+   void Event(const void* data, int data_size)
+   {
+      printf("OnlineHandler::Event: ptr %p, size %d\n", data, data_size);
 
-void eventHandler(const void*pheader,const void*pdata,int size)
-{
-  TMidasEvent event;
-  memcpy(event.GetEventHeader(), pheader, sizeof(TMidas_EVENT_HEADER));
-  event.SetData(size, (char*)pdata);
-  event.SetBankList();
-  HandleMidasEvent(event);
-}
+      if (!fRun.fRunInfo) {
+         StartRun(0); // start fake run for events outside of a run
+      }
 
-void MidasPollHandler()
-{
-  if (!(TMidasOnline::instance()->poll(0)))
-    gSystem->ExitLoop();
-}
+      TMEvent* event = new TMEvent(data, data_size);
 
-int ProcessMidasOnline(const char* hostname, const char* exptname)
+      TAFlags flags = 0;
+      
+      fRun.AnalyzeEvent(event, &flags, fWriter);
+
+      if (flags & TAFlag_QUIT)
+         fQuit = true;
+
+      if (fNumAnalyze > 0) {
+         fNumAnalyze--;
+         if (fNumAnalyze == 0)
+            fQuit = true;
+      }
+
+      if (event) {
+         delete event;
+         event = NULL;
+      }
+   }
+};
+
+int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostname, const char* exptname, int num_analyze, TMWriterInterface* writer)
 {
    TMidasOnline *midas = TMidasOnline::instance();
 
    int err = midas->connect(hostname, exptname, "rootana");
-   if (err != 0)
-     {
-       fprintf(stderr,"Cannot connect to MIDAS, error %d\n", err);
-       return -1;
-     }
+   if (err != 0) {
+      fprintf(stderr,"Cannot connect to MIDAS, error %d\n", err);
+      return -1;
+   }
 
-   gOdb = midas;
+   OnlineHandler* h = new OnlineHandler(num_analyze, writer);
 
-   midas->setTransitionHandlers(startRun,endRun,NULL,NULL);
+   midas->RegisterHandler(h);
    midas->registerTransitions();
 
    /* reqister event requests */
 
-   midas->setEventHandler(eventHandler);
    midas->eventRequest("SYSTEM",-1,-1,(1<<1));
 
-   /* fill present run parameters */
+   int run_number = midas->odbReadInt("/runinfo/Run number");
+   int run_state  = midas->odbReadInt("/runinfo/State");
 
-   int runno = gOdb->odbReadInt("/runinfo/Run number");
+   for (unsigned i=0; i<(*gModules).size(); i++)
+      (*gModules)[i]->Init(args);
 
-   if ((gOdb->odbReadInt("/runinfo/State") == 3)) // running state
-     startRun(0,runno,0);
+   if ((run_state == STATE_RUNNING)||(run_state == STATE_PAUSED)) {
+      h->StartRun(run_number);
+   }
 
-   printf("Startup: run %d\n", runno);
+   while (!h->fQuit) {
+      if (!TMidasOnline::instance()->poll(10))
+         break;
+   }
+
+   if (h->fRun.fRunInfo) {
+      h->fRun.EndRun();
+   }
+
+   for (unsigned i=0; i<(*gModules).size(); i++)
+      (*gModules)[i]->Finish();
    
-   MyPeriodic tm(100,MidasPollHandler);
-   //MyPeriodic th(1000,SISperiodic);
-   //MyPeriodic tn(1000,StepThroughSISBuffer);
-   //MyPeriodic to(1000,Scalerperiodic);
-
-   /*---- start main loop ----*/
-
-   //loop_online();
-   app->Run(kTRUE);
-
    /* disconnect from experiment */
    midas->disconnect();
 
@@ -310,9 +410,7 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Init(args);
 
-   TARunInfo* runinfo = NULL;
-
-   std::vector<TARunInterface*> runrun;
+   RunHandler run;
 
    bool done = false;
 
@@ -339,28 +437,13 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
             {
                int runno = event->serial_number;
 
-               if (runinfo) {
-                  if (runinfo->fRunNo == runno) {
+               if (run.fRunInfo) {
+                  if (run.fRunInfo->fRunNo == runno) {
                      // next subrun file, nothing to do
-                     runinfo->fFileName = filename;
+                     run.fRunInfo->fFileName = filename;
                   } else {
                      // file with a different run number
-
-                     if (runrun.size() > 0) {
-                        for (unsigned i=0; i<runrun.size(); i++) {
-                           if (runinfo)
-                              runrun[i]->EndRun(runinfo);
-                           delete runrun[i];
-                           runrun[i] = NULL;
-                        }
-                        runrun.clear();
-                        assert(runrun.size() == 0);
-                     }
-
-                     if (runinfo) {
-                        delete runinfo;
-                        runinfo = NULL;
-                     }
+                     run.EndRun();
                   }
                }
 
@@ -371,72 +454,49 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
                //   delete gOdb;
                //gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
 
-               if (!runinfo) {
-                  runinfo = new TARunInfo(runno, filename);
-                  assert(runrun.size() == 0);
-                  for (unsigned i=0; i<(*gModules).size(); i++)
-                     runrun.push_back((*gModules)[i]->NewRun(runinfo));
-                  for (unsigned i=0; i<runrun.size(); i++)
-                     runrun[i]->BeginRun(runinfo);
+               if (!run.fRunInfo) {
+                  run.CreateRun(runno, filename.c_str());
+                  run.BeginRun();
                }
 
-               for (unsigned i=0; i<runrun.size(); i++)
-                  runrun[i]->AnalyzeSpecialEvent(runinfo, event);
+               assert(run.fRunInfo);
+
+               run.AnalyzeSpecialEvent(event);
 
                if (writer)
                   TMWriteEvent(writer, event);
             }
          else if (event->event_id == 0x8001) // end of run event
             {
-               for (unsigned i=0; i<runrun.size(); i++)
-                  runrun[i]->AnalyzeSpecialEvent(runinfo, event);
-
                //int runno = event->serial_number;
-
+               run.AnalyzeSpecialEvent(event);
                if (writer)
                   TMWriteEvent(writer, event);
             }
          else if (event->event_id == 0x8002) // message event
             {
-               for (unsigned i=0; i<runrun.size(); i++)
-                  runrun[i]->AnalyzeSpecialEvent(runinfo, event);
-
+               run.AnalyzeSpecialEvent(event);
                if (writer)
                   TMWriteEvent(writer, event);
             }
          else
             {
-               if (!runinfo) {
+               if (!run.fRunInfo) {
                   // create a fake begin of run
-                  runinfo = new TARunInfo(0, filename);
-                  assert(runrun.size() == 0);
-                  for (unsigned i=0; i<(*gModules).size(); i++)
-                     runrun.push_back((*gModules)[i]->NewRun(runinfo));
-                  for (unsigned i=0; i<runrun.size(); i++)
-                     runrun[i]->BeginRun(runinfo);
+                  run.CreateRun(0, filename.c_str());
+                  run.BeginRun();
                }
 
                if (num_skip > 0) {
                   num_skip--;
                } else {
                   TAFlags flags = 0;
-                  TAFlowEvent* flow = NULL;
-                  
-                  for (unsigned i=0; i<runrun.size(); i++) {
-                     flow = runrun[i]->Analyze(runinfo, event, &flags, flow);
-                     if (flags & TAFlag_QUIT)
-                        done = true;
-                     if (flags & TAFlag_SKIP)
-                        break;
-                  }
 
-                  if (flags & TAFlag_WRITE)
-                     if (writer)
-                        TMWriteEvent(writer, event);
+                  run.AnalyzeEvent(event, &flags, writer);
 
-                  if (flow)
-                     delete flow;
-                  
+                  if (flags & TAFlag_QUIT)
+                     done = true;
+
                   if (num_analyze > 0) {
                      num_analyze--;
                      if (num_analyze == 0)
@@ -457,20 +517,8 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
          break;
    }
 
-   if (runrun.size() > 0) {
-      for (unsigned i=0; i<runrun.size(); i++) {
-         if (runinfo)
-            runrun[i]->EndRun(runinfo);
-         delete runrun[i];
-         runrun[i] = NULL;
-      }
-      runrun.clear();
-      assert(runrun.size() == 0);
-   }
-
-   if (runinfo) {
-      delete runinfo;
-      runinfo = NULL;
+   if (run.fRunInfo) {
+      run.EndRun();
    }
    
    for (unsigned i=0; i<(*gModules).size(); i++)
@@ -713,7 +761,7 @@ int main(int argc, char *argv[])
       ProcessMidasFiles(args, num_skip, num_analyze, writer);
    } else {
 #ifdef HAVE_MIDAS
-      ProcessMidasOnline(hostname, exptname, num_analyze);
+      ProcessMidasOnline(args, hostname, exptname, num_analyze, writer);
 #endif
    }
 

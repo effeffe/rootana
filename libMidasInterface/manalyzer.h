@@ -17,7 +17,7 @@ class TARunInfo
    VirtualOdb* fOdb;
 
  public:
-   TARunInfo(int runno, const std::string& filename);
+   TARunInfo(int runno, const char* filename);
    ~TARunInfo();
 
  private:

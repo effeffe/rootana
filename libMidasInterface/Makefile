@@ -22,8 +22,9 @@ OBJS += TMidasEvent.o
 OBJS += TMidasFile.o
 
 ifdef MIDASSYS
-CXXFLAGS += -I$(MIDASSYS)/include
+CXXFLAGS += -I$(MIDASSYS)/include -DHAVE_MIDAS
 OBJS += TMidasOnline.o
+MOBJS += TMidasOnline.o -L$(MIDASSYS)/darwin/lib -lmidas
 UNAME=$(shell uname)
 ifeq ($(UNAME),Darwin)
 CXXFLAGS += -DOS_LINUX -DOS_DARWIN
@@ -55,17 +56,17 @@ libMidasInterface.a: $(OBJS)
 %.o: %.cxx
 	$(CXX) $(CXXFLAGS) -c $<
 
-manalyzer.exe: %.exe: %.o manalyzer.o midasio.o TMidasEvent.o
-	$(CXX) -o $@ $(CXXFLAGS) $^ -L../lib -lrootana -lz $(ROOTLIBS)
+manalyzer.exe: %.exe: %.o manalyzer.o midasio.o
+	$(CXX) -o $@ $(CXXFLAGS) $^ $(MOBJS) -L../lib -lrootana -lz $(ROOTLIBS)
 
 manalyzer_example1.exe: %.exe: %.o manalyzer.o midasio.o TMidasEvent.o
-	$(CXX) -o $@ $(CXXFLAGS) $^ -L../lib -lrootana -lz $(ROOTLIBS)
+	$(CXX) -o $@ $(CXXFLAGS) $^ $(MOBJS) -L../lib -lrootana -lz $(ROOTLIBS)
 
 manalyzer_example2.exe: %.exe: %.o manalyzer.o midasio.o TMidasEvent.o
-	$(CXX) -o $@ $(CXXFLAGS) $^ -L../lib -lrootana -lz $(ROOTLIBS)
+	$(CXX) -o $@ $(CXXFLAGS) $^ $(MOBJS) -L../lib -lrootana -lz $(ROOTLIBS)
 
 manalyzer_example3.exe: %.exe: %.o manalyzer.o midasio.o TMidasEvent.o
-	$(CXX) -o $@ $(CXXFLAGS) $^ -L../lib -lrootana -lz $(ROOTLIBS)
+	$(CXX) -o $@ $(CXXFLAGS) $^ $(MOBJS) -L../lib -lrootana -lz $(ROOTLIBS)
 
 dox:
 	doxygen

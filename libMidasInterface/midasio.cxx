@@ -317,14 +317,27 @@ TMWriterInterface* TMNewWriter(const char* destination)
    }
 }
 
-u16 GetU16(void*ptr)
+u16 GetU16(const void*ptr)
 {
    return *(u16*)ptr;
 }
 
-u32 GetU32(void*ptr)
+u32 GetU32(const void*ptr)
 {
    return *(u32*)ptr;
+}
+
+static void ZeroEvent(TMEvent* e)
+{
+   e->error = false;
+   e->found_all_banks = false;
+   e->event_id      = 0;
+   e->trigger_mask  = 0;
+   e->serial_number = 0;
+   e->time_stamp    = 0;
+   e->data_size     = 0;
+   e->bank_header_flags  = 0;
+   e->bank_scan_position = 0;
 }
 
 TMEvent* TMReadEvent(TMReaderInterface* reader)
@@ -339,14 +352,7 @@ TMEvent* TMReadEvent(TMReaderInterface* reader)
    
    TMEvent* e = new TMEvent;
 
-   e->error = false;
-   e->found_all_banks = false;
-   e->event_id = 0;
-   e->trigger_mask = 0;
-   e->serial_number = 0;
-   e->time_stamp = 0;
-   e->data_size = 0;
-   e->bank_header_flags = 0;
+   ZeroEvent(e);
 
    const int event_header_size = 4*4;
    char event_header[event_header_size];
@@ -422,19 +428,58 @@ std::string TMEvent::BankToString(const TMBank*b) const
 
 TMEvent::TMEvent() // ctor
 {
-   error = false;
-   found_all_banks = false;
-   event_id      = 0;
-   trigger_mask  = 0;
-   serial_number = 0;
-   time_stamp    = 0;
-   data_size     = 0;
-   bank_header_flags  = 0;
-   bank_scan_position = 0;
+   ZeroEvent(this);
 }
+
+TMEvent::TMEvent(const void* xdata, int xdata_size)
+{
+   bool gOnce = true;
+   if (gOnce) {
+      gOnce = false;
+      assert(sizeof(u8)==1);
+      assert(sizeof(u16)==2);
+      assert(sizeof(u32)==4);
+   }
+
+   ZeroEvent(this);
+
+   const int event_header_size = 4*4;
+   const char* event_header = (const char*)xdata;
+
+   if (xdata_size < event_header_size) {
+      error = true;
+      return;
+   }
+
+   event_id      = GetU16(event_header+0);
+   trigger_mask  = GetU16(event_header+2);
+   serial_number = GetU32(event_header+4);
+   time_stamp    = GetU32(event_header+8);
+   data_size     = GetU32(event_header+12);
+
+   bank_header_flags = 0;
+
+   //if (!e->old_event.IsGoodSize()) { // invalid event size
+   //   e->error = true;
+   //   return e;
+   //}
+
+   int to_read = data_size;
+
+   data.resize(event_header_size + to_read);
+
+   memcpy(&data[0], xdata, event_header_size + to_read);
+}
+
+
 
 static int FindFirstBank(TMEvent* e)
 {
+   if (e->data.size() < 16 + 8) {
+      e->error = true;
+      return -1;
+   }
+   
    u32 bank_header_data_size = GetU32(&e->data[16]);
    u32 bank_header_flags     = GetU32(&e->data[16+4]);
 

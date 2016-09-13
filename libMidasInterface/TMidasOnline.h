@@ -11,9 +11,10 @@
 
 \********************************************************************/
 
-
-#include <stdio.h>
 #include <string>
+#include <vector>
+
+#include "midas.h"
 
 #include "VirtualOdb.h"
 
@@ -24,7 +25,7 @@ struct EventRequest
 public:
   EventRequest* fNext;          ///< (internal use) list of all requests
   std::string   fBufferName;    ///< name of the midas data buffer, e.g. "SYSTEM"
-  int           fBufferHandle;  ///< buffer handle from bm_open_buffer()
+  HNDLE         fBufferHandle;  ///< buffer handle from bm_open_buffer()
   int           fEventId;       ///< request event ID
   int           fTriggerMask;   ///< request trigger mask
   int           fSamplingType;  ///< sampling type
@@ -32,6 +33,14 @@ public:
 };
 
 /// MIDAS online connection, including access to online ODB
+
+class TMHandlerInterface
+{
+ public:
+  virtual ~TMHandlerInterface();
+  virtual void Transition(int transition, int run_number, int transition_time) = 0;
+  virtual void Event(const void* data, int data_size) = 0;
+};
 
 class TMidasOnline : public VirtualOdb
 {
@@ -48,7 +57,7 @@ public:
   std::string fHostname; ///< hostname where the mserver is running, blank if using shared memory
   std::string fExptname; ///< experiment name, blank if only one experiment defined in exptab
 
-  int  fDB; ///< ODB handle
+  HNDLE fDB; ///< ODB handle
 
   TransitionHandler fStartHandler;
   TransitionHandler fStopHandler;
@@ -57,6 +66,8 @@ public:
 
   EventRequest*     fEventRequests;
   EventHandler      fEventHandler;
+
+  std::vector<TMHandlerInterface*> fHandlers;
 
 private:
   /// TMidasOnline is a singleton class: only one
@@ -111,6 +122,8 @@ public:
 
   /// Get buffer size
   int getBufferSize();
+
+  void RegisterHandler(TMHandlerInterface* h);
 
   // ODB functions required by VirtualOdb
 
