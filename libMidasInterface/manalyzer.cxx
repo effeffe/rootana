@@ -26,6 +26,9 @@ TARunInfo::TARunInfo(int runno, const char* filename)
    if (filename)
       fFileName = filename;
    fOdb = NULL;
+#ifdef HAVE_ROOT
+   fRoot = new TARootHelper(this);
+#endif
 }
 
 TARunInfo::~TARunInfo()
@@ -35,6 +38,10 @@ TARunInfo::~TARunInfo()
    if (fOdb) {
       delete fOdb;
       fOdb = NULL;
+   }
+   if (fRoot) {
+      delete fRoot;
+      fRoot = NULL;
    }
 }
 
@@ -131,34 +138,9 @@ TARegisterModule::TARegisterModule(TAModuleInterface* m)
    gModules->push_back(m);
 }
 
-#include "VirtualOdb.h"
-#ifdef HAVE_MIDAS
-#include "TMidasOnline.h"
-#endif
-//#include "TMidasEvent.h"
-//#include "TMidasFile.h"
-#ifdef HAVE_ROOT
-#include "XmlOdb.h"
-#endif
-#ifdef HAVE_MIDASSERVER
-#include "midasServer.h"
-#endif
-#ifdef HAVE_LIBNETDIRECTORY
-#include "libNetDirectory/netDirectoryServer.h"
-#endif
-#ifdef HAVE_XMLSERVER
-#include "libXmlServer/xmlServer.h"
-#endif
-
-#ifdef HAVE_ROOT
-#include <TSystem.h>
-#include <TROOT.h>
-#include <TFile.h>
-#include <TDirectory.h>
-#include <TFolder.h>
-
-TDirectory* gOnlineHistDir = NULL;
-#endif
+//#ifdef HAVE_ROOT_XML
+//#include "XmlOdb.h"
+//#endif
 
 double GetTimeSec()
 {
@@ -168,29 +150,63 @@ double GetTimeSec()
 }
 
 #ifdef HAVE_ROOT
-TARootRunInfo::TARootRunInfo(const TARunInfo* runinfo) // ctor
-   : TARunInfo(*runinfo)
+
+//////////////////////////////////////////////////////////
+//
+// Methods of TARootHelper
+//
+//////////////////////////////////////////////////////////
+
+
+#ifdef HAVE_XMLSERVER
+#include "xmlServer.h"
+#include "TROOT.h"
+XmlServer* gXmlServer = NULL;
+#endif
+
+#ifdef XHAVE_LIBNETDIRECTORY
+#include "netDirectoryServer.h"
+#endif
+
+TApplication* TARootHelper::fgApp = NULL;
+TDirectory*   TARootHelper::fgDir = NULL;
+
+TARootHelper::TARootHelper(const TARunInfo* runinfo) // ctor
 {
-   printf("TARootRunInfo::ctor!\n");
+   printf("TARootHelper::ctor!\n");
 
    char xfilename[1024];
-   sprintf(xfilename, "output%05d.root", fRunNo);
-   fRootFile = new TFile(xfilename, "RECREATE");
+   sprintf(xfilename, "output%05d.root", runinfo->fRunNo);
+
+   fOutputFile = new TFile(xfilename, "RECREATE");
    
-   assert(fRootFile); // FIXME: new never returns NULL
-   assert(fRootFile->IsOpen()); // FIXME: survive failure to open ROOT file
+   assert(fOutputFile->IsOpen()); // FIXME: survive failure to open ROOT file
+
+   fOutputFile->cd();
+
+#ifdef XHAVE_LIBNETDIRECTORY
+   NetDirectoryExport(fOutputFile, "ManalyzerOutputFile");
+#endif
+#ifdef HAVE_XMLSERVER
+   if (gXmlServer)
+      gXmlServer->Export(fOutputFile, "ManalyzerOutputFile");
+#endif
 }
 
-TARootRunInfo::~TARootRunInfo() // dtor
+TARootHelper::~TARootHelper() // dtor
 {
-   printf("TARootRunInfo::dtor!\n");
+   printf("TARootHelper::dtor!\n");
    
-   if (fRootFile != NULL) {
-      fRootFile->Write();
-      fRootFile->Close();
-      fRootFile = NULL;
+   if (fOutputFile != NULL) {
+      fOutputFile->Write();
+      fOutputFile->Close();
+      fOutputFile = NULL;
    }
+
+   if (fgDir)
+      fgDir->cd();
 }
+
 #endif
 
 class RunHandler
@@ -278,6 +294,8 @@ public:
 
 #ifdef HAVE_MIDAS
 
+#include "TMidasOnline.h"
+
 class OnlineHandler: public TMHandlerInterface
 {
 public:
@@ -301,11 +319,6 @@ public:
    void StartRun(int run_number)
    {
       fRun.CreateRun(run_number, NULL);
-
-#ifdef HAVE_LIBNETDIRECTORY
-      NetDirectoryExport(gOutputFile, "outputFile");
-#endif
-
       fRun.BeginRun();
    }
 
@@ -622,15 +635,15 @@ public:
 void help()
 {
   printf("\nUsage:\n");
-  printf("\n./analyzer.exe [-h] [-Hhostname] [-Eexptname] [-eMaxEvents] [-P9091] [-p9090] [-m] [-oOutputfile.mid] [file1 file2 ...]\n");
+  printf("\n./analyzer.exe [-h] [-X9091] [-oOutputfile.mid] [file1 file2 ...]\n");
   printf("\n");
   printf("\t-h: print this help message\n");
   printf("\t-T: test mode - start and serve a test histogram\n");
   printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
   printf("\t-Eexptname: connect to this MIDAS experiment\n");
   printf("\t-oOutputfile.mid: write selected events into this file\n");
+  printf("\t-X: Start the Xml server on specified tcp port (for use with roody -Xlocalhost:9091)\n");
   printf("\t-P: Start the TNetDirectory server on specified tcp port (for use with roody -Plocalhost:9091)\n");
-  printf("\t-p: Start the old midas histogram server on specified tcp port (for use with roody -Hlocalhost:9090)\n");
   printf("\t-eNNN: Number of events to analyze\n");
   printf("\t-sNNN: Number of events to skip before starting analysis\n");
   printf("\t--dump: activate the event dump module\n");
@@ -662,7 +675,6 @@ int main(int argc, char *argv[])
    }
 
    bool testMode = false;
-   int  oldTcpPort = 0;
    int  tcpPort = 0;
    int  xmlTcpPort = 0;
    const char* hostname = NULL;
@@ -674,6 +686,7 @@ int main(int argc, char *argv[])
    TMWriterInterface *writer = NULL;
 
    bool event_dump = false;
+   bool root_graphics = false;
 
    for (unsigned int i=1; i<args.size(); i++) { // loop over the commandline options
       const char* arg = args[i].c_str();
@@ -682,6 +695,8 @@ int main(int argc, char *argv[])
       if (0) {
       } else if (args[i] == "--dump") {
          event_dump = true;
+      } else if (args[i] == "-g") {
+         root_graphics = true;
       } else if (strncmp(arg,"-o",2)==0) {
          writer = TMNewWriter(arg+2);
       } else if (strncmp(arg,"-s",2)==0) {
@@ -690,13 +705,11 @@ int main(int argc, char *argv[])
          num_analyze = atoi(arg+2);
       } else if (strncmp(arg,"-m",2)==0) { // Enable memory debugging
          gEnableShowMem = true;
-      } else if (strncmp(arg,"-p",2)==0) // Set the histogram server port
-         oldTcpPort = atoi(arg+2);
-      else if (strncmp(arg,"-P",2)==0) // Set the histogram server port
+      } else if (strncmp(arg,"-P",2)==0) { // Set the histogram server port
          tcpPort = atoi(arg+2);
-      else if (strncmp(arg,"-X",2)==0) // Set the histogram server port
+      } else if (strncmp(arg,"-X",2)==0) { // Set the histogram server port
          xmlTcpPort = atoi(arg+2);
-      else if (strcmp(arg,"-T")==0)
+      } else if (strcmp(arg,"-T")==0)
          testMode = true;
       else if (strncmp(arg,"-H",2)==0)
          hostname = strdup(arg+2);
@@ -711,37 +724,40 @@ int main(int argc, char *argv[])
    if (!gModules)
       gModules = new std::vector<TAModuleInterface*>;
 
+   if ((*gModules).size() == 0)
+      event_dump = true;
+
    if (event_dump)
       (*gModules).push_back(new EventDumpModule);
 
    printf("Registered modules: %d\n", (int)(*gModules).size());
-   
+
 #ifdef HAVE_ROOT
-   gROOT->cd();
-   gOnlineHistDir = new TDirectory("rootana", "rootana online plots");
+   if (root_graphics) {
+      TARootHelper::fgApp = new TApplication("manalyzer", NULL, NULL, 0, 0);
+   }
+
+   TARootHelper::fgDir = new TDirectory("manalyzer", "location of histograms");
+   TARootHelper::fgDir->cd();
 #endif
 
-#ifdef HAVE_MIDASSERVER
-   if (oldTcpPort)
-      StartMidasServer(oldTcpPort);
-#else
-   if (oldTcpPort)
-      fprintf(stderr,"ERROR: No support for the old midas server!\n");
-#endif
-#ifdef HAVE_LIBNETDIRECTORY
-   if (tcpPort)
-      StartNetDirectoryServer(tcpPort, gOnlineHistDir);
+#ifdef XHAVE_LIBNETDIRECTORY
+   if (tcpPort) {
+      VerboseNetDirectoryServer(true);
+      StartNetDirectoryServer(tcpPort, TARootHelper::fgDir);
+   }
 #else
    if (tcpPort)
       fprintf(stderr,"ERROR: No support for the TNetDirectory server!\n");
 #endif
+
 #ifdef HAVE_XMLSERVER
-   XmlServer* xmlServer = NULL;
    if (xmlTcpPort) {
-      xmlServer = new XmlServer();
-      xmlServer->SetVerbose(true);
-      xmlServer->Start(xmlTcpPort);
-      xmlServer->Export(gOnlineHistDir, gOnlineHistDir->GetName());
+      gXmlServer = new XmlServer();
+      gXmlServer->SetVerbose(true);
+      gXmlServer->Start(xmlTcpPort);
+      gXmlServer->Export(gROOT, "ROOT");
+      gXmlServer->Export(TARootHelper::fgDir, "manalyzer");
    }
 #else
    if (xmlTcpPort)

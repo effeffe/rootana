@@ -200,6 +200,10 @@ static TObject* FollowPath(TObject* container, char* path)
 
 static TObject* FindTopLevelObject(const char* name)
 {
+   if (0)
+      printf("FindTopLevelObject [%s]\n", name);
+   if (strcmp(name, "root") == 0)
+      return gROOT;
    TObject *obj = NULL;
    //gROOT->GetListOfFiles()->Print();
    obj = gROOT->GetListOfFiles()->FindObject(name);

@@ -37,6 +37,7 @@ struct ExampleRootRun: public TARunInterface
    {
       printf("BeginRun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
       fCounter = 0;
+      runinfo->fRoot->fOutputFile->cd(); // select correct ROOT directory
       hperrun = new TH1D("hperrun", "hperrun", 200, -100, 100);
    }
 
@@ -84,7 +85,7 @@ struct ExampleRootRun: public TARunInterface
 
       fCounter++;
       fModule->fTotalEventCounter++;
-      
+
       return flow;
    }
 
@@ -98,6 +99,7 @@ void ExampleRootModule::Init(const std::vector<std::string> &args)
 {
    printf("Init!\n");
    fTotalEventCounter = 0;
+   TARootHelper::fgDir->cd(); // select correct ROOT directory
    htotal = new TH1D("htotal", "htotal", 200, -100, 100);
 }
    

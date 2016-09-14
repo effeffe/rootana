@@ -9,12 +9,15 @@
 #include "midasio.h"
 #include "VirtualOdb.h"
 
+class TARootHelper;
+
 class TARunInfo
 {
  public:
    int fRunNo;
    std::string fFileName;
    VirtualOdb* fOdb;
+   TARootHelper* fRoot;
 
  public:
    TARunInfo(int runno, const char* filename);
@@ -99,18 +102,22 @@ class TARegisterModule
 #ifdef HAVE_ROOT
 
 #include "TFile.h"
+#include "TDirectory.h"
+#include "TApplication.h"
 
-class TARootRunInfo: public TARunInfo
+class TARootHelper
 {
  public:
-   TFile* fRootFile;
+   TFile* fOutputFile;
+   static TDirectory*   fgDir;
+   static TApplication* fgApp;
 
  public:
-   TARootRunInfo(const TARunInfo*);
-   ~TARootRunInfo(); // dtor
+   TARootHelper(const TARunInfo*);
+   ~TARootHelper(); // dtor
 
-   //private:
-   //TARootRunInfo() { printf("TARootRunInfo::default ctor!\n"); }; // hidden default constructor
+ private:
+   TARootHelper() { }; // hidden default constructor
 };
 #endif
 

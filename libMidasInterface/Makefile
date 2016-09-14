@@ -37,12 +37,12 @@ ifdef ROOTSYS
 OBJS += XmlOdb.o HttpOdb.o
 endif
 
-OBJS += midasio.o lz4.o lz4hc.o lz4frame.o xxhash.o
+OBJS += midasio.o lz4.o lz4hc.o lz4frame.o xxhash.o manalyzer.o
 
-ALL  += manalyzer.o manalyzer.exe
-ALL  += manalyzer_example1.o manalyzer_example1.exe
-ALL  += manalyzer_example2.o manalyzer_example2.exe
-ALL  += manalyzer_example3.o manalyzer_example3.exe
+#ALL  += manalyzer.o manalyzer.exe
+#ALL  += manalyzer_example1.o manalyzer_example1.exe
+#ALL  += manalyzer_example2.o manalyzer_example2.exe
+#ALL  += manalyzer_example3.o manalyzer_example3.exe
 
 all: $(ALL)
 
