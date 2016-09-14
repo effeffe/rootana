@@ -97,6 +97,9 @@ class TARegisterModule
 {
  public:
    TARegisterModule(TAModuleInterface* m);
+   //static void Register(TAModuleInterface* m);
+   //static std::vector<TAModuleInterface*>* fgModules;
+   //static std::vector<TAModuleInterface*>* Get() const;
 };
 
 #ifdef HAVE_ROOT
@@ -105,12 +108,15 @@ class TARegisterModule
 #include "TDirectory.h"
 #include "TApplication.h"
 
+class XmlServer;
+
 class TARootHelper
 {
  public:
    TFile* fOutputFile;
    static TDirectory*   fgDir;
    static TApplication* fgApp;
+   static XmlServer*    fgXmlServer;
 
  public:
    TARootHelper(const TARunInfo*);

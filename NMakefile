@@ -141,11 +141,15 @@ OBJS += obj/xxhash.o
 OBJS += obj/lz4frame.o
 OBJS += obj/midasio.o
 OBJS += obj/manalyzer.o
-
-obj/midasio.o: include/midasio.h
-obj/manalyzer.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h include/TMidasOnline.h
+OBJS += obj/manalyzer_main.o
 
 all: $(ALL)
+
+objs: $(OBJS)
+
+obj/midasio.o: include/midasio.h
+obj/manalyzer.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h
+obj/manalyzer_main.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h include/TMidasOnline.h
 
 $(ALL): include
 $(OBJS): include
