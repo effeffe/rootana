@@ -34,6 +34,7 @@ TMidasOnline::TMidasOnline() // ctor
 TMidasOnline::~TMidasOnline() // dtor
 {
   disconnect();
+  assert(!"TMidasOnline::~TMidasOnline(): destruction of the TMidasOnline singleton is not permitted!");
 }
 
 TMidasOnline* TMidasOnline::instance()

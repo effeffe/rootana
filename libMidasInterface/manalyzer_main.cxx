@@ -17,6 +17,10 @@
 #include "XmlServer.h"
 #endif
 
+#ifdef HAVE_ROOT_XML
+#include "XmlOdb.h"
+#endif
+
 //////////////////////////////////////////////////////////
 //
 // Methods of TARegisterModule
@@ -31,6 +35,25 @@ TARegisterModule::TARegisterModule(TAModuleInterface* m)
       gModules = new std::vector<TAModuleInterface*>;
    gModules->push_back(m);
 }
+
+//////////////////////////////////////////////////////////
+//
+// Methods of EmptyOdb
+//
+//////////////////////////////////////////////////////////
+
+class EmptyOdb: public VirtualOdb
+{
+public:
+   int      odbReadArraySize(const char*name) { return 0; }
+   int      odbReadAny(   const char*name, int index, int tid,void* buf, int bufsize = 0) { return 0; };
+   int      odbReadInt(   const char*name, int index = 0, int      defaultValue = 0) { return defaultValue; }
+   uint32_t odbReadUint32(const char*name, int index = 0, uint32_t defaultValue = 0) { return defaultValue; }
+   float     odbReadFloat(const char*name, int index = 0, float   defaultValue = 0) { return defaultValue; }
+   double   odbReadDouble(const char*name, int index = 0, double   defaultValue = 0) { return defaultValue; }
+   bool     odbReadBool(  const char*name, int index = 0, bool     defaultValue = false) { return defaultValue; }
+   const char* odbReadString(const char*name, int index = 0,const char* defaultValue = NULL) { return defaultValue; }
+};
 
 double GetTimeSec()
 {
@@ -72,6 +95,7 @@ public:
    void BeginRun()
    {
       assert(fRunInfo != NULL);
+      assert(fRunInfo->fOdb != NULL);
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->BeginRun(fRunInfo);
    }
@@ -82,6 +106,11 @@ public:
       
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->EndRun(fRunInfo);
+   }
+
+   void DeleteRun()
+   {
+      assert(fRunInfo);
 
       for (unsigned i=0; i<fRunRun.size(); i++) {
          delete fRunRun[i];
@@ -104,6 +133,7 @@ public:
    void AnalyzeEvent(TMEvent* event, TAFlags* flags, TMWriterInterface *writer)
    {
       assert(fRunInfo != NULL);
+      assert(fRunInfo->fOdb != NULL);
       
       TAFlowEvent* flow = NULL;
                   
@@ -149,6 +179,7 @@ public:
    void StartRun(int run_number)
    {
       fRun.CreateRun(run_number, NULL);
+      fRun.fRunInfo->fOdb = TMidasOnline::instance();
       fRun.BeginRun();
    }
 
@@ -157,14 +188,19 @@ public:
       printf("OnlineHandler::Transtion: transition %d, run %d, time %d\n", transition, run_number, transition_time);
       
       if (transition == TR_START) {
-         if (fRun.fRunInfo)
+         if (fRun.fRunInfo) {
             fRun.EndRun();
+            fRun.fRunInfo->fOdb = NULL;
+            fRun.DeleteRun();
+         }
          assert(fRun.fRunInfo == NULL);
 
          StartRun(run_number);
          printf("Begin run: %d\n", run_number);
       } else if (transition == TR_STOP) {
          fRun.EndRun();
+         fRun.fRunInfo->fOdb = NULL;
+         fRun.DeleteRun();
          printf("End of run %d\n", run_number);
       }
    }
@@ -235,6 +271,8 @@ int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostnam
 
    if (h->fRun.fRunInfo) {
       h->fRun.EndRun();
+      h->fRun.fRunInfo->fOdb = NULL;
+      h->fRun.DeleteRun();
    }
 
    for (unsigned i=0; i<(*gModules).size(); i++)
@@ -287,6 +325,7 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
                   } else {
                      // file with a different run number
                      run.EndRun();
+                     run.DeleteRun();
                   }
                }
 
@@ -299,6 +338,11 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
 
                if (!run.fRunInfo) {
                   run.CreateRun(runno, filename.c_str());
+#ifdef HAVE_ROOT_XML
+                  run.fRunInfo->fOdb = new XmlOdb((char*)&(event->data[16]),event->data_size);
+#else
+                  run.fRunInfo->fOdb = new EmptyOdb();
+#endif
                   run.BeginRun();
                }
 
@@ -315,6 +359,17 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
                run.AnalyzeSpecialEvent(event);
                if (writer)
                   TMWriteEvent(writer, event);
+
+               if (run.fRunInfo->fOdb) {
+                  delete run.fRunInfo->fOdb;
+                  run.fRunInfo->fOdb = NULL;
+               }
+               
+#ifdef HAVE_ROOT_XML
+               run.fRunInfo->fOdb = new XmlOdb((char*)&(event->data[16]),event->data_size);
+#else
+               run.fRunInfo->fOdb = new EmptyOdb();
+#endif
             }
          else if (event->event_id == 0x8002) // message event
             {
@@ -327,6 +382,7 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
                if (!run.fRunInfo) {
                   // create a fake begin of run
                   run.CreateRun(0, filename.c_str());
+                  run.fRunInfo->fOdb = new EmptyOdb();
                   run.BeginRun();
                }
 
@@ -362,6 +418,7 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
 
    if (run.fRunInfo) {
       run.EndRun();
+      run.DeleteRun();
    }
    
    for (unsigned i=0; i<(*gModules).size(); i++)

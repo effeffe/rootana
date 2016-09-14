@@ -30,6 +30,7 @@ TARunInfo::TARunInfo(int runno, const char* filename)
 
 TARunInfo::~TARunInfo()
 {
+   printf("TARunInfo::dtor!\n");
    fRunNo = 0;
    fFileName = "(deleted)";
    if (fOdb) {

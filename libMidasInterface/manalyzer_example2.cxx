@@ -36,6 +36,8 @@ struct ExampleRootRun: public TARunInterface
    void BeginRun(TARunInfo* runinfo)
    {
       printf("BeginRun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
+      time_t run_start_time = runinfo->fOdb->odbReadUint32("/Runinfo/Start time binary", 0, 0);
+      printf("ODB Run start time: %d: %s", (int)run_start_time, ctime(&run_start_time));
       fCounter = 0;
       runinfo->fRoot->fOutputFile->cd(); // select correct ROOT directory
       hperrun = new TH1D("hperrun", "hperrun", 200, -100, 100);
@@ -44,6 +46,8 @@ struct ExampleRootRun: public TARunInterface
    void EndRun(TARunInfo* runinfo)
    {
       printf("EndRun, run %d, events %d\n", runinfo->fRunNo, fCounter);
+      time_t run_stop_time = runinfo->fOdb->odbReadUint32("/Runinfo/Stop time binary", 0, 0);
+      printf("ODB Run stop time: %d: %s", (int)run_stop_time, ctime(&run_stop_time));
       hperrun->SaveAs("hperrun.root");
       hperrun->SaveAs("hperrun.pdf");
    }
@@ -63,10 +67,6 @@ struct ExampleRootRun: public TARunInterface
       printf("Analyze, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
       if (event->event_id != 2)
          return TAFlag_OK;
-
-      //event->FindAllBanks();
-      //std::string blist = event->BankListToString();
-      //printf("banks: %s\n", blist.c_str());
 
       TMBank* bslow = event->FindBank("SLOW");
       if (!bslow)
