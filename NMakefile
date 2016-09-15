@@ -23,6 +23,7 @@ ROOTGLIBS  := -L$(ROOTLIBDIR) $(shell root-config --glibs) -lThread
 ROOTCFLAGS := $(shell root-config --cflags)
 RPATH    += -Wl,-rpath,$(ROOTLIBDIR)
 CXXFLAGS += -DHAVE_ROOT $(ROOTCFLAGS)
+CXXFLAGS_ROOTCINT += -DHAVE_ROOT
 HAVE_ROOT_HTTP := $(findstring http,$(ROOTFEATURES))
 HAVE_ROOT_XML  := $(findstring xml,$(ROOTFEATURES))
 
@@ -53,6 +54,7 @@ CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 UNAME=$(shell uname)
 ifeq ($(UNAME),Darwin)
 CXXFLAGS += -DOS_LINUX -DOS_DARWIN
+CXXFLAGS_ROOTCINT += -DOS_LINUX -DOS_DARWIN
 MIDASLIBS = $(MIDASSYS)/darwin/lib/libmidas.a
 RPATH=
 endif
@@ -79,7 +81,7 @@ endif
 # optional libAnalyzer and libAnalyzerDisplay code
 ifdef HAVE_ROOT
 
-CXXFLAGS += -DNO_CINT
+#CXXFLAGS += -DNO_CINT
 
 ALL  += libAnalyzer/analyzer_example.exe
 ALL  += libAnalyzerDisplay/display_example.exe
@@ -97,6 +99,11 @@ OBJS += obj/TRootanaDisplay.o
 OBJS += obj/TSimpleExampleCanvas.o
 OBJS += obj/TComplicatedExampleCanvas.o
 OBJS += obj/TInterestingEventManager.o
+OBJS += obj/TFancyHistogramCanvas.o
+
+OBJS += obj/TMainDisplayWindowDict.o
+OBJS += obj/TRootanaDisplayDict.o
+OBJS += obj/TFancyHistogramCanvasDict.o
 
 endif
 
@@ -151,6 +158,10 @@ obj/midasio.o: include/midasio.h
 obj/manalyzer.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h
 obj/manalyzer_main.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h include/TMidasOnline.h
 
+obj/TMainDisplayWindowDict.o: obj/TMainDisplayWindowDict.cxx
+#OBJS += obj/TRootanaDisplayDict.o
+#OBJS += obj/TFancyHistogramCanvasDict.o
+
 $(ALL): include
 $(OBJS): include
 
@@ -172,6 +183,12 @@ lib/librootana.a: $(OBJS)
 
 #libAnalyzerDisplay/libAnalyzerDisplay.a:
 #	make -C libAnalyzerDisplay
+
+%Dict.o: %Dict.cxx
+	$(CXX) -o $@ $(CXXFLAGS) -c $<
+
+obj/%Dict.cxx:
+	rootcint -f $@ -c -p $(CXXFLAGS_ROOTCINT) -I./include $*.hxx include/$*_LinkDef.h
 
 %.exe: %.o lib/librootana.a
 	$(CXX) -o $@ $(CXXFLAGS) $< lib/librootana.a $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
@@ -216,6 +233,7 @@ dox:
 
 clean::
 	-rm -f *.o *.a *.exe $(ALL)
+	-rm -f */*Dict.cxx */*Dict.h
 	-rm -rf lib
 	-rm -rf include
 	-rm -rf obj

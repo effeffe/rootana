@@ -3,4 +3,6 @@
 *.o
 *.a
 *Dict.h
+*Dict.cxx
 include
+obj
