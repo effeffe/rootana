@@ -329,17 +329,10 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
                   }
                }
 
-               //
-               // Load ODB contents from the ODB XML file
-               //
-               //if (gOdb)
-               //   delete gOdb;
-               //gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
-
                if (!run.fRunInfo) {
                   run.CreateRun(runno, filename.c_str());
 #ifdef HAVE_ROOT_XML
-                  run.fRunInfo->fOdb = new XmlOdb((char*)&(event->data[16]),event->data_size);
+                  run.fRunInfo->fOdb = new XmlOdb(event->GetEventData(), event->data_size);
 #else
                   run.fRunInfo->fOdb = new EmptyOdb();
 #endif
@@ -366,7 +359,7 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
                }
                
 #ifdef HAVE_ROOT_XML
-               run.fRunInfo->fOdb = new XmlOdb((char*)&(event->data[16]),event->data_size);
+               run.fRunInfo->fOdb = new XmlOdb(event->GetEventData(), event->data_size);
 #else
                run.fRunInfo->fOdb = new EmptyOdb();
 #endif

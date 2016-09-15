@@ -336,6 +336,7 @@ static void ZeroEvent(TMEvent* e)
    e->serial_number = 0;
    e->time_stamp    = 0;
    e->data_size     = 0;
+   e->data_offset   = 0;
    e->bank_header_flags  = 0;
    e->bank_scan_position = 0;
 }
@@ -392,6 +393,8 @@ TMEvent* TMReadEvent(TMReaderInterface* reader)
       e->error = true;
       return e;
    }
+
+   e->data_offset = event_header_size;
 
    return e;
 }
@@ -456,6 +459,7 @@ TMEvent::TMEvent(const void* xdata, int xdata_size)
    serial_number = GetU32(event_header+4);
    time_stamp    = GetU32(event_header+8);
    data_size     = GetU32(event_header+12);
+   data_offset   = event_header_size;
 
    bank_header_flags = 0;
 
@@ -475,13 +479,18 @@ TMEvent::TMEvent(const void* xdata, int xdata_size)
 
 static int FindFirstBank(TMEvent* e)
 {
-   if (e->data.size() < 16 + 8) {
+   if (e->error)
+      return -1;
+   
+   u32 off = e->data_offset;
+   
+   if (e->data.size() < off + 8) {
       e->error = true;
       return -1;
    }
-   
-   u32 bank_header_data_size = GetU32(&e->data[16]);
-   u32 bank_header_flags     = GetU32(&e->data[16+4]);
+
+   u32 bank_header_data_size = GetU32(&e->data[off]);
+   u32 bank_header_flags     = GetU32(&e->data[off+4]);
 
    //printf("bank header: data size %d, flags 0x%08x\n", bank_header_data_size, bank_header_flags);
 
@@ -492,7 +501,7 @@ static int FindFirstBank(TMEvent* e)
 
    e->bank_header_flags = bank_header_flags;
 
-   return 16+8;
+   return off+8;
 }
 
 #if 0
@@ -581,6 +590,13 @@ static int FindNextBank(TMEvent* e, int pos, TMBank** pb)
       *pb = b;
 
    return npos;
+}
+
+char* TMEvent::GetEventData()
+{
+   if (error)
+      return NULL;
+   return (char*)&data[data_offset];
 }
 
 char* TMEvent::GetBankData(const TMBank* b)

@@ -37,11 +37,10 @@ Data types Definition                         min      max    */
 
 struct TMBank
 {
-   std::string name; ///< bank name, 4 characters max
-   u32         type; ///< type of data, enum of TID_xxx
-   //u32         num_values; ///< number of data items
-   u32         data_size; ///< total data size in bytes
-   u32         data_offset; ///< offset of data for this bank in the event data buffer
+   std::string name;        ///< bank name, 4 characters max
+   u32         type;        ///< type of data, enum of TID_xxx
+   u32         data_size;   ///< total data size in bytes
+   u32         data_offset; ///< offset of data for this bank in the event data[] container
 };
 
 struct TMEvent
@@ -49,31 +48,33 @@ struct TMEvent
    bool error; ///< event has an error - incomplete, truncated, inconsistent or corrupted
    bool found_all_banks; ///< all the banks in the event data have been discovered
    
-   u16 event_id; 
-   u16 trigger_mask;
-   u32 serial_number;
-   u32 time_stamp;
-   u32 data_size;
+   u16 event_id;         ///< MIDAS event ID
+   u16 trigger_mask;     ///< MIDAS trigger mask
+   u32 serial_number;    ///< MIDAS event serial number
+   u32 time_stamp;       ///< MIDAS event time stamp (unix time in sec)
+   u32 data_size;        ///< MIDAS event data size
+   u32 data_offset;      ///< MIDAS event data start in the data[] container
 
-   u32 bank_header_flags;
+   u32 bank_header_flags; ///< flags from the MIDAS event bank header
 
-   std::vector<TMBank> banks;
-   std::vector<u8> data;
+   std::vector<TMBank> banks; ///< list of MIDAS banks, fill using FindAllBanks()
+   std::vector<u8> data;      ///< MIDAS event bytes
 
-   u32 bank_scan_position;
+   u32 bank_scan_position;    ///< location where scan for MIDAS banks was last stopped
 
 public:
-   std::string HeaderToString() const;
-   std::string BankListToString() const;
-   std::string BankToString(const TMBank*) const;
+   std::string HeaderToString() const;            ///< print the MIDAS event header
+   std::string BankListToString() const;          ///< print the list of MIDAS banks
+   std::string BankToString(const TMBank*) const; ///< print definition of one MIDAS bank
 
    TMEvent(); // ctor
    TMEvent(const void* data, int data_size); // ctor
-   void FindAllBanks();
-   TMBank* FindBank(const char* bank_name);
-   char* GetBankData(const TMBank*);
-   void DeleteBank(const TMBank*);
-   void AddBank(const char* bank_name, int tid, int num_items, const char* data, int size);
+   void FindAllBanks();                      ///< scan the MIDAS event, find all data banks
+   TMBank* FindBank(const char* bank_name);  ///< scan the MIDAS event
+   char* GetEventData();                     ///< get pointer to MIDAS event data
+   char* GetBankData(const TMBank*);         ///< get pointer to MIDAS data bank
+   void DeleteBank(const TMBank*);           ///< delete MIDAS bank
+   void AddBank(const char* bank_name, int tid, int num_items, const char* data, int size); ///< add new MIDAS bank
 };
 
 class TMReaderInterface
