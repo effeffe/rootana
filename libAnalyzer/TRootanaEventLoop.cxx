@@ -26,6 +26,8 @@
 #include <assert.h>
 #include <signal.h>
 
+#include "TMidasFile.h"
+
 #include "sys/time.h"
 /// Little function for printing the number of processed events and processing rate.
 struct timeval raLastTime;  
