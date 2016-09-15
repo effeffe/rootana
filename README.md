@@ -12,6 +12,12 @@ The ROOTANA package includes 5 major components:
 * simple examples of using these components (a graphical analyzer, an event dump and an event skim programs) (analyzer.cxx, event_dump.cxx, event_skim.cxx)
 * a full featured framework for graphical data analysis including code to unpack typical VME and CAMAC modules (examples, libAnalyzer, linAnalyzerDisplay)
 
+Other notable features include:
+
+* reading compressed MIDAS files using compiled-in libraries for GZIP and LZ4 and using external decompressor for BZIP2 and PBZIP2.
+* reading MIDAS events from remote MIDAS files through ssh and dcache pipes, see TMidasFile::Open()
+* access to live MIDAS events from local MIDAS shared memory or from remote MIDAS system via the MIDAS mserver.
+
 The ROOTANA package can be used without installing ROOT and MIDAS:
 
 * without both ROOT and MIDAS one can only read (and write) existing .mid files. Only event_dump and event_skim will be built.
@@ -19,24 +25,29 @@ The ROOTANA package can be used without installing ROOT and MIDAS:
 * decoding of XML ODB dumps embedded in MIDAS files requires ROOT TXML and TDOMParser components (a version of XML decoder using libxml2 used to exist in the past).
 * if the ROOT package is installed but MIDAS is absent, full function of ROOTANA is available, except for access to live data. This mode is suitable for offline data analysis, i.e. the user has a copy of MIDAS data files on their laptop and wants to analyze them.
 
+Access to optional components is controlled by these Makefile and C++ symbols:
+
+* HAVE_MIDAS - defined if MIDAS is installed ($MIDASSYS is set)
+* HAVE_ROOT - if ROOT is installed (root-config is in the $PATH)
+* HAVE_ROOT_XML - ROOT XML component is installed ("xml" in root-config --features)
+* HAVE_ROOT_HTTP - ROOT HTTP component is installed ("http" in root-config --features)
+* HAVE_ZLIB - if the gzip/zlib library is installed (required for reading mid.gz files)
+
 ### Quick start guide ###
 
-* install ROOT (https://root.cern.ch), make sure ROOTSYS is defined ($ROOTSYS/include is accessible) or root-config is in the PATH
+* install ROOT (https://root.cern.ch), per ROOT documentation, run "thisroot" to define ROOTSYS and to add root-config, root and rootcint to the PATH
 * (optional) install MIDAS (https://midas.triumf.ca), make sure MIDASSYS is defined ($MIDASSYS/include is accessible)
 * git clone https://bitbucket.org/tmidas/rootana.git
 * cd rootana
 * make
 * examine simple examples: more event_dump.cxx, more analyzer.cxx
 * examine more complex examples: cd examples; make; more README.txt; more TAnaManager.cxx, etc
-  More documentation [Analyzer Framework](http://ladd00.triumf.ca/~lindner/rootana/html/analyzerClass.html) and [Display Framework](http://ladd00.triumf.ca/~lindner/rootana/html/displayClass.html)
+* if desired, run "make dox" to generate the Doxygen code reference documentation for the ROOTANA. This may take some time, at the end, open html/index.html.
+
+More documentation [Analyzer Framework](http://ladd00.triumf.ca/~lindner/rootana/html/analyzerClass.html) and [Display Framework](http://ladd00.triumf.ca/~lindner/rootana/html/displayClass.html)
 
 ### Contacts ###
 
-* Before conversion from svn to git, ROOTANA was managed by members of the TRIUMF DAQ group
-* The git version hosted on bitbucket is managed by the members of the MIDAS developers group.
 * to report bugs, request improvements, contribute bug fixes - please go to the ROOTANA issue tracker https://bitbucket.org/tmidas/rootana/issues
 * for questions and discussion - please go to the MIDAS discussion forum https://midas.triumf.ca/forum
 
-### Historical note by Konstantin Olchanski ###
-
-The origins of this package date back a few years when I wrote some C++ classes to read MIDAS files for the Dragon experiment. Jonty Pearson and Joe Chuma have since improved and added to my work. Then during the Summer of 2006, I wrote some more C++ classes for access to live data and for access to the live ODB, for use by the ALPHA experiment at CERN. This code was then reused for couple of test DAQ stations at TRIUMF. With the addition of ROODY access using the "midas server", ripped out from mana.c, it is now used for the PIENU beam test.

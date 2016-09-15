@@ -152,15 +152,12 @@ OBJS += obj/manalyzer_main.o
 
 all: $(ALL)
 
-objs: $(OBJS)
+objs:: include
+objs:: $(OBJS)
 
 obj/midasio.o: include/midasio.h
 obj/manalyzer.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h
 obj/manalyzer_main.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h include/TMidasOnline.h
-
-obj/TMainDisplayWindowDict.o: obj/TMainDisplayWindowDict.cxx
-#OBJS += obj/TRootanaDisplayDict.o
-#OBJS += obj/TFancyHistogramCanvasDict.o
 
 $(ALL): include
 $(OBJS): include
@@ -175,19 +172,13 @@ lib/librootana.a: $(OBJS)
 	-rm -f $@
 	ar -rv $@ $(OBJS)
 
-#libNetDirectory/libNetDirectory.a:
-#	make -C libNetDirectory
-
-#libAnalyzer/libAnalyzer.a:
-#	make -C libAnalyzer
-
-#libAnalyzerDisplay/libAnalyzerDisplay.a:
-#	make -C libAnalyzerDisplay
+include/%.h: include
+	@true
 
 %Dict.o: %Dict.cxx
 	$(CXX) -o $@ $(CXXFLAGS) -c $<
 
-obj/%Dict.cxx:
+obj/%Dict.cxx: include
 	rootcint -f $@ -c -p $(CXXFLAGS_ROOTCINT) -I./include $*.hxx include/$*_LinkDef.h
 
 %.exe: %.o lib/librootana.a
@@ -228,7 +219,7 @@ html/index.html:
 	-make -k dox
 	touch html/index.html
 
-dox:
+dox: include
 	doxygen
 
 clean::
@@ -237,6 +228,9 @@ clean::
 	-rm -rf lib
 	-rm -rf include
 	-rm -rf obj
+
+clean::
+	-rm -rf */*.exe.dSYM
 
 clean::
 	-rm -rf html
