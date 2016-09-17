@@ -14,7 +14,7 @@
 
 #ifdef HAVE_XMLSERVER
 #include "TROOT.h" // gROOT
-#include "XmlServer.h"
+#include "xmlServer.h"
 #endif
 
 #ifdef HAVE_ROOT_XML
