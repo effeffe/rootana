@@ -12,7 +12,9 @@
 #include <assert.h>
 #include <signal.h>
 
+#ifdef HAVE_MIDAS
 #include "TMidasOnline.h"
+#endif
 #include "TMidasEvent.h"
 #include "TMidasFile.h"
 #include "XmlOdb.h"

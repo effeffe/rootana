@@ -1,9 +1,6 @@
 #ifndef TPeriodicClass_hxx_seen
 #define TPeriodicClass_hxx_seen
 
-// ROOTANA includes
-#include "TMidasOnline.h"
-
 #include <TTimer.h>
 
 #include <stdio.h>

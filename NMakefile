@@ -224,7 +224,7 @@ dox: include
 
 clean::
 	-rm -f *.o *.a *.exe $(ALL)
-	-rm -f */*Dict.cxx */*Dict.h
+	-rm -f */*Dict.cxx */*Dict.h */*Dict_rdict.pcm
 	-rm -rf lib
 	-rm -rf include
 	-rm -rf obj

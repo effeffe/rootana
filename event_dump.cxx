@@ -14,7 +14,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef HAVE_MIDAS
 #include "TMidasOnline.h"
+#endif
 #include "TMidasEvent.h"
 #include "TMidasFile.h"
 
