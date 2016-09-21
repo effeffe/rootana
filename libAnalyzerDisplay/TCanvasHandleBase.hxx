@@ -10,7 +10,6 @@
 
 #include "TRootEmbeddedCanvas.h"
 #include "TCanvas.h"
-#include "TMidasEvent.h"
 #include "TRootanaDisplay.hxx"
 
 class TRootanaDisplay;
