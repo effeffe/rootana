@@ -36,7 +36,7 @@ bool gPrintBank = false;
 
 void HandleMidasEvent(TMidasEvent& event)
 {
-  int eventId = event.GetEventId();
+  //int eventId = event.GetEventId();
   if (gPrintBank)
     event.Print("a");
   else

@@ -25,8 +25,8 @@ int  gEventCutoff = 0;
 
 void HandleMidasEvent(TMidasEvent& event)
 {
-  int eventId = event.GetEventId();
-  int eventSN = event.GetSerialNumber();
+   //int eventId = event.GetEventId();
+   //int eventSN = event.GetSerialNumber();
   //event.Print("a");
   //event.Print();
   //  printf("EventSerial#: %i, EventID: %i\n",eventSN,eventId);

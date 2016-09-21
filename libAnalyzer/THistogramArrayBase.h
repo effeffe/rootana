@@ -41,8 +41,8 @@ class THistogramArrayBase : public std::vector<TH1*> {
   virtual void UpdateHistograms(TDataContainer& dataContainer) = 0;
 
   /// A helper method for accessing each histogram.  Does bounds checking.
-  TH1* GetHistogram(unsigned int i){
-    if(i < 0 || i >= size()){
+  TH1* GetHistogram(unsigned i){
+    if(i >= size()){
       std::cerr << "Invalid index (=" << i 
 		<< ") requested in THistogramArrayBase::GetHistogram(int i) " << std::endl;
       return 0;

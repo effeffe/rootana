@@ -518,7 +518,6 @@ void help()
   printf("\n./analyzer.exe [-h] [-X9091] [-oOutputfile.mid] [file1 file2 ...]\n");
   printf("\n");
   printf("\t-h: print this help message\n");
-  printf("\t-T: test mode - start and serve a test histogram\n");
   printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
   printf("\t-Eexptname: connect to this MIDAS experiment\n");
   printf("\t-oOutputfile.mid: write selected events into this file\n");
@@ -554,7 +553,6 @@ int main(int argc, char *argv[])
       args.push_back(argv[i]);
    }
 
-   bool testMode = false;
    int  tcpPort = 0;
    int  xmlTcpPort = 0;
    const char* hostname = NULL;
@@ -589,16 +587,15 @@ int main(int argc, char *argv[])
          tcpPort = atoi(arg+2);
       } else if (strncmp(arg,"-X",2)==0) { // Set the histogram server port
          xmlTcpPort = atoi(arg+2);
-      } else if (strcmp(arg,"-T")==0)
-         testMode = true;
-      else if (strncmp(arg,"-H",2)==0)
+      } else if (strncmp(arg,"-H",2)==0) {
          hostname = strdup(arg+2);
-      else if (strncmp(arg,"-E",2)==0)
+      } else if (strncmp(arg,"-E",2)==0) {
          exptname = strdup(arg+2);
-      else if (strcmp(arg,"-h")==0)
+      } else if (strcmp(arg,"-h")==0) {
          help(); // does not return
-      else if (arg[0] == '-')
+      } else if (arg[0] == '-') {
          help(); // does not return
+      }
    }
 
    if (!gModules)

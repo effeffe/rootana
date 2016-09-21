@@ -29,16 +29,15 @@ XmlOdb::XmlOdb(const char*xbuf,int bufLength) //ctor
   char*buf = (char*)malloc(bufLength);
   memcpy(buf, xbuf, bufLength);
   for (int i=0; i<bufLength; i++)
-    if (!isascii(buf[i]))
+    if (!isascii(buf[i])) {
       buf[i] = 'X';
-    else if (buf[i]=='\n')
-      0;
-    else if (buf[i]=='\r')
-      0;
-    else if (!isprint(buf[i]))
+    } else if (buf[i]=='\n') {
+    } else if (buf[i]=='\r') {
+    } else if (!isprint(buf[i])) {
       buf[i] = 'X';
-    else if (buf[i] == 0x1D)
+    } else if (buf[i] == 0x1D) {
       buf[i] = 'X';
+    }
 
   char* xend = strstr(buf,"odb>");
   if (xend)
@@ -331,7 +330,7 @@ TXMLNode* XmlOdb::FindArrayPath(TXMLNode*node,const char* path,const char* type,
   for (int i=0; elem!=NULL; )
     {
       const char* name = elem->GetNodeName();
-      const char* text = elem->GetText();
+      //const char* text = elem->GetText();
       //printf("index %d, name [%s] text [%s]\n", i, name, text);
 
       if (strcmp(name,"value") == 0)

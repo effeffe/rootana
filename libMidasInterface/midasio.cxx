@@ -580,7 +580,7 @@ static int FindNextBank(TMEvent* e, int pos, TMBank** pb)
 
    //printf("pos %d, next bank at %d: [%c%c%c%c]\n", pos, npos, xchar(e->data[npos+0]), xchar(e->data[npos+1]), xchar(e->data[npos+2]), xchar(e->data[npos+3]));
 
-   if (npos > e->data.size()) {
+   if (npos > (int)e->data.size()) {
       printf("invalid bank data size %d\n", b->data_size);
       e->error = true;
       return -1;
