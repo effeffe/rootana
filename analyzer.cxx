@@ -17,7 +17,9 @@
 #endif
 #include "TMidasEvent.h"
 #include "TMidasFile.h"
+#ifdef HAVE_ROOT_XML
 #include "XmlOdb.h"
+#endif
 #ifdef HAVE_MIDASSERVER
 #include "midasServer.h"
 #endif
@@ -28,6 +30,7 @@
 #include "libXmlServer/xmlServer.h"
 #endif
 
+#ifdef HAVE_ROOT
 #include <TSystem.h>
 #include <TROOT.h>
 #include <TApplication.h>
@@ -37,6 +40,7 @@
 #include <TGClient.h>
 #include <TGFrame.h>
 #include <TFolder.h>
+#endif
 
 #include "Globals.h"
 
@@ -47,8 +51,11 @@ bool gIsPedestalsRun = false;
 bool gIsOffline = false;
 int  gEventCutoff = 0;
 
+#ifdef HAVE_ROOT
 TDirectory* gOnlineHistDir = NULL;
 TFile* gOutputFile = NULL;
+#endif
+
 VirtualOdb* gOdb = NULL;
 
 //TCanvas  *gMainWindow = NULL; 	// the online histogram window
@@ -60,6 +67,7 @@ double GetTimeSec()
   return tv.tv_sec + 0.000001*tv.tv_usec;
 }
 
+#ifdef HAVE_ROOT
 class MyPeriodic : public TTimer
 {
 public:
@@ -101,7 +109,7 @@ public:
     TurnOff();
   }
 };
-
+#endif
 
 void startRun(int transition,int run,int time)
 {
@@ -109,13 +117,14 @@ void startRun(int transition,int run,int time)
   gRunNumber = run;
   gIsPedestalsRun = gOdb->odbReadBool("/experiment/edit on start/Pedestals run");
   printf("Begin run: %d, pedestal run: %d\n", gRunNumber, gIsPedestalsRun);
-    
+
+#ifdef HAVE_ROOT
   if(gOutputFile!=NULL)
   {
     gOutputFile->Write();
     gOutputFile->Close();
     gOutputFile=NULL;
-  }  
+  }
 
   char filename[1024];
   sprintf(filename, "output%05d.root", run);
@@ -126,6 +135,7 @@ void startRun(int transition,int run,int time)
 
   assert(gOutputFile);
   assert(gOutputFile->IsOpen());
+#endif
 
   //printf("gOutputFile: %p, isOpen %d\n", gOutputFile, gOutputFile->IsOpen());
 
@@ -144,20 +154,25 @@ void endRun(int transition,int run,int time)
     gManaHistosFolder->Clear();
 #endif
 
+#ifdef HAVE_ROOT
   if (gOutputFile)
     {
       gOutputFile->Write();
       gOutputFile->Close();		//close the histogram file
       gOutputFile = NULL;
     }
+#endif
 
   printf("End of run %d\n",run);
 }
 
+#ifdef HAVE_ROOT
 #include <TH1D.h>
+#endif
 
 void HandleSample(int ichan, void* ptr, int wsize)
 {
+#ifdef HAVE_ROOT
   uint16_t *samples = (uint16_t*) ptr;
   int numSamples = wsize;
 
@@ -185,6 +200,7 @@ void HandleSample(int ichan, void* ptr, int wsize)
 
   for(int ti=0; ti<numSamples; ti++)
     samplePlot->SetBinContent(ti, samples[ti]);
+#endif
 }
 
 
@@ -240,7 +256,7 @@ void eventHandler(const void*pheader,const void*pdata,int size)
   HandleMidasEvent(event);
 }
 
-int ProcessMidasFile(TApplication*app,const char*fname)
+int ProcessMidasFile(const char*fname)
 {
   TMidasFile f;
   bool tryOpen = f.Open(fname);
@@ -276,7 +292,9 @@ int ProcessMidasFile(TApplication*app,const char*fname)
 	  //
 	  if (gOdb)
 	    delete gOdb;
+#ifdef HAVE_ROOT_XML
 	  gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
+#endif
 
 	  startRun(0,event.GetSerialNumber(),0);
 	}
@@ -317,9 +335,6 @@ int ProcessMidasFile(TApplication*app,const char*fname)
   f.Close();
 
   endRun(0,gRunNumber,0);
-
-  // start the ROOT GUI event loop
-  //  app->Run(kTRUE);
 
   return 0;
 }
@@ -380,6 +395,7 @@ int ProcessMidasOnline(TApplication*app, const char* hostname, const char* exptn
 
 #endif
 
+#ifdef HAVE_ROOT
 #include <TGMenu.h>
 
 class MainWindow: public TGMainFrame {
@@ -476,6 +492,7 @@ void MainWindow::CloseWindow()
     	endRun(0,gRunNumber,0);
     gSystem->ExitLoop();
 }
+#endif
 
 static bool gEnableShowMem = false;
 
@@ -538,12 +555,14 @@ int main(int argc, char *argv[])
        args.push_back(argv[i]);
      }
 
+#ifdef HAVE_ROOT
    TApplication *app = new TApplication("rootana", &argc, argv);
 
    if(gROOT->IsBatch()) {
    	printf("Cannot run in batch mode\n");
 	return 1;
    }
+#endif
 
    //bool forceEnableGraphics = false;
    bool testMode = false;
@@ -581,7 +600,8 @@ int main(int argc, char *argv[])
        else if (arg[0] == '-')
 	 help(); // does not return
     }
-    
+
+#ifdef HAVE_ROOT
    MainWindow mainWindow(gClient->GetRoot(), 200, 300);
 
    gROOT->cd();
@@ -614,6 +634,7 @@ int main(int argc, char *argv[])
    if (xmlTcpPort)
      fprintf(stderr,"ERROR: No support for the XML Server!\n");
 #endif
+#endif // HAVE_ROOT
 	 
    gIsOffline = false;
 
@@ -626,10 +647,11 @@ int main(int argc, char *argv[])
 	   gIsOffline = true;
 	   //gEnableGraphics = false;
 	   //gEnableGraphics |= forceEnableGraphics;
-	   ProcessMidasFile(app,arg);
+	   ProcessMidasFile(arg);
 	 }
      }
 
+#ifdef HAVE_ROOT
    if (testMode)
      {
        gOnlineHistDir->cd();
@@ -641,6 +663,7 @@ int main(int argc, char *argv[])
        app->Run(kTRUE);
        return 0;
      }
+#endif
 
    // if we processed some data files,
    // do not go into online mode.

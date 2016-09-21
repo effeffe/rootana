@@ -15,8 +15,10 @@ extern bool gIsOffline;
 
 // Output files
 
+#ifdef HAVE_ROOT
 extern TFile* gOutputFile;
 extern TDirectory* gOnlineHistDir;
+#endif
 
 // ODB access
 

@@ -37,10 +37,12 @@ TARunInfo::~TARunInfo()
       delete fOdb;
       fOdb = NULL;
    }
+#ifdef HAVE_ROOT
    if (fRoot) {
       delete fRoot;
       fRoot = NULL;
    }
+#endif
 }
 
 //////////////////////////////////////////////////////////

@@ -1,14 +1,8 @@
 #
-# Makefile for the ROOT analyzer for MIDAS data.
+# Makefile for the ROOTANA package
 #
 
 CXXFLAGS = -g -O2 -Wall -Wuninitialized -I./include
-
-# MIDAS interface library
-
-#CXXFLAGS += -I./libMidasInterface
-#ALL+=  libMidasInterface/libMidasInterface.a
-#LIBS+= libMidasInterface/libMidasInterface.a
 
 # optional ROOT libraries
 
@@ -41,12 +35,13 @@ endif
 
 #xhere: ; @echo Have ROOT: features: $(ROOTFEATURES), libdir: $(ROOTLIBDIR), libs: $(ROOTLIBS) cflags: $(CXXFLAGS)
 else
-xnoroot: ; @echo ROOT not available, please run: make minimal
+#xnoroot: ; @echo ROOT not available, please run: make minimal
 endif
 
 # optional MIDAS libraries
 
 ifdef MIDASSYS
+
 HAVE_MIDAS=1
 MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil -lrt
 CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
@@ -61,8 +56,9 @@ endif
 
 endif
 
-#ifdef HAVE_ROOT
+ifdef HAVE_ROOT
 OBJS += obj/RootLock.o
+endif
 
 # optional TNetDirectory code
 
@@ -110,24 +106,16 @@ endif
 ALL  += lib/librootana.a
 ALL  += event_dump.exe
 ALL  += event_skim.exe
-
-ifdef HAVE_ROOT
-ifdef HAVE_MIDAS
-ALL  += tests/testODB.exe
-endif
-endif
-
-ifdef HAVE_ROOT
 ALL  += analyzer.exe
-ALL  += tests/test_midasServer.exe
-endif
-
-ifdef HAVE_ROOT
 ALL  += manalyzer.exe
 ALL  += manalyzer_example1.exe
+ifdef HAVE_ROOT
 ALL  += manalyzer_example2.exe
 ALL  += manalyzer_example3.exe
 ALL  += tests/test_midasServer.exe
+ifdef HAVE_MIDAS
+ALL  += tests/testODB.exe
+endif
 endif
 
 # libMidasInterface
@@ -137,7 +125,9 @@ OBJS += obj/TMidasFile.o
 ifdef HAVE_MIDAS
 OBJS += obj/TMidasOnline.o
 endif
+ifdef HAVE_ROOT
 OBJS += obj/HttpOdb.o
+endif
 ifdef HAVE_ROOT_XML
 OBJS += obj/XmlOdb.o
 endif
