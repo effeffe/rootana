@@ -4,7 +4,7 @@ CXXFLAGS = -g -O2 -Wall -Wuninitialized
 
 # optional ZLIB library
 
-CXXFLAGS += -DHAVE_ZLIB
+CXXFLAGS += -DHAVE_LIBZ
 
 # ROOT libraries
 

@@ -65,7 +65,7 @@ class PipeReader: public TMReaderInterface
    FILE* fPipe;
 };
 
-#ifdef HAVE_ZLIB
+#ifdef HAVE_LIBZ
 
 #include <zlib.h>
 
@@ -286,7 +286,7 @@ static int hasSuffix(const char*name,const char*suffix)
 TMReaderInterface* TMNewReader(const char* source)
 {
    if (0) {
-#if HAVE_ZLIB
+#if HAVE_LIBZ
    } else if (hasSuffix(source, ".gz")) {
       return new ZlibReader(source);
 #endif
@@ -303,7 +303,7 @@ TMWriterInterface* TMNewWriter(const char* destination)
 {
    if (0) {
 #if 0
-#if HAVE_ZLIB
+#if HAVE_LIBZ
    } else if (hasSuffix(source, ".gz")) {
       return new ZlibReader(source);
 #endif

@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <unistd.h> // close()
 
-#ifdef HAVE_ZLIB
+#ifdef HAVE_LIBZ
 #include <zlib.h>
 #endif
 
@@ -182,7 +182,7 @@ bool TMidasFile::Open(const char *filename)
       if (hasSuffix(filename, ".gz"))
         {
           // this is a compressed file
-#ifdef HAVE_ZLIB
+#ifdef HAVE_LIBZ
           fGzFile = new gzFile;
           (*(gzFile*)fGzFile) = gzdopen(fFile,"rb");
           if ((*(gzFile*)fGzFile) == NULL)
@@ -234,7 +234,7 @@ bool TMidasFile::OutOpen(const char *filename)
     // (hasSuffix(filename, ".dummy"))
     {
       // this is a compressed file
-#ifdef HAVE_ZLIB
+#ifdef HAVE_LIBZ
       fOutGzFile = new gzFile;
       *(gzFile*)fOutGzFile = gzdopen(fOutFile,"wb");
       if ((*(gzFile*)fOutGzFile) == NULL)
@@ -300,7 +300,7 @@ bool TMidasFile::Read(TMidasEvent *midasEvent)
   if (fReader)
     rd = fReader->Read((char*)midasEvent->GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
   else if (fGzFile)
-#ifdef HAVE_ZLIB
+#ifdef HAVE_LIBZ
     rd = gzread(*(gzFile*)fGzFile, (char*)midasEvent->GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
 #else
     assert(!"Cannot get here");
@@ -334,7 +334,7 @@ bool TMidasFile::Read(TMidasEvent *midasEvent)
   if (fReader)
     rd = fReader->Read((char*)midasEvent->GetData(), midasEvent->GetDataSize());
   else if (fGzFile)
-#ifdef HAVE_ZLIB
+#ifdef HAVE_LIBZ
     rd = gzread(*(gzFile*)fGzFile, midasEvent->GetData(), midasEvent->GetDataSize());
 #else
     assert(!"Cannot get here");
@@ -359,7 +359,7 @@ bool TMidasFile::Write(TMidasEvent *midasEvent)
   int wr = -2;
 
   if (fOutGzFile)
-#ifdef HAVE_ZLIB
+#ifdef HAVE_LIBZ
     wr = gzwrite(*(gzFile*)fOutGzFile, (char*)midasEvent->GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
 #else
     assert(!"Cannot get here");
@@ -375,7 +375,7 @@ bool TMidasFile::Write(TMidasEvent *midasEvent)
   printf("Written event header to outfile , return is %i\n",wr);
 
   if (fOutGzFile)
-#ifdef HAVE_ZLIB
+#ifdef HAVE_LIBZ
     wr = gzwrite(*(gzFile*)fOutGzFile, (char*)midasEvent->GetData(), midasEvent->GetDataSize());
 #else
     assert(!"Cannot get here");
@@ -397,7 +397,7 @@ void TMidasFile::Close()
   if (fPoFile)
     pclose((FILE*)fPoFile);
   fPoFile = NULL;
-#ifdef HAVE_ZLIB
+#ifdef HAVE_LIBZ
   if (fGzFile)
     gzclose(*(gzFile*)fGzFile);
   fGzFile = NULL;
@@ -410,7 +410,7 @@ void TMidasFile::Close()
 
 void TMidasFile::OutClose()
 {
-#ifdef HAVE_ZLIB
+#ifdef HAVE_LIBZ
   if (fOutGzFile) {
     gzflush(*(gzFile*)fOutGzFile, Z_FULL_FLUSH);
     gzclose(*(gzFile*)fOutGzFile);

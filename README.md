@@ -31,7 +31,7 @@ Access to optional components is controlled by these Makefile and C++ symbols:
 * HAVE_ROOT - if ROOT is installed (root-config is in the $PATH)
 * HAVE_ROOT_XML - ROOT XML component is installed ("xml" in root-config --features)
 * HAVE_ROOT_HTTP - ROOT HTTP component is installed ("http" in root-config --features)
-* HAVE_ZLIB - if the gzip/zlib library is installed (required for reading mid.gz files)
+* HAVE_LIBZ - if the gzip/zlib library is installed (required for reading mid.gz files)
 
 ### Quick start guide ###
 

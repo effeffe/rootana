@@ -4,6 +4,11 @@
 
 CXXFLAGS = -g -O2 -Wall -Wuninitialized -I./include
 
+# required/non-optional libz package for GZIP decompression
+
+HAVE_LIBZ := 1
+CXXFLAGS += -DHAVE_LIBZ
+
 # optional ROOT libraries
 
 ROOTVERSION := $(shell root-config --version)

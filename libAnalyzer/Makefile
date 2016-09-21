@@ -10,7 +10,7 @@ CXXFLAGS += -I$(ROOTANASYS)/include
 
 # optional ZLIB library
 
-CXXFLAGS += -DHAVE_ZLIB
+CXXFLAGS += -DHAVE_LIBZ
 
 # ROOT libraries
 
