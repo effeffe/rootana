@@ -2,6 +2,9 @@
 
 // Rootana includes
 #include "TRootanaEventLoop.hxx"
+#ifdef HAVE_MIDAS
+#include "TMidasOnline.h"
+#endif
 #ifdef HAVE_ROOT_XML
 #include "XmlOdb.h"
 #endif
