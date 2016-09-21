@@ -20,7 +20,7 @@
 #include "TMidasEvent.h"
 #include "TMidasFile.h"
 
-#ifdef HAVE_ROOT
+#ifdef HAVE_ROOT_XML
 #include "XmlOdb.h"
 #endif
 
@@ -101,7 +101,7 @@ int ProcessMidasFile(const char*fname)
 	  if (gOdb)
 	    delete gOdb;
           gOdb = NULL;
-#ifdef HAVE_ROOT
+#ifdef HAVE_ROOT_XML
 	  gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
 #endif
 	}

@@ -2,7 +2,9 @@
 
 // Rootana includes
 #include "TRootanaEventLoop.hxx"
+#ifdef HAVE_ROOT_XML
 #include "XmlOdb.h"
+#endif
 #ifdef OLD_SERVER
 #include "midasServer.h"
 #endif
@@ -364,8 +366,9 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
 	
         // Load ODB contents from the ODB XML file
         if (fODB) delete fODB;
+#ifdef HAVE_ROOT_XML
         fODB = new XmlOdb(event.GetData(),event.GetDataSize());
-	
+#endif
         fCurrentRunNumber = event.GetSerialNumber();
         OpenRootFile(fCurrentRunNumber,fname);
         BeginRun(0,event.GetSerialNumber(),0);
