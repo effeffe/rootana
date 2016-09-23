@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h> // malloc()
+#include <string.h> // memcpy()
 #include <errno.h>  // errno
 
 #include <string>
@@ -19,12 +20,19 @@ TMReaderInterface::TMReaderInterface() // ctor
    fErrorString = "";
 }
 
+static std::string to_string(int v)
+{
+   char buf[256];
+   sprintf(buf, "%d", v);
+   return buf;
+}
+
 static std::string Errno(const char* s)
 {
    std::string r;
    r += s;
    r += " failed: errno: ";
-   r += std::to_string(errno);
+   r += to_string(errno);
    r += " (";
    r += strerror(errno);
    r += ")";
@@ -212,7 +220,7 @@ class ZlibReader: public TMReaderInterface
 static std::string Lz4Error(int errorCode)
 {
    std::string s;
-   s += std::to_string(errorCode);
+   s += to_string(errorCode);
    s += " (";
    s += LZ4F_getErrorName(errorCode);
    s += ")";
