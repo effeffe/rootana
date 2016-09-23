@@ -120,74 +120,31 @@ public:
       if (LZ4F_isError(errorCode))
          printf("Can't create LZ4F context : %s", LZ4F_getErrorName(errorCode));
 
-      fBufSize = 10*1024*1024;
-      fBuf = (char*) malloc(fBufSize);
-      fBufStart = 0;
-      fBufHave = 0;
-
-      fSrcBufSize = 10*1024*1024;
-      fSrcBuf = (char*) malloc(fSrcBufSize);
+      fSrcBuf = NULL;
+      fSrcBufSize  = 0;
       fSrcBufStart = 0;
-      fSrcBufHave = 0;
+      fSrcBufHave  = 0;
+
+      AllocSrcBuf(1024*1024);
    }
 
    ~Lz4Reader() {
       printf("Lz4Reader::dtor!\n");
 
-      free(fBuf);
-      fBuf = NULL;
-
-      free(fSrcBuf);
-      fSrcBuf = NULL;
+      if (fSrcBuf) {
+         free(fSrcBuf);
+         fSrcBuf = NULL;
+      }
 
       LZ4F_errorCode_t errorCode = LZ4F_freeDecompressionContext(fContext);
       if (LZ4F_isError(errorCode))
          printf("Error : can't free LZ4F context resource : %s", LZ4F_getErrorName(errorCode));
    }
 
-   int ReadMore()
-   {
-      LZ4F_decompressOptions_t* dOptPtr = NULL;
-               
-      fBufStart = 0;
-      fBufHave = 0;
 
-      printf("read more: src buf: size %d, start %d, have %d\n", fSrcBufSize, fSrcBufStart, fSrcBufHave);
-
-      size_t size = fBufSize;
-
-      if (fSrcBufHave <= 0) {
-         int rd = fReader->Read(fSrcBuf, fSrcBufSize);
-
-         printf("read asked %d, got %d\n", fSrcBufSize, rd);
-
-         if (rd <= 0)
-            return rd;
-
-         fSrcBufStart = 0;
-         fSrcBufHave = rd;
-      }
-      
-      size_t remaining = fSrcBufHave;
-      
-      int more = LZ4F_decompress(fContext, fBuf, &size, fSrcBuf + fSrcBufStart, &remaining, dOptPtr);
-
-      printf("decompress: more %d, size %d, remaining %d\n", (int)more, (int)size, (int)remaining);
-
-      if (remaining > 0) {
-         fSrcBufStart += remaining;
-         fSrcBufHave -= remaining;
-      }
-
-      fBufStart = 0;
-      fBufHave = size;
-
-      return size;
-   }
-   
    int Read(void* buf, int count)
    {
-      printf("Lz4Reader::Read %d bytes!\n", count);
+      //printf("Lz4Reader::Read %d bytes!\n", count);
 
       char* cptr = (char*)buf;
       int clen = 0;
@@ -195,34 +152,55 @@ public:
       while (clen < count) {
          int more = count - clen;
 
-         printf("count %d, clen %d, fBufStart %d, fBufHave %d\n", count, clen, fBufStart, fBufHave);
+         if (fSrcBufHave == 0) {
+            assert(fSrcBufStart == 0);
 
-         if (fBufHave > 0) {
-            int copy = more;
-            if (copy > fBufHave)
-               copy = fBufHave;
-
-            memcpy(cptr, fBuf+fBufStart, copy);
-            cptr += copy;
-            clen += copy;
-            fBufStart += copy;
-            fBufHave -= copy;
-
-            // check if done reading
-            if (clen == count)
+            int rd = fReader->Read(fSrcBuf, fSrcBufSize);
+               
+            //printf("read asked %d, got %d\n", to_read, rd);
+            
+            if (rd < 0) {
+               if (clen > 0)
+                  return clen;
+               else
+                  return rd;
+            } else if (rd == 0) {
                return clen;
+            }
+               
+            fSrcBufHave += rd;
+            
+            //printf("Lz4Reader::ReadMore: rd %d, srcbuf start %d, have %d\n", rd, fSrcBufStart, fSrcBufHave);
+         }
+         
+         LZ4F_decompressOptions_t* dOptPtr = NULL;
 
-            // buffer must be empty now
-            assert(fBufHave == 0);
+         char*  dst = cptr;
+         size_t dst_size = more;
+         size_t src_size = fSrcBufHave;
+
+         size_t status = LZ4F_decompress(fContext, dst, &dst_size, fSrcBuf + fSrcBufStart, &src_size, dOptPtr);
+
+         if (LZ4F_isError(status)) {
+            printf("Error : can't decompress, error %d (%s)\n", (int)status, LZ4F_getErrorName(status));
+            return -1;
          }
 
-         int rd = ReadMore();
-         if (rd == 0)
-            return clen;
-         else if (rd < 0)
-            return rd;
+         //printf("LZ4Reader::Decompress: status %d, dst_size %d -> %d, src_size %d -> %d\n", (int)status, more, (int)dst_size, fSrcBufHave, (int)src_size);
+
+         assert(dst_size!=0 || src_size!=0); // make sure we make progress
+         
+         clen += dst_size;
+         cptr += dst_size;
+         
+         fSrcBufStart += src_size;
+         fSrcBufHave  -= src_size;
+
+         if (fSrcBufHave == 0)
+            fSrcBufStart = 0;
       }
       
+      //printf("Lz4Reader::Read %d bytes, returning %d bytes!\n", count, clen);
       return clen;
    }
    
@@ -231,14 +209,17 @@ public:
       printf("Lz4Reader::Close!\n");
       return fReader->Close();
    }
+
+   void AllocSrcBuf(int size)
+   {
+      //printf("Lz4Reader::AllocSrcBuffer %d -> %d bytes!\n", fSrcBufSize, size);
+      fSrcBuf = (char*) realloc(fSrcBuf, size);
+      assert(fSrcBuf != NULL);
+      fSrcBufSize = size;
+   }
    
    TMReaderInterface *fReader;
    LZ4F_decompressionContext_t fContext;
-
-   int fBufSize;
-   int fBufStart;
-   int fBufHave;
-   char* fBuf;
 
    int fSrcBufSize;
    int fSrcBufStart;
