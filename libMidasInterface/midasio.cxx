@@ -7,6 +7,7 @@
 #include <stdlib.h> // malloc()
 #include <string.h> // memcpy()
 #include <errno.h>  // errno
+#include <signal.h> // signal()
 
 #include <string>
 
@@ -56,6 +57,35 @@ static int ReadPipe(FILE *fp, char* buf, int length)
   return count;
 }
 
+
+class ErrorReader: public TMReaderInterface
+{
+ public:
+   ErrorReader(const char* filename)
+   {
+      if (TMTraceCtorDtor)
+         printf("ErrorReader::ctor!\n");
+      fError = true;
+      fErrorString = "The ErrorReader always returns an error";
+   }
+
+   ~ErrorReader() // dtor
+   {
+      if (TMTraceCtorDtor)
+         printf("ErrorReader::dtor!\n");
+   }
+
+   int Read(void* buf, int count)
+   {
+      return -1;
+   }
+
+   int Close()
+   {
+      // an exception, no error on close.
+      return 0;
+   }
+};
 
 class FileReader: public TMReaderInterface
 {
@@ -408,18 +438,100 @@ static int hasSuffix(const char*name,const char*suffix)
 
 TMReaderInterface* TMNewReader(const char* source)
 {
-   if (0) {
-#if HAVE_LIBZ
-   } else if (hasSuffix(source, ".gz")) {
-      return new ZlibReader(source);
+#ifdef SIGPIPE
+   signal(SIGPIPE, SIG_IGN); // crash if reading from closed pipe
 #endif
-   } else if (hasSuffix(source, ".bz2")) {
-      return new PipeReader((std::string("bzip2 -dc ") + source).c_str());
-   } else if (hasSuffix(source, ".lz4")) {
-      return new Lz4Reader(new FileReader(source));
-   } else {
-      return new FileReader(source);
-   }
+#ifdef SIGXFSZ
+   signal(SIGXFSZ, SIG_IGN); // crash if reading from file >2GB without O_LARGEFILE
+#endif
+
+   if (0)
+      {
+      }
+   else if (strncmp(source, "ssh://", 6) == 0)
+      {
+         const char* name = source + 6;
+         const char* s = strstr(name, "/");
+         
+         if (s == NULL) {
+            ErrorReader *e = new ErrorReader(source);
+            e->fError = true;
+            e->fErrorString = "TMidasFile::Open: Invalid ssh:// URI. Should be: ssh://user@host/file/path/...";
+            return e;
+         }
+         
+         const char* remoteFile = s + 1;
+         
+         std::string remoteHost;
+         for (s=name; *s != '/'; s++)
+            remoteHost += *s;
+
+         std::string pipe;
+
+         pipe = "ssh -e none -T -x -n ";
+         pipe += remoteHost;
+         pipe += " dd if=";
+         pipe += remoteFile;
+         pipe += " bs=1024k";
+         
+         if (hasSuffix(remoteFile,".gz"))
+            pipe += " | gzip -dc";
+         else if (hasSuffix(remoteFile,".bz2"))
+            pipe += " | bzip2 -dc";
+         else if (hasSuffix(remoteFile,".lz4"))
+            pipe += " | lz4 -d";
+
+         return new PipeReader(pipe.c_str());
+      }
+   else if (strncmp(source, "dccp://", 7) == 0)
+      {
+         const char* name = source + 7;
+
+         std::string pipe;
+
+         pipe = "dccp ";
+         pipe += name;
+         pipe += " /dev/fd/1";
+         
+         if (hasSuffix(source,".gz"))
+            pipe += " | gzip -dc";
+         else if (hasSuffix(source,".bz2"))
+            pipe += " | bzip2 -dc";
+         else if (hasSuffix(source,".lz4"))
+            pipe += " | lz4 -d";
+
+         return new PipeReader(pipe.c_str());
+      }
+   else if (strncmp(source, "pipein://", 9) == 0)
+      {
+         std::string pipe = source + 9;
+         return new PipeReader(pipe.c_str());
+      }
+#if 0 // read compressed files using the zlib library
+   else if (hasSuffix(source, ".gz"))
+      {
+         pipe = "gzip -dc ";
+         pipe += source;
+      }
+#endif
+#if HAVE_LIBZ
+   else if (hasSuffix(source, ".gz"))
+      {
+         return new ZlibReader(source);
+      }
+#endif
+   else if (hasSuffix(source, ".bz2"))
+      {
+         return new PipeReader((std::string("bzip2 -dc ") + source).c_str());
+      }
+   else if (hasSuffix(source, ".lz4"))
+      {
+         return new Lz4Reader(new FileReader(source));
+      }
+   else
+      {
+         return new FileReader(source);
+      }
 }
 
 TMWriterInterface* TMNewWriter(const char* destination)
