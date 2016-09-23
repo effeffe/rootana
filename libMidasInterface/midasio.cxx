@@ -31,6 +31,24 @@ static std::string Errno(const char* s)
    return r;
 }
 
+static int ReadPipe(FILE *fp, char* buf, int length)
+{
+  int count = 0;
+  while (length > 0) {
+     int rd = fread(buf, 1, length, fp);
+     if (rd < 0)
+        return rd;
+     if (rd == 0)
+        return count;
+
+     buf += rd;
+     length -= rd;
+     count += rd;
+  }
+  return count;
+}
+
+
 class FileReader: public TMReaderInterface
 {
  public:
@@ -59,7 +77,12 @@ class FileReader: public TMReaderInterface
       if (fError)
          return -1;
       assert(fFp != NULL);
-      return fread(buf, 1, count, fFp);
+      int rd = ReadPipe(fFp, (char*)buf, count);
+      if (rd < 0) {
+         fError = true;
+         fErrorString = Errno((std::string("fread(\"")+fFilename+"\")").c_str());
+      }
+      return rd;
    }
 
    int Close()
@@ -86,7 +109,10 @@ class PipeReader: public TMReaderInterface
          printf("PipeReader::ctor!\n");
       fPipename = pipename;
       fPipe = popen(pipename, "r");
-      assert(fPipe != NULL); // FIXME: check for error
+      if (!fPipe) {
+         fError = true;
+         fErrorString = Errno((std::string("popen(\"")+pipename+"\")").c_str());
+      }
    }
 
    ~PipeReader() // dtor
@@ -99,17 +125,25 @@ class PipeReader: public TMReaderInterface
 
    int Read(void* buf, int count)
    {
+      if (fError)
+         return -1;
       assert(fPipe != NULL);
-      return fread(buf, 1, count, fPipe); // FIXME: read pipe in a loop!
+      int rd = ReadPipe(fPipe, (char*)buf, count);
+      if (rd < 0) {
+         fError = true;
+         fErrorString = Errno((std::string("fread(\"")+fPipename+"\")").c_str());
+      }
+      return rd;
    }
 
    int Close()
    {
       if (TMTraceCtorDtor)
          printf("PipeReader::Close!\n");
-      assert(fPipe != NULL);
-      pclose(fPipe); // FIXME: check error
-      fPipe = NULL;
+      if (fPipe) {
+         pclose(fPipe); // FIXME: check error // only need to check error if writing to pipe
+         fPipe = NULL;
+      }
       return 0;
    }
 
@@ -130,13 +164,10 @@ class ZlibReader: public TMReaderInterface
          printf("ZlibReader::ctor!\n");
       fFilename = filename;
       fGzFile = gzopen(filename, "rb");
-      //if (fGzFile == NULL)
-      //   {
-            //fLastErrno = -1;
-            //fLastError = "zlib gzdopen() error";
-            //return false;
-      //   }
-      assert(fGzFile != NULL); // FIXME: check for error
+      if (!fGzFile) {
+         fError = true;
+         fErrorString = Errno((std::string("gzopen(\"")+fFilename+"\")").c_str());
+      }
    }
 
    ~ZlibReader() // dtor
@@ -149,17 +180,25 @@ class ZlibReader: public TMReaderInterface
 
    int Read(void* buf, int count)
    {
+      if (fError)
+         return -1;
       assert(fGzFile != NULL);
-      return gzread(fGzFile, buf, count);
+      int rd = gzread(fGzFile, buf, count);
+      if (rd < 0) {
+         fError = true;
+         fErrorString = Errno((std::string("gzread(\"")+fFilename+"\")").c_str());
+      }
+      return rd;
    }
 
    int Close()
    {
       if (TMTraceCtorDtor)
          printf("ZlibReader::Close!\n");
-      assert(fGzFile != NULL);
-      gzclose(fGzFile);
-      fGzFile = NULL;
+      if (fGzFile) {
+         gzclose(fGzFile); // FIXME: must check error on write, ok no check on read
+         fGzFile = NULL;
+      }
       return 0;
    }
 
@@ -169,6 +208,16 @@ class ZlibReader: public TMReaderInterface
 #endif
 
 #include "lz4frame.h"
+
+static std::string Lz4Error(int errorCode)
+{
+   std::string s;
+   s += std::to_string(errorCode);
+   s += " (";
+   s += LZ4F_getErrorName(errorCode);
+   s += ")";
+   return s;
+}
 
 class Lz4Reader: public TMReaderInterface
 {
@@ -182,8 +231,11 @@ public:
          printf("Lz4Reader::ctor!\n");
 
       LZ4F_errorCode_t errorCode = LZ4F_createDecompressionContext(&fContext, LZ4F_VERSION);
-      if (LZ4F_isError(errorCode))
-         printf("Can't create LZ4F context : %s", LZ4F_getErrorName(errorCode));
+      if (LZ4F_isError(errorCode)) {
+         fError = true;
+         fErrorString = "LZ4F_createDecompressionContext() error ";
+         fErrorString += Lz4Error(errorCode);
+      }
 
       fSrcBuf = NULL;
       fSrcBufSize  = 0;
@@ -203,8 +255,13 @@ public:
       }
 
       LZ4F_errorCode_t errorCode = LZ4F_freeDecompressionContext(fContext);
-      if (LZ4F_isError(errorCode))
-         printf("Error : can't free LZ4F context resource : %s", LZ4F_getErrorName(errorCode));
+      if (LZ4F_isError(errorCode)) {
+         fError = true;
+         fErrorString = "LZ4F_freeDecompressionContext() error ";
+         fErrorString += Lz4Error(errorCode);
+         // NB: this error cannot be reported: we are in the destructor, fErrorString
+         // is immediately destroyed...
+      }
 
       if (fReader) {
          delete fReader;
@@ -215,6 +272,9 @@ public:
 
    int Read(void* buf, int count)
    {
+      if (fError)
+         return -1;
+
       //printf("Lz4Reader::Read %d bytes!\n", count);
 
       char* cptr = (char*)buf;
@@ -253,7 +313,9 @@ public:
          size_t status = LZ4F_decompress(fContext, dst, &dst_size, fSrcBuf + fSrcBufStart, &src_size, dOptPtr);
 
          if (LZ4F_isError(status)) {
-            printf("Error : can't decompress, error %d (%s)\n", (int)status, LZ4F_getErrorName(status));
+            fError = true;
+            fErrorString = "LZ4F_decompress() error ";
+            fErrorString += Lz4Error(status);
             return -1;
          }
 
@@ -413,7 +475,10 @@ TMEvent* TMReadEvent(TMReaderInterface* reader)
 
    int rd = reader->Read(event_header, event_header_size);
 
-   if (rd == 0) { // end of file
+   if (rd < 0) { // read error
+      delete e;
+      return NULL;
+   } else if (rd == 0) { // end of file
       delete e;
       return NULL;
    } else if (rd != event_header_size) { // truncated data in file
@@ -442,7 +507,10 @@ TMEvent* TMReadEvent(TMReaderInterface* reader)
 
    rd = reader->Read(&e->data[event_header_size], to_read);
 
-   if (rd != to_read) { // truncated data in file
+   if (rd < 0) { // read error
+      delete e;
+      return NULL;
+   } else if (rd != to_read) { // truncated data in file
       e->error = true;
       return e;
    }
