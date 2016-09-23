@@ -403,6 +403,7 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
             break;
       }
 
+      reader->Close();
       delete reader;
 
       if (done)

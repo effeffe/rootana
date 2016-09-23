@@ -99,6 +99,8 @@ TMWriterInterface* TMNewWriter(const char* destination);
 TMEvent* TMReadEvent(TMReaderInterface* reader);
 void TMWriteEvent(TMWriterInterface* writer, const TMEvent* event);
 
+extern bool TMTraceCtorDtor;
+
 #endif
 
 /* emacs

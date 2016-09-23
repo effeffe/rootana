@@ -9,14 +9,26 @@
 
 #include <string>
 
+bool TMTraceCtorDtor = true;
+
 class FileReader: public TMReaderInterface
 {
  public:
    FileReader(const char* filename)
    {
+      if (TMTraceCtorDtor)
+         printf("FileReader::ctor!\n");
       fFilename = filename;
       fFp = fopen(filename, "r");
       assert(fFp != NULL); // FIXME: check for error
+   }
+
+   ~FileReader() // dtor
+   {
+      if (TMTraceCtorDtor)
+         printf("FileReader::dtor!\n");
+      if (fFp)
+         Close();
    }
 
    int Read(void* buf, int count)
@@ -27,6 +39,8 @@ class FileReader: public TMReaderInterface
 
    int Close()
    {
+      if (TMTraceCtorDtor)
+         printf("FileReader::Close!\n");
       assert(fFp != NULL);
       fclose(fFp);
       fFp = NULL;
@@ -42,9 +56,19 @@ class PipeReader: public TMReaderInterface
  public:
    PipeReader(const char* pipename)
    {
+      if (TMTraceCtorDtor)
+         printf("PipeReader::ctor!\n");
       fPipename = pipename;
       fPipe = popen(pipename, "r");
       assert(fPipe != NULL); // FIXME: check for error
+   }
+
+   ~PipeReader() // dtor
+   {
+      if (TMTraceCtorDtor)
+         printf("PipeReader::dtor!\n");
+      if (fPipe)
+         Close();
    }
 
    int Read(void* buf, int count)
@@ -55,6 +79,8 @@ class PipeReader: public TMReaderInterface
 
    int Close()
    {
+      if (TMTraceCtorDtor)
+         printf("PipeReader::Close!\n");
       assert(fPipe != NULL);
       pclose(fPipe); // FIXME: check error
       fPipe = NULL;
@@ -74,6 +100,8 @@ class ZlibReader: public TMReaderInterface
  public:
    ZlibReader(const char* filename)
    {
+      if (TMTraceCtorDtor)
+         printf("ZlibReader::ctor!\n");
       fFilename = filename;
       fGzFile = gzopen(filename, "rb");
       //if (fGzFile == NULL)
@@ -85,6 +113,14 @@ class ZlibReader: public TMReaderInterface
       assert(fGzFile != NULL); // FIXME: check for error
    }
 
+   ~ZlibReader() // dtor
+   {
+      if (TMTraceCtorDtor)
+         printf("PipeReader::dtor!\n");
+      if (fGzFile)
+         Close();
+   }
+
    int Read(void* buf, int count)
    {
       assert(fGzFile != NULL);
@@ -93,7 +129,9 @@ class ZlibReader: public TMReaderInterface
 
    int Close()
    {
-      assert (fGzFile != NULL);
+      if (TMTraceCtorDtor)
+         printf("ZlibReader::Close!\n");
+      assert(fGzFile != NULL);
       gzclose(fGzFile);
       fGzFile = NULL;
       return 0;
@@ -114,7 +152,8 @@ public:
       assert(reader);
       fReader = reader;
 
-      printf("Lz4Reader::ctor!\n");
+      if (TMTraceCtorDtor)
+         printf("Lz4Reader::ctor!\n");
 
       LZ4F_errorCode_t errorCode = LZ4F_createDecompressionContext(&fContext, LZ4F_VERSION);
       if (LZ4F_isError(errorCode))
@@ -129,7 +168,8 @@ public:
    }
 
    ~Lz4Reader() {
-      printf("Lz4Reader::dtor!\n");
+      if (TMTraceCtorDtor)
+         printf("Lz4Reader::dtor!\n");
 
       if (fSrcBuf) {
          free(fSrcBuf);
@@ -139,6 +179,11 @@ public:
       LZ4F_errorCode_t errorCode = LZ4F_freeDecompressionContext(fContext);
       if (LZ4F_isError(errorCode))
          printf("Error : can't free LZ4F context resource : %s", LZ4F_getErrorName(errorCode));
+
+      if (fReader) {
+         delete fReader;
+         fReader = NULL;
+      }
    }
 
 
@@ -206,7 +251,8 @@ public:
    
    int Close()
    {
-      printf("Lz4Reader::Close!\n");
+      if (TMTraceCtorDtor)
+         printf("Lz4Reader::Close!\n");
       return fReader->Close();
    }
 
