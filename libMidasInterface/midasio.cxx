@@ -5,11 +5,31 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h> // malloc()
-#include <string.h> // memcpy()
+#include <errno.h>  // errno
 
 #include <string>
 
 bool TMTraceCtorDtor = true;
+
+TMReaderInterface::TMReaderInterface() // ctor
+{
+   if (TMTraceCtorDtor)
+      printf("TMReaderInterface::ctor!\n");
+   fError = false;
+   fErrorString = "";
+}
+
+static std::string Errno(const char* s)
+{
+   std::string r;
+   r += s;
+   r += " failed: errno: ";
+   r += std::to_string(errno);
+   r += " (";
+   r += strerror(errno);
+   r += ")";
+   return r;
+}
 
 class FileReader: public TMReaderInterface
 {
@@ -20,7 +40,10 @@ class FileReader: public TMReaderInterface
          printf("FileReader::ctor!\n");
       fFilename = filename;
       fFp = fopen(filename, "r");
-      assert(fFp != NULL); // FIXME: check for error
+      if (!fFp) {
+         fError = true;
+         fErrorString = Errno((std::string("fopen(\"")+filename+"\")").c_str());
+      }
    }
 
    ~FileReader() // dtor
@@ -33,6 +56,8 @@ class FileReader: public TMReaderInterface
 
    int Read(void* buf, int count)
    {
+      if (fError)
+         return -1;
       assert(fFp != NULL);
       return fread(buf, 1, count, fFp);
    }
@@ -41,9 +66,10 @@ class FileReader: public TMReaderInterface
    {
       if (TMTraceCtorDtor)
          printf("FileReader::Close!\n");
-      assert(fFp != NULL);
-      fclose(fFp);
-      fFp = NULL;
+      if (fFp) {
+         fclose(fFp);
+         fFp = NULL;
+      }
       return 0;
    }
 

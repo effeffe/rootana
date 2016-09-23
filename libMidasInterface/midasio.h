@@ -80,9 +80,13 @@ public:
 class TMReaderInterface
 {
  public:
+   TMReaderInterface(); // ctor
    virtual int Read(void* buf, int count) = 0;
    virtual int Close() = 0;
    virtual ~TMReaderInterface() {};
+ public:
+   bool fError;
+   std::string fErrorString;
 };
 
 class TMWriterInterface

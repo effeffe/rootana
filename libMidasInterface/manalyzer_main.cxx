@@ -303,6 +303,12 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
 
       TMReaderInterface *reader = TMNewReader(filename.c_str());
 
+      if (reader->fError) {
+         printf("Could not open \"%s\", error: %s\n", filename.c_str(), reader->fErrorString.c_str());
+         delete reader;
+         continue;
+      }
+
       while (1) {
          TMEvent* event = TMReadEvent(reader);
 
