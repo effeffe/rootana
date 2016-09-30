@@ -29,6 +29,12 @@ fBankType(bktype), fBankName(name),fData(pdata){
   //  GetData64()
   const uint64_t* GetData64() const { return reinterpret_cast<const uint64_t*>(fData); }
 
+  //  GetFloat()
+  const float* GetFloat() const { return reinterpret_cast<const float*>(fData); }
+
+  //  GetDouble()
+  const double* GetDouble() const { return reinterpret_cast<const double*>(fData); }
+
   int GetSize() const {return fSize;}
 
   int GetType() const {return fBankType;}
