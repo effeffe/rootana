@@ -581,7 +581,7 @@ TMEvent* TMReadEvent(TMReaderInterface* reader)
    bool gOnce = true;
    if (gOnce) {
       gOnce = false;
-      assert(sizeof(u8)==1);
+      assert(sizeof(char)==1);
       assert(sizeof(u16)==2);
       assert(sizeof(u32)==4);
    }
@@ -680,7 +680,7 @@ TMEvent::TMEvent(const void* xdata, int xdata_size)
    bool gOnce = true;
    if (gOnce) {
       gOnce = false;
-      assert(sizeof(u8)==1);
+      assert(sizeof(char)==1);
       assert(sizeof(u16)==2);
       assert(sizeof(u32)==4);
    }
@@ -837,7 +837,7 @@ char* TMEvent::GetEventData()
 {
    if (error)
       return NULL;
-   return (char*)&data[data_offset];
+   return &data[data_offset];
 }
 
 char* TMEvent::GetBankData(const TMBank* b)
@@ -850,7 +850,7 @@ char* TMEvent::GetBankData(const TMBank* b)
       return NULL;
    if (b->data_offset >= data.size())
       return NULL;
-   return (char*)&data[b->data_offset];
+   return &data[b->data_offset];
 }
 
 TMBank* TMEvent::FindBank(const char* bank_name)

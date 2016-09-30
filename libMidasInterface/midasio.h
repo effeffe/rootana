@@ -8,7 +8,6 @@
 
 #if 1
 #include <stdint.h>
-typedef uint8_t  u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 #endif
@@ -35,16 +34,18 @@ Data types Definition                         min      max    */
 #define TID_LAST     17       /**< end of TID list indicator            */
 #endif
 
-struct TMBank
+class TMBank
 {
+ public:
    std::string name;        ///< bank name, 4 characters max
    u32         type;        ///< type of data, enum of TID_xxx
    u32         data_size;   ///< total data size in bytes
    u32         data_offset; ///< offset of data for this bank in the event data[] container
 };
 
-struct TMEvent
+class TMEvent
 {
+ public:
    bool error; ///< event has an error - incomplete, truncated, inconsistent or corrupted
    bool found_all_banks; ///< all the banks in the event data have been discovered
    
@@ -58,7 +59,7 @@ struct TMEvent
    u32 bank_header_flags; ///< flags from the MIDAS event bank header
 
    std::vector<TMBank> banks; ///< list of MIDAS banks, fill using FindAllBanks()
-   std::vector<u8> data;      ///< MIDAS event bytes
+   std::vector<char> data;      ///< MIDAS event bytes
 
    u32 bank_scan_position;    ///< location where scan for MIDAS banks was last stopped
 
