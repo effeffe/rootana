@@ -80,6 +80,9 @@ public:
 void ExampleCxxModule::Init(const std::vector<std::string> &args)
 {
    printf("Init!\n");
+   printf("Arguments:\n");
+   for (unsigned i=0; i<args.size(); i++)
+      printf("arg[%d]: [%s]\n", i, args[i].c_str());
    fTotalEventCounter = 0;
 }
    

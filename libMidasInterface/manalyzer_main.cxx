@@ -286,7 +286,7 @@ int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostnam
 
 #endif
 
-int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer)
+int ProcessMidasFiles(const std::vector<std::string>& files, const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer)
 {
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Init(args);
@@ -295,11 +295,8 @@ int ProcessMidasFiles(const std::vector<std::string>& args, int num_skip, int nu
 
    bool done = false;
 
-   for (unsigned i=1; i<args.size(); i++) {
-      if (args[i][0] == '-') // skip command line options
-         continue;
-
-      std::string filename = args[i];
+   for (unsigned i=0; i<files.size(); i++) {
+      std::string filename = files[i];
 
       TMReaderInterface *reader = TMNewReader(filename.c_str());
 
@@ -522,7 +519,7 @@ public:
 void help()
 {
   printf("\nUsage:\n");
-  printf("\n./analyzer.exe [-h] [-X9091] [-oOutputfile.mid] [file1 file2 ...]\n");
+  printf("\n./analyzer.exe [-h] [-X9091] [-oOutputfile.mid] [file1 file2 ...] [-- arguments passed to modules ...]\n");
   printf("\n");
   printf("\t-h: print this help message\n");
   printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
@@ -535,6 +532,7 @@ void help()
   printf("\t--dump: activate the event dump module\n");
   printf("\t-m: Enable memory leak debugging\n");
   printf("\t-g: Enable graphics display when processing data files\n");
+  printf("\t--: All following arguments are passed to the analyzer modules Init() method\n");
   printf("\n");
   printf("Example1: analyze online data: ./analyzer.exe -P9091\n");
   printf("Example2: analyze existing data: ./analyzer.exe /data/alpha/current/run00500.mid\n");
@@ -573,11 +571,17 @@ int main(int argc, char *argv[])
    bool event_dump = false;
    bool root_graphics = false;
 
+   std::vector<std::string> files;
+   std::vector<std::string> modargs;
+
    for (unsigned int i=1; i<args.size(); i++) { // loop over the commandline options
       const char* arg = args[i].c_str();
       //printf("argv[%d] is %s\n",i,arg);
 
-      if (0) {
+      if (args[i] == "--") {
+         for (unsigned j=i+1; j<args.size(); j++)
+            modargs.push_back(args[j]);
+         break;
       } else if (args[i] == "--dump") {
          event_dump = true;
       } else if (args[i] == "-g") {
@@ -602,6 +606,8 @@ int main(int argc, char *argv[])
          help(); // does not return
       } else if (arg[0] == '-') {
          help(); // does not return
+      } else {
+         files.push_back(args[i]);
       }
    }
 
@@ -649,20 +655,15 @@ int main(int argc, char *argv[])
       fprintf(stderr,"ERROR: No support for the XML Server!\n");
 #endif
    
-   bool run_from_file = false;
-   
-   for (unsigned int i=1; i<args.size(); i++) {
-      if (args[i][0] != '-') {
-         run_from_file = true;
-         break;
-      }
+   for (unsigned i=0; i<files.size(); i++) {
+      printf("file[%d]: %s\n", i, files[i].c_str());
    }
 
-   if (run_from_file) {
-      ProcessMidasFiles(args, num_skip, num_analyze, writer);
+   if (files.size() > 0) {
+      ProcessMidasFiles(files, modargs, num_skip, num_analyze, writer);
    } else {
 #ifdef HAVE_MIDAS
-      ProcessMidasOnline(args, hostname, exptname, num_analyze, writer);
+      ProcessMidasOnline(modargs, hostname, exptname, num_analyze, writer);
 #endif
    }
 
