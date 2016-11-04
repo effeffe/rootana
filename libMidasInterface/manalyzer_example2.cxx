@@ -4,6 +4,8 @@
 // K.Olchanski
 //
 
+#include <stdio.h>
+
 #include "manalyzer.h"
 #include "midasio.h"
 
