@@ -70,6 +70,8 @@ endif
 ifdef HAVE_ROOT
 CXXFLAGS += -DHAVE_LIBNETDIRECTORY
 OBJS     += obj/netDirectoryServer.o
+OBJS     += obj/TNetDirectory.o
+OBJS     += obj/TNetDirectoryDict.o
 endif
 
 # optional XmlServer code
@@ -181,8 +183,11 @@ include/%.h: include
 %Dict.o: %Dict.cxx
 	$(CXX) -o $@ $(CXXFLAGS) -c $<
 
-obj/%Dict.cxx: include
+obj/%Dict.cxx: include include/%.hxx
 	rootcint -f $@ -c -p $(CXXFLAGS_ROOTCINT) -I./include $*.hxx include/$*_LinkDef.h
+
+obj/%Dict.cxx: include include/%.h
+	rootcint -f $@ -c -p $(CXXFLAGS_ROOTCINT) -I./include $*.h include/$*_LinkDef.h
 
 %.exe: %.o lib/librootana.a
 	$(CXX) -o $@ $(CXXFLAGS) $< lib/librootana.a $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
