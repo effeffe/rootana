@@ -109,6 +109,7 @@ class TARegisterModule
 #include "TApplication.h"
 
 class XmlServer;
+class THttpServer;
 
 class TARootHelper
 {
@@ -117,6 +118,7 @@ class TARootHelper
    static TDirectory*   fgDir;
    static TApplication* fgApp;
    static XmlServer*    fgXmlServer;
+   static THttpServer*  fgHttpServer;
 
  public:
    TARootHelper(const TARunInfo*);

@@ -143,6 +143,7 @@ void TAModuleInterface::Finish()
 TApplication* TARootHelper::fgApp = NULL;
 TDirectory*   TARootHelper::fgDir = NULL;
 XmlServer*    TARootHelper::fgXmlServer = NULL;
+THttpServer*  TARootHelper::fgHttpServer = NULL;
 
 TARootHelper::TARootHelper(const TARunInfo* runinfo) // ctor
 {

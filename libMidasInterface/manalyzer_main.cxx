@@ -23,6 +23,10 @@
 #include "XmlOdb.h"
 #endif
 
+#ifdef HAVE_THTTP_SERVER
+#include "THttpServer.h"
+#endif
+
 //////////////////////////////////////////////////////////
 //
 // Methods of TARegisterModule
@@ -267,6 +271,11 @@ int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostnam
    }
 
    while (!h->fQuit) {
+#ifdef HAVE_THTTP_SERVER
+      if (TARootHelper::fgHttpServer) {
+         TARootHelper::fgHttpServer->ProcessRequests();
+      }
+#endif
       if (!TMidasOnline::instance()->poll(10))
          break;
    }
@@ -521,12 +530,13 @@ public:
 void help()
 {
   printf("\nUsage:\n");
-  printf("\n./analyzer.exe [-h] [-X9091] [-oOutputfile.mid] [file1 file2 ...] [-- arguments passed to modules ...]\n");
+  printf("\n./analyzer.exe [-h] [-R8081] [-oOutputfile.mid] [file1 file2 ...] [-- arguments passed to modules ...]\n");
   printf("\n");
   printf("\t-h: print this help message\n");
   printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
   printf("\t-Eexptname: connect to this MIDAS experiment\n");
   printf("\t-oOutputfile.mid: write selected events into this file\n");
+  printf("\t-R: Start the ROOT THttpServer HTTP server on specified tcp port, access by firefox http://localhost:8081\n");
   printf("\t-X: Start the Xml server on specified tcp port (for use with roody -Xlocalhost:9091)\n");
   printf("\t-P: Start the TNetDirectory server on specified tcp port (for use with roody -Plocalhost:9091)\n");
   printf("\t-eNNN: Number of events to analyze\n");
@@ -562,6 +572,7 @@ int main(int argc, char *argv[])
 
    int  tcpPort = 0;
    int  xmlTcpPort = 0;
+   int  httpPort = 0;
    const char* hostname = NULL;
    const char* exptname = NULL;
 
@@ -600,6 +611,8 @@ int main(int argc, char *argv[])
          tcpPort = atoi(arg+2);
       } else if (strncmp(arg,"-X",2)==0) { // Set the histogram server port
          xmlTcpPort = atoi(arg+2);
+      } else if (strncmp(arg,"-R",2)==0) { // Set the ROOT THttpServer HTTP port
+         httpPort = atoi(arg+2);
       } else if (strncmp(arg,"-H",2)==0) {
          hostname = strdup(arg+2);
       } else if (strncmp(arg,"-E",2)==0) {
@@ -656,6 +669,18 @@ int main(int argc, char *argv[])
    if (xmlTcpPort)
       fprintf(stderr,"ERROR: No support for the XML Server!\n");
 #endif
+   
+   if (httpPort) {
+#ifdef HAVE_THTTP_SERVER
+      char str[256];
+      sprintf(str, "http:127.0.0.1:%d", httpPort);
+      THttpServer *s = new THttpServer(str);
+      //s->SetTimer(100, kFALSE);
+      TARootHelper::fgHttpServer = s;
+#else
+      fprintf(stderr,"ERROR: No support for the THttpServer!\n");
+#endif
+   }
    
    for (unsigned i=0; i<files.size(); i++) {
       printf("file[%d]: %s\n", i, files[i].c_str());
