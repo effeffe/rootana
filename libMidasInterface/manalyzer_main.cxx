@@ -191,7 +191,7 @@ public:
 
    void Transition(int transition, int run_number, int transition_time)
    {
-      printf("OnlineHandler::Transtion: transition %d, run %d, time %d\n", transition, run_number, transition_time);
+      //printf("OnlineHandler::Transtion: transition %d, run %d, time %d\n", transition, run_number, transition_time);
       
       if (transition == TR_START) {
          if (fRun.fRunInfo) {
@@ -213,7 +213,7 @@ public:
 
    void Event(const void* data, int data_size)
    {
-      printf("OnlineHandler::Event: ptr %p, size %d\n", data, data_size);
+      //printf("OnlineHandler::Event: ptr %p, size %d\n", data, data_size);
 
       if (!fRun.fRunInfo) {
          StartRun(0); // start fake run for events outside of a run
