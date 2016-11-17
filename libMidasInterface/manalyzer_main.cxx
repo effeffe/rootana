@@ -276,6 +276,10 @@ int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostnam
          TARootHelper::fgHttpServer->ProcessRequests();
       }
 #endif
+#ifdef HAVE_ROOT
+      if (TARootHelper::fgApp)
+         gSystem->DispatchOneEvent(kTRUE);
+#endif
       if (!TMidasOnline::instance()->poll(10))
          break;
    }
