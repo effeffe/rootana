@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <signal.h>
 #include <string.h> // memcpy()
+#include <stdlib.h> // atoi()
 
 #ifdef HAVE_MIDAS
 #include "TMidasOnline.h"
@@ -342,11 +343,15 @@ int ProcessMidasFile(const char*fname)
 
 #ifdef HAVE_MIDAS
 
+#ifdef HAVE_ROOT
 void MidasPollHandler()
 {
   if (!(TMidasOnline::instance()->poll(0)))
     gSystem->ExitLoop();
 }
+#endif
+
+class TApplication;
 
 int ProcessMidasOnline(TApplication*app, const char* hostname, const char* exptname)
 {
@@ -377,7 +382,8 @@ int ProcessMidasOnline(TApplication*app, const char* hostname, const char* exptn
      startRun(0,gRunNumber,0);
 
    printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
-   
+
+#ifdef HAVE_ROOT
    MyPeriodic tm(100,MidasPollHandler);
    //MyPeriodic th(1000,SISperiodic);
    //MyPeriodic tn(1000,StepThroughSISBuffer);
@@ -387,6 +393,9 @@ int ProcessMidasOnline(TApplication*app, const char* hostname, const char* exptn
 
    //loop_online();
    app->Run(kTRUE);
+#else
+   // FIXME: running without ROOT will not work!
+#endif
 
    /* disconnect from experiment */
    midas->disconnect();
@@ -563,6 +572,8 @@ int main(int argc, char *argv[])
    	printf("Cannot run in batch mode\n");
 	return 1;
    }
+#else
+   TApplication* app = NULL;
 #endif
 
    //bool forceEnableGraphics = false;
