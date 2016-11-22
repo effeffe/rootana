@@ -11,6 +11,7 @@
 #include <iostream>
 #include <assert.h>
 #include <signal.h>
+#include <string.h> // memcpy()
 
 #ifdef HAVE_MIDAS
 #include "TMidasOnline.h"
