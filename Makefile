@@ -11,7 +11,9 @@ CXXFLAGS += -DHAVE_LIBZ
 
 # optional ROOT libraries
 
+ifndef NO_ROOT
 ROOTVERSION := $(shell root-config --version)
+endif
 
 ifdef ROOTVERSION
 HAVE_ROOT=1
