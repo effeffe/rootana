@@ -40,6 +40,15 @@ TRootanaDisplay::~TRootanaDisplay() {
 
 };
 
+
+#ifdef OS_DARWIN 
+static int gMainDisplayDefaultWidth = 1100;
+static int gMainDisplayDefaultHeight = 580;
+#else
+static int gMainDisplayDefaultWidth = 1200;
+static int gMainDisplayDefaultHeight = 800;
+#endif
+
 void TRootanaDisplay::InitializeMainWindow(){
 
   fMainWindow = new TMainDisplayWindow(gClient->GetRoot(),gMainDisplayDefaultWidth,

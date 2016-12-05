@@ -10,6 +10,8 @@
 ClassImp(TMainDisplayWindow)
 #endif
 
+
+
 TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool isOffline, bool updatingBasedSeconds)
   
 {
@@ -19,6 +21,8 @@ TMainDisplayWindow::TMainDisplayWindow(const TGWindow *p,UInt_t w,UInt_t h, bool
   fNumberSkipEventButton = 0;
   fTBrowser = 0;
   fNextInterestingButton = 0;
+  fMainDisplayDefaultWidth = w;
+  fMainDisplayDefaultHeight = h;
 
   // Create a main frame
   fMain = new TGMainFrame(p,w,h);
@@ -238,7 +242,7 @@ std::pair<int,int> TMainDisplayWindow::AddSingleTab(std::string name, TGTab * ta
     index.second = tab->GetNumberOfTabs() - 1;
   }
   TRootEmbeddedCanvas *embed_canvas  = new TRootEmbeddedCanvas(cname, compositeFrame,
-                                                               gMainDisplayDefaultWidth,gMainDisplayDefaultHeight);
+                                                               fMainDisplayDefaultWidth,fMainDisplayDefaultHeight);
   compositeFrame->AddFrame(embed_canvas, new TGLayoutHints(kLHintsTop | kLHintsExpandX,5,5,5,0));
 
   return index;

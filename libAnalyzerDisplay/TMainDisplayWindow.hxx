@@ -15,13 +15,6 @@
 #include <TApplication.h>
 //#include <TGTextButton.h>
 
-#ifdef OS_DARWIN 
-static int gMainDisplayDefaultWidth = 1100;
-static int gMainDisplayDefaultHeight = 580;
-#else
-static int gMainDisplayDefaultWidth = 1200;
-static int gMainDisplayDefaultHeight = 800;
-#endif
 
 class TMainDisplayWindow {
  
@@ -89,6 +82,9 @@ class TMainDisplayWindow {
 
   // Helper : get a particular embedded canvas, based on name.
   TRootEmbeddedCanvas* GetEmbeddedCanvas(const char *name);
+
+  int fMainDisplayDefaultWidth;
+  int fMainDisplayDefaultHeight;
 
  public:
 
