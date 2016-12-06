@@ -2,7 +2,10 @@
 
 // Promisified XLMHttpRequest wrapper...
 // stolen from http://www.html5rocks.com/en/tutorials/es6/promises/
-function getUrl(url, postData = false) {
+function getUrl(url, postData) {
+
+  if (typeof(postData)==='undefined') postData = false;
+
   // Return a new promise.
   return new Promise(function(resolve, reject) {
 
@@ -172,8 +175,10 @@ function parseRootDirectory(response){
 // Start by looking for histograms in the rootana directory.
 // If we don't find any histograms there, then look in the file directories.
 // Can request to make the call asynchronously or synchronously; default is async with promise 
-function find_active_root_directory(async = true){
+function find_active_root_directory(async){
 
+  if (typeof(async)==='undefined') async = true;
+  
   if(!async){
 
     // Get the JSON description of current ROOT directory
@@ -320,8 +325,10 @@ function makePlot1D(histoInfoJSONFirst,plotType,divName,csv_array,deleteDygraph,
 
 // This function handles making a CSV object for use in dygraph 1D plot...
 // The process for making the CSV is different for a single plot vs overlay plot.
-function makeCSVArray(plotType,histoInfoJSON,histoObject,dataIndex = 0){
+function makeCSVArray(plotType,histoInfoJSON,histoObject,dataIndex){
 
+  if (typeof(dataIndex)==='undefined') dataIndex = 0;
+  
   if(plotType == "single" || plotType == "multiple"){
       
     // Fill the CSV array to make the histogram.
