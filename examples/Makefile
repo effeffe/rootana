@@ -45,13 +45,15 @@ endif # ROOTSYS
 
 ifdef MIDASSYS
 
-LIBS += $(MIDASSYS)/linux/lib/libmidas.a -lutil -lrt
+MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil -lrt
 CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 
 UNAME := $(shell uname)
 ifeq ($(UNAME),Darwin)
-LIBS += $(MIDASSYS)/darwin/lib/libmidas.a
+MIDASLIBS = $(MIDASSYS)/darwin/lib/libmidas.a
 endif
+
+LIBS += $(MIDASLIBS)
 
 endif # MIDASSYS
 
