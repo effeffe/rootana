@@ -13,6 +13,7 @@
 
 #include <TSemaphore.h>
 #include <TTimer.h>
+#include <TThread.h>
 
 static TSemaphore gRootSema(0); // wait by server, post by timer
 static TSemaphore gWaitSema(0); // post by server, wait by timer
