@@ -121,17 +121,17 @@ OBJS += obj/TFancyHistogramCanvasDict.o
 endif
 
 ALL  += lib/librootana.a
-ALL  += event_dump.exe
-ALL  += event_skim.exe
-ALL  += analyzer.exe
+ALL  += event_dump.o event_dump.exe
+ALL  += event_skim.o event_skim.exe
+ALL  += analyzer.o analyzer.exe
 ALL  += manalyzer.exe
-ALL  += manalyzer_example1.exe
+ALL  += obj/manalyzer_example1.o manalyzer_example1.exe
 ifdef HAVE_ROOT
-ALL  += manalyzer_example2.exe
-ALL  += manalyzer_example3.exe
-ALL  += tests/test_midasServer.exe
+ALL  += obj/manalyzer_example2.o manalyzer_example2.exe
+ALL  += obj/manalyzer_example3.o manalyzer_example3.exe
+ALL  += tests/test_midasServer.o tests/test_midasServer.exe
 ifdef HAVE_MIDAS
-ALL  += tests/testODB.exe
+ALL  += tests/testODB.o tests/testODB.exe
 endif
 endif
 
@@ -159,18 +159,15 @@ OBJS += obj/manalyzer_main.o
 
 all: $(ALL)
 
-objs:: include
-objs:: $(OBJS)
-
-obj/midasio.o: include/midasio.h
-obj/manalyzer.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h
-obj/manalyzer_main.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h include/TMidasOnline.h
-
 $(ALL): include
 $(OBJS): include
 
+#obj/midasio.o: include/midasio.h
+#obj/manalyzer.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h
+#obj/manalyzer_main.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h include/TMidasOnline.h
+
 include:
-	mkdir -p include
+	mkdir -p include lib obj
 	cd include; ln -sfv ../lib*/*.h .
 	cd include; ln -sfv ../lib*/*.hxx .
 
@@ -179,16 +176,16 @@ lib/librootana.a: $(OBJS)
 	-rm -f $@
 	ar -rv $@ $(OBJS)
 
-include/%.h: include
-	@true
+#include/%.h: include
+#	@true
 
 %Dict.o: %Dict.cxx
 	$(CXX) -o $@ $(CXXFLAGS) -c -I. $<
 
-obj/%Dict.cxx: include include/%.hxx
+obj/TMainDisplayWindowDict.cxx obj/TRootanaDisplayDict.cxx obj/TFancyHistogramCanvasDict.cxx: obj/%Dict.cxx:
 	rootcint -f $@ -c -p $(CXXFLAGS_ROOTCINT) -I./include include/$*.hxx include/$*_LinkDef.h
 
-obj/%Dict.cxx: include include/%.h
+obj/TNetDirectoryDict.cxx: obj/%Dict.cxx:
 	rootcint -f $@ -c -p $(CXXFLAGS_ROOTCINT) -I./include include/$*.h include/$*_LinkDef.h
 
 %.exe: %.o lib/librootana.a
@@ -201,27 +198,21 @@ obj/%Dict.cxx: include include/%.h
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: libMidasInterface/%.cxx
-	mkdir -p obj
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: libMidasInterface/%.c
-	mkdir -p obj
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: libNetDirectory/%.cxx
-	mkdir -p obj
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: libXmlServer/%.cxx
-	mkdir -p obj
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: libAnalyzer/%.cxx
-	mkdir -p obj
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: libAnalyzerDisplay/%.cxx
-	mkdir -p obj
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 html/index.html:
