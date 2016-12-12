@@ -121,9 +121,15 @@ OBJS += obj/TFancyHistogramCanvasDict.o
 endif
 
 ALL  += lib/librootana.a
-ALL  += event_dump.o event_dump.exe
-ALL  += event_skim.o event_skim.exe
-ALL  += analyzer.o analyzer.exe
+
+# old analyzer
+
+ALL  += obj/event_dump.o event_dump.exe
+ALL  += obj/event_skim.o event_skim.exe
+ALL  += obj/analyzer.o analyzer.exe
+
+# new analyzer
+
 ALL  += manalyzer.exe
 ALL  += obj/manalyzer_example1.o manalyzer_example1.exe
 ifdef HAVE_ROOT
@@ -213,6 +219,9 @@ obj/%.o: libAnalyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: libAnalyzerDisplay/%.cxx
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+obj/%.o: old_analyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 html/index.html:

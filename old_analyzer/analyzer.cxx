@@ -26,10 +26,10 @@
 #include "midasServer.h"
 #endif
 #ifdef HAVE_LIBNETDIRECTORY
-#include "libNetDirectory/netDirectoryServer.h"
+#include "netDirectoryServer.h"
 #endif
 #ifdef HAVE_XMLSERVER
-#include "libXmlServer/xmlServer.h"
+#include "xmlServer.h"
 #endif
 
 #ifdef HAVE_ROOT
