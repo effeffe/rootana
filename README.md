@@ -6,10 +6,10 @@ Welcome to ROOTANA, the ROOT (https://root.cern.ch) based data analysis package 
 
 The ROOTANA package includes 4 major components:
 
-* a C++ library for reading and writing data files in the MIDAS .mid format, for connecting to live MIDAS experiments, and for accessing ODB data (live or from ODB dumps in the data files) [libMidasInterface](libMidasInterface/README.md)
-* the old ROOT analyzer (old_analyzer)
-* the new MIDAS analyzer (manalyzer)
-* an interactive graphical analyzer (examples, libAnalyzer, linAnalyzerDisplay)
+* a C++ library for reading and writing data files in the MIDAS .mid format, for connecting to live MIDAS experiments, and for accessing ODB data (live or from ODB dumps in the data files) [libMidasInterface](libMidasInterface/)
+* the old ROOT analyzer [old_analyzer](old_analyzer/)
+* the new MIDAS analyzer [manalyzer](manalyzer/)
+* an interactive graphical analyzer, see [examples](examples/), [libAnalyzer](libAnalyzer/), [libAnalyzerDisplay](libAnalyzerDisplay/)
 
 Other notable features include:
 
