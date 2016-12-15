@@ -124,20 +124,20 @@ ALL  += lib/librootana.a
 
 # old analyzer
 
-ALL  += obj/event_dump.o event_dump.exe
-ALL  += obj/event_skim.o event_skim.exe
-ALL  += obj/analyzer.o analyzer.exe
+ALL  += obj/event_dump.o old_analyzer/event_dump.exe
+ALL  += obj/event_skim.o old_analyzer/event_skim.exe
+ALL  += obj/analyzer.o old_analyzer/analyzer.exe
 
 # new analyzer
 
-ALL  += manalyzer.exe
-ALL  += obj/manalyzer_example1.o manalyzer_example1.exe
+ALL  += manalyzer/manalyzer.exe
+ALL  += obj/manalyzer_example1.o manalyzer/manalyzer_example1.exe
 ifdef HAVE_ROOT
-ALL  += obj/manalyzer_example2.o manalyzer_example2.exe
-ALL  += obj/manalyzer_example3.o manalyzer_example3.exe
-ALL  += tests/test_midasServer.o tests/test_midasServer.exe
+ALL  += obj/manalyzer_example2.o manalyzer/manalyzer_example2.exe
+ALL  += obj/manalyzer_example3.o manalyzer/manalyzer_example3.exe
+ALL  += libMidasServer/test_midasServer.o libMidasServer/test_midasServer.exe
 ifdef HAVE_MIDAS
-ALL  += tests/testODB.o tests/testODB.exe
+ALL  += libMidasInterface/tests/testODB.o libMidasInterface/tests/testODB.exe
 endif
 endif
 
@@ -224,6 +224,9 @@ obj/%.o: libAnalyzerDisplay/%.cxx
 obj/%.o: old_analyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
+obj/%.o: manalyzer/%.cxx
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
 html/index.html:
 	-mkdir html
 	-make -k dox
@@ -234,6 +237,7 @@ dox: include
 
 clean::
 	-rm -f *.o *.a *.exe $(ALL)
+	-rm -f */*.exe
 	-rm -f */*Dict.cxx */*Dict.h */*Dict_rdict.pcm
 	-rm -rf lib
 	-rm -rf include
