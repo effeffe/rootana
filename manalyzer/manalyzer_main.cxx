@@ -162,6 +162,10 @@ public:
 
 #include "TMidasOnline.h"
 
+#ifdef HAVE_ROOT
+#include "TSystem.h"
+#endif
+
 class OnlineHandler: public TMHandlerInterface
 {
 public:
