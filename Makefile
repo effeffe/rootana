@@ -120,6 +120,14 @@ OBJS += obj/TFancyHistogramCanvasDict.o
 
 endif
 
+# libUnpack
+
+OBJS += obj/UnpackVF48A.o
+OBJS += obj/Alpha16.o
+OBJS += obj/v1190unpack.o
+
+#
+
 ALL  += lib/librootana.a
 
 # old analyzer
@@ -219,6 +227,9 @@ obj/%.o: libAnalyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: libAnalyzerDisplay/%.cxx
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+obj/%.o: libUnpack/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: old_analyzer/%.cxx
