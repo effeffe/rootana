@@ -535,6 +535,122 @@ public:
    }
 };
 
+class InteractiveRun: public TARunInterface
+{
+public:
+   bool fContinue;
+   int  fSkip;
+   
+   InteractiveRun(TARunInfo* runinfo)
+      : TARunInterface(runinfo)
+   {
+      printf("InteractiveRun::ctor, run %d\n", runinfo->fRunNo);
+      fContinue = false;
+      fSkip = 0;
+   }
+   
+   ~InteractiveRun()
+   {
+      printf("InteractiveRun::dtor!\n");
+   }
+
+   void BeginRun(TARunInfo* runinfo)
+   {
+      printf("InteractiveRun::BeginRun, run %d\n", runinfo->fRunNo);
+   }
+
+   void EndRun(TARunInfo* runinfo)
+   {
+      printf("InteractiveRun::EndRun, run %d\n", runinfo->fRunNo);
+   }
+
+   void PauseRun(TARunInfo* runinfo)
+   {
+      printf("InteractiveRun::PauseRun, run %d\n", runinfo->fRunNo);
+   }
+
+   void ResumeRun(TARunInfo* runinfo)
+   {
+      printf("InteractiveRun::ResumeRun, run %d\n", runinfo->fRunNo);
+   }
+
+   TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
+   {
+      printf("InteractiveRun::Analyze, run %d, %s\n", runinfo->fRunNo, event->HeaderToString().c_str());
+
+      if (fContinue && !(*flags & TAFlag_DISPLAY)) {
+         return flow;
+      } else {
+         fContinue = false;
+      }
+
+      if (fSkip > 0) {
+         fSkip--;
+         return flow;
+      }
+
+      while (1) {
+         char str[256];
+         fprintf(stdout, "manalyzer> "); fflush(stdout);
+         fgets(str, sizeof(str)-1, stdin);
+         
+         printf("command [%s]\n", str);
+
+         if (str[0] == 'h') { // "help"
+            printf("Interactive manalyzer commands:\n");
+            printf(" q - quit\n");
+            printf(" h - help\n");
+            printf(" c - continue until next TAFlag_DISPLAY event\n");
+            printf(" n - next event\n");
+            printf(" aNNN - analyze N events, i.e. \"a10\"\n");
+         } else if (str[0] == 'q') { // "quit"
+            *flags |= TAFlag_QUIT;
+            return flow;
+         } else if (str[0] == 'n') { // "next"
+            return flow;
+         } else if (str[0] == 'c') { // "continue"
+            fContinue = true;
+            return flow;
+         } else if (str[0] == 'a') { // "analyze" N events
+            int num = atoi(str+1);
+            printf("Analyzing %d events\n", num);
+            if (num > 0) {
+               fSkip = num-1;
+            }
+            return flow;
+         }
+      }
+
+      return flow;
+   }
+
+   void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)
+   {
+      printf("InteractiveRun::AnalyzeSpecialEvent, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
+   }
+};
+
+class InteractiveModule: public TAModuleInterface
+{
+public:
+
+   void Init(const std::vector<std::string> &args)
+   {
+      printf("InteractiveModule::Init!\n");
+   }
+   
+   void Finish()
+   {
+      printf("InteractiveModule::Finish!\n");
+   }
+   
+   TARunInterface* NewRun(TARunInfo* runinfo)
+   {
+      printf("InteractiveModule::NewRun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
+      return new InteractiveRun(runinfo);
+   }
+};
+
 void help()
 {
   printf("\nUsage:\n");
@@ -552,6 +668,7 @@ void help()
   printf("\t--dump: activate the event dump module\n");
   printf("\t-m: Enable memory leak debugging\n");
   printf("\t-g: Enable graphics display when processing data files\n");
+  printf("\t-i: Enable intractive mode\n");
   printf("\t--: All following arguments are passed to the analyzer modules Init() method\n");
   printf("\n");
   printf("Example1: analyze online data: ./analyzer.exe -P9091\n");
@@ -591,6 +708,7 @@ int main(int argc, char *argv[])
 
    bool event_dump = false;
    bool root_graphics = false;
+   bool interactive = false;
 
    std::vector<std::string> files;
    std::vector<std::string> modargs;
@@ -607,6 +725,8 @@ int main(int argc, char *argv[])
          event_dump = true;
       } else if (args[i] == "-g") {
          root_graphics = true;
+      } else if (args[i] == "-i") {
+         interactive = true;
       } else if (strncmp(arg,"-o",2)==0) {
          writer = TMNewWriter(arg+2);
       } else if (strncmp(arg,"-s",2)==0) {
@@ -642,6 +762,9 @@ int main(int argc, char *argv[])
 
    if (event_dump)
       (*gModules).push_back(new EventDumpModule);
+
+   if (interactive)
+      (*gModules).push_back(new InteractiveModule);
 
    printf("Registered modules: %d\n", (int)(*gModules).size());
 
