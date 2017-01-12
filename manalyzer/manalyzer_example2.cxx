@@ -68,7 +68,7 @@ struct ExampleRootRun: public TARunInterface
    {
       printf("Analyze, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
       if (event->event_id != 2)
-         return TAFlag_OK;
+         return flow;
 
       TMBank* bslow = event->FindBank("SLOW");
       if (!bslow)
