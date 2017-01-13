@@ -239,7 +239,7 @@ bool TRootanaDisplay::ProcessMidasEventOffline(TDataContainer& dataContainer){
     fCanvasHandlers[i].second->UpdateCanvasHistograms(*fCachedDataContainer);
 
   // Keep skipping if we haven't processed enough
-  if(fNumberSkipEventsOffline >= fNumberProcessed){
+  if(fNumberSkipEventsOffline >= fNumberProcessed || fNumberSkipEventsOffline == -1){
     return true;
   }
 
@@ -316,6 +316,21 @@ void TRootanaDisplay::EndRunRAD(int transition,int run,int time){
     fCanvasHandlers[i].second->EndRun(transition,run,time);
   UpdatePlotsAction();
 
+  if(fNumberSkipEventsOffline == -1){
+    // Pause the display
+    while(1){
+      usleep(10000);
+
+      // Break out if next button or next interesting button pressed.
+      if(!waitingForNextButton || !waitingForNextInterestingButton) break;
+
+      // Resize windows, if needed.
+      fMainWindow->ResetSize();
+
+      // handle GUI events
+      gSystem->ProcessEvents();
+    }
+  }
 }
 
 
