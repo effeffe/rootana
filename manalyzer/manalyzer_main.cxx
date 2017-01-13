@@ -281,8 +281,9 @@ int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostnam
       }
 #endif
 #ifdef HAVE_ROOT
-      if (TARootHelper::fgApp)
+      if (TARootHelper::fgApp) {
          gSystem->DispatchOneEvent(kTRUE);
+      }
 #endif
       if (!TMidasOnline::instance()->poll(10))
          break;
@@ -535,11 +536,121 @@ public:
    }
 };
 
+#ifdef HAVE_ROOT
+#include <TGMenu.h>
+#include <TSystem.h>
+
+#define CTRL_QUIT 1
+#define CTRL_NEXT 2
+#define CTRL_CONTINUE 3
+
+class MainWindow: public TGMainFrame
+{
+private:
+   TGPopupMenu*		menuFile;
+   //TGPopupMenu* 		menuControls;
+   TGMenuBar*		menuBar;
+   TGLayoutHints*	menuBarLayout;
+   TGLayoutHints*	menuBarItemLayout;
+
+public:
+   int fCtrl;
+  
+public:
+   MainWindow(const TGWindow*w, int s1, int s2) // ctor
+      : TGMainFrame(w, s1, s2)
+   {
+      fCtrl = 0;
+      //SetCleanup(kDeepCleanup);
+   
+      SetWindowName("ROOT Analyzer Control");
+
+      // layout the gui
+      menuFile = new TGPopupMenu(gClient->GetRoot());
+      menuFile->AddEntry("Next", CTRL_NEXT);
+      menuFile->AddEntry("Continue", CTRL_CONTINUE);
+      menuFile->AddEntry("Quit", CTRL_QUIT);
+
+      menuBarItemLayout = new TGLayoutHints(kLHintsTop|kLHintsLeft, 0, 4, 0, 0);
+
+      menuFile->Associate(this);
+      //menuControls->Associate(this);
+
+      menuBar = new TGMenuBar(this, 1, 1, kRaisedFrame);
+      menuBar->AddPopup("&File",     menuFile,     menuBarItemLayout);
+      //menuBar->AddPopup("&Controls", menuControls, menuBarItemLayout);
+      menuBar->Layout();
+
+      menuBarLayout = new TGLayoutHints(kLHintsTop|kLHintsLeft|kLHintsExpandX);
+      AddFrame(menuBar,menuBarLayout);
+   
+      MapSubwindows(); 
+      Layout();
+      MapWindow();
+   }
+
+   ~MainWindow() // dtor // Closing the control window closes the whole program
+   {
+      printf("MainWindow::dtor!\n");
+      delete menuFile;
+      //delete menuControls;
+      delete menuBar;
+      delete menuBarLayout;
+      delete menuBarItemLayout;
+   }
+
+   void CloseWindow()
+   {
+      printf("MainWindow::CloseWindow()\n");
+      fCtrl = CTRL_QUIT;
+      gSystem->ExitLoop();
+   }
+  
+   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+   {
+      printf("GUI Message %d %d %d\n",(int)msg,(int)parm1,(int)parm2);
+      switch (GET_MSG(msg))
+         {
+         default:
+            break;
+         case kC_COMMAND:
+            switch (GET_SUBMSG(msg))
+               {
+               default:
+                  break;
+               case kCM_MENU:
+                  printf("parm1 %d\n", (int)parm1);
+                  switch (parm1)
+                     {
+                     default:
+                        printf("Control %d!\n", (int)parm1);
+                        fCtrl = parm1;
+                        gSystem->ExitLoop();
+                        break;
+                     case CTRL_QUIT:
+                        printf("CTRL_QUIT!\n");
+                        fCtrl = CTRL_QUIT;
+                        gSystem->ExitLoop();
+                        break;
+                     }
+                  break;
+               }
+            break;
+         }
+
+      return kTRUE;
+   }
+};
+#endif
+
 class InteractiveRun: public TARunInterface
 {
 public:
    bool fContinue;
    int  fSkip;
+#ifdef HAVE_ROOT
+   MainWindow *fCtrlWindow;
+#endif
    
    InteractiveRun(TARunInfo* runinfo)
       : TARunInterface(runinfo)
@@ -547,6 +658,12 @@ public:
       printf("InteractiveRun::ctor, run %d\n", runinfo->fRunNo);
       fContinue = false;
       fSkip = 0;
+#ifdef HAVE_ROOT
+      fCtrlWindow = NULL;
+      if (runinfo->fRoot->fgApp) {
+         fCtrlWindow = new MainWindow(gClient->GetRoot(), 200, 300);
+      }
+#endif
    }
    
    ~InteractiveRun()
@@ -588,6 +705,22 @@ public:
          fSkip--;
          return flow;
       }
+
+#ifdef HAVE_ROOT
+      if (fCtrlWindow && runinfo->fRoot->fgApp) {
+         runinfo->fRoot->fgApp->Run();
+         switch (fCtrlWindow->fCtrl) {
+         case CTRL_QUIT:
+            *flags |= TAFlag_QUIT;
+            return flow;
+         case CTRL_NEXT:
+            return flow;
+         case CTRL_CONTINUE:
+            fContinue = true;
+            return flow;
+         }
+      }
+#endif
 
       while (1) {
          char str[256];
