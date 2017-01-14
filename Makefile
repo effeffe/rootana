@@ -125,6 +125,7 @@ endif
 OBJS += obj/UnpackVF48A.o
 OBJS += obj/Alpha16.o
 OBJS += obj/v1190unpack.o
+OBJS += obj/v1742unpack.o
 
 #
 
