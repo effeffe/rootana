@@ -35,6 +35,11 @@ struct ExampleRootRun: public TARunInterface
       fModule = m;
    }
 
+   ~ExampleRootRun()
+   {
+      printf("ExampleRootRun::dtor!\n");
+   }
+
    void BeginRun(TARunInfo* runinfo)
    {
       printf("BeginRun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
