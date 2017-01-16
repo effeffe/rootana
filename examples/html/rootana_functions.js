@@ -245,46 +245,71 @@ function rootanaResetAllHistograms(){
 
 gPlotlyPointer = 0;
 
+var data;
+
 function makePlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph){
   
+  var redraw = ($("#"+divName).html() != "");
+
   var title = histoObject["_title"];
       
   // Need to recalculate the bin centers.
   var bin_widthX = (histoInfoJSON["fXaxis"]["fXmax"] - histoInfoJSON["fXaxis"]["fXmin"]) / histoInfoJSON["fXaxis"]["fNbins"];
-  var bin_widthY = (histoInfoJSON["fYaxis"]["fYmax"] - histoInfoJSON["fYaxis"]["fYmin"]) / histoInfoJSON["fYaxis"]["fNbins"];
+  var bin_widthY = (histoInfoJSON["fYaxis"]["fXmax"] - histoInfoJSON["fYaxis"]["fXmin"]) / histoInfoJSON["fYaxis"]["fNbins"];
 
-  var x = [];
-  var y = [];
-  var z = new Array(histoInfoJSON["fYaxis"]["fNbins"]);
+  var xarr = new Array(histoInfoJSON["fXaxis"]["fNbins"]);
+  var yarr = new Array(histoInfoJSON["fYaxis"]["fNbins"]);
+  var zarr = new Array(histoInfoJSON["fYaxis"]["fNbins"]);
   for (var i=0; i<histoInfoJSON["fYaxis"]["fNbins"]; i++){
-    z[i] = new Array(histoInfoJSON["fXaxis"]);
+    zarr[i] = new Array(histoInfoJSON["fXaxis"]);
   }
       
   // Urgh, plot.ly seems to define arrays opposite to ROOT
   for (var iyy = 1; iyy <= histoInfoJSON["fYaxis"]["fNbins"]; iyy++){
+    yarr[iyy - 1] = Number(histoInfoJSON["fYaxis"]["fXmin"] + (iyy - 0.5) * bin_widthY);
+    
     for (var ixx = 1; ixx <= histoInfoJSON["fXaxis"]["fNbins"]; ixx++){
       var index = iyy*(histoInfoJSON["fXaxis"]["fNbins"] +2) + ixx;
-      z[iyy-1][ixx-1] = Number(histoInfoJSON["fArray"][index]);
+      zarr[iyy-1][ixx-1] = Number(histoInfoJSON["fArray"][index]);
+      
+      if (iyy == 1) {
+        xarr[ixx - 1] = Number(histoInfoJSON["fXaxis"]["fXmin"] + (ixx - 0.5) * bin_widthX);
+      }
     }
   }
 
+  if (redraw) {
+    data[0]['z'] = zarr;
+    Plotly.redraw(divName);
+    return;
+  }
 
+  
   //document.getElementById("readstatus").innerHTML = z;
-  var data = [
-              {
-                z: z,
-                type: 'heatmap'
-              }
-              ];
+  data = [
+      {
+          x: xarr,
+          y: yarr,
+          z: zarr,
+          colorscale: [
+              ['0.0', 'rgb(255,255,255)'],
+              ['0.0000001', 'rgb(171,217,233)'],
+              ['0.333333333333', 'rgb(116,173,209)'],
+              ['0.666666666667', 'rgb(69,117,180)'],
+              ['1.0', 'rgb(49,54,149)']
+          ],
+          type: 'heatmap'
+      }
+  ];
   var layout = {
-    title: histoObject["_title"],
-    xaxis: {
-      title: histoInfoJSON["fXaxis"]["fTitle"],
-    },
-    yaxis: {
-      title: histoInfoJSON["fYaxis"]["fTitle"],
-    },
-    showlegend: false
+      title: histoObject["_title"],
+      xaxis: {
+	  title: histoInfoJSON["fXaxis"]["fTitle"],
+      },
+      yaxis: {
+	  title: histoInfoJSON["fYaxis"]["fTitle"],
+      },
+      showlegend: false
   };
 
   //  delete gDygraphPointer[dygraphIndex] ;
@@ -292,9 +317,6 @@ function makePlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygra
     gDygraphPointer[dygraphIndex].destroy();
     gDygraphPointer[dygraphIndex] = 0;
   }
-  //if(gPlotlyPointer) delete gPlotlyPointer;
-  //gd2 = document.getElementById(divName);
-  //purge(gd2);
 
   Plotly.newPlot(divName, data,layout);
 

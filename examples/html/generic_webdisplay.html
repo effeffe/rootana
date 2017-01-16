@@ -105,6 +105,11 @@ invalidSetup = true;
 
 <!-- configure the display for current settings; return true if successful -->
 function configureDisplay(histogramsSetupInfo, histogramID){
+ 
+  $("#graphdiv").html("");
+  $("#graphdiv21").html("");
+  $("#graphdiv22").html("");
+
 
   if (!(histogramID in histogramsSetupInfo)){
     console.log("Failure; value " + histogramID + " is not in histogram Setup JSON dump ");
