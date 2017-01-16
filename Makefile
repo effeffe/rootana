@@ -144,6 +144,7 @@ ALL  += obj/manalyzer_example1.o manalyzer/manalyzer_example1.exe
 ifdef HAVE_ROOT
 ALL  += obj/manalyzer_example2.o manalyzer/manalyzer_example2.exe
 ALL  += obj/manalyzer_example3.o manalyzer/manalyzer_example3.exe
+ALL  += obj/manalyzer_example_root_graphics.o manalyzer/manalyzer_example_root_graphics.exe
 ALL  += libMidasServer/test_midasServer.o libMidasServer/test_midasServer.exe
 ifdef HAVE_MIDAS
 ALL  += libMidasInterface/tests/testODB.o libMidasInterface/tests/testODB.exe
