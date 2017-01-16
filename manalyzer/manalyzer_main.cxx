@@ -27,6 +27,10 @@
 #include "THttpServer.h"
 #endif
 
+#ifdef HAVE_ROOT
+#include <TSystem.h>
+#endif
+
 //////////////////////////////////////////////////////////
 //
 // Methods of TARegisterModule
@@ -424,6 +428,12 @@ int ProcessMidasFiles(const std::vector<std::string>& files, const std::vector<s
 
          if (done)
             break;
+
+#ifdef HAVE_ROOT
+         if (TARootHelper::fgApp) {
+            gSystem->DispatchOneEvent(kTRUE);
+         }
+#endif
       }
 
       reader->Close();
@@ -538,51 +548,137 @@ public:
 
 #ifdef HAVE_ROOT
 #include <TGMenu.h>
-#include <TSystem.h>
+#include <TGButton.h>
 
 #define CTRL_QUIT 1
 #define CTRL_NEXT 2
 #define CTRL_CONTINUE 3
+#define CTRL_PAUSE    4
+
+class XCtrl
+{
+public:
+   int fValue;
+
+   XCtrl() // ctor
+   {
+      fValue = 0;
+   }
+};
+
+class XButton: public TGTextButton
+{
+public:
+   XCtrl* fCtrl;
+   int    fValue;
+   
+   XButton(TGWindow*p, const char* text, XCtrl* ctrl, int value) // ctor
+      : TGTextButton(p, text)
+   {
+      fCtrl = ctrl;
+      fValue = value;
+   }
+
+#if 0
+   void Pressed()
+   {
+      printf("Pressed!\n");
+   }
+   
+   void Released()
+   {
+      printf("Released!\n");
+   }
+#endif
+   
+   void Clicked()
+   {
+      printf("Clicked button %s, value %d!\n", GetString().Data(), fValue);
+      if (fCtrl)
+         fCtrl->fValue = fValue;
+      gSystem->ExitLoop();
+   }
+};
 
 class MainWindow: public TGMainFrame
 {
 private:
-   TGPopupMenu*		menuFile;
-   //TGPopupMenu* 		menuControls;
-   TGMenuBar*		menuBar;
+   TGPopupMenu*		fMenu;
+   TGMenuBar*		fMenuBar;
    TGLayoutHints*	menuBarLayout;
    TGLayoutHints*	menuBarItemLayout;
 
 public:
-   int fCtrl;
+   XCtrl* fCtrl;
   
 public:
-   MainWindow(const TGWindow*w, int s1, int s2) // ctor
+   MainWindow(const TGWindow*w, int s1, int s2, XCtrl* ctrl) // ctor
       : TGMainFrame(w, s1, s2)
    {
-      fCtrl = 0;
+      fCtrl = ctrl;
       //SetCleanup(kDeepCleanup);
    
       SetWindowName("ROOT Analyzer Control");
 
       // layout the gui
-      menuFile = new TGPopupMenu(gClient->GetRoot());
-      menuFile->AddEntry("Next", CTRL_NEXT);
-      menuFile->AddEntry("Continue", CTRL_CONTINUE);
-      menuFile->AddEntry("Quit", CTRL_QUIT);
+      fMenu = new TGPopupMenu(gClient->GetRoot());
+      fMenu->AddEntry("Next",     CTRL_NEXT);
+      fMenu->AddEntry("Continue", CTRL_CONTINUE);
+      fMenu->AddEntry("Pause",    CTRL_PAUSE);
+      fMenu->AddEntry("Quit",     CTRL_QUIT);
 
       menuBarItemLayout = new TGLayoutHints(kLHintsTop|kLHintsLeft, 0, 4, 0, 0);
 
-      menuFile->Associate(this);
-      //menuControls->Associate(this);
+      fMenu->Associate(this);
 
-      menuBar = new TGMenuBar(this, 1, 1, kRaisedFrame);
-      menuBar->AddPopup("&File",     menuFile,     menuBarItemLayout);
-      //menuBar->AddPopup("&Controls", menuControls, menuBarItemLayout);
-      menuBar->Layout();
+      fMenuBar = new TGMenuBar(this, 1, 1, kRaisedFrame);
+      fMenuBar->AddPopup("&Rootana", fMenu, menuBarItemLayout);
+      fMenuBar->Layout();
 
       menuBarLayout = new TGLayoutHints(kLHintsTop|kLHintsLeft|kLHintsExpandX);
-      AddFrame(menuBar,menuBarLayout);
+      AddFrame(fMenuBar, menuBarLayout);
+
+      // Create a container frames containing buttons
+
+      // one button is resized up to the parent width.
+      // Note! this width should be fixed!
+      TGVerticalFrame *hframe1 = new TGVerticalFrame(this, 170, 50, kFixedWidth);
+
+      // to take whole space we need to use kLHintsExpandX layout hints
+      hframe1->AddFrame(new XButton(hframe1, "&Next ", ctrl, CTRL_NEXT),
+                        new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 2, 2));
+      AddFrame(hframe1, new TGLayoutHints(kLHintsCenterX, 2, 2, 5, 1));
+
+      // two buttons are resized up to the parent width.
+      // Note! this width should be fixed!
+      TGCompositeFrame *cframe1 = new TGCompositeFrame(this, 170, 20, kHorizontalFrame | kFixedWidth);
+
+      // to share whole parent space we need to use kLHintsExpandX layout hints
+      cframe1->AddFrame(new XButton(cframe1, "&Continue", ctrl, CTRL_CONTINUE),
+                        new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
+
+      cframe1->AddFrame(new XButton(cframe1, "&Pause", ctrl, CTRL_PAUSE),
+                        new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
+
+      AddFrame(cframe1, new TGLayoutHints(kLHintsCenterX, 2, 2, 5, 1));
+
+      // three buttons are resized up to the parent width.
+      // Note! this width should be fixed!
+      TGCompositeFrame *cframe2 = new TGCompositeFrame(this, 170, 20, kHorizontalFrame | kFixedWidth);
+
+#if 0
+      TGButton* ok = new XButton(cframe2, "OK", ctrl, 0);
+      // to share whole parent space we need to use kLHintsExpandX layout hints
+      cframe2->AddFrame(ok, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 3, 2, 2, 2));
+
+      TGButton* cancel = new XButton(cframe2, "Cancel ", ctrl, 0);
+      cframe2->AddFrame(cancel, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 3, 2, 2, 2));
+#endif
+
+      cframe2->AddFrame(new XButton(cframe2, "&Quit ", ctrl, CTRL_QUIT),
+                        new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 2, 2));
+      
+      AddFrame(cframe2, new TGLayoutHints(kLHintsCenterX, 2, 2, 5, 1));
    
       MapSubwindows(); 
       Layout();
@@ -592,9 +688,8 @@ public:
    ~MainWindow() // dtor // Closing the control window closes the whole program
    {
       printf("MainWindow::dtor!\n");
-      delete menuFile;
-      //delete menuControls;
-      delete menuBar;
+      delete fMenu;
+      delete fMenuBar;
       delete menuBarLayout;
       delete menuBarItemLayout;
    }
@@ -602,7 +697,8 @@ public:
    void CloseWindow()
    {
       printf("MainWindow::CloseWindow()\n");
-      fCtrl = CTRL_QUIT;
+      if (fCtrl)
+         fCtrl->fValue = CTRL_QUIT;
       gSystem->ExitLoop();
    }
   
@@ -624,12 +720,8 @@ public:
                      {
                      default:
                         printf("Control %d!\n", (int)parm1);
-                        fCtrl = parm1;
-                        gSystem->ExitLoop();
-                        break;
-                     case CTRL_QUIT:
-                        printf("CTRL_QUIT!\n");
-                        fCtrl = CTRL_QUIT;
+                        if (fCtrl)
+                           fCtrl->fValue = parm1;
                         gSystem->ExitLoop();
                         break;
                      }
@@ -649,6 +741,7 @@ public:
    bool fContinue;
    int  fSkip;
 #ifdef HAVE_ROOT
+   XCtrl* fCtrl;
    MainWindow *fCtrlWindow;
 #endif
    
@@ -659,9 +752,10 @@ public:
       fContinue = false;
       fSkip = 0;
 #ifdef HAVE_ROOT
+      fCtrl = new XCtrl;
       fCtrlWindow = NULL;
       if (runinfo->fRoot->fgApp) {
-         fCtrlWindow = new MainWindow(gClient->GetRoot(), 200, 300);
+         fCtrlWindow = new MainWindow(gClient->GetRoot(), 200, 300, fCtrl);
       }
 #endif
    }
@@ -695,6 +789,15 @@ public:
    {
       printf("InteractiveRun::Analyze, run %d, %s\n", runinfo->fRunNo, event->HeaderToString().c_str());
 
+#ifdef HAVE_ROOT
+      if (fCtrl->fValue == CTRL_QUIT) {
+         *flags |= TAFlag_QUIT;
+         return flow;
+      } else if (fCtrl->fValue == CTRL_PAUSE) {
+         fContinue = false;
+      }
+#endif
+
       if (fContinue && !(*flags & TAFlag_DISPLAY)) {
          return flow;
       } else {
@@ -709,7 +812,7 @@ public:
 #ifdef HAVE_ROOT
       if (fCtrlWindow && runinfo->fRoot->fgApp) {
          runinfo->fRoot->fgApp->Run();
-         switch (fCtrlWindow->fCtrl) {
+         switch (fCtrl->fValue) {
          case CTRL_QUIT:
             *flags |= TAFlag_QUIT;
             return flow;
