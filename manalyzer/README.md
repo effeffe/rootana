@@ -29,34 +29,34 @@ TBW (explain how to use the flow object to pass data between modules)
 ### manalyzer module and object life time
 
 * analyzer start:
-  - call module constructors
-  - call module Init() methods
+    - call module constructors
+    - call module Init() methods
 
 * run start:
-  - call module NewRun() methods
-  - call run constructors
-  - call run BeginRun() methods
+    - call module NewRun() methods
+    - call run constructors
+    - call run BeginRun() methods
 
 * if running from file:
-  - call run AnalyzeSpecialEvent() methods for the ODB dump event (evid 0x8000)
+    - call run AnalyzeSpecialEvent() methods for the ODB dump event (evid 0x8000)
 
 * for each event:
-  - call run Analyze() methods
+    - call run Analyze() methods
 
 * when switching from one subrun file to the next subrun file:
-  - BeginRun()/EndRun() are not called
-  - AnalyzeSpecialEvent() is called twice: once for the ODB dump event in the old subrun file (evid 0x8001) and once for the ODB dump event in the new subrun file (evid 0x8000)
+    - BeginRun()/EndRun() are not called
+    - AnalyzeSpecialEvent() is called twice: once for the ODB dump event in the old subrun file (evid 0x8001) and once for the ODB dump event in the new subrun file (evid 0x8000)
 
 * run end:
-  - call run AnalyzeSpecialEvent() methods for the ODB dump event (evid 0x8001)
-  - call run EndRun() methods
-  - call run destructors
+    - call run AnalyzeSpecialEvent() methods for the ODB dump event (evid 0x8001)
+    - call run EndRun() methods
+    - call run destructors
 
 * analyzer shutdown:
-  - definitely do the "run end" activity (all run objects destroyed)
-  - call module Finish() methods
-  - call module destructors
-  - return from manalyzer_main()
+    - definitely do the "run end" activity (all run objects destroyed)
+    - call module Finish() methods
+    - call module destructors
+    - return from manalyzer_main()
 
 ### The ROOT helper class TARootHelper
 
