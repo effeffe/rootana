@@ -137,14 +137,21 @@ ALL  += obj/event_dump.o old_analyzer/event_dump.exe
 ALL  += obj/event_skim.o old_analyzer/event_skim.exe
 ALL  += obj/analyzer.o old_analyzer/analyzer.exe
 
-# new analyzer
+# new midas analyzer
 
-ALL  += manalyzer/manalyzer.exe
-ALL  += obj/manalyzer_example1.o manalyzer/manalyzer_example1.exe
+ALL  += obj/manalyzer_main.o
+MALL  += manalyzer/manalyzer.exe
+MALL  += manalyzer/manalyzer_example_cxx.exe
 ifdef HAVE_ROOT
-ALL  += obj/manalyzer_example2.o manalyzer/manalyzer_example2.exe
-ALL  += obj/manalyzer_example3.o manalyzer/manalyzer_example3.exe
-ALL  += obj/manalyzer_example_root_graphics.o manalyzer/manalyzer_example_root_graphics.exe
+MALL  += manalyzer/manalyzer_example_root.exe
+MALL  += manalyzer/manalyzer_example_flow.exe
+MALL  += manalyzer/manalyzer_example_root_graphics.exe
+endif
+ALL   += $(MALL)
+
+# test programs
+
+ifdef HAVE_ROOT
 ALL  += libMidasServer/test_midasServer.o libMidasServer/test_midasServer.exe
 ifdef HAVE_MIDAS
 ALL  += libMidasInterface/tests/testODB.o libMidasInterface/tests/testODB.exe
@@ -171,16 +178,12 @@ OBJS += obj/xxhash.o
 OBJS += obj/lz4frame.o
 OBJS += obj/midasio.o
 OBJS += obj/manalyzer.o
-OBJS += obj/manalyzer_main.o
 
 all: $(ALL)
 
 $(ALL): include
 $(OBJS): include
-
-#obj/midasio.o: include/midasio.h
-#obj/manalyzer.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h
-#obj/manalyzer_main.o: include/manalyzer.h include/midasio.h include/VirtualOdb.h include/TMidasOnline.h
+$(MALL): include
 
 include:
 	mkdir -p include lib obj
@@ -209,6 +212,9 @@ obj/TNetDirectoryDict.cxx: obj/%Dict.cxx:
 
 %.exe: obj/%.o lib/librootana.a
 	$(CXX) -o $@ $(CXXFLAGS) $< lib/librootana.a $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
+
+$(MALL): %.exe: %.o obj/manalyzer_main.o lib/librootana.a
+	$(CXX) -o $@ $(CXXFLAGS) $< obj/manalyzer_main.o lib/librootana.a $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
 
 %.o: %.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<

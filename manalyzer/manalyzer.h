@@ -129,6 +129,8 @@ class TARootHelper
 };
 #endif
 
+int manalyzer_main(int argc, char* argv[]);
+
 #endif
 
 /* emacs
