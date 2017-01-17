@@ -239,7 +239,7 @@ public:
    const char* odbReadString(const char*name, int index = 0,const char* defaultValue = NULL) { return defaultValue; }
 };
 
-double GetTimeSec()
+static double GetTimeSec()
 {
   struct timeval tv;
   gettimeofday(&tv,NULL);
@@ -423,7 +423,7 @@ public:
    }
 };
 
-int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostname, const char* exptname, int num_analyze, TMWriterInterface* writer)
+static int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostname, const char* exptname, int num_analyze, TMWriterInterface* writer)
 {
    TMidasOnline *midas = TMidasOnline::instance();
 
@@ -484,7 +484,7 @@ int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostnam
 
 #endif
 
-int ProcessMidasFiles(const std::vector<std::string>& files, const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer)
+static int ProcessMidasFiles(const std::vector<std::string>& files, const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer)
 {
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Init(args);
@@ -630,7 +630,7 @@ int ProcessMidasFiles(const std::vector<std::string>& files, const std::vector<s
 
 static bool gEnableShowMem = false;
 
-int ShowMem(const char* label)
+static int ShowMem(const char* label)
 {
   if (!gEnableShowMem)
     return 0;
@@ -1061,7 +1061,7 @@ public:
    }
 };
 
-void help()
+static void help()
 {
   printf("\nUsage:\n");
   printf("\n./analyzer.exe [-h] [-R8081] [-oOutputfile.mid] [file1 file2 ...] [-- arguments passed to modules ...]\n");
