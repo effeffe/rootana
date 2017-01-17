@@ -91,6 +91,8 @@ ifdef HAVE_ROOT
 ALL  += libAnalyzer/analyzer_example.exe
 ALL  += libAnalyzerDisplay/display_example.exe
 
+DALL += libAnalyzerDisplay/display_example.o
+
 OBJS += obj/TRootanaEventLoop.o
 OBJS += obj/TDataContainer.o
 OBJS += obj/TPeriodicClass.o
@@ -138,9 +140,13 @@ ALL  += lib/librootana.a
 
 # old analyzer
 
-ALL  += obj/event_dump.o old_analyzer/event_dump.exe
-ALL  += obj/event_skim.o old_analyzer/event_skim.exe
-ALL  += obj/analyzer.o old_analyzer/analyzer.exe
+ALL  += old_analyzer/event_dump.exe
+ALL  += old_analyzer/event_skim.exe
+ALL  += old_analyzer/analyzer.exe
+
+DALL += old_analyzer/event_dump.o
+DALL += old_analyzer/event_skim.o
+DALL += old_analyzer/analyzer.o
 
 # new midas analyzer
 
