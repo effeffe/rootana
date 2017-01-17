@@ -118,6 +118,11 @@ OBJS += obj/TMainDisplayWindowDict.o
 OBJS += obj/TRootanaDisplayDict.o
 OBJS += obj/TFancyHistogramCanvasDict.o
 
+DALL += obj/TNetDirectoryDict.cxx
+DALL += obj/TMainDisplayWindowDict.cxx
+DALL += obj/TRootanaDisplayDict.cxx
+DALL += obj/TFancyHistogramCanvasDict.cxx
+
 endif
 
 # libUnpack
@@ -184,6 +189,7 @@ all: $(ALL)
 $(ALL): include
 $(OBJS): include
 $(MALL): include
+$(DALL): include
 
 include:
 	mkdir -p include lib obj
