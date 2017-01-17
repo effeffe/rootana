@@ -276,6 +276,9 @@ clean::
 	-rm -rf obj
 
 clean::
+	-rm -f */*.o
+
+clean::
 	-rm -rf */*.exe.dSYM
 
 clean::
