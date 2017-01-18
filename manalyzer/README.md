@@ -13,6 +13,7 @@ The new MIDAS analyzer was written with explicit goals in mind:
 ### Quick start
 
 TBW - explain:
+
 * copy example, copy Makefile, copy manalyzer_main.
 * create histograms in the BeginRun() method
 * save results in the EndRun() method
@@ -97,6 +98,7 @@ When analyzing multiple subrun files, no new runinfo objects are created, but th
 file name is always updated when switching from one subrun file to the next.
 
 TARunInfo data members:
+
 * fRunNo - is the current run number. Special run number 0 is used when processing online events when the midas run is stopped (no run).
 * fFileName - current file name. (An empty string when processing online events)
 * fOdb - pointer to a VirtualOdb object. When online, it is connected to the live online ODB. When processing data files, it is connected to the last seen ODB dump event (evid 0x8000 and 0x8001). If none available, it is connected to the special EmptyOdb object (all "odb get" methods return the default values).
@@ -116,6 +118,7 @@ should not save pointers to it or any of it's components. A pointer to this obje
 is always available to all user methods via "runinfo->fRoot".
 
 TARootHelper data members:
+
 * TFile*        fOutputFile - ROOT output file. To save ROOT histograms into the output file, do "runinfo->fRoot->fOutputFile->cd()" before calling "new TH1D & co". This file is always present and always open for writing (no need to check for NULL pointer).
 * TDirectory*   fgDir - ROOT in-memory directory. To avoid saving ROOT histograms in the output file, do "runinfo->fRoot->fgDir->cd()" before calling "new TH1D & co". This directory is always present (no need to check for NULL pointer). The contents of this directory are automatically exported to the ROOT web server.
 * TApplication* fgApp - pointer to ROOT graphics environement, if running in graphical mode. Value is NULL if running in batch mode (no graphics).
