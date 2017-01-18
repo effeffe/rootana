@@ -1070,9 +1070,9 @@ static void help()
   printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
   printf("\t-Eexptname: connect to this MIDAS experiment\n");
   printf("\t-oOutputfile.mid: write selected events into this file\n");
-  printf("\t-R: Start the ROOT THttpServer HTTP server on specified tcp port, access by firefox http://localhost:8081\n");
-  printf("\t-X: Start the Xml server on specified tcp port (for use with roody -Xlocalhost:9091)\n");
-  printf("\t-P: Start the TNetDirectory server on specified tcp port (for use with roody -Plocalhost:9091)\n");
+  printf("\t-Rnnnn: Start the ROOT THttpServer HTTP server on specified tcp port, access by firefox http://localhost:8081\n");
+  printf("\t-Xnnnn: Start the Xml server on specified tcp port (for use with roody -Xlocalhost:9091)\n");
+  printf("\t-Pnnnn: Start the TNetDirectory server on specified tcp port (for use with roody -Plocalhost:9091)\n");
   printf("\t-eNNN: Number of events to analyze\n");
   printf("\t-sNNN: Number of events to skip before starting analysis\n");
   printf("\t--dump: activate the event dump module\n");
