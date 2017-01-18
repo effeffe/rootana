@@ -100,8 +100,11 @@ file name is always updated when switching from one subrun file to the next.
 TARunInfo data members:
 
 * fRunNo - is the current run number. Special run number 0 is used when processing online events when the midas run is stopped (no run).
+
 * fFileName - current file name. (An empty string when processing online events)
+
 * fOdb - pointer to a VirtualOdb object. When online, it is connected to the live online ODB. When processing data files, it is connected to the last seen ODB dump event (evid 0x8000 and 0x8001). If none available, it is connected to the special EmptyOdb object (all "odb get" methods return the default values).
+
 * fRoot - pointer to the ROOT helper object (TARootHelper, see the next section). This member only exists if manalyzer is built with HAVE_ROOT.
 
 ### The ROOT helper class TARootHelper
@@ -120,10 +123,15 @@ is always available to all user methods via "runinfo->fRoot".
 TARootHelper data members:
 
 * TFile*        fOutputFile - ROOT output file. To save ROOT histograms into the output file, do "runinfo->fRoot->fOutputFile->cd()" before calling "new TH1D & co". This file is always present and always open for writing (no need to check for NULL pointer).
+
 * TDirectory*   fgDir - ROOT in-memory directory. To avoid saving ROOT histograms in the output file, do "runinfo->fRoot->fgDir->cd()" before calling "new TH1D & co". This directory is always present (no need to check for NULL pointer). The contents of this directory are automatically exported to the ROOT web server.
+
 * TApplication* fgApp - pointer to ROOT graphics environement, if running in graphical mode. Value is NULL if running in batch mode (no graphics).
+
 * THttpServer*  fgHttpServer - pointer to the ROOT web server object (-R switch).
+
 * XmlServer*    fgXmlServer - pointer to the old XML Web server for use with the roody application (-X switch).
+
 * TNetDirectory server (-P switch) is also available (it has no corresponding c++ object).
 
 ### Module registration
