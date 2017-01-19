@@ -11,7 +11,8 @@ CXXFLAGS = -g -O2 -Wall -Wuninitialized -I./include
 # required/non-optional libz package for GZIP decompression
 
 HAVE_LIBZ := 1
-CXXFLAGS += -DHAVE_LIBZ
+CXXFLAGS  += -DHAVE_LIBZ
+USER_LIBS += -lz
 
 # optional ROOT libraries
 
@@ -29,6 +30,8 @@ ROOTCFLAGS := $(shell root-config --cflags)
 RPATH    += -Wl,-rpath,$(ROOTLIBDIR)
 CXXFLAGS += -DHAVE_ROOT $(ROOTCFLAGS)
 CXXFLAGS_ROOTCINT += -DHAVE_ROOT
+USER_CFLAGS += $(ROOTCFLAGS)
+USER_LIBS   += $(ROOTGLIBS)
 HAVE_ROOT_HTTP := $(findstring http,$(ROOTFEATURES))
 HAVE_ROOT_XML  := $(findstring xml,$(ROOTFEATURES))
 
@@ -36,6 +39,7 @@ ifdef HAVE_ROOT_XML
 CXXFLAGS += -DHAVE_ROOT_XML
 ROOTLIBS += -lXMLParser -lXMLIO
 ROOTGLIBS += -lXMLParser -lXMLIO
+USER_LIBS += -lXMLParser -lXMLIO
 endif
 
 ifdef HAVE_ROOT_HTTP
@@ -43,6 +47,7 @@ HAVE_THTTP_SERVER := 1
 CXXFLAGS += -DHAVE_ROOT_HTTP -DHAVE_THTTP_SERVER
 ROOTLIBS += -lRHTTP
 ROOTGLIBS += -lRHTTP
+USER_LIBS += -lRHTTP
 endif
 
 #xhere: ; @echo Have ROOT: features: $(ROOTFEATURES), libdir: $(ROOTLIBDIR), libs: $(ROOTLIBS) cflags: $(CXXFLAGS)
@@ -61,16 +66,20 @@ ifneq ($(MIDASSYS),)
 HAVE_MIDAS=1
 MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil -lrt
 CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
+USER_CFLAGS += -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 
 UNAME=$(shell uname)
 ifeq ($(UNAME),Darwin)
 CXXFLAGS += -DOS_LINUX -DOS_DARWIN
+USER_CFLAGS += -DOS_LINUX -DOS_DARWIN
 CXXFLAGS_ROOTCINT += -DOS_LINUX -DOS_DARWIN
 MIDASLIBS = $(MIDASSYS)/darwin/lib/libmidas.a
 RPATH=
 endif
 
-endif
+USER_LIBS += $(MIDASLIBS)
+
+endif # MIDASSYS
 
 ifdef HAVE_ROOT
 OBJS += obj/RootLock.o
@@ -211,6 +220,8 @@ $(OBJS): include
 $(DALL): include
 
 RC := include/rootana_config.h
+RF := include/rootana_cflags.txt
+RL := include/rootana_libs.txt
 
 include:
 	mkdir -p include lib obj
@@ -262,6 +273,12 @@ else
 	echo "//#define HAVE_LIBNETDIRECTORY 1" >> $(RC)
 endif
 	echo "// end" >> $(RC)
+	-rm -f $(RF)
+	touch $(RF)
+	echo "$(USER_CFLAGS)" >> $(RF)
+	-rm -f $(RL)
+	touch $(RL)
+	echo "$(USER_LIBS)" >> $(RL)
 	cd include; ln -sfv ../lib*/*.h .
 	cd include; ln -sfv ../lib*/*.hxx .
 	cd include; ln -sfv ../manalyzer/*.h .

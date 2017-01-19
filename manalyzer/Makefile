@@ -6,67 +6,15 @@
 # make NO_ROOT=1 # build without ROOT support
 #
 
-CXXFLAGS = -g -O2 -Wall -Wuninitialized
-
-# ROOTANA libraries
+CXXFLAGS += -g -O2 -Wall -Wuninitialized
 
 ifndef ROOTANASYS
 norootanasys:
 	@echo Error: ROOTANASYS in not defined, please source thisrootana.{sh,csh}
-else
-CXXFLAGS += -I$(ROOTANASYS)/include
-LIBS     += -L$(ROOTANASYS)/lib -lrootana
-endif # ROOTANASYS
-
-# optional ROOT libraries
-
-ifndef NO_ROOT
-ROOTVERSION := $(shell root-config --version)
 endif
 
-ifdef ROOTVERSION
-HAVE_ROOT  := 1
-ROOTFEATURES := $(shell root-config --features)
-ROOTLIBDIR := $(shell root-config --libdir)
-LIBS += -L$(ROOTLIBDIR) $(shell root-config --glibs) -lThread
-ROOTCFLAGS := $(shell root-config --cflags)
-RPATH    += -Wl,-rpath,$(ROOTLIBDIR)
-CXXFLAGS += $(ROOTCFLAGS)
-HAVE_ROOT_HTTP := $(findstring http,$(ROOTFEATURES))
-HAVE_ROOT_XML  := $(findstring xml,$(ROOTFEATURES))
-
-ifdef HAVE_ROOT_XML
-LIBS += -lXMLParser -lXMLIO
-endif
-
-ifdef HAVE_ROOT_HTTP
-LIBS += -lRHTTP
-endif
-
-endif # HAVE_ROOT
-
-# optional MIDAS libraries
-
-ifdef NO_MIDAS
-MIDASSYS:=
-endif
-
-ifneq ($(MIDASSYS),)
-
-HAVE_MIDAS=1
-MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil -lrt
-CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
-
-UNAME=$(shell uname)
-ifeq ($(UNAME),Darwin)
-CXXFLAGS += -DOS_LINUX -DOS_DARWIN
-MIDASLIBS = $(MIDASSYS)/darwin/lib/libmidas.a
-RPATH=
-endif
-
-LIBS += $(MIDASLIBS)
-
-endif # HAVE_MIDAS
+CXXFLAGS += -I$(ROOTANASYS)/include $(shell cat $(ROOTANASYS)/include/rootana_cflags.txt)
+LIBS     += -L$(ROOTANASYS)/lib -lrootana $(shell cat $(ROOTANASYS)/include/rootana_libs.txt)
 
 USER_MODULES:=
 # add more user modules here
