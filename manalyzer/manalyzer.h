@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "rootana_config.h"
 #include "midasio.h"
 #include "VirtualOdb.h"
 
