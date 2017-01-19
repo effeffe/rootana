@@ -102,6 +102,7 @@ ifdef HAVE_ROOT
 ALL  += libAnalyzer/analyzer_example.exe
 ALL  += libAnalyzerDisplay/display_example.exe
 
+DALL += libAnalyzer/analyzer_example.o
 DALL += libAnalyzerDisplay/display_example.o
 
 OBJS += obj/TRootanaEventLoop.o
