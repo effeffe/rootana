@@ -351,7 +351,11 @@ void MidasPollHandler()
 }
 #endif
 
+#ifdef HAVE_ROOT
 class TApplication;
+#else
+#define TApplication void*
+#endif
 
 int ProcessMidasOnline(TApplication*app, const char* hostname, const char* exptname)
 {
@@ -573,7 +577,9 @@ int main(int argc, char *argv[])
 	return 1;
    }
 #else
-   TApplication* app = NULL;
+#ifdef HAVE_MIDAS
+   TApplication *app = NULL;
+#endif
 #endif
 
    //bool forceEnableGraphics = false;
