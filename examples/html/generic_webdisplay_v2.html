@@ -19,7 +19,9 @@
   <script src="jsroot/scripts/JSRootCore.js"></script>
   <script src="jsroot/scripts/JSRootPainter.js"></script>
   <script src="jsroot/scripts/JSRootPainter.More.js"></script>
-  <script language="javascript" type="text/javascript" src="rootana_functions_jsroot.js"></script>
+  <script language="javascript" type="text/javascript" src="rootana_functions.js"></script>
+  <script language="javascript" type="text/javascript" src="plotting_functions_jsroot.js"></script>
+  <script language="javascript" type="text/javascript" src="plotting_functions_nonroot.js"></script>
 <style type="text/css">
 input[type=number]{
     width: 60px;
@@ -112,8 +114,16 @@ var currentHistogramInfo;
 invalidSetup = true;
 
 <!-- configure the display for current settings; return true if successful -->
-function configureDisplay(histogramsSetupInfo, histogramID){
+function configureDisplay(histogramsSetupInfo){
 
+   var histogramID = $(":button.displayControlEl.select_buttons.selected").attr('id')
+   
+   deleteOldPlots();
+   
+   $("#graphdiv").html("");
+   $("#graphdiv21").html("");
+   $("#graphdiv22").html("");
+   
   if (!(histogramID in histogramsSetupInfo)){
     console.log("Failure; value " + histogramID + " is not in histogram Setup JSON dump ");
     invalidSetup = true;
@@ -162,6 +172,7 @@ function configureDisplay(histogramsSetupInfo, histogramID){
 }
 
 
+
 <!-- main method to setup which histograms to display, using JSON formatted data -->
 function selectHistogramsFromJSON(){
    
@@ -194,7 +205,7 @@ function selectHistogramsFromJSON(){
    }
    
    document.getElementById("displayControlButtons").innerHTML = buttonString;
-   configureDisplay(histogramsSetupInfo,$(":button.displayControlEl.select_buttons.selected").attr('id')); 
+   configureDisplay(histogramsSetupInfo);//,$(":button.displayControlEl.select_buttons.selected").attr('id')); 
 
 
    <!-- set up what happens for display button clicks -->
@@ -203,14 +214,13 @@ function selectHistogramsFromJSON(){
       $(this).addClass("selected");
       
       <!-- find the configuration for this button -->
-      configureDisplay(histogramsSetupInfo,this.id);
+      configureDisplay(histogramsSetupInfo);
       
       ShowParams();
       updatePlots(true);
    });
    
-   
-   
+      
    <!-- set up what happens for DTM source button clicks -->
    $(":button.triggerControlEl,select_buttons").click(function(){
       $(":button.triggerControlEl.select_buttons.selected").removeClass("selected");
@@ -218,8 +228,19 @@ function selectHistogramsFromJSON(){
       
       <!-- find the configuration for this button -->
       setRootanaDirectory(this.id);
-      
+
       ShowParams();
+      updatePlots(true);
+   });
+
+   <!-- set up what happens for plotting style button clicks -->
+   $(":button.styleControlEl,select_buttons").click(function(){
+      $(":button.styleControlEl.select_buttons.selected").removeClass("selected");
+      $(this).addClass("selected");
+      
+      <!-- find the configuration for this button -->
+      configureDisplay(histogramsSetupInfo);
+      
       updatePlots(true);
    });
    
@@ -229,21 +250,31 @@ function selectHistogramsFromJSON(){
 
 
 function getNumericString(channel){
-
-
-  var tmpstr = "";
-  
+  var tmpstr = "";  
   if(currentHistogramInfo["MaxModules"] > 1){
     tmpstr += "_" + document.getElementById("module_number").value;
   }
-
   if(currentHistogramInfo["MaxChannels"] > 1){
     tmpstr += "_" + String(channel);
   }
   return tmpstr;
 }
 
-  function updatePlots(deleteDygraph){
+
+// Function will call either JSROOT plotting or Plot-ly/dygraph plotting, depending on what user chooses
+function plotAllHistograms(plotType,divNames, histogramNameList, deleteDygraph){
+
+   if($(":button.styleControlEl.select_buttons.selected").attr('id') == "root_style"){
+      plotAllHistogramsJSROOT(plotType,divNames, histogramNameList, deleteDygraph);
+   }else{
+      plotAllHistogramsNonROOT(plotType,divNames, histogramNameList, deleteDygraph);
+   }
+
+   
+}
+
+
+function updatePlots(deleteDygraph){
 
    
    // update the MIDAS status
@@ -392,6 +423,10 @@ function changeUpdateTime() {
           <b>Display Control </b><br><br>
           <input type="button" id="pause_button" onclick="pause_resume();" value="Pause" ></input>
           <input class="displayControlEl" type="button" id="reset_button" onclick="rootanaResetAllHistograms();" value="Reset All Histograms" ></input><br>
+
+          <button class="styleControlEl select_buttons selected" id="root_style" > ROOT style </button> 
+          <button class="styleControlEl select_buttons" id="plotly_style" > Plot-ly style </button> <br>
+
           <p> Refresh period (ms):
             <input  class="displayControlEl" type="number" id="updatePeriod" min="100" max="100000" value="5000" onchange="changeUpdateTime();"><p>
 
