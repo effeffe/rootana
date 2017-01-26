@@ -30,12 +30,10 @@ function deleteOldPlots(){
 function makePlot2D(divName, histoObject,histoInfoJSON, dygraphIndex,deleteDygraph){
 
 
-  console.log("3D plot;...");
   var redraw = ($("#"+divName).html() != "");
 
   var title = histoObject["_title"];
 
-    console.log("3D plot;...");
   // Need to recalculate the bin centers.
   var bin_widthX = (histoInfoJSON["fXaxis"]["fXmax"] - histoInfoJSON["fXaxis"]["fXmin"]) / histoInfoJSON["fXaxis"]["fNbins"];
   var bin_widthY = (histoInfoJSON["fYaxis"]["fXmax"] - histoInfoJSON["fYaxis"]["fXmin"]) / histoInfoJSON["fYaxis"]["fNbins"];
@@ -106,7 +104,7 @@ function makePlot1D(histoInfoJSONFirst,plotType,divName,csv_array,deleteDygraph,
   if(plotType == "overlay"){
     title = "Overlay Histograms";
   }
-  
+
   //  g = new Dygraph(document.getElementById(divName),csv_array_multi,{title: 'multiple histograms'});
   if(deleteDygraph || gDygraphPointer[dygraphIndex] == 0){
     delete gDygraphPointer[dygraphIndex] ;
