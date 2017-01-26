@@ -14,6 +14,18 @@ function initialize(){
 }
 
 
+function xhrErrorResponse(listDirectories, errorString){
+
+  console.log("Error ! " + errorString);
+  document.getElementById("readstatus").innerHTML = "Couldn't get histogram data; request = "+ listDirectories + "; error = " + errorString + ". Did rootana httpserver die?";
+  document.getElementById("readstatus").style.color = 'red';    
+  // If we couldn't find histogram, try forcing re-find of rootana directory
+  gFoundRootanaDir = false;
+  xhrAlreadyInFligthJSROOT = false;
+  find_active_root_directory();
+
+}
+
 var xhrAlreadyInFligthJSROOT = false;
 
 
@@ -31,40 +43,39 @@ function plotAllHistogramsJSROOT(plotType,divNames, histogramNameList, deleteDyg
   // Don't make another request if last request isn't finished.
   if(xhrAlreadyInFligthJSROOT) return;
   xhrAlreadyInFligthJSROOT = true;
-  
+
+  // Wrap the request in promise; will combine multiple items (if there are more than 1) into single XHR request
+  var listDirectories = "";
   for(var index = 0; index < histogramNameList.length; index++){
+    var name = active_directory + "/" + histogramNameList[index];
+    listDirectories += name + "/root.json\n";
+  }    
 
-    var url = rootana_dir + active_directory + "/" + histogramNameList[index] + "/root.json.gz?compact=3";
-    console.log("send this request: " + url);
-
-
-    var req = JSROOT.NewHttpRequest(url, 'object', function(histo) {
-      if (!histo) {
-        console.log("Fail to get histo");
-        document.getElementById("readstatus").innerHTML = "Couldn't get histogram data; request = "+ listDirectories + "; error = " + error + ". Did rootana httpserver die?";
-        document.getElementById("readstatus").style.color = 'red';    
-        // If we couldn't find histogram, try forcing re-find of rootana directory
-        gFoundRootanaDir = false;
-        find_active_root_directory();
-        return;
-      }
-      
-      // redraw histogram at specified frame
-      JSROOT.redraw(this.frame, histo, "colz");
-      //JSROOT.redraw(frame, histo, "hist");
-
-      xhrAlreadyInFligthJSROOT = false;
-      document.getElementById("readstatus").innerHTML = "Rootana data correctly read";
-      document.getElementById("readstatus").style.color = 'black';      
-
-    });
-
+  // compose URL
+  var url = rootana_dir + "multi.json?number="+String(histogramNameList.length);
+ 
+  getUrl(url, listDirectories,divNames).then(function(response) {
     
-    req.frame = divNames[index];
-    req.send(null);
+    xhrAlreadyInFligthJSROOT = false;
+    
+    var histo = JSON.parse(response);    
+    // Little hack from Sergey to distinguish the different responses from THttpServer
+    for (var i=0;i<histo.length;++i){
+      histo[i] = JSROOT.JSONR_unref(histo[i]);
+      JSROOT.redraw(divNames[i], histo[i], "colz");
+    }
 
-  }
 
-  return;  
+     document.getElementById("readstatus").innerHTML = "Rootana data correctly read";
+     document.getElementById("readstatus").style.color = 'black';      
+
+   }).catch(function(error) {  // Handle exception if we didn't find the histogram...
+
+     promiseAlreadyInFligth = false;
+     xhrErrorResponse(listDirectories,error);
+    
+   });
+  
+
 
 }
