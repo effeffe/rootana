@@ -60,9 +60,22 @@ function plotAllHistogramsJSROOT(plotType,divNames, histogramNameList, deleteDyg
     
     var histo = JSON.parse(response);    
     // Little hack from Sergey to distinguish the different responses from THttpServer
+
+    if(plotType == "overlay"){
+      $("#graphdiv").html("");
+    }
     for (var i=0;i<histo.length;++i){
       histo[i] = JSROOT.JSONR_unref(histo[i]);
-      JSROOT.redraw(divNames[i], histo[i], "colz");
+      if(plotType == "overlay"){         
+        //JSROOT.clear(divNames[0]);
+        if(i==0){
+          JSROOT.draw(divNames[0], histo[i], "");
+        } else {
+          JSROOT.draw(divNames[0], histo[i], "SAME");
+        }
+      }else{
+        JSROOT.redraw(divNames[i], histo[i], "colz");
+      }
     }
 
 
