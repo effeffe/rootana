@@ -180,6 +180,41 @@ bool TMidasOnline::poll(int mdelay)
   return true;
 }
 
+bool TMidasOnline::sleep(int mdelay)
+{
+  //printf("poll!\n");
+  
+  if (checkTransitions())
+    return true;
+  
+  //ss_suspend_set_dispatch(CH_IPC, 0, (int (*)(void)) cm_dispatch_ipc);
+  ss_suspend_set_dispatch(CH_IPC, 0, NULL);
+
+ int status = ss_suspend(mdelay, 0);
+  if (status == SS_SUCCESS)
+    return true;
+  if (status == SS_TIMEOUT)
+    return true;
+#if 0
+  if (status == SS_SERVER_RECV) {
+    //printf("ss_suspend status %d\n", status);
+    // FIXME: maybe sleep here?
+    return true;
+  }
+#endif
+  printf("ss_suspend status %d\n", status);
+#if 0
+  if (status == RPC_SHUTDOWN || status == SS_ABORT)
+    {
+      fprintf(stderr, "TMidasOnline::poll: cm_yield(%d) status %d, shutting down.\n",mdelay,status);
+      disconnect();
+      return false;
+    }
+#endif
+  
+  return true;
+}
+
 void TMidasOnline::setEventHandler(EventHandler handler)
 {
   fEventHandler  = handler;

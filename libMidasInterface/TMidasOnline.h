@@ -89,8 +89,11 @@ public:
   /// Disconnect from MIDAS
   int disconnect();
 
-  /// Check for MIDAS events (run transitions, data requests)
+  /// Check for all MIDAS events (new data events, run transitions)
   bool poll(int mdelay);
+
+  /// Sleep while checking for and answering MIDAS RPC requests (run transitions, etc)
+  bool sleep(int mdelay);
 
   // run transitions functions
 
