@@ -239,12 +239,14 @@ public:
    const char* odbReadString(const char*name, int index = 0,const char* defaultValue = NULL) { return defaultValue; }
 };
 
+#if 0
 static double GetTimeSec()
 {
   struct timeval tv;
   gettimeofday(&tv,NULL);
   return tv.tv_sec + 0.000001*tv.tv_usec;
 }
+#endif
 
 class RunHandler
 {
@@ -630,6 +632,7 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
 
 static bool gEnableShowMem = false;
 
+#if 0
 static int ShowMem(const char* label)
 {
   if (!gEnableShowMem)
@@ -648,6 +651,7 @@ static int ShowMem(const char* label)
 
   return mem;
 }
+#endif
 
 class EventDumpRun: public TARunInterface
 {
@@ -915,8 +919,8 @@ public:
    bool fContinue;
    int  fSkip;
 #ifdef HAVE_ROOT
-   XCtrl* fCtrl;
-   MainWindow *fCtrlWindow;
+   static XCtrl* fgCtrl;
+   static MainWindow *fgCtrlWindow;
 #endif
    
    InteractiveRun(TARunInfo* runinfo)
@@ -926,10 +930,10 @@ public:
       fContinue = false;
       fSkip = 0;
 #ifdef HAVE_ROOT
-      fCtrl = new XCtrl;
-      fCtrlWindow = NULL;
-      if (runinfo->fRoot->fgApp) {
-         fCtrlWindow = new MainWindow(gClient->GetRoot(), 200, 300, fCtrl);
+      if (!fgCtrl)
+         fgCtrl = new XCtrl;
+      if (!fgCtrlWindow && runinfo->fRoot->fgApp) {
+         fgCtrlWindow = new MainWindow(gClient->GetRoot(), 200, 300, fgCtrl);
       }
 #endif
    }
@@ -964,10 +968,10 @@ public:
       printf("InteractiveRun::Analyze, run %d, %s\n", runinfo->fRunNo, event->HeaderToString().c_str());
 
 #ifdef HAVE_ROOT
-      if (fCtrl->fValue == CTRL_QUIT) {
+      if (fgCtrl->fValue == CTRL_QUIT) {
          *flags |= TAFlag_QUIT;
          return flow;
-      } else if (fCtrl->fValue == CTRL_PAUSE) {
+      } else if (fgCtrl->fValue == CTRL_PAUSE) {
          fContinue = false;
       }
 #endif
@@ -984,17 +988,36 @@ public:
       }
 
 #ifdef HAVE_ROOT
-      if (fCtrlWindow && runinfo->fRoot->fgApp) {
-         runinfo->fRoot->fgApp->Run();
-         switch (fCtrl->fValue) {
-         case CTRL_QUIT:
-            *flags |= TAFlag_QUIT;
-            return flow;
-         case CTRL_NEXT:
-            return flow;
-         case CTRL_CONTINUE:
-            fContinue = true;
-            return flow;
+      if (fgCtrlWindow && runinfo->fRoot->fgApp) {
+         while (1) {
+#ifdef HAVE_THTTP_SERVER
+            if (TARootHelper::fgHttpServer) {
+               TARootHelper::fgHttpServer->ProcessRequests();
+            }
+#endif
+#ifdef HAVE_ROOT
+            if (TARootHelper::fgApp) {
+               gSystem->DispatchOneEvent(kTRUE);
+            }
+#endif
+            if (!TMidasOnline::instance()->sleep(10)) {
+               *flags |= TAFlag_QUIT;
+               return flow;
+            }
+
+            int ctrl = fgCtrl->fValue;
+            fgCtrl->fValue = 0;
+
+            switch (ctrl) {
+            case CTRL_QUIT:
+               *flags |= TAFlag_QUIT;
+               return flow;
+            case CTRL_NEXT:
+               return flow;
+            case CTRL_CONTINUE:
+               fContinue = true;
+               return flow;
+            }
          }
       }
 #endif
@@ -1039,6 +1062,9 @@ public:
       printf("InteractiveRun::AnalyzeSpecialEvent, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
    }
 };
+
+MainWindow* InteractiveRun::fgCtrlWindow = NULL;
+XCtrl* InteractiveRun::fgCtrl = NULL;
 
 class InteractiveModule: public TAModuleInterface
 {
