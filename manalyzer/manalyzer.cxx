@@ -1000,10 +1000,14 @@ public:
                gSystem->DispatchOneEvent(kTRUE);
             }
 #endif
+#ifdef HAVE_MIDAS
             if (!TMidasOnline::instance()->sleep(10)) {
                *flags |= TAFlag_QUIT;
                return flow;
             }
+#else
+            gSystem->Sleep(10);
+#endif
 
             int ctrl = fgCtrl->fValue;
             fgCtrl->fValue = 0;
