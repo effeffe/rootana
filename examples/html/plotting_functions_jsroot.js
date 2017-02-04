@@ -54,7 +54,7 @@ function plotAllHistogramsJSROOT(plotType,divNames, histogramNameList, deleteDyg
   // compose URL
   var url = rootana_dir + "multi.json?number="+String(histogramNameList.length);
  
-  getUrl(url, listDirectories,divNames).then(function(response) {
+  getUrl(url, listDirectories).then(function(response) {
     
     xhrAlreadyInFligthJSROOT = false;
     
@@ -64,16 +64,20 @@ function plotAllHistogramsJSROOT(plotType,divNames, histogramNameList, deleteDyg
     if(plotType == "overlay"){
       $("#graphdiv").html("");
     }
+
+    // Loop over the different histograms we got back.
+    // Need to handle the overlay plots different from the single/multiple plots.
     for (var i=0;i<histo.length;++i){
       histo[i] = JSROOT.JSONR_unref(histo[i]);
+      
       if(plotType == "overlay"){         
-        //JSROOT.clear(divNames[0]);
         if(i==0){
           JSROOT.draw(divNames[0], histo[i], "");
         } else {
+          histo[i].fLineColor = i+2;
           JSROOT.draw(divNames[0], histo[i], "SAME");
         }
-      }else{
+      }else{ // single or multiple
         JSROOT.redraw(divNames[i], histo[i], "colz");
       }
     }

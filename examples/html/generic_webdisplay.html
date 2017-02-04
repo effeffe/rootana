@@ -108,6 +108,13 @@ function setRootanaDirectory(webdir_end){
    document.getElementById('midasLink').href = location.protocol + '//' + location.host + "/";
 }
 
+<!-- clean div for new display -->
+function cleanDivs(){   
+   deleteOldPlots();   
+   $("#graphdiv").html("");
+   $("#graphdiv21").html("");
+   $("#graphdiv22").html("");
+}
 
 var histogramsSetupInfo;
 var currentHistogramInfo;
@@ -118,12 +125,7 @@ function configureDisplay(histogramsSetupInfo){
 
    var histogramID = $(":button.displayControlEl.select_buttons.selected").attr('id')
    
-   deleteOldPlots();
-   
-   $("#graphdiv").html("");
-   $("#graphdiv21").html("");
-   $("#graphdiv22").html("");
-   
+   cleanDivs();
   if (!(histogramID in histogramsSetupInfo)){
     console.log("Failure; value " + histogramID + " is not in histogram Setup JSON dump ");
     invalidSetup = true;
@@ -442,7 +444,7 @@ function changeUpdateTime() {
           
           <div id="DisplaySelectionDiv" style="display:none"> 
           Select Display Type
-          <select  class="displayControlEl" id="HistoDisplay" onchange="ShowParams()">
+          <select  class="displayControlEl" id="HistoDisplay" onchange="cleanDivs();ShowParams()">
             <option value="Single">Single</option>
             <option value="Overlay">Overlay </option>
             <option value="Multiple">Multiple </option>
