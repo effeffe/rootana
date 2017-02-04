@@ -1216,6 +1216,8 @@ int manalyzer_main(int argc, char *argv[])
          interactive = true;
       } else if (args[i] == "-t") {
          gTrace = true;
+         TMReaderInterface::fgTrace = true;
+         TMWriterInterface::fgTrace = true;
       } else if (strncmp(arg,"-o",2)==0) {
          writer = TMNewWriter(arg+2);
       } else if (strncmp(arg,"-s",2)==0) {

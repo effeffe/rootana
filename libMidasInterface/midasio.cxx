@@ -11,11 +11,12 @@
 
 #include <string>
 
-bool TMTraceCtorDtor = true;
+bool TMWriterInterface::fgTrace = false;
+bool TMReaderInterface::fgTrace = false;
 
 TMReaderInterface::TMReaderInterface() // ctor
 {
-   if (TMTraceCtorDtor)
+   if (TMReaderInterface::fgTrace)
       printf("TMReaderInterface::ctor!\n");
    fError = false;
    fErrorString = "";
@@ -63,7 +64,7 @@ class ErrorReader: public TMReaderInterface
  public:
    ErrorReader(const char* filename)
    {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("ErrorReader::ctor!\n");
       fError = true;
       fErrorString = "The ErrorReader always returns an error";
@@ -71,7 +72,7 @@ class ErrorReader: public TMReaderInterface
 
    ~ErrorReader() // dtor
    {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("ErrorReader::dtor!\n");
    }
 
@@ -92,7 +93,7 @@ class FileReader: public TMReaderInterface
  public:
    FileReader(const char* filename)
    {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("FileReader::ctor!\n");
       fFilename = filename;
       fFp = fopen(filename, "r");
@@ -104,7 +105,7 @@ class FileReader: public TMReaderInterface
 
    ~FileReader() // dtor
    {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("FileReader::dtor!\n");
       if (fFp)
          Close();
@@ -125,7 +126,7 @@ class FileReader: public TMReaderInterface
 
    int Close()
    {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("FileReader::Close!\n");
       if (fFp) {
          fclose(fFp);
@@ -143,7 +144,7 @@ class PipeReader: public TMReaderInterface
  public:
    PipeReader(const char* pipename)
    {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("PipeReader::ctor!\n");
       fPipename = pipename;
       fPipe = popen(pipename, "r");
@@ -155,7 +156,7 @@ class PipeReader: public TMReaderInterface
 
    ~PipeReader() // dtor
    {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("PipeReader::dtor!\n");
       if (fPipe)
          Close();
@@ -176,7 +177,7 @@ class PipeReader: public TMReaderInterface
 
    int Close()
    {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("PipeReader::Close!\n");
       if (fPipe) {
          pclose(fPipe); // FIXME: check error // only need to check error if writing to pipe
@@ -198,7 +199,7 @@ class ZlibReader: public TMReaderInterface
  public:
    ZlibReader(const char* filename)
    {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("ZlibReader::ctor!\n");
       fFilename = filename;
       fGzFile = gzopen(filename, "rb");
@@ -210,7 +211,7 @@ class ZlibReader: public TMReaderInterface
 
    ~ZlibReader() // dtor
    {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("PipeReader::dtor!\n");
       if (fGzFile)
          Close();
@@ -231,7 +232,7 @@ class ZlibReader: public TMReaderInterface
 
    int Close()
    {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("ZlibReader::Close!\n");
       if (fGzFile) {
          gzclose(fGzFile); // FIXME: must check error on write, ok no check on read
@@ -265,7 +266,7 @@ public:
       assert(reader);
       fReader = reader;
 
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("Lz4Reader::ctor!\n");
 
       LZ4F_errorCode_t errorCode = LZ4F_createDecompressionContext(&fContext, LZ4F_VERSION);
@@ -284,7 +285,7 @@ public:
    }
 
    ~Lz4Reader() {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("Lz4Reader::dtor!\n");
 
       if (fSrcBuf) {
@@ -377,7 +378,7 @@ public:
    
    int Close()
    {
-      if (TMTraceCtorDtor)
+      if (TMReaderInterface::fgTrace)
          printf("Lz4Reader::Close!\n");
       return fReader->Close();
    }

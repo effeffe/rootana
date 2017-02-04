@@ -88,6 +88,7 @@ class TMReaderInterface
  public:
    bool fError;
    std::string fErrorString;
+   static bool fgTrace;
 };
 
 class TMWriterInterface
@@ -96,6 +97,8 @@ class TMWriterInterface
    virtual int Write(const void* buf, int count) = 0;
    virtual int Close() = 0;
    virtual ~TMWriterInterface() {};
+ public:
+   static bool fgTrace;
 };
 
 TMReaderInterface* TMNewReader(const char* source);
