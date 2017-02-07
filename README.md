@@ -9,7 +9,7 @@ The ROOTANA package includes 4 major components:
 * a C++ library for reading and writing data files in the MIDAS .mid format, for connecting to live MIDAS experiments, and for accessing ODB data (live or from ODB dumps in the data files) [libMidasInterface](libMidasInterface/)
 * the old ROOT analyzer [old_analyzer](old_analyzer/)
 * the new MIDAS analyzer [manalyzer](manalyzer/)
-* an interactive graphical analyzer, see [examples](examples/), [libAnalyzer](libAnalyzer/), [libAnalyzerDisplay](libAnalyzerDisplay/)
+* an interactive graphical analyzer, see [libAnalyzer](https://midas.triumf.ca/MidasWiki/index.php/Rootana_Analyzer_Framework), [libAnalyzerDisplay](https://midas.triumf.ca/MidasWiki/index.php/Rootana_Display_Framework), [examples](examples/)
 
 Other notable features include:
 
