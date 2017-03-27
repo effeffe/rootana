@@ -9,28 +9,17 @@
 #include "manalyzer.h"
 #include "midasio.h"
 
-class ExampleCxxModule: public TAModuleInterface
+class ExampleCxx: public TARunObject
 {
 public:
-   void Init(const std::vector<std::string> &args);
-   void Finish();
-   TARunInterface* NewRun(TARunInfo* runinfo);
-
-   int fTotalEventCounter;
-};
-
-class ExampleCxxRun: public TARunInterface
-{
-public:
-   ExampleCxxRun(TARunInfo* runinfo, ExampleCxxModule *m)
-      : TARunInterface(runinfo)
+   ExampleCxx(TARunInfo* runinfo)
+      : TARunObject(runinfo)
    {
       printf("ctor, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
-      fModule = m;
       fRunEventCounter = 0;
    }
 
-   ~ExampleCxxRun()
+   ~ExampleCxx()
    {
       printf("dtor!\n");
    }
@@ -45,6 +34,11 @@ public:
    {
       printf("EndRun, run %d\n", runinfo->fRunNo);
       printf("Counted %d events in run %d\n", fRunEventCounter, runinfo->fRunNo);
+   }
+
+   void NextSubrun(TARunInfo* runinfo)
+   {
+      printf("NextSubrun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
    }
 
    void PauseRun(TARunInfo* runinfo)
@@ -64,7 +58,6 @@ public:
       //event->old_event.Print();
 
       fRunEventCounter++;
-      fModule->fTotalEventCounter++;
 
       return flow;
    }
@@ -75,32 +68,32 @@ public:
    }
 
    int fRunEventCounter;
-
-   ExampleCxxModule* fModule;
 };
 
-void ExampleCxxModule::Init(const std::vector<std::string> &args)
+class ExampleCxxFactory: public TAFactory
 {
-   printf("Init!\n");
-   printf("Arguments:\n");
-   for (unsigned i=0; i<args.size(); i++)
-      printf("arg[%d]: [%s]\n", i, args[i].c_str());
-   fTotalEventCounter = 0;
-}
+public:
+   void Init(const std::vector<std::string> &args)
+   {
+      printf("Init!\n");
+      printf("Arguments:\n");
+      for (unsigned i=0; i<args.size(); i++)
+         printf("arg[%d]: [%s]\n", i, args[i].c_str());
+   }
    
-void ExampleCxxModule::Finish()
-{
-   printf("Finish!\n");
-   printf("Counted %d events grand total\n", fTotalEventCounter);
-}
+   void Finish()
+   {
+      printf("Finish!\n");
+   }
    
-TARunInterface* ExampleCxxModule::NewRun(TARunInfo* runinfo)
-{
-   printf("NewRun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
-   return new ExampleCxxRun(runinfo, this);
-}
+   TARunObject* NewRunObject(TARunInfo* runinfo)
+   {
+      printf("NewRunObject, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
+      return new ExampleCxx(runinfo);
+   }
+};
 
-TARegisterModule tarm(new ExampleCxxModule);
+static TARegister tar(new ExampleCxxFactory);
 
 /* emacs
  * Local Variables:

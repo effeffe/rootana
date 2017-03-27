@@ -57,7 +57,7 @@ all:: $(ALL)
 %.exe: %.o manalyzer_main.o
 	$(CXX) -o $@ manalyzer_main.o $< $(CXXFLAGS) $(LIBS) -lm -lz -lpthread
 
-$(EXAMPLE_ALL): %.exe: $(ROOTANALIB)
+$(EXAMPLE_ALL): %.exe: %.o $(ROOTANALIB)
 	$(CXX) -o $@ $(ROOTANASYS)/obj/manalyzer_main.o $< $(CXXFLAGS) $(LIBS) -lm -lz -lpthread
 
 %.exe: $(MAIN) $(MODULES) $(ROOTANALIB)

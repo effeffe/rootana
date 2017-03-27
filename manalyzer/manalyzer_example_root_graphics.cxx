@@ -13,38 +13,25 @@
 #include "TCanvas.h"
 #include "TH1D.h"
 
-class ExampleRootGModule: public TAModuleInterface
+struct ExampleGRoot: public TARunObject
 {
-public:
-   void Init(const std::vector<std::string> &args);
-   void Finish();
-   TARunInterface* NewRun(TARunInfo* runinfo);
-
-   int fTotalEventCounter;
-   TH1D* htotal;
-};
-
-struct ExampleRootGRun: public TARunInterface
-{
-   ExampleRootGModule* fModule;
    int fCounter;
    TCanvas *fCanvas;
    TH1D* hperrun;
    TH1D* hExample;
    TRandom* fRndm;
    
-   ExampleRootGRun(TARunInfo* runinfo, ExampleRootGModule* m)
-      : TARunInterface(runinfo)
+   ExampleGRoot(TARunInfo* runinfo)
+      : TARunObject(runinfo)
    {
-      printf("ExampleRootGRun::ctor!\n");
-      fModule = m;
+      printf("ExampleGRoot::ctor!\n");
       fCanvas = new TCanvas("example", "example", 500, 500);
       fRndm = new TRandom3(); // recommended random number generator
    }
 
-   ~ExampleRootGRun()
+   ~ExampleGRoot()
    {
-      printf("ExampleRootGRun::dtor!\n");
+      printf("ExampleGRoot::dtor!\n");
       if (fCanvas)
          delete fCanvas;
       fCanvas = NULL;
@@ -73,6 +60,11 @@ struct ExampleRootGRun: public TARunInterface
       printf("ODB Run stop time: %d: %s", (int)run_stop_time, ctime(&run_stop_time));
       hperrun->SaveAs("hperrun.root");
       hperrun->SaveAs("hperrun.pdf");
+   }
+
+   void NextSubrun(TARunInfo* runinfo)
+   {
+      printf("NextSubrun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
    }
 
    void PauseRun(TARunInfo* runinfo)
@@ -106,10 +98,7 @@ struct ExampleRootGRun: public TARunInterface
                printf("event %d, slow %f\n", event->serial_number, v);
                
                hperrun->Fill(v);
-               fModule->htotal->Fill(v);
-               
                fCounter++;
-               fModule->fTotalEventCounter++;
             }
          }
       }
@@ -130,29 +119,27 @@ struct ExampleRootGRun: public TARunInterface
    }
 };
 
-void ExampleRootGModule::Init(const std::vector<std::string> &args)
+class ExampleGRootFactory: public TAFactory
 {
-   printf("Init!\n");
-   fTotalEventCounter = 0;
-   TARootHelper::fgDir->cd(); // select correct ROOT directory
-   htotal = new TH1D("htotal", "htotal", 200, -100, 100);
-}
+public:
+   void Init(const std::vector<std::string> &args)
+   {
+      printf("Init!\n");
+   }
    
-void ExampleRootGModule::Finish()
-{
-   printf("Finish!\n");
-   printf("Counted %d events grand total\n", fTotalEventCounter);
-   htotal->SaveAs("htotal.root");
-   htotal->SaveAs("htotal.pdf");
-}
-   
-TARunInterface* ExampleRootGModule::NewRun(TARunInfo* runinfo)
-{
-   printf("NewRun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
-   return new ExampleRootGRun(runinfo, this);
-}
+   void Finish()
+   {
+      printf("Finish!\n");
+   }
 
-TARegisterModule tarm(new ExampleRootGModule);
+   TARunObject* NewRunObject(TARunInfo* runinfo)
+   {
+      printf("NewRunObject, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
+      return new ExampleGRoot(runinfo);
+   }
+};
+
+static TARegister tar(new ExampleGRootFactory);
 
 /* emacs
  * Local Variables:

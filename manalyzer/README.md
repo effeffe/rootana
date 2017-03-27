@@ -10,7 +10,7 @@ and to correct some of the known problems:
 * the same analysis code can be used online and offline, no dependancies on the MIDAS package
 * the same analysis code can be used in batch mode or in interactive graphical mode
 * correct processing of subrun files
-* better management of life time of ROOT objects (separation of module and run objects)
+* better management of life time for ROOT objects
 
 ### Quick start
 
@@ -54,7 +54,7 @@ TBW
 
 An analyzer for a non-trivial experiment may be quite complicated. To manage this complexity
 one can arrange the code in independant analyzer modules. To communicate results between modules
-one can use normal C++ coding or one can use the flow object described in the next section.
+one can use ordinary C++ coding or one can use the mechanism of flow objects described in the next section.
 
 A typical analyzer module may perform several duties:
 
@@ -63,26 +63,25 @@ A typical analyzer module may perform several duties:
 * prepare to start analyzes, create histogram objects, initialize data structures, load calibrations: in the module's BeginRun() method.
 
 An analyzer may be used to process just one data file, a sequence of data files from the same run (subrun files) or several
-different runs. In this last case, there may be two different types of results (histogram objects, etc): per-run histograms
-and cumulative "all runs" histograms.
+different runs.
 
-To correctly manage the lifetime (creation and destructions) of all these types of data objects,
-the analyzer module is broken into two classes:
-* the "run" class holds data (histograms, canvases, etc) for the run currently being processed. These data is created when the run starts,
-it is destroyed when the run ends and the analyzer framework encourages a coding style where pointers to deleted objects
-will not be accidentally kept and used, leading to memory corruption and crashes.
-* the "module" class holds data that needs to be accumulated across multiple runs. The module "run" object will typically maintain
-a pointer to it's "module" class to access these data.
+To correctly manage the lifetime (creation and destructions) of all data objects,
+the anlayzer uses "run objects".
 
-Other analyzer frameworks did not have this separation of per-run and "global" data, and this encouraged
-the use of global variables. Together with ROOT's idiosyncratic memory management, where
-some ROOT objects "live" inside in normal memory and behave like normal C++ objects while other
+A "run object" holds all the data (histograms, canvases, c++ structures, etc) for the run currently being processed.
+these data are created when the run starts, and are destroyed when the run ends, encouraging a coding style
+where pointers to deleted objects will not be accidentally kept and used, leading to memory corruption and crashes.
+
+The analyzer framework manages (creates and destroys) run objects using the factory pattern. It the typical case,
+the user run object is connected to the framework by creating a TAFactory object (written explicitely
+or using the TAFactoryTemplate<T>) and passing it to the TARegister object via static initialization.
+
+Previous analyzer frameworks did not use this type of "run object" to manage per-run data, and encouraged
+the use of global variables for ROOT file objects, for ROOT histograms, etc. Together with ROOT's idiosyncratic
+emory management, where some ROOT objects "live" inside in normal memory and behave like normal C++ objects while other
 ROOT objects live "inside ROOT file" objects and "vanish" when the ROOT file is closed,
-it makes it very easy to write analyzers that crash at the end of run or crash
-when switching from one run to the next. (a problem for online analyzers).
-
-The present manalyzer scheme was devised mainly to straighten this memory management problem and permit
-more robust online analyzers.
+made it very easy to write analyzers that crash at the end of run or crash
+when switching from one run to the next. (a big problem when writing online analyzers).
 
 ### The flow object
 
@@ -136,6 +135,7 @@ by manipulating the TAFlags:
 
 * when switching from one subrun file to the next subrun file:
     - BeginRun()/EndRun() are not called
+    - NextSubrun() is called with runinfo containing the new subrun file name
     - AnalyzeSpecialEvent() is called twice: once for the ODB dump event in the old subrun file (evid 0x8001) and once for the ODB dump event in the new subrun file (evid 0x8000)
 
 * run end:

@@ -11,33 +11,20 @@
 
 #include "TH1D.h"
 
-class ExampleRootModule: public TAModuleInterface
+struct ExampleRoot: public TARunObject
 {
-public:
-   void Init(const std::vector<std::string> &args);
-   void Finish();
-   TARunInterface* NewRun(TARunInfo* runinfo);
-
-   int fTotalEventCounter;
-   TH1D* htotal;
-};
-
-struct ExampleRootRun: public TARunInterface
-{
-   ExampleRootModule* fModule;
    int fCounter;
    TH1D* hperrun;
    
-   ExampleRootRun(TARunInfo* runinfo, ExampleRootModule* m)
-      : TARunInterface(runinfo)
+   ExampleRoot(TARunInfo* runinfo)
+      : TARunObject(runinfo)
    {
-      printf("ExampleRootRun::ctor!\n");
-      fModule = m;
+      printf("ExampleRoot::ctor!\n");
    }
 
-   ~ExampleRootRun()
+   ~ExampleRoot()
    {
-      printf("ExampleRootRun::dtor!\n");
+      printf("ExampleRoot::dtor!\n");
    }
 
    void BeginRun(TARunInfo* runinfo)
@@ -88,10 +75,7 @@ struct ExampleRootRun: public TARunInterface
       printf("event %d, slow %f\n", event->serial_number, v);
 
       hperrun->Fill(v);
-      fModule->htotal->Fill(v);
-
       fCounter++;
-      fModule->fTotalEventCounter++;
 
       return flow;
    }
@@ -102,29 +86,27 @@ struct ExampleRootRun: public TARunInterface
    }
 };
 
-void ExampleRootModule::Init(const std::vector<std::string> &args)
+class ExampleRootFactory: public TAFactory
 {
-   printf("Init!\n");
-   fTotalEventCounter = 0;
-   TARootHelper::fgDir->cd(); // select correct ROOT directory
-   htotal = new TH1D("htotal", "htotal", 200, -100, 100);
-}
-   
-void ExampleRootModule::Finish()
-{
-   printf("Finish!\n");
-   printf("Counted %d events grand total\n", fTotalEventCounter);
-   htotal->SaveAs("htotal.root");
-   htotal->SaveAs("htotal.pdf");
-}
-   
-TARunInterface* ExampleRootModule::NewRun(TARunInfo* runinfo)
-{
-   printf("NewRun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
-   return new ExampleRootRun(runinfo, this);
-}
+public:
+   void Init(const std::vector<std::string> &args)
+   {
+      printf("Init!\n");
+   }
+      
+   void Finish()
+   {
+      printf("Finish!\n");
+   }
+      
+   TARunObject* NewRunObject(TARunInfo* runinfo)
+   {
+      printf("NewRunObject, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
+      return new ExampleRoot(runinfo);
+   }
+};
 
-TARegisterModule tarm(new ExampleRootModule);
+static TARegister tar(new ExampleRootFactory);
 
 /* emacs
  * Local Variables:

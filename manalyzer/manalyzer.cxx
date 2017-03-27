@@ -20,7 +20,7 @@ static bool gTrace = false;
 //
 //////////////////////////////////////////////////////////
 
-TARunInfo::TARunInfo(int runno, const char* filename)
+TARunInfo::TARunInfo(int runno, const char* filename, const std::vector<std::string>& args)
 {
    if (gTrace)
       printf("TARunInfo::ctor!\n");
@@ -31,6 +31,7 @@ TARunInfo::TARunInfo(int runno, const char* filename)
 #ifdef HAVE_ROOT
    fRoot = new TARootHelper(this);
 #endif
+   fArgs = args;
 }
 
 TARunInfo::~TARunInfo()
@@ -75,69 +76,75 @@ TAFlowEvent::~TAFlowEvent() // dtor
 
 //////////////////////////////////////////////////////////
 //
-// Methods of TARunInterace
+// Methods of TARunObject
 //
 //////////////////////////////////////////////////////////
 
-TARunInterface::TARunInterface(TARunInfo* runinfo)
+TARunObject::TARunObject(TARunInfo* runinfo)
 {
    if (gTrace)
-      printf("TARunInterface::ctor, run %d\n", runinfo->fRunNo);
+      printf("TARunObject::ctor, run %d\n", runinfo->fRunNo);
 }
 
-void TARunInterface::BeginRun(TARunInfo* runinfo)
+void TARunObject::BeginRun(TARunInfo* runinfo)
 {
    if (gTrace)
-      printf("TARunInterface::BeginRun, run %d\n", runinfo->fRunNo);
+      printf("TARunObject::BeginRun, run %d\n", runinfo->fRunNo);
 }
 
-void TARunInterface::EndRun(TARunInfo* runinfo)
+void TARunObject::EndRun(TARunInfo* runinfo)
 {
    if (gTrace)
-      printf("TARunInterface::EndRun, run %d\n", runinfo->fRunNo);
+      printf("TARunObject::EndRun, run %d\n", runinfo->fRunNo);
 }
 
-void TARunInterface::PauseRun(TARunInfo* runinfo)
+void TARunObject::NextSubrun(TARunInfo* runinfo)
 {
    if (gTrace)
-      printf("TARunInterface::PauseRun, run %d\n", runinfo->fRunNo);
+      printf("TARunObject::NextSubrun, run %d\n", runinfo->fRunNo);
 }
 
-void TARunInterface::ResumeRun(TARunInfo* runinfo)
+void TARunObject::PauseRun(TARunInfo* runinfo)
 {
    if (gTrace)
-      printf("TARunInterface::ResumeRun, run %d\n", runinfo->fRunNo);
+      printf("TARunObject::PauseRun, run %d\n", runinfo->fRunNo);
 }
 
-TAFlowEvent* TARunInterface::Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
+void TARunObject::ResumeRun(TARunInfo* runinfo)
 {
    if (gTrace)
-      printf("TARunInterface::Analyze!\n");
+      printf("TARunObject::ResumeRun, run %d\n", runinfo->fRunNo);
+}
+
+TAFlowEvent* TARunObject::Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
+{
+   if (gTrace)
+      printf("TARunObject::Analyze!\n");
    return flow;
 }
 
-void TARunInterface::AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)
+void TARunObject::AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)
 {
    if (gTrace)
-      printf("TARunInterface::AnalyzeSpecialEvent!\n");
+      printf("TARunObject::AnalyzeSpecialEvent!\n");
 }
 
 //////////////////////////////////////////////////////////
 //
-// Methods of TAModuleInterface
+// Methods of TAFactory
 //
 //////////////////////////////////////////////////////////
 
-void TAModuleInterface::Init(const std::vector<std::string> &args)
+void TAFactory::Init(const std::vector<std::string> &args)
 {
    if (gTrace)
-      printf("TAModuleInterface::Init!\n");
+      printf("TAFactory::Init!\n");
 }
 
-void TAModuleInterface::Finish()
+void TAFactory::Finish()
 {
    if (gTrace)
-      printf("TAModuleInterface::Finish!\n");
+      printf("TAFactory::Finish!\n");
 }
 
 #ifdef HAVE_ROOT
@@ -226,16 +233,16 @@ TARootHelper::~TARootHelper() // dtor
 
 //////////////////////////////////////////////////////////
 //
-// Methods of TARegisterModule
+// Methods of TARegister
 //
 //////////////////////////////////////////////////////////
 
-std::vector<TAModuleInterface*> *gModules = NULL;
+std::vector<TAFactory*> *gModules = NULL;
 
-TARegisterModule::TARegisterModule(TAModuleInterface* m)
+TARegister::TARegister(TAFactory* m)
 {
    if (!gModules)
-      gModules = new std::vector<TAModuleInterface*>;
+      gModules = new std::vector<TAFactory*>;
    gModules->push_back(m);
 }
 
@@ -271,11 +278,13 @@ class RunHandler
 {
 public:
    TARunInfo* fRunInfo;
-   std::vector<TARunInterface*> fRunRun;
+   std::vector<TARunObject*> fRunRun;
+   std::vector<std::string>  fArgs;
 
-   RunHandler() // ctor
+   RunHandler(const std::vector<std::string>& args) // ctor
    {
       fRunInfo = NULL;
+      fArgs = args;
    }
 
    ~RunHandler() // dtor
@@ -291,10 +300,10 @@ public:
       assert(fRunInfo == NULL);
       assert(fRunRun.size() == 0);
       
-      fRunInfo = new TARunInfo(run_number, file_name);
+      fRunInfo = new TARunInfo(run_number, file_name, fArgs);
 
       for (unsigned i=0; i<(*gModules).size(); i++)
-         fRunRun.push_back((*gModules)[i]->NewRun(fRunInfo));
+         fRunRun.push_back((*gModules)[i]->NewRunObject(fRunInfo));
    }
 
    void BeginRun()
@@ -311,6 +320,14 @@ public:
       
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->EndRun(fRunInfo);
+   }
+
+   void NextSubrun()
+   {
+      assert(fRunInfo);
+      
+      for (unsigned i=0; i<fRunRun.size(); i++)
+         fRunRun[i]->NextSubrun(fRunInfo);
    }
 
    void DeleteRun()
@@ -373,7 +390,8 @@ public:
    TMWriterInterface* fWriter;
    bool fQuit;
 
-   OnlineHandler(int num_analyze, TMWriterInterface* writer) // ctor
+   OnlineHandler(int num_analyze, TMWriterInterface* writer, const std::vector<std::string>& args) // ctor
+      : fRun(args)
    {
       fQuit = false;
       fNumAnalyze = num_analyze;
@@ -454,7 +472,7 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
       return -1;
    }
 
-   OnlineHandler* h = new OnlineHandler(num_analyze, writer);
+   OnlineHandler* h = new OnlineHandler(num_analyze, writer, args);
 
    midas->RegisterHandler(h);
    midas->registerTransitions();
@@ -510,7 +528,7 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Init(args);
 
-   RunHandler run;
+   RunHandler run(args);
 
    bool done = false;
 
@@ -544,6 +562,7 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
                   if (run.fRunInfo->fRunNo == runno) {
                      // next subrun file, nothing to do
                      run.fRunInfo->fFileName = filename;
+                     run.NextSubrun();
                   } else {
                      // file with a different run number
                      run.EndRun();
@@ -672,45 +691,50 @@ static int ShowMem(const char* label)
 }
 #endif
 
-class EventDumpRun: public TARunInterface
+class EventDumpModule: public TARunObject
 {
 public:
-   EventDumpRun(TARunInfo* runinfo)
-      : TARunInterface(runinfo)
+   EventDumpModule(TARunInfo* runinfo)
+      : TARunObject(runinfo)
    {
       if (gTrace)
-         printf("EventDumpRun::ctor, run %d\n", runinfo->fRunNo);
+         printf("EventDumpModule::ctor, run %d\n", runinfo->fRunNo);
    }
    
-   ~EventDumpRun()
+   ~EventDumpModule()
    {
       if (gTrace)
-         printf("EventDumpRun::dtor!\n");
+         printf("EventDumpModule::dtor!\n");
    }
 
    void BeginRun(TARunInfo* runinfo)
    {
-      printf("EventDumpRun::BeginRun, run %d\n", runinfo->fRunNo);
+      printf("EventDumpModule::BeginRun, run %d\n", runinfo->fRunNo);
    }
 
    void EndRun(TARunInfo* runinfo)
    {
-      printf("EventDumpRun::EndRun, run %d\n", runinfo->fRunNo);
+      printf("EventDumpModule::EndRun, run %d\n", runinfo->fRunNo);
+   }
+
+   void NextSubrun(TARunInfo* runinfo)
+   {
+      printf("EventDumpModule::NextSubrun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
    }
 
    void PauseRun(TARunInfo* runinfo)
    {
-      printf("EventDumpRun::PauseRun, run %d\n", runinfo->fRunNo);
+      printf("EventDumpModule::PauseRun, run %d\n", runinfo->fRunNo);
    }
 
    void ResumeRun(TARunInfo* runinfo)
    {
-      printf("EventDumpRun::ResumeRun, run %d\n", runinfo->fRunNo);
+      printf("EventDumpModule::ResumeRun, run %d\n", runinfo->fRunNo);
    }
 
    TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
    {
-      printf("EventDumpRun::Analyze, run %d, ", runinfo->fRunNo);
+      printf("EventDumpModule::Analyze, run %d, ", runinfo->fRunNo);
       event->FindAllBanks();
       std::string h = event->HeaderToString();
       std::string b = event->BankListToString();
@@ -720,31 +744,31 @@ public:
 
    void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)
    {
-      printf("EventDumpRun::AnalyzeSpecialEvent, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
+      printf("EventDumpModule::AnalyzeSpecialEvent, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
    }
 };
 
-class EventDumpModule: public TAModuleInterface
+class EventDumpModuleFactory: public TAFactory
 {
 public:
 
    void Init(const std::vector<std::string> &args)
    {
       if (gTrace)
-         printf("EventDumpModule::Init!\n");
+         printf("EventDumpModuleFactory::Init!\n");
    }
    
    void Finish()
    {
       if (gTrace)
-         printf("EventDumpModule::Finish!\n");
+         printf("EventDumpModuleFactory::Finish!\n");
    }
    
-   TARunInterface* NewRun(TARunInfo* runinfo)
+   TARunObject* NewRunObject(TARunInfo* runinfo)
    {
       if (gTrace)
-         printf("EventDumpModule::NewRun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
-      return new EventDumpRun(runinfo);
+         printf("EventDumpModuleFactory::NewRunObject, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
+      return new EventDumpModule(runinfo);
    }
 };
 
@@ -953,7 +977,7 @@ public:
 };
 #endif
 
-class InteractiveRun: public TARunInterface
+class InteractiveModule: public TARunObject
 {
 public:
    bool fContinue;
@@ -963,11 +987,11 @@ public:
    static MainWindow *fgCtrlWindow;
 #endif
    
-   InteractiveRun(TARunInfo* runinfo)
-      : TARunInterface(runinfo)
+   InteractiveModule(TARunInfo* runinfo)
+      : TARunObject(runinfo)
    {
       if (gTrace)
-         printf("InteractiveRun::ctor, run %d\n", runinfo->fRunNo);
+         printf("InteractiveModule::ctor, run %d\n", runinfo->fRunNo);
       fContinue = false;
       fSkip = 0;
 #ifdef HAVE_ROOT
@@ -979,20 +1003,20 @@ public:
 #endif
    }
    
-   ~InteractiveRun()
+   ~InteractiveModule()
    {
       if (gTrace)
-         printf("InteractiveRun::dtor!\n");
+         printf("InteractiveModule::dtor!\n");
    }
 
    void BeginRun(TARunInfo* runinfo)
    {
-      printf("InteractiveRun::BeginRun, run %d\n", runinfo->fRunNo);
+      printf("InteractiveModule::BeginRun, run %d\n", runinfo->fRunNo);
    }
 
    void EndRun(TARunInfo* runinfo)
    {
-      printf("InteractiveRun::EndRun, run %d\n", runinfo->fRunNo);
+      printf("InteractiveModule::EndRun, run %d\n", runinfo->fRunNo);
 
 #ifdef HAVE_ROOT
       if (fgCtrlWindow && runinfo->fRoot->fgApp) {
@@ -1034,17 +1058,17 @@ public:
 
    void PauseRun(TARunInfo* runinfo)
    {
-      printf("InteractiveRun::PauseRun, run %d\n", runinfo->fRunNo);
+      printf("InteractiveModule::PauseRun, run %d\n", runinfo->fRunNo);
    }
 
    void ResumeRun(TARunInfo* runinfo)
    {
-      printf("InteractiveRun::ResumeRun, run %d\n", runinfo->fRunNo);
+      printf("InteractiveModule::ResumeRun, run %d\n", runinfo->fRunNo);
    }
 
    TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
    {
-      printf("InteractiveRun::Analyze, run %d, %s\n", runinfo->fRunNo, event->HeaderToString().c_str());
+      printf("InteractiveModule::Analyze, run %d, %s\n", runinfo->fRunNo, event->HeaderToString().c_str());
 
 #ifdef HAVE_ROOT
       if (fgCtrl->fValue == CTRL_QUIT) {
@@ -1143,34 +1167,34 @@ public:
    void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)
    {
       if (gTrace)
-         printf("InteractiveRun::AnalyzeSpecialEvent, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
+         printf("InteractiveModule::AnalyzeSpecialEvent, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
    }
 };
 
-MainWindow* InteractiveRun::fgCtrlWindow = NULL;
-XCtrl* InteractiveRun::fgCtrl = NULL;
+MainWindow* InteractiveModule::fgCtrlWindow = NULL;
+XCtrl* InteractiveModule::fgCtrl = NULL;
 
-class InteractiveModule: public TAModuleInterface
+class InteractiveModuleFactory: public TAFactory
 {
 public:
 
    void Init(const std::vector<std::string> &args)
    {
       if (gTrace)
-         printf("InteractiveModule::Init!\n");
+         printf("InteractiveModuleFactory::Init!\n");
    }
    
    void Finish()
    {
       if (gTrace)
-         printf("InteractiveModule::Finish!\n");
+         printf("InteractiveModuleFactory::Finish!\n");
    }
    
-   TARunInterface* NewRun(TARunInfo* runinfo)
+   TARunObject* NewRunObject(TARunInfo* runinfo)
    {
       if (gTrace)
-         printf("InteractiveModule::NewRun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
-      return new InteractiveRun(runinfo);
+         printf("InteractiveModuleFactory::NewRunObject, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
+      return new InteractiveModule(runinfo);
    }
 };
 
@@ -1283,16 +1307,16 @@ int manalyzer_main(int argc, char *argv[])
    }
 
    if (!gModules)
-      gModules = new std::vector<TAModuleInterface*>;
+      gModules = new std::vector<TAFactory*>;
 
    if ((*gModules).size() == 0)
       event_dump = true;
 
    if (event_dump)
-      (*gModules).push_back(new EventDumpModule);
+      (*gModules).push_back(new EventDumpModuleFactory);
 
    if (interactive)
-      (*gModules).push_back(new InteractiveModule);
+      (*gModules).push_back(new InteractiveModuleFactory);
 
    printf("Registered modules: %d\n", (int)(*gModules).size());
 

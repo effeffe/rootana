@@ -33,64 +33,48 @@ public:
    }
 };
 
-class ExampleModule1: public TAModuleInterface
+class Example1: public TARunObject
 {
 public:
-   TARunInterface* NewRun(TARunInfo* runinfo);
-};
-
-class ExampleModule2: public TAModuleInterface
-{
-public:
-   TARunInterface* NewRun(TARunInfo* runinfo);
-};
-
-class ExampleRun1: public TARunInterface
-{
-public:
-   ExampleRun1(TARunInfo* runinfo, ExampleModule1 *m)
-      : TARunInterface(runinfo)
+   Example1(TARunInfo* runinfo)
+      : TARunObject(runinfo)
    {
-      printf("ExampleRun1::ctor, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
-      fModule = m;
+      printf("Example1::ctor, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
    }
 
-   ~ExampleRun1()
+   ~Example1()
    {
-      printf("ExampleRun1::dtor!\n");
+      printf("Example1::dtor!\n");
    }
   
    TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
    {
-      printf("ExampleRun1::Analyze, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
+      printf("Example1::Analyze, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
 
       flow = new Object1(flow, 10);
       flow = new Object2(flow, "some text");
 
       return flow;
    }
-
-   ExampleModule1* fModule;
 };
 
-class ExampleRun2: public TARunInterface
+class Example2: public TARunObject
 {
 public:
-   ExampleRun2(TARunInfo* runinfo, ExampleModule2 *m)
-      : TARunInterface(runinfo)
+   Example2(TARunInfo* runinfo)
+      : TARunObject(runinfo)
    {
-      printf("ExampleRun2::ctor, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
-      fModule = m;
+      printf("Example2::ctor, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
    }
 
-   ~ExampleRun2()
+   ~Example2()
    {
-      printf("ExampleRun2::dtor!\n");
+      printf("Example2::dtor!\n");
    }
   
    TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
    {
-      printf("ExampleRun2::Analyze, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
+      printf("Example2::Analyze, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
 
       // example iterating over flow events
 
@@ -127,22 +111,10 @@ public:
 
       return flow;
    }
-
-   ExampleModule2* fModule;
 };
 
-TARunInterface* ExampleModule1::NewRun(TARunInfo* runinfo)
-{
-   return new ExampleRun1(runinfo, this);
-}
-
-TARunInterface* ExampleModule2::NewRun(TARunInfo* runinfo)
-{
-   return new ExampleRun2(runinfo, this);
-}
-
-TARegisterModule tarm1(new ExampleModule1);
-TARegisterModule tarm2(new ExampleModule2);
+static TARegister tar1(new TAFactoryTemplate<Example1>);
+static TARegister tar2(new TAFactoryTemplate<Example2>);
 
 /* emacs
  * Local Variables:

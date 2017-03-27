@@ -19,9 +19,10 @@ class TARunInfo
    std::string fFileName;
    VirtualOdb* fOdb;
    TARootHelper* fRoot;
+   std::vector<std::string> fArgs;
 
  public:
-   TARunInfo(int runno, const char* filename);
+   TARunInfo(int runno, const char* filename, const std::vector<std::string>& args);
    ~TARunInfo();
 
  private:
@@ -60,15 +61,16 @@ typedef int TAFlags;
 #define TAFlag_WRITE   (1<<2)
 #define TAFlag_DISPLAY (1<<3)
 
-class TARunInterface
+class TARunObject
 {
  public:
-   TARunInterface(TARunInfo* runinfo); // ctor
-   virtual ~TARunInterface() {}; // dtor
+   TARunObject(TARunInfo* runinfo); // ctor
+   virtual ~TARunObject() {}; // dtor
 
  public:
    virtual void BeginRun(TARunInfo* runinfo); // begin of run
    virtual void EndRun(TARunInfo* runinfo); // end of run
+   virtual void NextSubrun(TARunInfo* runinfo); // next subrun file
 
    virtual void PauseRun(TARunInfo* runinfo); // pause of run (if online)
    virtual void ResumeRun(TARunInfo* runinfo); // resume of run (if online)
@@ -77,27 +79,35 @@ class TARunInterface
    virtual void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event);
 
  private:
-   TARunInterface(); // hidden default constructor
+   TARunObject(); // hidden default constructor
 };
 
-class TAModuleInterface
+class TAFactory
 {
  public:
-   TAModuleInterface() {}; // ctor
-   virtual ~TAModuleInterface() {}; // dtor
+   TAFactory() {}; // ctor
+   virtual ~TAFactory() {}; // dtor
 
  public:
-   virtual TARunInterface* NewRun(TARunInfo* runinfo) = 0; // factory for module-specific Run objects
+   virtual TARunObject* NewRunObject(TARunInfo* runinfo) = 0; // factory for Run objects
 
  public:
    virtual void Init(const std::vector<std::string> &args); // start of analysis
    virtual void Finish(); // end of analysis
 };
 
-class TARegisterModule
+template<class T> class TAFactoryTemplate: public TAFactory
+{
+   T* NewRunObject(TARunInfo* runinfo)
+   {
+      return new T(runinfo);
+   }
+};
+
+class TARegister
 {
  public:
-   TARegisterModule(TAModuleInterface* m);
+   TARegister(TAFactory* m);
    //static void Register(TAModuleInterface* m);
    //static std::vector<TAModuleInterface*>* fgModules;
    //static std::vector<TAModuleInterface*>* Get() const;
