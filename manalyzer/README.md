@@ -2,23 +2,39 @@
 
 ### Introduction
 
-The new MIDAS analyzer was written with explicit goals in mind:
+The new MIDAS analyzer was written to combine the good ideas from the existing analyzers
+and to correct some of the known problems:
 
 * preserve the idea of a modular analyzer (from the old MIDAS analyzer mana.c)
 * preserve the idea of "data flow" (from the "flow analyzer")
 * the same analysis code can be used online and offline, no dependancies on the MIDAS package
 * the same analysis code can be used in batch mode or in interactive graphical mode
+* correct processing of subrun files
 * better management of life time of ROOT objects (separation of module and run objects)
 
 ### Quick start
 
-TBW - explain:
+TBW - explain creating of analyzer:
 
 * copy example, copy Makefile, copy manalyzer_main.
 * create histograms in the BeginRun() method
 * save results in the EndRun() method
 * process data and fill histograms in the Analyze() method
 * extract midas data banks like this: TBW
+
+TBW - explain running of analyzer:
+
+* invoke as "./ana.exe runNNNsub*.mid.gz"
+* ROOT output file "outputNNN.root" is created
+* histograms booked in BeginRun() "live" inside this ROOT output file (by default)
+* book histograms in the Analyze() method
+* do final computations (fit histograms, etc) in EndRun()
+* ROOT output file is closed
+* module "run object" is destroyed
+* after the ROOT output file is closed, histograms created "inside the ROOT output file" vanish,
+but no user analysis code is called after EndRun() making is impossible to crash on trying to use
+the vanished objects.
+* if desired, one can place ROOT objects into the ROOT memory instead of the ROOT output file
 
 ### ROOT Web server
 
@@ -36,13 +52,64 @@ TBW
 
 ### Concept of analyzer module
 
-TBW (explain separation of module and run objects)
+An analyzer for a non-trivial experiment may be quite complicated. To manage this complexity
+one can arrange the code in independant analyzer modules. To communicate results between modules
+one can use normal C++ coding or one can use the flow object described in the next section.
+
+A typical analyzer module may perform several duties:
+
+* extract data from a MIDAS event data bank, perform some computations, fill histograms: this is done in the module's Analyze() method.
+* perform final computations, save results: this is done in the module's EndRun() method.
+* prepare to start analyzes, create histogram objects, initialize data structures, load calibrations: in the module's BeginRun() method.
+
+An analyzer may be used to process just one data file, a sequence of data files from the same run (subrun files) or several
+different runs. In this last case, there may be two different types of results (histogram objects, etc): per-run histograms
+and cumulative "all runs" histograms.
+
+To correctly manage the lifetime (creation and destructions) of all these types of data objects,
+the analyzer module is broken into two classes:
+* the "run" class holds data (histograms, canvases, etc) for the run currently being processed. These data is created when the run starts,
+it is destroyed when the run ends and the analyzer framework encourages a coding style where pointers to deleted objects
+will not be accidentally kept and used, leading to memory corruption and crashes.
+* the "module" class holds data that needs to be accumulated across multiple runs. The module "run" object will typically maintain
+a pointer to it's "module" class to access these data.
+
+Other analyzer frameworks did not have this separation of per-run and "global" data, and this encouraged
+the use of global variables. Together with ROOT's idiosyncratic memory management, where
+some ROOT objects "live" inside in normal memory and behave like normal C++ objects while other
+ROOT objects live "inside ROOT file" objects and "vanish" when the ROOT file is closed,
+it makes it very easy to write analyzers that crash at the end of run or crash
+when switching from one run to the next. (a problem for online analyzers).
+
+The present manalyzer scheme was devised mainly to straighten this memory management problem and permit
+more robust online analyzers.
 
 ### The flow object
 
-TBW (explain how to use the flow object to pass data between modules)
+An analyzer for a non-trivial experiment may have several analyzer modules
+performing different tasks separately (an ADC module may unpack and calibrate ADC data, a TDC module
+may unpack and sort TDC data). Result of these modules is often C++ classes (array of ADC pulse heights,
+array of TDC hit times). To pass these C++ objects to the next analyzer module where these data can be
+ombined together, one can use the "flow event". (as the bank structure of MIDAS events is inconvinient
+or handling C++ objects).
+
+C++ objects that will be passed between modules should extend the class TAFlowEvent
+(as demonstrated by Object1 and Object2 in manalyzer_example_flow.cxx). The TAFlowEvent object
+maintains a simple linked list of all flow objects. Each module Analyze() method has access
+to all existing flow objects and can add new flow objects as desired. The flow event and all the flow objects
+are automatically deleted after the last analyzer module Analyze() method is completed.
+
+Here is some examples taken from manalyzer_example_flow.cxx:
+
+* define a flow object: class Object2 : public TAFlowEvent { public: std::string fStringValue; ... };
+* add flow object: flow = new Object2(flow, "some text");
+* get a specific object (by C++ class type): Object2* o2 = flow->Find<Object2>();
+* loop over all objects: TAFlowEvent* f = flow; while (f) { Object1* o1 = dynamic_cast<Object1*>(f); if (o1) { ... }; f = f->fNext; }
 
 ### Event analysis flags
+
+The user analysis code in the Analyze() method can influence data processing by the manalyzer framework
+by manipulating the TAFlags:
 
 * TAFlag_OK - all is good
 * TAFlag_SKIP - tells manalyzer to skip processing of this event by subsequent modules (for implementing "filter" modules)
@@ -146,7 +213,7 @@ TBW
 
 TBW
 
-### The interative display module
+### The interactive display module
 
 TBW
 

@@ -16,7 +16,9 @@
 #include "TMidasFile.h"
 #include "TMidasEvent.h"
 #ifdef HAVE_ROOT
+#ifdef HAVE_ROOT_XML
 #include "XmlOdb.h"
+#endif
 #include "HttpOdb.h"
 #endif
 
@@ -63,7 +65,7 @@ int main(int argc, char *argv[])
      }
    else if (xmlfile)
      {
-#ifdef HAVE_ROOT
+#ifdef HAVE_ROOT_XML
        XmlOdb* odb = new XmlOdb(filename);
        //odb->DumpTree();
        gOdb = odb;
@@ -112,9 +114,15 @@ int main(int argc, char *argv[])
                //
                // Load ODB contents from the ODB XML file
                //
-               if (gOdb)
+               if (gOdb) {
                  delete gOdb;
+                 gOdb = NULL;
+               }
+#ifdef HAVE_ROOT_XML
                gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
+#else
+               printf("This program is compiled without support for XML ODB access\n");
+#endif
                break;
              }
          }

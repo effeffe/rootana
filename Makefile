@@ -119,19 +119,15 @@ OBJS += obj/TDataContainer.o
 OBJS += obj/TPeriodicClass.o
 OBJS += obj/TV792Data.o
 OBJS += obj/TV1190Data.o
-OBJS += obj/TV1190Data.o
 OBJS += obj/TV1720RawData.o
 OBJS += obj/TV1730DppData.o
 OBJS += obj/TV1730RawData.o
 OBJS += obj/TDT724RawData.o
-OBJS += obj/TV792Data.o
 OBJS += obj/TL2249Data.o
 OBJS += obj/TMesytecData.o
 
 OBJS += obj/TRootanaDisplay.o
 OBJS += obj/TMainDisplayWindow.o
-OBJS += obj/TRootanaDisplay.o
-OBJS += obj/TRootanaDisplay.o
 OBJS += obj/TSimpleExampleCanvas.o
 OBJS += obj/TComplicatedExampleCanvas.o
 OBJS += obj/TInterestingEventManager.o
@@ -209,7 +205,6 @@ OBJS += obj/lz4.o
 OBJS += obj/lz4hc.o
 OBJS += obj/xxhash.o
 OBJS += obj/lz4frame.o
-OBJS += obj/midasio.o
 OBJS += obj/manalyzer.o
 
 all: $(ALL)

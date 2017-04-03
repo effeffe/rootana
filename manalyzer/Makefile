@@ -24,8 +24,10 @@ endif
 
 # get the rootana Makefile settings
 
-CXXFLAGS += -I$(ROOTANASYS)/include $(shell cat $(ROOTANASYS)/include/rootana_cflags.txt)
-LIBS     += -L$(ROOTANASYS)/lib -lrootana $(shell cat $(ROOTANASYS)/include/rootana_libs.txt)
+CXXFLAGS   += -I$(ROOTANASYS)/include $(shell cat $(ROOTANASYS)/include/rootana_cflags.txt)
+ROOTANALIB += $(ROOTANASYS)/lib/librootana.a
+LIBS       += $(ROOTANALIB)
+LIBS       += $(shell cat $(ROOTANASYS)/include/rootana_libs.txt)
 
 # select the main program - local custom main()
 # or standard main() from rootana
@@ -55,10 +57,10 @@ all:: $(ALL)
 %.exe: %.o manalyzer_main.o
 	$(CXX) -o $@ manalyzer_main.o $< $(CXXFLAGS) $(LIBS) -lm -lz -lpthread
 
-$(EXAMPLE_ALL): %.exe:
+$(EXAMPLE_ALL): %.exe: $(ROOTANALIB)
 	$(CXX) -o $@ $(ROOTANASYS)/obj/manalyzer_main.o $< $(CXXFLAGS) $(LIBS) -lm -lz -lpthread
 
-%.exe: $(MAIN) $(MODULES)
+%.exe: $(MAIN) $(MODULES) $(ROOTANALIB)
 	$(CXX) -o $@ $(MAIN) $(MODULES) $(CXXFLAGS) $(LIBS) -lm -lz -lpthread
 
 %.o: %.cxx
