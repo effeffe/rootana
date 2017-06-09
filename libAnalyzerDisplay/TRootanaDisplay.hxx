@@ -171,7 +171,7 @@ public:
     return false;
   }
   void UsageRAD(){
-    printf("\t-s: will process specified number of events before displaying (for display programs)\n");
+    printf("\t-sYYY: will process YYY events before displaying (for display programs)\n");
     printf("\t-S: will process all events of a run before displaying (for display programs)\n");
   }
 
