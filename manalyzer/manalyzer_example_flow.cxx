@@ -33,6 +33,26 @@ public:
    }
 };
 
+class Object3 : public TAFlowEvent
+{
+public:
+   double* fPtrValue;
+
+   Object3(TAFlowEvent* flow, double* doublePtr)
+      : TAFlowEvent(flow)
+   {
+      fPtrValue = doublePtr;
+   }
+
+   ~Object3() // dtor
+   {
+      if (fPtrValue) {
+         delete fPtrValue;
+         fPtrValue = NULL;
+      }
+   }
+};
+
 class Example1: public TARunObject
 {
 public:
@@ -72,9 +92,35 @@ public:
       printf("Example2::dtor!\n");
    }
   
+   void PreEndRun(TARunInfo* runinfo, std::deque<TAFlowEvent*>* flow_queue)
+   {
+      TAFlowEvent* flow = NULL;
+      
+      printf("Example2::PreEndRun, run %d\n", runinfo->fRunNo);
+
+      double *dptr = new double;
+      *dptr = 17.1;
+      
+      flow = new Object3(flow, dptr);
+
+      flow_queue->push_back(flow);
+   }
+      
    TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
    {
       printf("Example2::Analyze, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
+
+      double *dptr = new double;
+      *dptr = 3.14;
+      
+      flow = new Object3(flow, dptr);
+
+      return flow;
+   }
+      
+   TAFlowEvent* AnalyzeFlowEvent(TARunInfo* runinfo, TAFlags* flags, TAFlowEvent* flow)
+   {
+      printf("Example2::AnalyzeFlowEvent, run %d\n", runinfo->fRunNo);
 
       // example iterating over flow events
 
@@ -83,14 +129,18 @@ public:
          while (f) {
             Object1* o1 = dynamic_cast<Object1*>(f);
             Object2* o2 = dynamic_cast<Object2*>(f);
+            Object3* o3 = dynamic_cast<Object3*>(f);
 
-            printf("flow event %p, o1: %p, o2: %p\n", f, o1, o2);
+            printf("flow event %p, o1: %p, o2: %p, o3: %p\n", f, o1, o2, o3);
 
             if (o1)
                printf("object1 int value: %d\n", o1->fIntValue);
             
             if (o2)
                printf("object2 string value: %s\n", o2->fStringValue.c_str());
+            
+            if (o3)
+               printf("object3 pointer to double value: %f\n", *o3->fPtrValue);
             
             f = f->fNext;
          }
@@ -101,12 +151,16 @@ public:
       if (flow) {
          Object1* o1 = flow->Find<Object1>();
          Object2* o2 = flow->Find<Object2>();
+         Object3* o3 = flow->Find<Object3>();
 
          if (o1)
             printf("find object1 int value: %d\n", o1->fIntValue);
          
          if (o2)
             printf("find object2 string value: %s\n", o2->fStringValue.c_str());
+
+         if (o3)
+            printf("find object3 pointer to double value: %f\n", *o3->fPtrValue);
       }
 
       return flow;

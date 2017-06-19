@@ -116,7 +116,20 @@ void TARunObject::ResumeRun(TARunInfo* runinfo)
       printf("TARunObject::ResumeRun, run %d\n", runinfo->fRunNo);
 }
 
+void TARunObject::PreEndRun(TARunInfo* runinfo, std::deque<TAFlowEvent*>* flow_queue)
+{
+   if (gTrace)
+      printf("TARunObject::PreEndRun, run %d\n", runinfo->fRunNo);
+}
+
 TAFlowEvent* TARunObject::Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
+{
+   if (gTrace)
+      printf("TARunObject::Analyze!\n");
+   return flow;
+}
+
+TAFlowEvent* TARunObject::AnalyzeFlowEvent(TARunInfo* runinfo, TAFlags* flags, TAFlowEvent* flow)
 {
    if (gTrace)
       printf("TARunObject::Analyze!\n");
@@ -317,7 +330,27 @@ public:
    void EndRun()
    {
       assert(fRunInfo);
+
+      std::deque<TAFlowEvent*> flow_queue;
       
+      for (unsigned i=0; i<fRunRun.size(); i++)
+         fRunRun[i]->PreEndRun(fRunInfo, &flow_queue);
+
+      while (!flow_queue.empty()) {
+         TAFlowEvent* flow = flow_queue.front();
+         flow_queue.pop_front();
+
+         int flags = 0;
+
+         for (unsigned i=0; i<fRunRun.size(); i++) {
+            flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, &flags, flow);
+            if (flags & TAFlag_SKIP)
+               break;
+         }
+
+         delete flow;
+      }
+
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->EndRun(fRunInfo);
    }
@@ -363,6 +396,12 @@ public:
          flow = fRunRun[i]->Analyze(fRunInfo, event, flags, flow);
          if (*flags & TAFlag_SKIP)
             break;
+      }
+      
+      for (unsigned i=0; i<fRunRun.size(); i++) {
+         if (*flags & TAFlag_SKIP)
+            break;
+         flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
       }
       
       if (*flags & TAFlag_WRITE)

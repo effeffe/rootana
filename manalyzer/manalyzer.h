@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <deque>
 
 #include "rootana_config.h"
 #include "midasio.h"
@@ -75,7 +76,10 @@ class TARunObject
    virtual void PauseRun(TARunInfo* runinfo); // pause of run (if online)
    virtual void ResumeRun(TARunInfo* runinfo); // resume of run (if online)
 
+   virtual void PreEndRun(TARunInfo* runinfo, std::deque<TAFlowEvent*>* flow_queue); // generate flow events before end of run
+
    virtual TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow);
+   virtual TAFlowEvent* AnalyzeFlowEvent(TARunInfo* runinfo, TAFlags* flags, TAFlowEvent* flow);
    virtual void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event);
 
  private:
