@@ -66,7 +66,7 @@ An analyzer may be used to process just one data file, a sequence of data files 
 different runs.
 
 To correctly manage the lifetime (creation and destructions) of all data objects,
-the anlayzer uses "run objects".
+the analyzer uses "run objects".
 
 A "run object" holds all the data (histograms, canvases, c++ structures, etc) for the run currently being processed.
 these data are created when the run starts, and are destroyed when the run ends, encouraging a coding style
@@ -105,6 +105,32 @@ Here is some examples taken from manalyzer_example_flow.cxx:
 * get a specific object (by C++ class type): Object2* o2 = flow->Find<Object2>();
 * loop over all objects: TAFlowEvent* f = flow; while (f) { Object1* o1 = dynamic_cast<Object1*>(f); if (o1) { ... }; f = f->fNext; }
 
+If desired, one can use the function AnalyzeFlowEvent() to separate the analysis of flow events
+from the analysis of MIDAS events. For example, one can unpack MIDAS data banks into C++ structures
+stored in a flow event in the function Analyze() of one module and process the data and fill the histograms
+in the function AnalyzeFlowEvent() of a different module (separate data unpacking module and data
+analysis module).
+
+### The PreEndRun method
+
+Sometimes physics events need to be generated and processed at the end of a run after all
+midas events have already been processed, after the last Analyze() call, but before
+the final EndRun() call.
+
+This happens when MIDAS midas events contain a continuous stream of data
+and the stream unpacker has to maintain a buffer of incomplete data between Analyze() calls.
+
+This also happens when the analyzer contains an event builder component which may contain
+a buffer for incomplete or pending physics events.
+
+To ensure that all of this buffered data is analyzed and no unprocessed data is left behind,
+use the method PreEndRun().
+
+It is called before the final EndRun() and it gives the analysis module an opportunuty to generate
+any number of flow events (via push_back() into an std::deque). After calling PreEndRun()
+for all modules, the accumulated flow events are processed by calling AnalyzeFlowEvent()
+similar to processing normal flow events.
+
 ### Event analysis flags
 
 The user analysis code in the Analyze() method can influence data processing by the manalyzer framework
@@ -131,7 +157,8 @@ by manipulating the TAFlags:
     - call run AnalyzeSpecialEvent() methods for the ODB dump event (evid 0x8000)
 
 * for each event:
-    - call run Analyze() methods
+    - call run Analyze() methods, which may generate a flow event
+    - if there is a flow event, call run AnalyzeFlowEvent methods
 
 * when switching from one subrun file to the next subrun file:
     - BeginRun()/EndRun() are not called
@@ -140,6 +167,8 @@ by manipulating the TAFlags:
 
 * run end:
     - call run AnalyzeSpecialEvent() methods for the ODB dump event (evid 0x8001)
+    - call run PreEndRun() methods, which may generate flow events
+    - if there are flow events, call run AnalyzeFlowEvent methods
     - call run EndRun() methods
     - call run destructors
 

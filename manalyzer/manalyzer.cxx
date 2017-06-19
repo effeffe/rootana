@@ -397,11 +397,13 @@ public:
          if (*flags & TAFlag_SKIP)
             break;
       }
-      
-      for (unsigned i=0; i<fRunRun.size(); i++) {
-         if (*flags & TAFlag_SKIP)
-            break;
-         flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
+
+      if (flow && !(*flags & TAFlag_SKIP)) {
+         for (unsigned i=0; i<fRunRun.size(); i++) {
+            flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
+            if (*flags & TAFlag_SKIP)
+               break;
+         }
       }
       
       if (*flags & TAFlag_WRITE)
