@@ -993,6 +993,43 @@ public:
    void EndRun(TARunInfo* runinfo)
    {
       printf("InteractiveRun::EndRun, run %d\n", runinfo->fRunNo);
+
+#ifdef HAVE_ROOT
+      if (fgCtrlWindow && runinfo->fRoot->fgApp) {
+         while (1) {
+#ifdef HAVE_THTTP_SERVER
+            if (TARootHelper::fgHttpServer) {
+               TARootHelper::fgHttpServer->ProcessRequests();
+            }
+#endif
+#ifdef HAVE_ROOT
+            if (TARootHelper::fgApp) {
+               gSystem->DispatchOneEvent(kTRUE);
+            }
+#endif
+#ifdef HAVE_MIDAS
+            if (!TMidasOnline::instance()->sleep(10)) {
+               // FIXME: indicate that we should exit the analyzer
+               return;
+            }
+#else
+            gSystem->Sleep(10);
+#endif
+
+            int ctrl = fgCtrl->fValue;
+            fgCtrl->fValue = 0;
+
+            switch (ctrl) {
+            case CTRL_QUIT:
+               return;
+            case CTRL_NEXT:
+               return;
+            case CTRL_CONTINUE:
+               return;
+            }
+         }
+      }
+#endif
    }
 
    void PauseRun(TARunInfo* runinfo)

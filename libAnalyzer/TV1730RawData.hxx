@@ -13,14 +13,14 @@ class RawChannelMeasurement {
 
 public:
   
-	int GetNSamples(){
+	const int GetNSamples(){
 		return  fSamples.size();
 	}
 	
-	int GetChannel(){ return fChan;}
+	const int GetChannel(){ return fChan;}
 
-  /// Get Errors
-  uint32_t GetSample(int i){
+        /// Get Errors
+        const uint32_t GetSample(int i){
 		if(i >= 0 && i < fSamples.size())
 			return fSamples[i];
 		return 9999999;
