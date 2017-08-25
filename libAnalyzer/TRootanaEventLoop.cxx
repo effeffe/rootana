@@ -44,7 +44,7 @@ bool gUseOnlyRecent;
 
 void PrintCurrentStats(){
 
-  if((raTotalEventsProcessed%500)==0){
+  if((raTotalEventsProcessed%5000)==0){
     if(raTotalEventsProcessed==0){
       gettimeofday(&raLastTime, NULL);
     }else{
@@ -55,8 +55,8 @@ void PrintCurrentStats(){
       double dtime = nowTime.tv_sec - raLastTime.tv_sec + (nowTime.tv_usec - raLastTime.tv_usec)/1000000.0;
       double rate = 0;
       if (dtime !=0)
-        rate = 500.0/(dtime);
-      printf("Processed %d events.  Analysis rate = %f events/seconds. \n",raTotalEventsProcessed,rate);
+        rate = 5.0/(dtime);
+      printf("Processed %d events.  Analysis rate = %6.3fkHz. \n",raTotalEventsProcessed,rate);
       gettimeofday(&raLastTime, NULL);
 
       if(gUseOnlyRecent){
@@ -169,6 +169,7 @@ void TRootanaEventLoop::PrintHelp(){
   printf("\n");
   printf("\t-h: print this help message\n");
   printf("\t-T: test mode - start and serve a test histogram\n");
+  printf("\t-D: Become a daemon\n");
   printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
   printf("\t-Eexptname: connect to this MIDAS experiment\n");
   printf("\t-bbuffer: connect to this MIDAS buffer\n");
@@ -186,6 +187,48 @@ void TRootanaEventLoop::PrintHelp(){
   printf("Example2: analyze existing data: ./analyzer.exe /data/alpha/current/run00500.mid\n");
 
   exit(1);
+}
+
+// Stolen from MIDAS...
+// returns 1 = success, 0 = failure
+// copied almost completely from MIDAS system.c
+int ss_daemon_init(){
+
+  bool keep_stdout = false;
+#ifdef OS_LINUX
+
+   /* only implemented for UNIX */
+   int i, fd, pid;
+
+   if ((pid = fork()) < 0)
+      return 0;
+   else if (pid != 0)
+      exit(0);                  /* parent finished */
+
+   /* child continues here */
+
+   /* try and use up stdin, stdout and stderr, so other
+      routines writing to stdout etc won't cause havoc. Copied from smbd */
+   for (i = 0; i < 3; i++) {
+      close(i);
+      fd = open("/dev/null", O_RDWR, 0);
+      if (fd < 0)
+         fd = open("/dev/null", O_WRONLY, 0);
+      if (fd < 0) {
+	std::cout << "Can't open /dev/null" << std::endl;
+         return 0;
+      }
+      if (fd != i) {
+	std::cout << "Did not get file descriptor" << std::endl;
+	return 0;
+      }
+   }
+
+   setsid();                    /* become session leader */
+
+#endif
+
+   return 1;
 }
 
 
@@ -218,6 +261,7 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
   }
 
   bool testMode = false;
+  bool daemonMode = false;
   int  tcpPort = 0;
 #ifdef HAVE_THTTP_SERVER
   int  rhttpdPort = 0; // ROOT THttpServer port
@@ -242,6 +286,8 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
 #endif
       else if (strcmp(arg,"-T")==0)
 	testMode = true;
+      else if (strcmp(arg,"-D")==0)
+	daemonMode = true;
       else if (strncmp(arg,"-H",2)==0)
 	hostname = strdup(arg+2);
       else if (strncmp(arg,"-E",2)==0)
@@ -267,6 +313,10 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
       }
   }
 
+  if (daemonMode) {
+    printf("\nBecoming a daemon...\n");
+    ss_daemon_init();
+  }
 
   MainWindow *mainWindow=0;
   if(fCreateMainWindow){
