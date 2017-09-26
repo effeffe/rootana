@@ -13,6 +13,17 @@ function initialize(){
   
 }
 
+function cleanJSDivs(){
+
+  JSROOT.cleanup('graphdiv');
+  JSROOT.cleanup('graphdiv21');
+  JSROOT.cleanup('graphdiv22');
+  JSROOT.RegisterForResize('graphdiv');
+  JSROOT.RegisterForResize('graphdiv21');
+  JSROOT.RegisterForResize('graphdiv22');
+  
+}
+
 
 function xhrErrorResponse(listDirectories, errorString){
 
@@ -47,13 +58,23 @@ function plotAllHistogramsJSROOT(plotType,divNames, histogramNameList, deleteDyg
   // Wrap the request in promise; will combine multiple items (if there are more than 1) into single XHR request
   var listDirectories = "";
   for(var index = 0; index < histogramNameList.length; index++){
+
     var name = active_directory + "/" + histogramNameList[index];
+    // If the histogram name has "Canvases/" then    
+    // assume we don't need the active_directory
+    if (histogramNameList[index].indexOf("Canvases/") >= 0){
+      name = histogramNameList[index];
+    }
+    
+    //name = "Canvases/Calibrated1VM4WithMagnetRamp";
     listDirectories += name + "/root.json\n";
+    
+    console.log(name + "/root.json");
   }    
 
   // compose URL
   var url = rootana_dir + "multi.json?number="+String(histogramNameList.length);
- 
+  console.log("url " + url); 
   getUrl(url, listDirectories).then(function(response) {
     
     xhrAlreadyInFligthJSROOT = false;
@@ -61,13 +82,12 @@ function plotAllHistogramsJSROOT(plotType,divNames, histogramNameList, deleteDyg
     var histo = JSON.parse(response);    
     // Little hack from Sergey to distinguish the different responses from THttpServer
 
-    if(plotType == "overlay"){
-      $("#graphdiv").html("");
-    }
+    $("#graphdiv").html("");
 
     // Loop over the different histograms we got back.
     // Need to handle the overlay plots different from the single/multiple plots.
     for (var i=0;i<histo.length;++i){
+      console.log(histo[i]);
       histo[i] = JSROOT.JSONR_unref(histo[i]);
       
       if(plotType == "overlay"){         
@@ -78,7 +98,9 @@ function plotAllHistogramsJSROOT(plotType,divNames, histogramNameList, deleteDyg
           JSROOT.draw(divNames[0], histo[i], "SAME");
         }
       }else{ // single or multiple
-        JSROOT.redraw(divNames[i], histo[i], "colz");
+	  //        JSROOT.redraw(divNames[i], histo[i], "");
+          JSROOT.redraw(divNames[i], histo[i]);
+          console.log(divNames[i]);
       }
     }
 

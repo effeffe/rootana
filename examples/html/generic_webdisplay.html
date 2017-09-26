@@ -27,13 +27,13 @@ input[type=number]{
     width: 60px;
 }
 #graphdiv21 {min-width:100%} 
-#graphdiv21 {min-height:250px}
+#graphdiv21 {min-height:325px}
 #graphdiv22 {min-width:100%}
-#graphdiv22 {min-height:250px}
+#graphdiv22 {min-height:325px}
 #graphdiv {min-width:100%}
-#graphdiv {min-height:500px}
+#graphdiv {min-height:650px}
 #plotlydiv {min-width:100%}
-#plotlydiv {min-height:500px}
+#plotlydiv {min-height:650px}
 
 
 button.select_buttons{
@@ -111,6 +111,7 @@ function setRootanaDirectory(webdir_end){
 <!-- clean div for new display -->
 function cleanDivs(){   
    deleteOldPlots();   
+   cleanJSDivs();   
    $("#graphdiv").html("");
    $("#graphdiv21").html("");
    $("#graphdiv22").html("");
@@ -408,10 +409,7 @@ function changeUpdateTime() {
         Periodic Dark Noise </button>
       
       </div>      
-      Plots: 
       <div id="displayControlButtons"></div>
-      <p>Read back status: <span id="readstatus"></span> 
-      <p>
       
     </div>
 
@@ -508,6 +506,7 @@ function changeUpdateTime() {
   <p>
 
   Last updated: <span id="datetime"></span>
+  <p>Read back status: <span id="readstatus"></span> 
 
 </body>
 

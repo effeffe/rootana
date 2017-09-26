@@ -141,14 +141,18 @@ function parseRootDirectory(response){
     // Loop over the objects in child object, looking for either the rootana directory
     // or Files directory
     
-    
+    console.log("Parsing");
     for(var i = 0; i < rootStructureJSON["_childs"].length; i++){
       var testDir = rootStructureJSON["_childs"][i];
       var name = testDir["_name"];
       
-      // Check for histograms in the rootana directory
-      if( name == "rootana"){
-        
+
+      // Check for histograms in the root directory
+      if(testDir["_kind"] == "ROOT.TH1D"){ 
+        active_directory = "";
+        histo_address = rootana_dir  + active_directory;
+	gFoundRootanaDir = true;
+	gHistogramList = rootStructureJSON["_childs"];
       }
       
       // Check for histograms in the Files directory
@@ -169,6 +173,7 @@ function parseRootDirectory(response){
         }
       }
     }
+
 
 }
 
