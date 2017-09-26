@@ -27,13 +27,13 @@ input[type=number]{
     width: 60px;
 }
 #graphdiv21 {min-width:100%} 
-#graphdiv21 {min-height:325px}
+#graphdiv21 {min-height:50%}
 #graphdiv22 {min-width:100%}
-#graphdiv22 {min-height:325px}
+#graphdiv22 {min-height:50%}
 #graphdiv {min-width:100%}
-#graphdiv {min-height:650px}
+#graphdiv {min-height:100%}
 #plotlydiv {min-width:100%}
-#plotlydiv {min-height:650px}
+#plotlydiv {min-height:100%}
 
 
 button.select_buttons{
@@ -395,23 +395,6 @@ function changeUpdateTime() {
 <body onload="initialize();setRootanaDirectory('rootana');find_active_root_directory(false);selectHistogramsFromJSON(); midasStatus();updatePlots(false); ">
   <div class="container-fluid">
     
-    <!--- Top banner --> 
-    <div class="page-header">
-      <font size="6"><b>Generic DAQ Web Display</b></font><br>
-
-      <div id="triggerSelectionDiv" style="display:none"> 
-      DTM Source: 
-      <button class="triggerControlEl select_buttons selected" id="rootana_physics" > 
-        Physics Trigger </button>
-      <button class="triggerControlEl select_buttons" id="rootana_dnf" > 
-        Periodic DNF </button>
-      <button class="triggerControlEl select_buttons" id="rootana_dnrates" > 
-        Periodic Dark Noise </button>
-      
-      </div>      
-      <div id="displayControlButtons"></div>
-      
-    </div>
 
 
     <!--- Main display --> 
@@ -419,8 +402,25 @@ function changeUpdateTime() {
        
       <!--- Control buttons --> 
       <div class="col-md-3" >
-	<div style="height:225px">
-          <b>Display Control </b><br><br>
+	<div style="height:300px">
+
+         <font size="6"><b>DAQ Web Display</b></font><br><br>
+
+         <div id="triggerSelectionDiv" style="display:none"> 
+          DTM Source: 
+          <button class="triggerControlEl select_buttons selected" id="rootana_physics" > 
+          Physics Trigger </button>
+          <button class="triggerControlEl select_buttons" id="rootana_dnf" > 
+          Periodic DNF </button>
+          <button class="triggerControlEl select_buttons" id="rootana_dnrates" > 
+          Periodic Dark Noise </button>
+      
+         </div>      
+          <b>Histogram Groups: </b><br>
+
+          <div id="displayControlButtons"></div> <br>
+         
+          <b>Display Control: </b><br>
           <input type="button" id="pause_button" onclick="pause_resume();" value="Pause" ></input>
           <input class="displayControlEl" type="button" id="reset_button" onclick="rootanaResetAllHistograms();" value="Reset All Histograms" ></input><br>
 
@@ -466,13 +466,13 @@ function changeUpdateTime() {
         </div>
         
           
-          <br> <b>MIDAS Status</b><br>
+          <br> <b>MIDAS Status:</b><br>
           <ul>
             <li id="daq_running"></li>
             <li id="current_run"></li>
           </ul>
           
-          <br> <b>Links</b><br>
+          <br> <b>Links:</b><br>
           <a id="midasLink"  href="https://localhost">MIDAS Status Page</a> <br>
           <a id="rootanaLink" href="https://localhost/rootana/">Root Online Browser</a> <br>
           
