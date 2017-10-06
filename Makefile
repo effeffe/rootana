@@ -118,6 +118,7 @@ OBJS += obj/TRootanaEventLoop.o
 OBJS += obj/TDataContainer.o
 OBJS += obj/TPeriodicClass.o
 OBJS += obj/TV792Data.o
+OBJS += obj/TV792NData.o
 OBJS += obj/TV1190Data.o
 OBJS += obj/TV1720RawData.o
 OBJS += obj/TV1730DppData.o

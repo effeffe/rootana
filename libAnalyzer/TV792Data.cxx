@@ -17,8 +17,9 @@ TV792Data::TV792Data(int bklen, int bktype, const char* name, void *pdata):
     }
     
 
-    if((word & 0x07000000) == 0x00000000) // measurement
+    if((word & 0x07000000) == 0x00000000){ // measurement
       fMeasurements.push_back(VADCMeasurement(fAdc_header_word,word));
+    }
 
     if((word & 0x07000000) == 0x04000000) // trailer
       fAdc_trailer_word = word;
