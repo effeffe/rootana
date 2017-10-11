@@ -132,6 +132,7 @@ OBJS += obj/TMainDisplayWindow.o
 OBJS += obj/TSimpleExampleCanvas.o
 OBJS += obj/TComplicatedExampleCanvas.o
 OBJS += obj/TInterestingEventManager.o
+OBJS += obj/TSimpleHistogramCanvas.o
 OBJS += obj/TFancyHistogramCanvas.o
 
 OBJS += obj/TMainDisplayWindowDict.o
