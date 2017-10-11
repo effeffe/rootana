@@ -346,6 +346,10 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
    // Initialize the event loop with user initialization.
    Initialize();
 
+   // Initialize the event loop with rootana display initialization.
+   InitializeRAD();
+
+
    for (unsigned int i=1; i<args.size(); i++){
      const char* arg = args[i].c_str();
      if (arg[0] != '-')  

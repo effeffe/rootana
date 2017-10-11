@@ -68,6 +68,8 @@ public:
   /// for each input file.
   virtual void EndRun(int transition,int run,int time);
   
+  /// Special version of Init method, to be used only by TRootanaDisplay
+  virtual void InitializeRAD(void){};
   /// Special version of BOR method, to be used only by TRootanaDisplay
   /// This is just so that users still have ability to set their own
   /// BOR methods, in addition to what TRootanaDisplay needs to do at BOR

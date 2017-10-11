@@ -153,7 +153,7 @@ public:
   /// Set Display name
   void SetDisplayName(std::string name){fDisplayName = name;}
   
-  void Initialize(){
+  void InitializeRAD(){
     InitializeMainWindow();
   }
 
