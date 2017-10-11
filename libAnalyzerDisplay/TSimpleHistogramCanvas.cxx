@@ -7,11 +7,22 @@
 TSimpleHistogramCanvas::TSimpleHistogramCanvas(TH1* histo, std::string name): TCanvasHandleBase(name){
 
   fHisto = histo;
-
+  fGraph = 0;
 }
+
+TSimpleHistogramCanvas::TSimpleHistogramCanvas(TGraph* graph, std::string name): TCanvasHandleBase(name){
+
+  fHisto = 0;
+  fGraph = graph;
+}
+
+
 
 TSimpleHistogramCanvas::~TSimpleHistogramCanvas(){
 
+  if(fHisto) delete fHisto;
+  if(fGraph) delete fGraph;
+  
 }
 
 
@@ -33,7 +44,15 @@ void TSimpleHistogramCanvas::PlotCanvas(TDataContainer& dataContainer, TRootEmbe
 
   TCanvas* c1 = embedCanvas->GetCanvas();
   c1->Clear();
-  fHisto->Draw();
+
+  if(fHisto){
+    fHisto->Draw();
+  }
+  if(fGraph){
+    fGraph->Draw("AP*");
+    fGraph->SetMarkerStyle(20);
+  }
+  
   c1->Modified();
   c1->Update();
 
@@ -44,7 +63,7 @@ void TSimpleHistogramCanvas::PlotCanvas(TDataContainer& dataContainer, TRootEmbe
 
 /// Take actions at begin run
 void TSimpleHistogramCanvas::BeginRun(int transition,int run,int time){
-  fHisto->Reset();
+  if(fHisto)fHisto->Reset();
 };
 
 /// Take actions at end run  

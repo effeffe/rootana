@@ -7,14 +7,16 @@
 #include "TCanvasHandleBase.hxx"
 
 #include "TH1.h"
+#include "TGraph.h"
 
-/// A canvas that plots a single TH1
+/// A canvas that plots a single TH1 or TGraph
 class TSimpleHistogramCanvas : public TCanvasHandleBase{
 
 public:
 
 
   TSimpleHistogramCanvas(TH1* histo, std::string name);
+  TSimpleHistogramCanvas(TGraph* graph, std::string name);
 
   ~TSimpleHistogramCanvas();
 
@@ -38,6 +40,8 @@ private:
 
   /// Pointer to the histogram 
   TH1* fHisto;
+  /// Pointer to the graph 
+  TGraph* fGraph;
 
   // Don't define default constructor.
   TSimpleHistogramCanvas();
