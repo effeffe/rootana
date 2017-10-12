@@ -28,7 +28,7 @@ TSimpleHistogramCanvas::~TSimpleHistogramCanvas(){
 
 /// Reset the histograms in fHistoArray.
 void TSimpleHistogramCanvas::ResetCanvasHistograms(){
-  fHisto->Reset();
+  if(fHisto)fHisto->Reset();
 }
   
 /// Update the histograms for this canvas.
