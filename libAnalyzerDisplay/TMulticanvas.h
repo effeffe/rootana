@@ -55,9 +55,9 @@ public:
   
   /// Plot the histograms for this canvas for a particular index; 
 	void PlotCanvas(TDataContainer& dataContainer, TRootEmbeddedCanvas *embedCanvas);
-  
+	
 	// Don't do anything here; let deap ana manager handle updating/resetting.
-	void ResetCanvasHistograms(){;};
+	void ResetCanvasHistograms();
 	void UpdateCanvasHistograms(TDataContainer& dataContainer){;};
 
 

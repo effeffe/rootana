@@ -48,4 +48,16 @@ void TMulticanvas::PlotCanvas(TDataContainer& dataContainer, TRootEmbeddedCanvas
 }
 
 
+// Reset
+void TMulticanvas::ResetCanvasHistograms(){
 
+  for(int i = 0; i < gMaxSubCanvasesMuCa; i++){
+    if(fHasHistoSingle[i]){
+      fSummaryHistoSingle[i]->Reset();
+    }else if(fHasHisto2D[i]){
+      fSummaryHisto2D[i]->Reset();
+
+    }
+  }
+
+}
