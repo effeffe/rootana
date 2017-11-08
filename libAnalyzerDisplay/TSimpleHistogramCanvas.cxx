@@ -4,10 +4,11 @@
 #include "TH2.h"
 
 
-TSimpleHistogramCanvas::TSimpleHistogramCanvas(TH1* histo, std::string name): TCanvasHandleBase(name){
+TSimpleHistogramCanvas::TSimpleHistogramCanvas(TH1* histo, std::string name, std::string printoption): TCanvasHandleBase(name){
 
   fHisto = histo;
   fGraph = 0;
+  fPrintOption = printoption;
 }
 
 TSimpleHistogramCanvas::TSimpleHistogramCanvas(TGraph* graph, std::string name): TCanvasHandleBase(name){
@@ -46,7 +47,7 @@ void TSimpleHistogramCanvas::PlotCanvas(TDataContainer& dataContainer, TRootEmbe
   c1->Clear();
 
   if(fHisto){
-    fHisto->Draw();
+    fHisto->Draw(fPrintOption.c_str());
   }
   if(fGraph){
     fGraph->Draw("AP*");

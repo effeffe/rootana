@@ -15,7 +15,7 @@ class TSimpleHistogramCanvas : public TCanvasHandleBase{
 public:
 
 
-  TSimpleHistogramCanvas(TH1* histo, std::string name);
+  TSimpleHistogramCanvas(TH1* histo, std::string name, std::string printoption = "");
   TSimpleHistogramCanvas(TGraph* graph, std::string name);
 
   ~TSimpleHistogramCanvas();
@@ -42,6 +42,9 @@ private:
   TH1* fHisto;
   /// Pointer to the graph 
   TGraph* fGraph;
+  
+  // Print option for TH1F
+  std::string fPrintOption;
 
   // Don't define default constructor.
   TSimpleHistogramCanvas();
