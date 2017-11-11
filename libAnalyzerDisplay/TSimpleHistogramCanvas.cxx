@@ -9,12 +9,18 @@ TSimpleHistogramCanvas::TSimpleHistogramCanvas(TH1* histo, std::string name, std
   fHisto = histo;
   fGraph = 0;
   fPrintOption = printoption;
+
+  fExtraHistos = std::vector<TH1*>();
+  fExtraGraphs = std::vector<TGraph*>();
 }
 
 TSimpleHistogramCanvas::TSimpleHistogramCanvas(TGraph* graph, std::string name): TCanvasHandleBase(name){
 
   fHisto = 0;
   fGraph = graph;
+
+  fExtraHistos = std::vector<TH1*>();
+  fExtraGraphs = std::vector<TGraph*>();
 }
 
 
@@ -23,6 +29,9 @@ TSimpleHistogramCanvas::~TSimpleHistogramCanvas(){
 
   if(fHisto) delete fHisto;
   if(fGraph) delete fGraph;
+
+  for(unsigned int i = 0; i < fExtraHistos.size(); i++) delete fExtraHistos[i];
+  for(unsigned int i = 0; i < fExtraGraphs.size(); i++) delete fExtraGraphs[i];
   
 }
 
@@ -30,6 +39,7 @@ TSimpleHistogramCanvas::~TSimpleHistogramCanvas(){
 /// Reset the histograms in fHistoArray.
 void TSimpleHistogramCanvas::ResetCanvasHistograms(){
   if(fHisto)fHisto->Reset();
+  for(unsigned int i = 0; i < fExtraHistos.size(); i++) fExtraHistos[i]->Reset();
 }
   
 /// Update the histograms for this canvas.
@@ -52,6 +62,19 @@ void TSimpleHistogramCanvas::PlotCanvas(TDataContainer& dataContainer, TRootEmbe
   if(fGraph){
     fGraph->Draw("AP*");
     fGraph->SetMarkerStyle(20);
+  }
+
+  for(unsigned int i = 0; i < fExtraHistos.size(); i++){
+    std::string option = std::string("SAME") + fPrintOption;
+    fExtraHistos[i]->Draw(option.c_str());
+    fExtraHistos[i]->SetLineColor(i+2);
+    fExtraHistos[i]->SetMarkerColor(i+2);
+  }
+
+  for(unsigned int i = 0; i < fExtraGraphs.size(); i++){
+    fExtraGraphs[i]->Draw("*");
+    fExtraGraphs[i]->SetMarkerStyle(20 + i+1);
+    fExtraGraphs[i]->SetMarkerColor(i+2);
   }
   
   c1->Modified();
