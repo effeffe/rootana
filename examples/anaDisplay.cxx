@@ -10,7 +10,7 @@
 
 
 #include "TAnaManager.hxx"
-
+#include "TTRB3Data.hxx"
 
 class MyTestLoop: public TRootanaDisplay { 
 
@@ -79,6 +79,33 @@ public:
   void ResetHistograms(){}
 
   void UpdateHistograms(TDataContainer& dataContainer){
+
+    TTRB3Data *data = dataContainer.GetEventData<TTRB3Data>("TRB0");
+    if(data){
+      //data->Print();
+
+      double reftime = 0;
+      for(int i = 0; i < data->GetNumberMeasurements(); i++){
+        std::vector<TrbTdcMeas> meas =  data->GetMeasurements();
+        uint32_t fine = meas[i].GetFineTime();
+        uint32_t coarse = meas[i].GetCoarseTime();
+        uint32_t id = meas[i].GetBoardId();
+        uint32_t ch = meas[i].GetChannel();
+        
+        
+        double time = ((double) coarse) * 5.0 - ((((double)fine)-17.0)/457.0) *5.0;
+
+        if(id == 0 && ch == 1){
+          if(reftime != 0)
+            std::cout << "Meas " << id << " " << ch << " " << coarse
+                      << " " << fine << " " << time << " "
+                      << time-reftime << std::endl;
+
+          reftime = time;
+        }
+        
+      }
+    }
     
     anaManager->ProcessMidasEvent(dataContainer);
   }
