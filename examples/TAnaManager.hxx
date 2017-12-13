@@ -12,6 +12,7 @@
 //#define USE_V1730DPP
 #define USE_V1730RAW
 #define USE_DT724
+#define USE_TRB3
 
 #include "TV792Histogram.h"
 #include "TV1190Histogram.h"
@@ -22,6 +23,7 @@
 #include "TV1730DppWaveform.h"
 #include "TV1730RawWaveform.h"
 #include "TDT724Waveform.h"
+#include "TTRB3Histogram.hxx"
 
 /// This is an example of how to organize a set of different histograms
 /// so that we can access the same information in a display or a batch
@@ -35,6 +37,10 @@ public:
   /// Processes the midas event, fills histograms, etc.
   int ProcessMidasEvent(TDataContainer& dataContainer);
 
+  void BeginRun(int transition,int run,int time) {};
+  void EndRun(int transition,int run,int time) {};
+
+
 	/// Methods for determining if we have a particular set of histograms.
 	bool HaveV792Histograms();
 	bool HaveV1190Histograms();
@@ -45,6 +51,7 @@ public:
 	bool HaveV1730DPPistograms();
 	bool HaveV1730Rawistograms();
 	bool HaveDT724Histograms();
+  	bool HaveTRB3Histograms();
 
 	/// Methods for getting particular set of histograms.
 	TV792Histograms* GetV792Histograms();
@@ -56,6 +63,8 @@ public:
 	TV1730DppWaveform* GetV1730DPPistograms();
 	TV1730RawWaveform* GetV1730Rawistograms();
 	TDT724Waveform* GetDT724Histograms();
+        TTRB3Histograms* GetTRB3Histograms();
+        TTRB3DiffHistograms* GetTRB3DiffHistograms();
 
 
 private:
@@ -69,6 +78,8 @@ private:
 	TV1730DppWaveform *fV1730DppWaveform;
 	TV1730RawWaveform *fV1730RawWaveform;
 	TDT724Waveform *fDT724Waveform;
+  	TTRB3Histograms *fTRB3Histograms;
+    	TTRB3DiffHistograms *fTRB3DiffHistograms;
 
   // Make some cross-channel histograms
   TH2F *fV1720PHCompare;

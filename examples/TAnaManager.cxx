@@ -66,6 +66,15 @@ TAnaManager::TAnaManager(){
 	fDT724Waveform->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
 #endif
 
+        fTRB3Histograms = 0;
+        fTRB3DiffHistograms = 0;
+#ifdef USE_TRB3
+	fTRB3Histograms = new TTRB3Histograms();
+	fTRB3Histograms->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
+        fTRB3DiffHistograms = new TTRB3DiffHistograms();
+        fTRB3DiffHistograms->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
+#endif
+
 };
 
 
@@ -80,10 +89,10 @@ int TAnaManager::ProcessMidasEvent(TDataContainer& dataContainer){
 	if(fV1720Waveform)  fV1720Waveform->UpdateHistograms(dataContainer);
 	if(fV1720Correlations)  fV1720Correlations->UpdateHistograms(dataContainer); 
   	if(fV1730DppWaveform)  fV1730DppWaveform->UpdateHistograms(dataContainer); 
-	if(fV1730RawWaveform)  fV1730RawWaveform->UpdateHistograms(dataContainer);
-
-        
-	if(fDT724Waveform)  fDT724Waveform->UpdateHistograms(dataContainer); 
+	if(fV1730RawWaveform)  fV1730RawWaveform->UpdateHistograms(dataContainer);        
+	if(fDT724Waveform)  fDT724Waveform->UpdateHistograms(dataContainer);
+        if(fTRB3Histograms)  fTRB3Histograms->UpdateHistograms(dataContainer);
+        if(fTRB3DiffHistograms)  fTRB3DiffHistograms->UpdateHistograms(dataContainer); 
 
         // Do little analysis of the V1720 data, as example...
         if(fV1720Waveform){
@@ -157,6 +166,10 @@ bool TAnaManager::HaveDT724Histograms(){
 	if(fDT724Waveform) return true; 
 	return false;
 };
+bool TAnaManager::HaveTRB3Histograms(){
+	if(fTRB3Histograms) return true; 
+	return false;
+};
 
 TV792Histograms* TAnaManager::GetV792Histograms() {return fV792Histogram;}
 TV1190Histograms* TAnaManager::GetV1190Histograms(){return fV1190Histogram;}
@@ -167,4 +180,6 @@ TV1720Correlations* TAnaManager::GetV1720Correlations(){return fV1720Correlation
 TV1730DppWaveform* TAnaManager::GetV1730DPPistograms(){return fV1730DppWaveform;}
 TV1730RawWaveform* TAnaManager::GetV1730Rawistograms(){return fV1730RawWaveform;}
 TDT724Waveform* TAnaManager::GetDT724Histograms(){return fDT724Waveform;}
+TTRB3Histograms* TAnaManager::GetTRB3Histograms(){return fTRB3Histograms;}
+TTRB3DiffHistograms* TAnaManager::GetTRB3DiffHistograms(){return fTRB3DiffHistograms;}
 

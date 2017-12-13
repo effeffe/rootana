@@ -63,6 +63,11 @@ public:
     if(anaManager->HaveDT724Histograms()) 
       AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetDT724Histograms(),"DT724 Waveforms"));
     
+    if(anaManager->HaveTRB3Histograms()){
+      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetTRB3Histograms(),"TRB3"));
+      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetTRB3DiffHistograms(),"TRB3 Diff"));
+    }
+    
     SetDisplayName("Example Display");
   };
 
@@ -70,43 +75,17 @@ public:
 
   void BeginRun(int transition,int run,int time) {
     std::cout << "User BOR method" << std::endl;
+    anaManager->BeginRun(transition, run, time);
   }
 
   void EndRun(int transition,int run,int time) {
     std::cout << "User EOR method" << std::endl;
+    anaManager->EndRun(transition, run, time);
   }
 
   void ResetHistograms(){}
 
   void UpdateHistograms(TDataContainer& dataContainer){
-
-    TTRB3Data *data = dataContainer.GetEventData<TTRB3Data>("TRB0");
-    if(data){
-      //data->Print();
-
-      double reftime = 0;
-      for(int i = 0; i < data->GetNumberMeasurements(); i++){
-        std::vector<TrbTdcMeas> meas =  data->GetMeasurements();
-        uint32_t fine = meas[i].GetFineTime();
-        uint32_t coarse = meas[i].GetCoarseTime();
-        uint32_t id = meas[i].GetBoardId();
-        uint32_t ch = meas[i].GetChannel();
-        
-        
-        double time = ((double) coarse) * 5.0 - ((((double)fine)-17.0)/457.0) *5.0;
-
-        if(id == 0 && ch == 1){
-          if(reftime != 0)
-            std::cout << "Meas " << id << " " << ch << " " << coarse
-                      << " " << fine << " " << time << " "
-                      << time-reftime << std::endl;
-
-          reftime = time;
-        }
-        
-      }
-    }
-    
     anaManager->ProcessMidasEvent(dataContainer);
   }
 
