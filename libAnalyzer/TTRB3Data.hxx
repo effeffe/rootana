@@ -25,6 +25,7 @@ public:
     return (tdc_measurement_word & 0x7ffff);
   }
 
+  // semi calibrated time in nanoseconds
   double GetFinalTime() const { // Currently return time with crude calibration
     return ((double) GetCoarseTime()) * 5.0 - ((((double)GetFineTime())-17.0)/457.0) *5.0;        
   }
@@ -34,7 +35,8 @@ public:
   };
 
   uint32_t GetCoarseTime() const {return tdc_measurement_word & 0x7ff;};
-  
+
+  uint32_t GetEpochTime() const {return tdc_epoch_word & 0xfffffff;};
   
   /// Get the channel number
   uint32_t GetChannel() const {
