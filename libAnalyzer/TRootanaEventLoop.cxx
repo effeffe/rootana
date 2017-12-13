@@ -526,7 +526,8 @@ void TRootanaEventLoop::OpenRootFile(int run, std::string midasFilename){
 void TRootanaEventLoop::CloseRootFile(){
 
   if(fOutputFile) {
-		std::cout << "Closing ROOT file " << std::endl;
+    std::cout << "Closing ROOT file "
+              << fOutputFile->GetName() << std::endl;
     fOutputFile->Write();
     fOutputFile->Close();
     fOutputFile=0;
