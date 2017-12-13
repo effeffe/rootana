@@ -25,6 +25,10 @@ public:
     return (tdc_measurement_word & 0x7ffff);
   }
 
+  double GetFinalTime() const { // Currently return time with crude calibration
+    return ((double) GetCoarseTime()) * 5.0 - ((((double)GetFineTime())-17.0)/457.0) *5.0;        
+  }
+  
   uint32_t GetFineTime() const {
     return (tdc_measurement_word & 0x1ff000) >> 12;
   };
