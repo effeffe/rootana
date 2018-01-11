@@ -62,6 +62,7 @@ public:
     
     anaManager->ProcessMidasEvent(dataContainer);
 
+    
     return true;
   }
 

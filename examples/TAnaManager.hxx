@@ -13,6 +13,7 @@
 #define USE_V1730RAW
 #define USE_DT724
 #define USE_TRB3
+#define USE_CAMACADC
 
 #include "TV792Histogram.h"
 #include "TV1190Histogram.h"
@@ -24,6 +25,7 @@
 #include "TV1730RawWaveform.h"
 #include "TDT724Waveform.h"
 #include "TTRB3Histogram.hxx"
+#include "TCamacADCHistogram.h"
 
 /// This is an example of how to organize a set of different histograms
 /// so that we can access the same information in a display or a batch
@@ -52,6 +54,7 @@ public:
 	bool HaveV1730Rawistograms();
 	bool HaveDT724Histograms();
   	bool HaveTRB3Histograms();
+  	bool HaveCamacADCHistograms();
 
 	/// Methods for getting particular set of histograms.
 	TV792Histograms* GetV792Histograms();
@@ -65,6 +68,7 @@ public:
 	TDT724Waveform* GetDT724Histograms();
         TTRB3Histograms* GetTRB3Histograms();
         TTRB3DiffHistograms* GetTRB3DiffHistograms();
+        TCamacADCHistograms* GetCamacADCHistograms();
 
 
 private:
@@ -80,6 +84,7 @@ private:
 	TDT724Waveform *fDT724Waveform;
   	TTRB3Histograms *fTRB3Histograms;
     	TTRB3DiffHistograms *fTRB3DiffHistograms;
+    	TCamacADCHistograms *fCamacADCHistograms;
 
   // Make some cross-channel histograms
   TH2F *fV1720PHCompare;

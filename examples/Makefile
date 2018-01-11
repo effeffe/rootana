@@ -63,6 +63,7 @@ OBJS += TL2249Histogram.o TAgilentHistogram.o
 OBJS += TV1720Waveform.o TDT724Waveform.o
 OBJS += TV1730DppWaveform.o TV1730RawWaveform.o
 OBJS += TV1720Correlations.o TTRB3Histogram.o
+OBJS += TCamacADCHistogram.o
 OBJS += TAnaManager.o
 
 all: $(OBJS) ana.exe anaDisplay.exe midas2root.exe

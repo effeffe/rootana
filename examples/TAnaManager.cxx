@@ -75,6 +75,11 @@ TAnaManager::TAnaManager(){
         fTRB3DiffHistograms->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
 #endif
 
+#ifdef USE_CAMACADC
+	fCamacADCHistograms = new TCamacADCHistograms();
+	fCamacADCHistograms->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
+#endif
+
 };
 
 
@@ -93,6 +98,7 @@ int TAnaManager::ProcessMidasEvent(TDataContainer& dataContainer){
 	if(fDT724Waveform)  fDT724Waveform->UpdateHistograms(dataContainer);
         if(fTRB3Histograms)  fTRB3Histograms->UpdateHistograms(dataContainer);
         if(fTRB3DiffHistograms)  fTRB3DiffHistograms->UpdateHistograms(dataContainer); 
+        if(fCamacADCHistograms)  fCamacADCHistograms->UpdateHistograms(dataContainer); 
 
         // Do little analysis of the V1720 data, as example...
         if(fV1720Waveform){
@@ -170,6 +176,10 @@ bool TAnaManager::HaveTRB3Histograms(){
 	if(fTRB3Histograms) return true; 
 	return false;
 };
+bool TAnaManager::HaveCamacADCHistograms(){
+	if(fCamacADCHistograms) return true; 
+	return false;
+};
 
 TV792Histograms* TAnaManager::GetV792Histograms() {return fV792Histogram;}
 TV1190Histograms* TAnaManager::GetV1190Histograms(){return fV1190Histogram;}
@@ -182,4 +192,5 @@ TV1730RawWaveform* TAnaManager::GetV1730Rawistograms(){return fV1730RawWaveform;
 TDT724Waveform* TAnaManager::GetDT724Histograms(){return fDT724Waveform;}
 TTRB3Histograms* TAnaManager::GetTRB3Histograms(){return fTRB3Histograms;}
 TTRB3DiffHistograms* TAnaManager::GetTRB3DiffHistograms(){return fTRB3DiffHistograms;}
+TCamacADCHistograms* TAnaManager::GetCamacADCHistograms(){return fCamacADCHistograms;}
 

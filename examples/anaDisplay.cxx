@@ -67,6 +67,10 @@ public:
       AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetTRB3Histograms(),"TRB3"));
       AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetTRB3DiffHistograms(),"TRB3 Diff"));
     }
+
+    if(anaManager->HaveCamacADCHistograms()){
+      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetCamacADCHistograms(),"CAMAC ADC"));
+    }
     
     SetDisplayName("Example Display");
   };

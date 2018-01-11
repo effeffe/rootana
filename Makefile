@@ -127,6 +127,7 @@ OBJS += obj/TDT724RawData.o
 OBJS += obj/TL2249Data.o
 OBJS += obj/TMesytecData.o
 OBJS += obj/TTRB3Data.o
+OBJS += obj/TCamacADCData.o
 
 OBJS += obj/TRootanaDisplay.o
 OBJS += obj/TMainDisplayWindow.o
