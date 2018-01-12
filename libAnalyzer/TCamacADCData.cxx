@@ -24,11 +24,12 @@ TCamacData::TCamacData(int bklen, int bktype, const char* name, void *pdata):
     
     CamacADCEvent event;
     
+    pointer++; // not sure what this word is... possibly the number of subsequent words in event.
+
     // fill ADC values;
     for(int i = 0; i < NADC; i++){
       event.SetADC(i,GetData16()[pointer++]);
     }    
-    pointer++; // not sure what this word is...
     if(GetData16()[pointer++] != checkword){
       std::cout << "Data " << GetData16()[pointer] << " doesn't match checkword "
 		<< checkword << std::endl;
