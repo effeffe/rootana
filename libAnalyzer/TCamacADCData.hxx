@@ -12,7 +12,9 @@
 class CamacADCEvent {
 
 public:
-  CamacADCEvent(){};
+  CamacADCEvent(){
+    for(int i = 0; i < NADC; i++) ADCValues[i] = -1;
+  };
 
   // Set the ADC value for this channel.
   void SetADC(int ch, int adc);
