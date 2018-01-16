@@ -30,6 +30,8 @@ public:
   // The tree to fill.
   TTree *fTree;
 
+  int timestamp;
+  int serialnumber;
 #ifdef USE_V792
   // CAEN V792 tree variables
   int nchannels;
@@ -54,6 +56,9 @@ public:
     // Create a TTree
     fTree = new TTree("midas_data","MIDAS data");
 
+    fTree->Branch("timestamp",&timestamp,"timestamp/I");
+    fTree->Branch("serialnumber",&serialnumber,"serialnumber/I");
+
 #ifdef USE_V792    
     fTree->Branch("nchannels",&nchannels,"nchannels/I");
     fTree->Branch("adc_value",adc_value,"adc_value[nchannels]/I");
@@ -72,10 +77,10 @@ public:
   // Lecroy data packets.
   bool ProcessMidasEvent(TDataContainer& dataContainer){
 
-    int id = dataContainer.GetMidasEvent().GetSerialNumber();
-    if(id%10 == 0) printf(".");
-
-
+    serialnumber = dataContainer.GetMidasEvent().GetSerialNumber();
+    if(serialnumber%10 == 0) printf(".");
+    timestamp = dataContainer.GetMidasEvent().GetTimeStamp();
+ 
 #ifdef USE_V792    
     TV792Data *data = dataContainer.GetEventData<TV792Data>("ADC0");
     if(data){
