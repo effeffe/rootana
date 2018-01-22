@@ -12,6 +12,7 @@
 #include "VirtualOdb.h"
 
 class TARootHelper;
+class TAFlowEvent;
 
 class TARunInfo
 {
@@ -21,7 +22,8 @@ class TARunInfo
    VirtualOdb* fOdb;
    TARootHelper* fRoot;
    std::vector<std::string> fArgs;
-
+   std::deque<TAFlowEvent*> fFlowQueue;
+   
  public:
    TARunInfo(int runno, const char* filename, const std::vector<std::string>& args);
    ~TARunInfo();

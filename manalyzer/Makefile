@@ -35,16 +35,23 @@ LIBS       += $(shell cat $(ROOTANASYS)/include/rootana_libs.txt)
 #MAIN := manalyzer_main.o
 MAIN := $(ROOTANASYS)/obj/manalyzer_main.o
 
+# build against a local copy of manalyzer.o
+#MANA := manalyzer.o
+
 # uncomment and define analyzer modules here
 
 #MODULES += agbars_module.o
 #ALL     += barsana.exe
 
+# analyzer with just the event dump module
+
+ALL += manalyzer.exe
+
 # examples
 
-EXAMPLE_ALL += manalyzer.exe
 EXAMPLE_ALL += manalyzer_example_cxx.exe
 EXAMPLE_ALL += manalyzer_example_flow.exe
+EXAMPLE_ALL += manalyzer_example_flow_queue.exe
 ifdef HAVE_ROOT
 EXAMPLE_ALL += manalyzer_example_root.exe
 EXAMPLE_ALL += manalyzer_example_root_graphics.exe
@@ -57,11 +64,11 @@ all:: $(ALL)
 %.exe: %.o manalyzer_main.o
 	$(CXX) -o $@ manalyzer_main.o $< $(CXXFLAGS) $(LIBS) -lm -lz -lpthread
 
-$(EXAMPLE_ALL): %.exe: %.o $(ROOTANALIB)
-	$(CXX) -o $@ $(ROOTANASYS)/obj/manalyzer_main.o $< $(CXXFLAGS) $(LIBS) -lm -lz -lpthread
+$(EXAMPLE_ALL): %.exe: %.o $(MAIN) $(MANA) $(ROOTANALIB)
+	$(CXX) -o $@ $(MAIN) $(MANA) $< $(CXXFLAGS) $(LIBS) -lm -lz -lpthread
 
-%.exe: $(MAIN) $(MODULES) $(ROOTANALIB)
-	$(CXX) -o $@ $(MAIN) $(MODULES) $(CXXFLAGS) $(LIBS) -lm -lz -lpthread
+%.exe: $(MAIN) $(MANA) $(MODULES) $(ROOTANALIB)
+	$(CXX) -o $@ $(MAIN) $(MANA) $(MODULES) $(CXXFLAGS) $(LIBS) -lm -lz -lpthread
 
 %.o: %.cxx
 	$(CXX) -o $@ $(CXXFLAGS) -c $<

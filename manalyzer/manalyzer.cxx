@@ -50,6 +50,16 @@ TARunInfo::~TARunInfo()
       fRoot = NULL;
    }
 #endif
+   int count = 0;
+   while (!fFlowQueue.empty()) {
+      TAFlowEvent* flow = fFlowQueue.front();
+      fFlowQueue.pop_front();
+      delete flow;
+      count++;
+   }
+   if (gTrace) {
+      printf("TARunInfo::dtor: deleted %d queued flow events!\n", count);
+   }
 }
 
 //////////////////////////////////////////////////////////
@@ -331,25 +341,10 @@ public:
    {
       assert(fRunInfo);
 
-      std::deque<TAFlowEvent*> flow_queue;
-      
       for (unsigned i=0; i<fRunRun.size(); i++)
-         fRunRun[i]->PreEndRun(fRunInfo, &flow_queue);
+         fRunRun[i]->PreEndRun(fRunInfo, &fRunInfo->fFlowQueue);
 
-      while (!flow_queue.empty()) {
-         TAFlowEvent* flow = flow_queue.front();
-         flow_queue.pop_front();
-
-         int flags = 0;
-
-         for (unsigned i=0; i<fRunRun.size(); i++) {
-            flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, &flags, flow);
-            if (flags & TAFlag_SKIP)
-               break;
-         }
-
-         delete flow;
-      }
+      AnalyzeFlowQueue();
 
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->EndRun(fRunInfo);
@@ -385,6 +380,33 @@ public:
          fRunRun[i]->AnalyzeSpecialEvent(fRunInfo, event);
    }
 
+   TAFlowEvent* AnalyzeFlowEvent(TAFlags* flags, TAFlowEvent* flow)
+   {
+      for (unsigned i=0; i<fRunRun.size(); i++) {
+         flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
+         if (!flow)
+            break;
+         if ((*flags) & TAFlag_SKIP)
+            break;
+      }
+
+      return flow;
+   }
+
+   void AnalyzeFlowQueue()
+   {
+      while (!fRunInfo->fFlowQueue.empty()) {
+         TAFlowEvent* flow = fRunInfo->fFlowQueue.front();
+         fRunInfo->fFlowQueue.pop_front();
+         if (flow) {
+            int flags = 0;
+            flow = AnalyzeFlowEvent(&flags, flow);
+            if (flow)
+               delete flow;
+         }
+      }
+   }
+
    void AnalyzeEvent(TMEvent* event, TAFlags* flags, TMWriterInterface *writer)
    {
       assert(fRunInfo != NULL);
@@ -399,11 +421,7 @@ public:
       }
 
       if (flow && !(*flags & TAFlag_SKIP)) {
-         for (unsigned i=0; i<fRunRun.size(); i++) {
-            flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
-            if (*flags & TAFlag_SKIP)
-               break;
-         }
+         flow = AnalyzeFlowEvent(flags, flow);
       }
       
       if (*flags & TAFlag_WRITE)
@@ -412,6 +430,8 @@ public:
       
       if (flow)
          delete flow;
+
+      AnalyzeFlowQueue();
    }
 };
 
@@ -693,6 +713,87 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
 
       reader->Close();
       delete reader;
+
+      if (done)
+         break;
+   }
+
+   if (run.fRunInfo) {
+      run.EndRun();
+      run.DeleteRun();
+   }
+   
+   for (unsigned i=0; i<(*gModules).size(); i++)
+      (*gModules)[i]->Finish();
+   
+   return 0;
+}
+
+static int ProcessDemoMode(const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer)
+{
+   for (unsigned i=0; i<(*gModules).size(); i++)
+      (*gModules)[i]->Init(args);
+
+   RunHandler run(args);
+
+   bool done = false;
+
+   int runno = 1;
+   
+   for (unsigned i=0; true; i++) {
+      char s[256];
+      sprintf(s, "%03d", i);
+      std::string filename = std::string("demo_subrun_") + s;
+
+      if (!run.fRunInfo) {
+         run.CreateRun(runno, filename.c_str());
+         run.fRunInfo->fOdb = new EmptyOdb();
+         run.BeginRun();
+      }
+
+      // we do not generate a fake begin of run event...
+      //run.AnalyzeSpecialEvent(event);
+
+      // only switch subruns after the first subrun file
+      if (i>0) {
+         run.fRunInfo->fFileName = filename;
+         run.NextSubrun();
+      }
+
+      for (unsigned j=0; j<100; j++) {
+         TMEvent* event = new TMEvent();
+
+         if (num_skip > 0) {
+            num_skip--;
+         } else {
+            TAFlags flags = 0;
+            
+            run.AnalyzeEvent(event, &flags, writer);
+            
+            if (flags & TAFlag_QUIT)
+               done = true;
+            
+            if (num_analyze > 0) {
+               num_analyze--;
+               if (num_analyze == 0)
+                  done = true;
+            }
+         }
+
+         delete event;
+
+         if (done)
+            break;
+
+#ifdef HAVE_ROOT
+         if (TARootHelper::fgApp) {
+            gSystem->DispatchOneEvent(kTRUE);
+         }
+#endif
+      }
+
+      // we do not generate a fake end of run event...
+      //run.AnalyzeSpecialEvent(event);
 
       if (done)
          break;
@@ -1245,6 +1346,7 @@ static void help()
   printf("\n./analyzer.exe [-h] [-R8081] [-oOutputfile.mid] [file1 file2 ...] [-- arguments passed to modules ...]\n");
   printf("\n");
   printf("\t-h: print this help message\n");
+  printf("\t--demo: activate the demo mode, online connection or input file not needed, midas events are generated internally\n");
   printf("\t-Hhostname: connect to MIDAS experiment on given host\n");
   printf("\t-Eexptname: connect to this MIDAS experiment\n");
   printf("\t-oOutputfile.mid: write selected events into this file\n");
@@ -1296,6 +1398,7 @@ int manalyzer_main(int argc, char *argv[])
    TMWriterInterface *writer = NULL;
 
    bool event_dump = false;
+   bool demo_mode = false;
    bool root_graphics = false;
    bool interactive = false;
 
@@ -1312,6 +1415,8 @@ int manalyzer_main(int argc, char *argv[])
          break;
       } else if (args[i] == "--dump") {
          event_dump = true;
+      } else if (args[i] == "--demo") {
+         demo_mode = true;
       } else if (args[i] == "-g") {
          root_graphics = true;
       } else if (args[i] == "-i") {
@@ -1410,7 +1515,9 @@ int manalyzer_main(int argc, char *argv[])
       printf("file[%d]: %s\n", i, files[i].c_str());
    }
 
-   if (files.size() > 0) {
+   if (demo_mode) {
+      ProcessDemoMode(modargs, num_skip, num_analyze, writer);
+   } else if (files.size() > 0) {
       ProcessMidasFiles(files, modargs, num_skip, num_analyze, writer);
    } else {
 #ifdef HAVE_MIDAS

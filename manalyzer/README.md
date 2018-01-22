@@ -111,6 +111,29 @@ stored in a flow event in the function Analyze() of one module and process the d
 in the function AnalyzeFlowEvent() of a different module (separate data unpacking module and data
 analysis module).
 
+### The flow event queue
+
+Non-trivial experiments may have multiple physics events contained inside a single MIDAS
+event. In this situation one can unpack each physics event into it's own separate flow event
+and ask manalyzer to process each of these flow events separately, as if there were multiple
+midas events.
+
+This is done in the Analyze() method by placing the individual flow events
+into the flow queue: TAFlowEvent*e = unpack_event(midas_event); runinfo->fFlowQueue.push_back(e);
+
+After manalyzer finishes processing the current midas event, it will proceed
+with processing the queued flow events. Each queued flow event is processed the same way
+as normal midas events, except that the Analyze() method is not called (there is no midas event!),
+so only the AnalyzeFlowEvent() method will be used. The flags work the same way, and one can chain
+additional flow objects to the flow event as it passes from one module to the next. At the
+very end, the flow event is automatically deleted.
+
+After all queued flow events are processed, manalyzer will continue with processing
+the next midas event.
+
+The flow event queue can also be used to finish processing any events remaining buffered
+or queued at the EndRun() time as described in the next section.
+
 ### The PreEndRun method
 
 Sometimes physics events need to be generated and processed at the end of a run after all
