@@ -344,7 +344,11 @@ public:
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->PreEndRun(fRunInfo, &fRunInfo->fFlowQueue);
 
-      AnalyzeFlowQueue();
+      // FIXME: flags may be set to TAFlag_QUIT, which should
+      // be propagated to the called of EndRun() who should
+      // detect it and cause the analyzer to shutdown.
+      TAFlags flags = 0;
+      AnalyzeFlowQueue(&flags);
 
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->EndRun(fRunInfo);
@@ -388,12 +392,14 @@ public:
             break;
          if ((*flags) & TAFlag_SKIP)
             break;
+         if ((*flags) & TAFlag_QUIT)
+            break;
       }
 
       return flow;
    }
 
-   void AnalyzeFlowQueue()
+   void AnalyzeFlowQueue(TAFlags* ana_flags)
    {
       while (!fRunInfo->fFlowQueue.empty()) {
          TAFlowEvent* flow = fRunInfo->fFlowQueue.front();
@@ -403,6 +409,8 @@ public:
             flow = AnalyzeFlowEvent(&flags, flow);
             if (flow)
                delete flow;
+            if (flags & TAFlag_QUIT)
+               *ana_flags |= TAFlag_QUIT;
          }
       }
    }
@@ -431,7 +439,7 @@ public:
       if (flow)
          delete flow;
 
-      AnalyzeFlowQueue();
+      AnalyzeFlowQueue(flags);
    }
 };
 
@@ -923,30 +931,31 @@ public:
 #define CTRL_NEXT 2
 #define CTRL_CONTINUE 3
 #define CTRL_PAUSE    4
+#define CTRL_NEXT_FLOW 5
 
 #define CTRL_TBROWSER 11
 
-class XCtrl
+class ValueHolder
 {
 public:
    int fValue;
 
-   XCtrl() // ctor
+   ValueHolder() // ctor
    {
       fValue = 0;
    }
 };
 
-class XButton: public TGTextButton
+class TextButton: public TGTextButton
 {
 public:
-   XCtrl* fCtrl;
+   ValueHolder* fHolder;
    int    fValue;
    
-   XButton(TGWindow*p, const char* text, XCtrl* ctrl, int value) // ctor
+   TextButton(TGWindow*p, const char* text, ValueHolder* holder, int value) // ctor
       : TGTextButton(p, text)
    {
-      fCtrl = ctrl;
+      fHolder = holder;
       fValue = value;
    }
 
@@ -965,31 +974,38 @@ public:
    void Clicked()
    {
       //printf("Clicked button %s, value %d!\n", GetString().Data(), fValue);
-      if (fCtrl)
-         fCtrl->fValue = fValue;
+      if (fHolder)
+         fHolder->fValue = fValue;
       //gSystem->ExitLoop();
    }
 };
 
 class MainWindow: public TGMainFrame
 {
-private:
+public:
    TGPopupMenu*		fMenu;
    TGMenuBar*		fMenuBar;
-   TGLayoutHints*	menuBarLayout;
-   TGLayoutHints*	menuBarItemLayout;
+   TGLayoutHints*	fMenuBarItemLayout;
 
-public:
-   XCtrl* fCtrl;
+   TGCompositeFrame*    fButtonsFrame;
+
+   ValueHolder* fHolder;
+
+   TextButton* fNextButton;
+   TextButton* fNextFlowButton;
+   TextButton* fContinueButton;
+   TextButton* fPauseButton;
+
+   TextButton* fQuitButton;
   
 public:
-   MainWindow(const TGWindow*w, int s1, int s2, XCtrl* ctrl) // ctor
+   MainWindow(const TGWindow*w, int s1, int s2, ValueHolder* holder) // ctor
       : TGMainFrame(w, s1, s2)
    {
       if (gTrace)
          printf("MainWindow::ctor!\n");
 
-      fCtrl = ctrl;
+      fHolder = holder;
       //SetCleanup(kDeepCleanup);
    
       SetWindowName("ROOT Analyzer Control");
@@ -999,66 +1015,48 @@ public:
       fMenu->AddEntry("New TBrowser", CTRL_TBROWSER);
       fMenu->AddEntry("-", 0);
       fMenu->AddEntry("Next",     CTRL_NEXT);
+      fMenu->AddEntry("NextFlow", CTRL_NEXT_FLOW);
       fMenu->AddEntry("Continue", CTRL_CONTINUE);
       fMenu->AddEntry("Pause",    CTRL_PAUSE);
       fMenu->AddEntry("-", 0);
       fMenu->AddEntry("Quit",     CTRL_QUIT);
 
-      menuBarItemLayout = new TGLayoutHints(kLHintsTop|kLHintsLeft, 0, 4, 0, 0);
+      fMenuBarItemLayout = new TGLayoutHints(kLHintsTop|kLHintsLeft, 0, 4, 0, 0);
 
       fMenu->Associate(this);
 
       fMenuBar = new TGMenuBar(this, 1, 1, kRaisedFrame);
-      fMenuBar->AddPopup("&Rootana", fMenu, menuBarItemLayout);
+      fMenuBar->AddPopup("&Rootana", fMenu, fMenuBarItemLayout);
       fMenuBar->Layout();
 
-      menuBarLayout = new TGLayoutHints(kLHintsTop|kLHintsLeft|kLHintsExpandX);
-      AddFrame(fMenuBar, menuBarLayout);
+      AddFrame(fMenuBar, new TGLayoutHints(kLHintsTop|kLHintsLeft|kLHintsExpandX));
 
-      // Create a container frames containing buttons
+      fButtonsFrame = new TGVerticalFrame(this);
 
-      // one button is resized up to the parent width.
-      // Note! this width should be fixed!
-      TGVerticalFrame *hframe1 = new TGVerticalFrame(this, 170, 50, kFixedWidth);
+      fNextButton = new TextButton(fButtonsFrame, "Next", holder, CTRL_NEXT);
+      fNextFlowButton = new TextButton(fButtonsFrame, "Next Flow Event", holder, CTRL_NEXT_FLOW);
 
-      // to take whole space we need to use kLHintsExpandX layout hints
-      hframe1->AddFrame(new XButton(hframe1, "&Next ", ctrl, CTRL_NEXT),
-                        new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 2, 2));
-      AddFrame(hframe1, new TGLayoutHints(kLHintsCenterX, 2, 2, 5, 1));
+      fButtonsFrame->AddFrame(fNextButton, new TGLayoutHints(kLHintsExpandX, 1, 1, 1, 1));
+      fButtonsFrame->AddFrame(fNextFlowButton, new TGLayoutHints(kLHintsExpandX, 1, 1, 1, 1));
 
-      // two buttons are resized up to the parent width.
-      // Note! this width should be fixed!
-      TGCompositeFrame *cframe1 = new TGCompositeFrame(this, 170, 20, kHorizontalFrame | kFixedWidth);
+      TGHorizontalFrame *hframe = new TGHorizontalFrame(fButtonsFrame);
 
-      // to share whole parent space we need to use kLHintsExpandX layout hints
-      cframe1->AddFrame(new XButton(cframe1, "&Continue", ctrl, CTRL_CONTINUE),
-                        new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
+      fContinueButton = new TextButton(hframe, " Continue ", holder, CTRL_CONTINUE);
+      fPauseButton = new TextButton(hframe, " Pause ", holder, CTRL_PAUSE);
 
-      cframe1->AddFrame(new XButton(cframe1, "&Pause", ctrl, CTRL_PAUSE),
-                        new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 2, 2, 2));
+      hframe->AddFrame(fContinueButton, new TGLayoutHints(kLHintsExpandX, 1, 1, 1, 1));
+      hframe->AddFrame(fPauseButton, new TGLayoutHints(kLHintsExpandX, 1, 1, 1, 1));
 
-      AddFrame(cframe1, new TGLayoutHints(kLHintsCenterX, 2, 2, 5, 1));
+      fButtonsFrame->AddFrame(hframe, new TGLayoutHints(kLHintsExpandX));
 
-      // three buttons are resized up to the parent width.
-      // Note! this width should be fixed!
-      TGCompositeFrame *cframe2 = new TGCompositeFrame(this, 170, 20, kHorizontalFrame | kFixedWidth);
-
-#if 0
-      TGButton* ok = new XButton(cframe2, "OK", ctrl, 0);
-      // to share whole parent space we need to use kLHintsExpandX layout hints
-      cframe2->AddFrame(ok, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 3, 2, 2, 2));
-
-      TGButton* cancel = new XButton(cframe2, "Cancel ", ctrl, 0);
-      cframe2->AddFrame(cancel, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 3, 2, 2, 2));
-#endif
-
-      cframe2->AddFrame(new XButton(cframe2, "&Quit ", ctrl, CTRL_QUIT),
-                        new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 2, 2));
-      
-      AddFrame(cframe2, new TGLayoutHints(kLHintsCenterX, 2, 2, 5, 1));
+      fQuitButton = new TextButton(fButtonsFrame, "Quit ", holder, CTRL_QUIT);
+      fButtonsFrame->AddFrame(fQuitButton, new TGLayoutHints(kLHintsExpandX, 1, 1, 1, 1));
    
+      AddFrame(fButtonsFrame, new TGLayoutHints(kLHintsExpandX));
+
       MapSubwindows(); 
       Layout();
+      Resize(GetDefaultSize());
       MapWindow();
    }
 
@@ -1069,8 +1067,7 @@ public:
 
       delete fMenu;
       delete fMenuBar;
-      delete menuBarLayout;
-      delete menuBarItemLayout;
+      delete fMenuBarItemLayout;
    }
 
    void CloseWindow()
@@ -1078,8 +1075,8 @@ public:
       if (gTrace)
          printf("MainWindow::CloseWindow()\n");
 
-      if (fCtrl)
-         fCtrl->fValue = CTRL_QUIT;
+      if (fHolder)
+         fHolder->fValue = CTRL_QUIT;
       //gSystem->ExitLoop();
    }
   
@@ -1104,8 +1101,8 @@ public:
                         break;
                      default:
                         //printf("Control %d!\n", (int)parm1);
-                        if (fCtrl)
-                           fCtrl->fValue = parm1;
+                        if (fHolder)
+                           fHolder->fValue = parm1;
                         //gSystem->ExitLoop();
                         break;
                      }
@@ -1123,9 +1120,10 @@ class InteractiveModule: public TARunObject
 {
 public:
    bool fContinue;
+   bool fNextFlow;
    int  fSkip;
 #ifdef HAVE_ROOT
-   static XCtrl* fgCtrl;
+   static ValueHolder* fgHolder;
    static MainWindow *fgCtrlWindow;
 #endif
    
@@ -1135,12 +1133,13 @@ public:
       if (gTrace)
          printf("InteractiveModule::ctor, run %d\n", runinfo->fRunNo);
       fContinue = false;
+      fNextFlow = false;
       fSkip = 0;
 #ifdef HAVE_ROOT
-      if (!fgCtrl)
-         fgCtrl = new XCtrl;
+      if (!fgHolder)
+         fgHolder = new ValueHolder;
       if (!fgCtrlWindow && runinfo->fRoot->fgApp) {
-         fgCtrlWindow = new MainWindow(gClient->GetRoot(), 200, 300, fgCtrl);
+         fgCtrlWindow = new MainWindow(gClient->GetRoot(), 200, 300, fgHolder);
       }
 #endif
    }
@@ -1162,6 +1161,10 @@ public:
 
 #ifdef HAVE_ROOT
       if (fgCtrlWindow && runinfo->fRoot->fgApp) {
+         fgCtrlWindow->fNextButton->SetEnabled(false);
+         fgCtrlWindow->fNextFlowButton->SetEnabled(false);
+         fgCtrlWindow->fContinueButton->SetEnabled(false);
+         fgCtrlWindow->fPauseButton->SetEnabled(false);
          while (1) {
 #ifdef HAVE_THTTP_SERVER
             if (TARootHelper::fgHttpServer) {
@@ -1182,8 +1185,8 @@ public:
             gSystem->Sleep(10);
 #endif
 
-            int ctrl = fgCtrl->fValue;
-            fgCtrl->fValue = 0;
+            int ctrl = fgHolder->fValue;
+            fgHolder->fValue = 0;
 
             switch (ctrl) {
             case CTRL_QUIT:
@@ -1208,30 +1211,8 @@ public:
       printf("InteractiveModule::ResumeRun, run %d\n", runinfo->fRunNo);
    }
 
-   TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
+   void InteractiveLoop(TARunInfo* runinfo, TAFlags* flags)
    {
-      printf("InteractiveModule::Analyze, run %d, %s\n", runinfo->fRunNo, event->HeaderToString().c_str());
-
-#ifdef HAVE_ROOT
-      if (fgCtrl->fValue == CTRL_QUIT) {
-         *flags |= TAFlag_QUIT;
-         return flow;
-      } else if (fgCtrl->fValue == CTRL_PAUSE) {
-         fContinue = false;
-      }
-#endif
-
-      if (fContinue && !(*flags & TAFlag_DISPLAY)) {
-         return flow;
-      } else {
-         fContinue = false;
-      }
-
-      if (fSkip > 0) {
-         fSkip--;
-         return flow;
-      }
-
 #ifdef HAVE_ROOT
       if (fgCtrlWindow && runinfo->fRoot->fgApp) {
          while (1) {
@@ -1248,24 +1229,27 @@ public:
 #ifdef HAVE_MIDAS
             if (!TMidasOnline::instance()->sleep(10)) {
                *flags |= TAFlag_QUIT;
-               return flow;
+               return;
             }
 #else
             gSystem->Sleep(10);
 #endif
 
-            int ctrl = fgCtrl->fValue;
-            fgCtrl->fValue = 0;
+            int ctrl = fgHolder->fValue;
+            fgHolder->fValue = 0;
 
             switch (ctrl) {
             case CTRL_QUIT:
                *flags |= TAFlag_QUIT;
-               return flow;
+               return;
             case CTRL_NEXT:
-               return flow;
+               return;
+            case CTRL_NEXT_FLOW:
+               fNextFlow = true;
+               return;
             case CTRL_CONTINUE:
                fContinue = true;
-               return flow;
+               return;
             }
          }
       }
@@ -1287,25 +1271,76 @@ public:
             printf(" aNNN - analyze N events, i.e. \"a10\"\n");
          } else if (str[0] == 'q') { // "quit"
             *flags |= TAFlag_QUIT;
-            return flow;
+            return;
          } else if (str[0] == 'n') { // "next"
-            return flow;
+            return;
          } else if (str[0] == 'c') { // "continue"
             fContinue = true;
-            return flow;
+            return;
          } else if (str[0] == 'a') { // "analyze" N events
             int num = atoi(str+1);
             printf("Analyzing %d events\n", num);
             if (num > 0) {
                fSkip = num-1;
             }
-            return flow;
+            return;
          }
       }
+   }
+
+   TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
+   {
+      printf("InteractiveModule::Analyze, run %d, %s\n", runinfo->fRunNo, event->HeaderToString().c_str());
+
+#ifdef HAVE_ROOT
+      if (fgHolder->fValue == CTRL_QUIT) {
+         *flags |= TAFlag_QUIT;
+         return flow;
+      } else if (fgHolder->fValue == CTRL_PAUSE) {
+         fContinue = false;
+      }
+#endif
+
+      if ((fContinue||fNextFlow) && !(*flags & TAFlag_DISPLAY)) {
+         return flow;
+      } else {
+         fContinue = false;
+      }
+
+      if (fSkip > 0) {
+         fSkip--;
+         return flow;
+      }
+
+      InteractiveLoop(runinfo, flags);
 
       return flow;
    }
 
+   TAFlowEvent* AnalyzeFlowEvent(TARunInfo* runinfo, TAFlags* flags, TAFlowEvent* flow)
+   {
+      printf("InteractiveModule::AnalyzeFlowEvent, run %d\n", runinfo->fRunNo);
+
+#ifdef HAVE_ROOT
+      if (fgHolder->fValue == CTRL_QUIT) {
+         *flags |= TAFlag_QUIT;
+         return flow;
+      } else if (fgHolder->fValue == CTRL_PAUSE) {
+         fContinue = false;
+      }
+#endif
+
+      if ((!fNextFlow) && !(*flags & TAFlag_DISPLAY)) {
+         return flow;
+      }
+
+      fNextFlow = false;
+
+      InteractiveLoop(runinfo, flags);
+      
+      return flow;
+   }
+   
    void AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)
    {
       if (gTrace)
@@ -1314,7 +1349,7 @@ public:
 };
 
 MainWindow* InteractiveModule::fgCtrlWindow = NULL;
-XCtrl* InteractiveModule::fgCtrl = NULL;
+ValueHolder* InteractiveModule::fgHolder = NULL;
 
 class InteractiveModuleFactory: public TAFactory
 {
