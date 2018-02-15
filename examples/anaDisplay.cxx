@@ -65,6 +65,7 @@ public:
     
     if(anaManager->HaveTRB3Histograms()){
       AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetTRB3Histograms(),"TRB3"));
+      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetTRB3FineHistograms(),"TRB3 Fine"));
       AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetTRB3DiffHistograms(),"TRB3 Diff"));
     }
 
