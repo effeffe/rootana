@@ -3,15 +3,15 @@
 
 // Use this list here to decide which type of equipment to use.
 
-#define USE_V792
+//#define USE_V792
 //#define USE_V1190
 //#define USE_L2249
 //#define USE_AGILENT
-#define USE_V1720
-#define USE_V1720_CORRELATIONS
+//#define USE_V1720
+//#define USE_V1720_CORRELATIONS
 //#define USE_V1730DPP
-#define USE_V1730RAW
-#define USE_DT724
+//#define USE_V1730RAW
+//#define USE_DT724
 #define USE_TRB3
 #define USE_CAMACADC
 
@@ -67,6 +67,7 @@ public:
 	TV1730RawWaveform* GetV1730Rawistograms();
 	TDT724Waveform* GetDT724Histograms();
         TTRB3Histograms* GetTRB3Histograms();
+  TTRB3FineHistograms* GetTRB3FineHistograms(){return fTRB3FineHistograms;}
         TTRB3DiffHistograms* GetTRB3DiffHistograms();
         TCamacADCHistograms* GetCamacADCHistograms();
 
@@ -83,6 +84,7 @@ private:
 	TV1730RawWaveform *fV1730RawWaveform;
 	TDT724Waveform *fDT724Waveform;
   	TTRB3Histograms *fTRB3Histograms;
+  	TTRB3FineHistograms *fTRB3FineHistograms;
     	TTRB3DiffHistograms *fTRB3DiffHistograms;
     	TCamacADCHistograms *fCamacADCHistograms;
 

@@ -17,7 +17,28 @@ class TTRB3Histograms : public THistogramArrayBase {
   void BeginRun(int transition,int run,int time);
 
   /// Take actions at end run  
-  void EndRun(int transition,int run,int time);
+  void EndRun(int transition,int run,int time){};
+
+private:
+
+  void CreateHistograms();
+    
+};
+
+/// Class for making histograms of TRB3 raw fine times .
+class TTRB3FineHistograms : public THistogramArrayBase {
+ public:
+  TTRB3FineHistograms();
+  virtual ~TTRB3FineHistograms(){};
+  
+  /// Update the histograms for this canvas.
+  void UpdateHistograms(TDataContainer& dataContainer);
+
+  /// Take actions at begin run
+  void BeginRun(int transition,int run,int time);
+
+  /// Take actions at end run  
+  void EndRun(int transition,int run,int time){};
 
 private:
 
@@ -38,7 +59,7 @@ class TTRB3DiffHistograms : public THistogramArrayBase {
   void BeginRun(int transition,int run,int time);
 
   /// Take actions at end run  
-  void EndRun(int transition,int run,int time);
+  void EndRun(int transition,int run,int time){};
 
 private:
 

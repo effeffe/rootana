@@ -67,10 +67,13 @@ TAnaManager::TAnaManager(){
 #endif
 
         fTRB3Histograms = 0;
+        fTRB3FineHistograms = 0;
         fTRB3DiffHistograms = 0;
 #ifdef USE_TRB3
 	fTRB3Histograms = new TTRB3Histograms();
 	fTRB3Histograms->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
+	fTRB3FineHistograms = new TTRB3FineHistograms();
+	fTRB3FineHistograms->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
         fTRB3DiffHistograms = new TTRB3DiffHistograms();
         fTRB3DiffHistograms->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
 #endif
@@ -97,6 +100,7 @@ int TAnaManager::ProcessMidasEvent(TDataContainer& dataContainer){
 	if(fV1730RawWaveform)  fV1730RawWaveform->UpdateHistograms(dataContainer);        
 	if(fDT724Waveform)  fDT724Waveform->UpdateHistograms(dataContainer);
         if(fTRB3Histograms)  fTRB3Histograms->UpdateHistograms(dataContainer);
+        if(fTRB3FineHistograms)  fTRB3FineHistograms->UpdateHistograms(dataContainer);
         if(fTRB3DiffHistograms)  fTRB3DiffHistograms->UpdateHistograms(dataContainer); 
         if(fCamacADCHistograms)  fCamacADCHistograms->UpdateHistograms(dataContainer); 
 
