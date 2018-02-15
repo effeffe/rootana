@@ -126,6 +126,7 @@ OBJS += obj/TV1730RawData.o
 OBJS += obj/TDT724RawData.o
 OBJS += obj/TL2249Data.o
 OBJS += obj/TMesytecData.o
+OBJS += obj/TRB3Decoder.o
 OBJS += obj/TTRB3Data.o
 OBJS += obj/TCamacADCData.o
 
