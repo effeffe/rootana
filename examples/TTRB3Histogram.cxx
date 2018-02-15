@@ -40,8 +40,8 @@ void TTRB3Histograms::CreateHistograms(){
       
       sprintf(title,"TRB3 histogram for fpga=%i channel=%i",j, i);	
       
-      TH1D *tmp = new TH1D(name,title,50000,0,10000);
-      tmp->SetXTitle("Hit time (ns)");
+      TH1D *tmp = new TH1D(name,title,500000,0,10000000);
+      tmp->SetXTitle("Hit time (ps)");
       tmp->SetYTitle("Number of Entries");
       push_back(tmp);
     }
@@ -126,8 +126,8 @@ void TTRB3DiffHistograms::CreateHistograms(){
       
       sprintf(title,"TRB3 difference histogram for fpga=%i channel=%i",j, i);	
       
-      TH1D *tmp = new TH1D(name,title,20000,-109.4,109.4);
-      tmp->SetXTitle("Hit time (ns)");
+      TH1D *tmp = new TH1D(name,title,20000,-109400,109400);
+      tmp->SetXTitle("Hit time (ps)");
       tmp->SetYTitle("Number of Entries");
       push_back(tmp);
     }
@@ -157,8 +157,8 @@ void TTRB3DiffHistograms::UpdateHistograms(TDataContainer& dataContainer){
       if(fReferenceFpga == id && fReferenceCh == ch){
         reftime = time;
         foundRef = true;
-      }
-
+        //        std::cout << "Epoch time : " << ((double)meas[i].GetEpochTime())/1000000.0 << std::endl;
+      }      
     }
 
     if(foundRef){

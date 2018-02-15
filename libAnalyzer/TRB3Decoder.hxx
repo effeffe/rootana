@@ -32,9 +32,9 @@ public:
     return (tdc_measurement_word & 0x7ffff);
   }
 
-  // semi calibrated time in nanoseconds
+  // semi calibrated time in picoseconds
   double GetFinalTime() const { // Currently return time with crude calibration
-    return ((double) GetCoarseTime()) * 5.0 - ((((double)GetFineTime())-17.0)/457.0) *5.0;        
+    return ((double) GetCoarseTime()) * 5000.0 - ((((double)GetFineTime())-17.0)/457.0) *5000.0;        
   }
   
   uint32_t GetFineTime() const {
