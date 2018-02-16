@@ -1,6 +1,11 @@
 #include "TRB3Decoder.hxx"
 
 
+void Trb3Calib::UseTRB3LinearCalibration(bool uselinear){useLinearCalibration = uselinear;};
+void Trb3Calib::SetTRB3LinearCalibrationConstants(float low_value, float high_value){
+  trb3LinearLowEnd = low_value;
+  trb3LinearHighEnd = high_value;
+}
 
 
 TrbDecoder::TrbDecoder(int bklen, void *pdata){

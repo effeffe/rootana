@@ -1,6 +1,6 @@
 #include "TAnaManager.hxx"
 #include "TV1720RawData.h"
-
+#include "TRB3Decoder.hxx"
 
 TAnaManager::TAnaManager(){
 
@@ -70,7 +70,11 @@ TAnaManager::TAnaManager(){
         fTRB3FineHistograms = 0;
         fTRB3DiffHistograms = 0;
 #ifdef USE_TRB3
-	fTRB3Histograms = new TTRB3Histograms();
+
+        // Set the TDC linear calibration values
+        Trb3Calib::getInstance().SetTRB3LinearCalibrationConstants(17,471);
+        
+        fTRB3Histograms = new TTRB3Histograms();
 	fTRB3Histograms->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
 	fTRB3FineHistograms = new TTRB3FineHistograms();
 	fTRB3FineHistograms->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.

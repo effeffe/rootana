@@ -12,6 +12,44 @@
 #include <iostream>
 #include <inttypes.h>
 
+// Some global variables for setting the TRB3 calibration
+class Trb3Calib
+{
+public:
+  static Trb3Calib& getInstance()
+  {
+    static Trb3Calib    instance;
+    return instance;
+  }
+
+  void UseTRB3LinearCalibration(bool uselinear);  
+  void SetTRB3LinearCalibrationConstants(float low_value, float high_value);  
+
+  bool LinearCalib(){return useLinearCalibration;}
+  float LinearCalibLowEnd(){ return trb3LinearLowEnd;};
+  float LinearCalibHighEnd(){ return trb3LinearHighEnd;};
+
+private:
+  Trb3Calib() {
+    useLinearCalibration = true; 
+    trb3LinearLowEnd = 17.0; 
+    trb3LinearHighEnd = 473.0; 
+  }
+  Trb3Calib(Trb3Calib const&);              // Don't Implement.
+  void operator=(Trb3Calib const&); // Don't implement
+
+  bool useLinearCalibration = true; // use linear calibration
+  
+  float trb3LinearLowEnd = 17.0; // low value of fine TDC hits
+  float trb3LinearHighEnd = 473.0; // high value of fine TDC hits
+  
+  
+};
+
+// Function to allow 
+
+
+
 /// Decoder for individual hits from GSI TFB3 FPGA-TDC
 class TrbTdcMeas {
 
@@ -33,8 +71,13 @@ public:
   }
 
   // semi calibrated time in picoseconds
-  double GetFinalTime() const { // Currently return time with crude calibration
-    return ((double) GetCoarseTime()) * 5000.0 - ((((double)GetFineTime())-17.0)/457.0) *5000.0;        
+  double GetFinalTime() const { 
+    if(Trb3Calib::getInstance().LinearCalib()){ // use linear calibration, if requested
+      return ((double) GetCoarseTime()) * 5000.0
+        - ((((double)GetFineTime())-Trb3Calib::getInstance().LinearCalibLowEnd())
+           /(Trb3Calib::getInstance().LinearCalibHighEnd() - Trb3Calib::getInstance().LinearCalibLowEnd())) *5000.0;
+    }
+    return -99.0;
   }
   
   uint32_t GetFineTime() const {
