@@ -123,7 +123,7 @@ class TrbDecoder {
 public:
 
   /// Constructor
-  TrbDecoder(int bklen, void *pdata);
+  TrbDecoder(int bklen, void *pdata, std::string bankname);
 
 
   void Print();

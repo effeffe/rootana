@@ -25,8 +25,6 @@ public:
 
   /// Get Packet size
   const uint32_t GetPacketSize(){return decoder.GetPacketSize();}
-  // Get Board ID
-  const uint32_t GetBoardId(){return decoder.GetBoardId();}
   // Get sequence number
   const uint32_t GetSeqNr(){return decoder.GetSeqNr();}
   // Get run number

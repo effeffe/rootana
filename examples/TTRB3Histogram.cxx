@@ -56,6 +56,7 @@ void TTRB3Histograms::CreateHistograms(){
 void TTRB3Histograms::UpdateHistograms(TDataContainer& dataContainer){
 
   TTRB3Data *data = dataContainer.GetEventData<TTRB3Data>("TRB0");
+  if(!data) data = dataContainer.GetEventData<TTRB3Data>("TRBA");
   if(data){
     //data->Print();
     
@@ -66,6 +67,7 @@ void TTRB3Histograms::UpdateHistograms(TDataContainer& dataContainer){
       uint32_t id = meas[i].GetBoardId();
       uint32_t ch = meas[i].GetChannel();
       int hch = NchannelPerFpga*id + ch;
+      //      std::cout << hch << " " << id << " " << ch << std::endl;
       GetHistogram(hch)->Fill(time);
 
     }
@@ -132,7 +134,8 @@ void TTRB3FineHistograms::CreateHistograms(){
 /// Update the histograms for this canvas.
 void TTRB3FineHistograms::UpdateHistograms(TDataContainer& dataContainer){
 
-  TTRB3Data *data = dataContainer.GetEventData<TTRB3Data>("TRB0");
+  TTRB3Data *data = dataContainer.GetEventData<TTRB3Data>("TRB0"); 
+  if(!data) data = dataContainer.GetEventData<TTRB3Data>("TRBA");
   if(data){
     double reftime = 0;
     for(int i = 0; i < data->GetNumberMeasurements(); i++){
@@ -208,6 +211,7 @@ void TTRB3DiffHistograms::CreateHistograms(){
 void TTRB3DiffHistograms::UpdateHistograms(TDataContainer& dataContainer){
 
   TTRB3Data *data = dataContainer.GetEventData<TTRB3Data>("TRB0");
+  if(!data) data = dataContainer.GetEventData<TTRB3Data>("TRBA");
   if(data){
     //data->Print();
 
