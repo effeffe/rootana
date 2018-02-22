@@ -46,8 +46,7 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
     fDecoding = fData[3];
 
     // Loop over rest of bank
-    bool foundFpgaBank = false;
-    uint32_t fpgaWord, headerWord;
+    uint32_t fpgaWord = 0, headerWord = 0;
     //std::cout << "Number of words: " << GetSize() << std::endl;
     for(int pointer = 6; pointer < 6 + size_subevent; pointer++){
       
@@ -60,10 +59,11 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
 	 (word & 0xfff0ffff) == 0x00000102 ||
 	 (word & 0xfff0ffff) == 0x00000103 ){
 	fpgaWord = word;
+	//std::cout << "Found header: " << fpgaWord << " at " << pointer <<  std::endl;
+
 	// next word if TDC header
 	pointer++;
 	headerWord = fData[pointer];
-	//std::cout << "Found header: " << fpgaWord << std::endl;
 	continue;
       }
       
@@ -75,14 +75,16 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
 	
 	if((fpgaWord & 0xf) > 3 ){
 	  std::cout << "TDC FPGA ID? " << std::hex << fpgaWord << " " << headerWord 
-		    << " " << tdcWord << std::dec << std::endl;
-          for(int i = 0; i < 10; i++)
+		    << " " << tdcWord << " " << pointer << " " << size_subevent << std::dec << std::endl;
+          for(int i = 0; i < 6 + size_subevent; i++)
             std::cout << i << " 0x"<<std::hex
                       << fData[i] << std::dec << std::endl;
-        }
-	if((tdcWord & 0xe0000000) == 0x80000000){
-	  fMeasurements.push_back(TrbTdcMeas(fpgaWord, headerWord,
-					     epochWord, tdcWord));
+        }else{
+	  
+	  if((tdcWord & 0xe0000000) == 0x80000000){
+	    fMeasurements.push_back(TrbTdcMeas(fpgaWord, headerWord,
+					       epochWord, tdcWord));
+	  }
 	}
       }       
     }  
@@ -104,7 +106,6 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
     fTime = fData[6];
     
     // Loop over rest of bank
-    bool foundFpgaBank = false;
     uint32_t fpgaWord, headerWord;
     //std::cout << "Number of words: " << GetSize() << std::endl;
     for(int pointer = 7; pointer < bklen; pointer++){
