@@ -17,6 +17,8 @@ void Trb3Calib::SetTRB3LinearCalibrationConstants(float low_value, float high_va
       (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
 #endif
 
+// See figure 23 of TRB3 manual for description of TRB3 packet
+
 TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
   
   fPacketSize = 0;
@@ -42,54 +44,81 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
 #endif
       }
     }
+    // This is the number of words in the sub-event packet, not including this word.
     int size_subevent = fData[2]/4;
     fDecoding = fData[3];
 
+    // Decode sub-event ID, trigger number and trigger code!!!
+    
     // Loop over rest of bank
     uint32_t fpgaWord = 0, headerWord = 0;
-    //std::cout << "Number of words: " << GetSize() << std::endl;
-    for(int pointer = 6; pointer < 6 + size_subevent; pointer++){
-      
-      uint32_t word = fData[pointer];
-      //std::cout << pointer << " " << std::hex
-      //        << word << std::dec << std::endl;
-      // Look for word indicating a new FPGA
-      if((word & 0xfff0ffff) == 0x00000100 ||
-	 (word & 0xfff0ffff) == 0x00000101 ||
-	 (word & 0xfff0ffff) == 0x00000102 ||
-	 (word & 0xfff0ffff) == 0x00000103 ){
-	fpgaWord = word;
-	//std::cout << "Found header: " << fpgaWord << " at " << pointer <<  std::endl;
+    int pointer = 6;
 
-	// next word if TDC header
+    // We search for words that look like the FPGA header words (sub-sub-event IDs);
+    // if we don't find them, break out.
+    bool finished = false;
+    while (!finished){
+      uint32_t word = fData[pointer];
+      // Look for word indicating a new FPGA
+      if((word & 0x0000ffff) == 0x00000100 ||
+	 (word & 0x0000ffff) == 0x00000101 ||
+	 (word & 0x0000ffff) == 0x00000102 ||
+	 (word & 0x0000ffff) == 0x00000103 ){
+	fpgaWord = word;
+
+        int nwords_subevent = ((word & 0xffff0000) >> 16);
+
+        //	std::cout << "Found header: " << std::hex << fpgaWord << std::dec << " at " << pointer << " nwords: " << nwords_subevent<< std::endl;
+          
+       	// next word if TDC header
 	pointer++;
 	headerWord = fData[pointer];
-	continue;
+                
+        // Now loop over the next couple words, grabbing the TDC data
+        for(int i = 0; i < nwords_subevent; i++){
+          pointer++;
+          uint32_t word = fData[pointer];
+          // Look for the epoch counter word; the TDC data word follows it
+          if((word & 0xe0000000) == 0x60000000){
+            uint32_t epochWord = word;
+            pointer++; i++;
+            uint32_t tdcWord = fData[pointer];
+            
+            if((fpgaWord & 0xf) > 3 ){
+              std::cout << "TDC FPGA ID > 3?  Not possible... " << std::hex << fpgaWord << " " << headerWord 
+                        << " " << tdcWord << " " << pointer << " " << size_subevent << std::dec << std::endl;
+              for(int i = 0; i < 6 ; i++)
+                std::cout << i << " 0x"<<std::hex
+                          << fData[i] << std::dec << std::endl;
+            }else{
+              
+              if((tdcWord & 0xe0000000) == 0x80000000){
+                //                std::cout << std::hex << "Adding TDC " << headerWord << " " <<  epochWord << " " << tdcWord << std::endl;
+                fMeasurements.push_back(TrbTdcMeas(fpgaWord, headerWord,
+                                                   epochWord, tdcWord));
+              }
+              
+            }
+          }          
+        }
+        
+      }else{
+        // The next word isn't a sub-sub-event ID word, so break out.
+        finished = true;
       }
       
-      // Look for the epoch counter word; the TDC data word follows it
-      if((word & 0xe0000000) == 0x60000000){
-	uint32_t epochWord = word;
-	pointer++;
-	uint32_t tdcWord = fData[pointer];
-	
-	if((fpgaWord & 0xf) > 3 ){
-	  std::cout << "TDC FPGA ID? " << std::hex << fpgaWord << " " << headerWord 
-		    << " " << tdcWord << " " << pointer << " " << size_subevent << std::dec << std::endl;
-          for(int i = 0; i < 6 + size_subevent; i++)
-            std::cout << i << " 0x"<<std::hex
-                      << fData[i] << std::dec << std::endl;
-        }else{
-	  
-	  if((tdcWord & 0xe0000000) == 0x80000000){
-	    fMeasurements.push_back(TrbTdcMeas(fpgaWord, headerWord,
-					       epochWord, tdcWord));
-	  }
-	}
-      }       
-    }  
-  
-    // Need to add some bank error checking here!!! And do a more careful loop over the data packet...
+      
+    }
+    
+
+    // Go to end of sub-event; check the trailer word
+    int end_packet = 2+ size_subevent -1;
+    if( fData[end_packet-1] != 0x15555){
+      std::cout << "TRB3 sub-event ID trailer word = " << fData[end_packet-1] << "; not expected 0x15555; bank decoding error!!!" << std::endl;
+    }
+
+    
+    //    std::cout << "Check  " << std::dec << pointer << " " << end_packet << " num measurements: " << fMeasurements.size() <<"\n_______\n"<< std::endl;
     
 
   }else{ // Old decoder, for data read from the DABC event builder
