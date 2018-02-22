@@ -51,7 +51,7 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
 
     // Decode sub-event ID, trigger number and trigger code!!!
     fDecoding = fData[3];
-    fSubEventID = fData[4] && 0xffff;
+    fSubEventID = fData[4] & 0xffff;
     fTriggerWord = fData[5];
       
     
