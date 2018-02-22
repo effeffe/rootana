@@ -44,11 +44,16 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
 #endif
       }
     }
+
     // This is the number of words in the sub-event packet, not including this word.
     int size_subevent = fData[2]/4;
-    fDecoding = fData[3];
+
 
     // Decode sub-event ID, trigger number and trigger code!!!
+    fDecoding = fData[3];
+    fSubEventID = fData[4] && 0xffff;
+    fTriggerWord = fData[5];
+      
     
     // Loop over rest of bank
     uint32_t fpgaWord = 0, headerWord = 0;
@@ -91,7 +96,7 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
                 std::cout << i << " 0x"<<std::hex
                           << fData[i] << std::dec << std::endl;
             }else{
-              
+
               if((tdcWord & 0xe0000000) == 0x80000000){
                 //                std::cout << std::hex << "Adding TDC " << headerWord << " " <<  epochWord << " " << tdcWord << std::endl;
                 fMeasurements.push_back(TrbTdcMeas(fpgaWord, headerWord,

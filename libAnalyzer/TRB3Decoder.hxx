@@ -86,7 +86,8 @@ public:
 
   uint32_t GetCoarseTime() const {return tdc_measurement_word & 0x7ff;};
 
-  uint32_t GetEpochTime() const {return tdc_epoch_word & 0xfffffff;};
+  // This epoch counter rolls every 10us
+  uint32_t GetEpochCounter() const {return tdc_epoch_word & 0xfffffff;};
   
   /// Get the channel number
   uint32_t GetChannel() const {
@@ -133,6 +134,15 @@ public:
   /// Get the Vector of TDC Measurements.
   std::vector<TrbTdcMeas>& GetMeasurements() {return fMeasurements;}
 
+  /// Get Sub-event ID
+  uint32_t GetSubEventID(){ return fSubEventID;}
+
+  /// Get Trigger Number
+  uint32_t GetTriggerNumber(){ return ((fTriggerWord & 0xffffff00) >> 8);}
+
+  /// Get Trigger code
+  uint32_t GetTriggerCode(){ return  (fTriggerWord & 0xff);}
+
   /// Get Packet size
   const uint32_t GetPacketSize(){return fPacketSize;}
   // Get Board ID
@@ -161,6 +171,8 @@ private:
   uint32_t fRunNr;
   uint32_t fDate;
   uint32_t fTime;
+  uint32_t fSubEventID;
+  uint32_t fTriggerWord;
   
   /// Vector of TDC Measurements.
   std::vector<TrbTdcMeas> fMeasurements;

@@ -38,6 +38,8 @@ public:
   // Get time; seconds since when???
   const uint32_t GetTime(){return decoder.GetTime();};;
   
+  /// Get decoder
+  TrbDecoder& GetDecoder() {return decoder;}
 
   
 private:
