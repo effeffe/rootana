@@ -82,6 +82,7 @@ TAnaManager::TAnaManager(){
         fTRB3DiffHistograms->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
 #endif
 
+        fCamacADCHistograms = 0;
 #ifdef USE_CAMACADC
 	fCamacADCHistograms = new TCamacADCHistograms();
 	fCamacADCHistograms->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
