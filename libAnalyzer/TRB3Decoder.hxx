@@ -38,10 +38,10 @@ private:
   Trb3Calib(Trb3Calib const&);              // Don't Implement.
   void operator=(Trb3Calib const&); // Don't implement
 
-  bool useLinearCalibration = true; // use linear calibration
+  bool useLinearCalibration; // use linear calibration
   
-  float trb3LinearLowEnd = 17.0; // low value of fine TDC hits
-  float trb3LinearHighEnd = 473.0; // high value of fine TDC hits
+  float trb3LinearLowEnd; // low value of fine TDC hits
+  float trb3LinearHighEnd; // high value of fine TDC hits
   
   
 };
