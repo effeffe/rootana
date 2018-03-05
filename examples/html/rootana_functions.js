@@ -189,7 +189,7 @@ function find_active_root_directory(async){
   if(!async){
 
     // Get the JSON description of current ROOT directory
-    var request = XMLHttpRequestGeneric();
+    var request = new XMLHttpRequest();
     request.open('GET', rootana_dir + "h.json", false);
     request.send(null);
   
@@ -225,7 +225,7 @@ function rootanaResetHistogram(histogramName){
   }
 
   // Send the request for data for this plot
-  var request = XMLHttpRequestGeneric();
+  var request = new XMLHttpRequest();
   request.open('GET', histo_address + "/" + histogramName +"/exe.json?method=Reset", false);
   console.log("Sending : " + histo_address + "/" + histogramName +"/exe.json?method=Reset");
   request.send(null);
