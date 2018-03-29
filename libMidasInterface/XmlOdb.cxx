@@ -46,7 +46,7 @@ XmlOdb::XmlOdb(const char*xbuf,int bufLength) //ctor
   //printf("end: %s\n", buf+bufLength-5);
 
   fParser->ParseBuffer(buf,bufLength);
-
+  free(buf);
   TXMLDocument* doc = fParser->GetXMLDocument();
   if (!doc)
     {
