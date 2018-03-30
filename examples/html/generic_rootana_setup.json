@@ -19,5 +19,8 @@
   "V1720 Pulse Height Comparison" : { 
     "MaxChannels" : 1,
     "WebserverName" : "V1720PHCompare"
+  },
+  "DisplaySettings" : {
+    "DisplayStyle" : "root"
   }
 } 

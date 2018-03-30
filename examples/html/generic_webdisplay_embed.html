@@ -74,7 +74,9 @@ var gStatusInflight = false;
 function midasStatus(){
 
   // don't make another request if the last request is still outstanding.
-  if(gStatusInflight){ return; }
+   if(gStatusInflight){
+      return;
+   }
 
   gStatusInflight = true;
 
@@ -195,7 +197,12 @@ function selectHistogramsFromJSON(){
    <!-- create button for each element in json -->
    var buttonString = "";
    var first = true;
+   var hasSettings = false;
    for (var key in histogramsSetupInfo){
+      if(key == "DisplaySettings"){
+         hasSettings = true;
+         continue;
+      }
       //console.log("key " + key);
       buttonString += "<button class='displayControlEl select_buttons";
       if(first){
@@ -245,6 +252,26 @@ function selectHistogramsFromJSON(){
       updatePlots(true);
    });
    
+
+   <!-- Disable the ROOT vs PLOT-LY option, if specified in options file  -->
+   var styleSet = false;
+   if(hasSettings && "DisplayStyle" in histogramsSetupInfo["DisplaySettings"]){
+      console.log("Have display style");
+      if( histogramsSetupInfo["DisplaySettings"]["DisplayStyle"] == "root" || histogramsSetupInfo["DisplaySettings"]["DisplayStyle"] == "plotly"){
+         $(":button.styleControlEl.select_buttons.selected").removeClass("selected");
+         $("#"+histogramsSetupInfo["DisplaySettings"]["DisplayStyle"]+"_style").addClass("selected");
+         document.getElementById("root_style").style.display = "none";   
+         document.getElementById("plotly_style").style.display = "none";
+         styleSet = true;
+         console.log("Making displays invisible");
+      }
+   }
+   
+   if(!styleSet){
+      console.log("Making displays visible");
+      document.getElementById("root_style").style.display = "inline";   
+      document.getElementById("plotly_style").style.display = "inline";
+   }
    
 }
 
