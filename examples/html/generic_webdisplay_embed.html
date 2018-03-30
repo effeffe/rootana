@@ -108,7 +108,8 @@ function setRootanaDirectory(webdir_end){
 }
 
 <!-- clean div for new display -->
-function cleanDivs(){   
+function cleanDivs(){
+   console.log("clean divs!!!");
    deleteOldPlots();   
    cleanJSDivs();   
    $("#graphdiv").html("");
@@ -211,10 +212,36 @@ function selectHistogramsFromJSON(){
       }
       buttonString += "' id='"+key+"' > "+key+" </button>\n";
    }
-   
-   document.getElementById("displayControlButtons").innerHTML = buttonString;
-   configureDisplay(histogramsSetupInfo);//,$(":button.displayControlEl.select_buttons.selected").attr('id')); 
 
+   <!-- Disable the ROOT vs PLOT-LY option, if specified in options file  -->
+   var styleSet = false;
+   if(hasSettings && "DisplayStyle" in histogramsSetupInfo["DisplaySettings"]){
+      console.log("Have display style");
+      if( histogramsSetupInfo["DisplaySettings"]["DisplayStyle"] == "root" || histogramsSetupInfo["DisplaySettings"]["DisplayStyle"] == "plotly"){
+         $(":button.styleControlEl.select_buttons.selected").removeClass("selected");
+         $("#"+histogramsSetupInfo["DisplaySettings"]["DisplayStyle"]+"_style").addClass("selected");
+         document.getElementById("root_style").style.display = "none";   
+         document.getElementById("plotly_style").style.display = "none";
+         // For reasons unclear I need to manually set the div size if I use only plotly
+         // This won't work cleanly on all displays.
+         if(histogramsSetupInfo["DisplaySettings"]["DisplayStyle"] == "plotly"){            
+            document.getElementById("graphdiv").style.width="600px";
+            document.getElementById("graphdiv").style.height="500px";
+         }
+         styleSet = true;
+         console.log("Making display style buttons invisible");
+      }
+   }
+   
+   if(!styleSet){
+      console.log("Making display style buttons visible");
+      document.getElementById("root_style").style.display = "inline";   
+      document.getElementById("plotly_style").style.display = "inline";
+   }  
+
+   // Configure the displays
+   document.getElementById("displayControlButtons").innerHTML = buttonString;
+   configureDisplay(histogramsSetupInfo);
 
    <!-- set up what happens for display button clicks -->
    $(":button.displayControlEl,select_buttons").click(function(){
@@ -253,26 +280,6 @@ function selectHistogramsFromJSON(){
    });
    
 
-   <!-- Disable the ROOT vs PLOT-LY option, if specified in options file  -->
-   var styleSet = false;
-   if(hasSettings && "DisplayStyle" in histogramsSetupInfo["DisplaySettings"]){
-      console.log("Have display style");
-      if( histogramsSetupInfo["DisplaySettings"]["DisplayStyle"] == "root" || histogramsSetupInfo["DisplaySettings"]["DisplayStyle"] == "plotly"){
-         $(":button.styleControlEl.select_buttons.selected").removeClass("selected");
-         $("#"+histogramsSetupInfo["DisplaySettings"]["DisplayStyle"]+"_style").addClass("selected");
-         document.getElementById("root_style").style.display = "none";   
-         document.getElementById("plotly_style").style.display = "none";
-         styleSet = true;
-         console.log("Making displays invisible");
-      }
-   }
-   
-   if(!styleSet){
-      console.log("Making displays visible");
-      document.getElementById("root_style").style.display = "inline";   
-      document.getElementById("plotly_style").style.display = "inline";
-   }
-   
 }
 
 
@@ -305,8 +312,6 @@ function plotAllHistograms(plotType,divNames, histogramNameList, deleteDygraph){
 function updatePlots(deleteDygraph){
 
    
-   // update the MIDAS status
-   //var status = midasStatus()
    // don't bother updating if run is not ongoing.
    if(gRunOngoing == false){ 
       document.getElementById("readstatus").innerHTML = "No updates when run stopped.";
@@ -499,7 +504,7 @@ function changeUpdateTime() {
           </div>
           
           
-          <a id="rootanaLink" href="https://localhost/rootana/">Root Online Browser</a> <br>
+          <a id="rootanaLink" href="https://localhost/rootana/">JS-ROOT Online Browser</a> <br>
           <br>
           Last updated: <span id="datetime"></span>
           <p>Read back status: <span id="readstatus"></span>       
