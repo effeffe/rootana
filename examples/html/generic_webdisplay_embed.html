@@ -137,11 +137,12 @@ function configureDisplay(histogramsSetupInfo){
   currentHistogramInfo = histogramsSetupInfo[histogramID];
 
 
-  <!-- set channel button; if channel <= 1, then handle individual histograms -->
-  if(currentHistogramInfo["MaxChannels"] <= 1){
+  <!-- set channel button; if MaxChannel <= 1 or MaxChannel doesn't exist, then handle individual histograms -->
+   if(!("MaxChannels" in currentHistogramInfo)
+      || currentHistogramInfo["MaxChannels"] <= 1){
     document.getElementById("ChannelSelectionDiv").style.display = "none";
     document.getElementById("DisplaySelectionDiv").style.display = "none";
-     // Treat it differently if it is a single histogram or a list of 
+     // Treat it differently if it is a single histogram or a list of histograms
      if( typeof currentHistogramInfo["WebserverName"] == 'string'){
         document.getElementById("listedHistoDisplayDiv").style.display = "none";
      }else{
@@ -149,6 +150,7 @@ function configureDisplay(histogramsSetupInfo){
         $("#listedHistoMenu").empty();
         for (var key in currentHistogramInfo["WebserverName"]){
            var option = document.createElement("option");
+           console.log("Test key : " + key);
            option.text = key;
            document.getElementById("listedHistoMenu").add(option); 
         }
@@ -327,12 +329,12 @@ function updatePlots(deleteDygraph){
 
    
    <!-- Check for single histogram; if so, just plot -->
-   if(currentHistogramInfo["MaxChannels"] == 1){
+   if(!("MaxChannels" in currentHistogramInfo) || currentHistogramInfo["MaxChannels"] == 1){
 
       if(typeof currentHistogramInfo["WebserverName"] == 'string'){   
          plotAllHistograms("single",["graphdiv"],[currentHistogramInfo["WebserverName"]],deleteDygraph);
       }else{
-         // find the histogram name using drop-down menu
+         // find the histogram name using drop-down menu         
          var menukey = document.getElementById("listedHistoMenu").value;
          plotAllHistograms("single",["graphdiv"],[currentHistogramInfo["WebserverName"][menukey]],deleteDygraph);
       }
