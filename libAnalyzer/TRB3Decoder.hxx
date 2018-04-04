@@ -91,7 +91,7 @@ public:
   
   /// Get the channel number
   uint32_t GetChannel() const {
-    return ((tdc_measurement_word & 0x7c00000 ) >> 22 );
+    return ((tdc_measurement_word & 0xfc00000 ) >> 22 );
   }
 
  
