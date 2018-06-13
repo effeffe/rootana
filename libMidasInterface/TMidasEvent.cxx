@@ -337,6 +337,15 @@ int TMidasEvent::SetBankList()
   if (fEventHeader.fEventId <= 0)
     return 0;
 
+  // Check if it is FIXED-style event ; but comment out check for now
+  if(0){
+    TMidas_BANK_HEADER *pbh = (TMidas_BANK_HEADER *) (fData);  
+    if(GetEventHeader()->fDataSize - (pbh->fDataSize + 8) != 0){ 
+      printf("Found FIXED-style event.  Skipping.\n"); 
+      return 0;  
+    }       
+  }               
+
   if (fBankList)
     return fBanksN;
 
