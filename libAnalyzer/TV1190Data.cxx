@@ -117,6 +117,9 @@ TV1190Data::TV1190Data(int bklen, int bktype, const char* name, void *pdata):
       fWordCountTotal += (word & 0x0001fffe0) >> 5;      
       fStatus.push_back( (word & 0x07000000) >> 24);
     }
+
+    // Found filler word; ignore
+    if( (word & 0xf8000000) == 0xc0000000) continue;
  
   }
 
@@ -128,14 +131,16 @@ TV1190Data::TV1190Data(int bklen, int bktype, const char* name, void *pdata):
       std::cout << "0x"<<std::hex << word << std::dec << std::endl;
     }
   }
-  if(found_trailer_word != GetSize()-1)
+  if(found_trailer_word != fWordCountTotal-1)
     std::cerr << "Error; did not find trailer on last word of bank. trailer word = " << found_trailer_word
 	      << " last word = " << GetSize()-1 << std::endl;
 
-  if(fWordCountTotal != GetSize()){
-    std::cerr << "Error in decoding V1190 data; word count in all trailers ("<<fWordCountTotal 
-	      << ") doesn't match bank size ("<< GetSize() << ")." << std::endl;
-  }
+  // this check doesn't make sense... sometimes we have filler words...
+  if(0)
+    if(fWordCountTotal != GetSize()){
+      std::cerr << "Error in decoding V1190 data; word count in all trailers ("<<fWordCountTotal 
+		<< ") doesn't match bank size ("<< GetSize() << ")." << std::endl;
+    }
 
 
 }
