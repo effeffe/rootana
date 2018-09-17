@@ -256,7 +256,7 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
   }
     
   if(gROOT->IsBatch() && !fUseBatchMode) {
-    printf("Cannot run in batch mode\n");
+    printf("Cannot run without X-window support; this program is not setup to run in batch mode\n");
     return 1;
   }
 
