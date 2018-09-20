@@ -61,6 +61,7 @@ A typical analyzer module may perform several duties:
 * extract data from a MIDAS event data bank, perform some computations, fill histograms: this is done in the module's Analyze() method.
 * perform final computations, save results: this is done in the module's EndRun() method.
 * prepare to start analyzes, create histogram objects, initialize data structures, load calibrations: in the module's BeginRun() method.
+* Print usage guide/ help (for flags passed to the module): in the module's Usage() method.
 
 An analyzer may be used to process just one data file, a sequence of data files from the same run (subrun files) or several
 different runs.
