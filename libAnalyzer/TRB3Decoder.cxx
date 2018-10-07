@@ -36,18 +36,24 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
     // check for correct endian-ness; if wrong, flip.
     // fourth word is endian encoding check word
     if(!((fData[3] & 0x1) == 1 && (fData[3] & 0x80000000) == 0)){
-      for(int i = 0; i < bklen/4; i++){
+      //std::cout << "Endian swapping" << std::endl;
+      for(int i = 0; i < bklen; i++){
 #if defined(OS_LINUX) && !defined(OS_DARWIN)
 	fData[i] = __bswap_32 (fData[i]);
 #else
         fData[i] = R__bswap_constant_32(fData[i]);
 #endif
+
+        //std::cout << bklen/4 << " "
+        //        << i << " " << std::hex << "0x"<<fData[i] << std::dec << std::endl;
+
       }
+
     }
 
     // This is the number of words in the sub-event packet, not including this word.
     int size_subevent = fData[2]/4;
-
+    //    std::cout << "subevent size : " << size_subevent << std::endl;
 
     // Decode sub-event ID, trigger number and trigger code!!!
     fDecoding = fData[3];
@@ -78,15 +84,17 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
        	// next word if TDC header
 	pointer++;
 	headerWord = fData[pointer];
-                
+
+        uint32_t epochWord = 0;
         // Now loop over the next couple words, grabbing the TDC data
         for(int i = 0; i < nwords_subevent; i++){
           pointer++;
           uint32_t word = fData[pointer];
-          // Look for the epoch counter word; the TDC data word follows it
-          if((word & 0xe0000000) == 0x60000000){
+          // Look for the epoch counter word; use this epoch word for all subsequent TDCs...
+          if((word & 0xe0000000) == 0x60000000)
             uint32_t epochWord = word;
-            pointer++; i++;
+
+          if((word & 0xe0000000) == 0x80000000){
             uint32_t tdcWord = fData[pointer];
             
             if((fpgaWord & 0xf) > 3 ){
@@ -97,12 +105,9 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
                           << fData[i] << std::dec << std::endl;
             }else{
 
-              if((tdcWord & 0xe0000000) == 0x80000000){
-                //                std::cout << std::hex << "Adding TDC " << headerWord << " " <<  epochWord << " " << tdcWord << std::endl;
-                fMeasurements.push_back(TrbTdcMeas(fpgaWord, headerWord,
+              //                std::cout << std::hex << "Adding TDC " << headerWord << " " <<  epochWord << " " << tdcWord << std::endl;
+              fMeasurements.push_back(TrbTdcMeas(fpgaWord, headerWord,
                                                    epochWord, tdcWord));
-              }
-              
             }
           }          
         }
@@ -114,7 +119,8 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
       
       
     }
-    
+
+    //    std::cout << "Number of hits: " << fMeasurements.size() << std::endl;
 
     // Go to end of sub-event; check the trailer word
     int end_packet = 2+ size_subevent -1;
