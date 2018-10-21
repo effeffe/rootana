@@ -87,3 +87,18 @@ pipelines:
           - make
           - . thisrootana.sh
           - echo $ROOTANASYS
+          
+    - step:
+        name: Build on CERN Centos7 with MIDAS
+        image: jmckenna/midas_docker
+        script:
+          - cat /etc/*release
+          - echo $ROOTSYS
+          - root-config --version
+          - root-config --libs
+          - root-config --glibs
+          - gcc -v
+          - make
+          - . thisrootana.sh
+          - echo $ROOTANASYS
+          
