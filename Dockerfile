@@ -1,4 +1,5 @@
 FROM rootproject/root-cc7
 COPY . /rootana
-RUN make /rootana
+WORKDIR /rootana
+RUN make 
 CMD source /rootana/thisrootana.sh
