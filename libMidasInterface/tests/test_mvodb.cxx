@@ -162,6 +162,59 @@ int main(int argc, char *argv[])
 
    printf("read run number (RI): %d\n", runno);
 
+   MVOdb* test = odb->Chdir("test_mvodb", true);
+
+   int ivalue = 1;
+   float fvalue = 2.2;
+   double dvalue = 3.3;
+   bool bvalue0 = false;
+   bool bvalue1 = true;
+   uint16_t u16value = 0xabcd;
+   uint32_t u32value = 0x12345678;
+   std::string svalue = "test string";
+
+   printf("\n");
+   printf("Test read of all data types:\n");
+   printf("\n");
+
+   test->RI("int", 0, &ivalue, true);
+   test->RF("float", 0, &fvalue, true);
+   test->RD("double", 0, &dvalue, true);
+   test->RB("bool0", 0, &bvalue0, true);
+   test->RB("bool1", 0, &bvalue1, true);
+   test->RU16("u16", 0, &u16value, true);
+   test->RU32("u32", 0, &u32value, true);
+   test->RS("string", 0, &svalue, true);
+
+   printf("int: %d\n", ivalue);
+   printf("float: %f\n", fvalue);
+   printf("double: %f\n", dvalue);
+   printf("bool0: %d\n", bvalue0);
+   printf("bool1: %d\n", bvalue1);
+   printf("u16: 0x%04x\n", u16value);
+   printf("u32: 0x%08x\n", u32value);
+   printf("string: \"%s\"\n", svalue.c_str());
+
+   printf("\n");
+   printf("Test write of all data types:\n");
+   printf("\n");
+
+   test->WI("int", 0, 10);
+   test->WF("float", 0, 11.1);
+   test->WD("double", 0, 22.2);
+   test->WB("bool0", 0, true);
+   test->WB("bool1", 0, false);
+   test->WU16("u16", 0, 0xcdef);
+   test->WU32("u32", 0, 0xdeadf00d);
+   test->WS("string", 0, "write test string");
+
+   printf("\n");
+   printf("Test special cases:\n");
+   printf("\n");
+
+   test->RI("nonexistant", 0, &ivalue, false);
+   test->RI("nonexistant_with_index", 1, &ivalue, true);
+
 #if 0
    printf("read array size of /test: %d\n", gOdb->odbReadArraySize("/test"));
    printf("read array size of /runinfo/run number: %d\n", gOdb->odbReadArraySize("/runinfo/Run number"));
