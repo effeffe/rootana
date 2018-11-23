@@ -22,48 +22,6 @@ static std::string toString(int value)
    return buf;
 }
 
-#if 0
-
-static int odbResizeArray(TMFE* mfe, const char*name, int tid, int size)
-{
-   int oldSize = odbReadArraySize(mfe, name);
-
-   if (oldSize >= size)
-      return oldSize;
-
-   int status;
-   HNDLE hkey;
-   HNDLE hdir = 0;
-
-   status = db_find_key(mfe->fDB, hdir, (char*)name, &hkey);
-   if (status != SUCCESS) {
-      mfe->Msg(MINFO, "odbResizeArray", "Creating \'%s\'[%d] of type %d", name, size, tid);
-      
-      status = db_create_key(mfe->fDB, hdir, (char*)name, tid);
-      if (status != SUCCESS) {
-         mfe->Msg(MERROR, "odbResizeArray", "Cannot create \'%s\' of type %d, db_create_key() status %d", name, tid, status);
-         return -1;
-      }
-         
-      status = db_find_key (mfe->fDB, hdir, (char*)name, &hkey);
-      if (status != SUCCESS) {
-         mfe->Msg(MERROR, "odbResizeArray", "Cannot create \'%s\', db_find_key() status %d", name, status);
-         return -1;
-      }
-   }
-   
-   mfe->Msg(MINFO, "odbResizeArray", "Resizing \'%s\'[%d] of type %d, old size %d", name, size, tid, oldSize);
-
-   status = db_set_num_values(mfe->fDB, hkey, size);
-   if (status != SUCCESS) {
-      mfe->Msg(MERROR, "odbResizeArray", "Cannot resize \'%s\'[%d] of type %d, db_set_num_values() status %d", name, size, tid, status);
-      return -1;
-   }
-   
-   return size;
-}
-#endif
-
 class MidasOdb: public MVOdb
 {
 public:
@@ -136,17 +94,70 @@ public:
 
    void ReadKey(const char* varname, int *tid, int *num_values, int *total_size, int *item_size, MVOdbError* error)
    {
-      // FIXME: incomplete!
       if (tid) *tid = 0;
       if (num_values) *num_values = 0;
       if (total_size) *total_size = 0;
       if (item_size)  *item_size = 0;
+
+      std::string path = Path(varname);
+
+      int status;
+      HNDLE hkey;
+
+      status = db_find_key(fDB, 0, path.c_str(), &hkey);
+      if (status != DB_SUCCESS) {
+         SetMidasStatus(error, fPrintError, path, "db_find_key", status);
+         return;
+      }
+      
+      KEY key;
+      status = db_get_key(fDB, hkey, &key);
+      if (status != DB_SUCCESS) {
+         SetMidasStatus(error, fPrintError, path, "db_get_key", status);
+         return;
+      }
+
+      if (tid)
+         *tid = key.type;
+      
+      if (num_values)
+         *num_values = key.num_values;
+      
+      if (total_size)
+         *total_size = key.total_size;
+
+      if (item_size)
+         *item_size = key.item_size;
+
       SetOk(error);
    }
 
    void ReadDir(std::vector<std::string>* varname, std::vector<int> *tid, std::vector<int> *num_values, std::vector<int> *total_size, std::vector<int> *item_size, MVOdbError* error)
    {
       // FIXME: incomplete!
+      SetOk(error);
+   }
+
+   void Resize(const char* varname, int new_size, MVOdbError* error)
+   {
+      std::string path = Path(varname);
+
+      int status;
+      HNDLE hkey;
+      
+      status = db_find_key(fDB, 0, path.c_str(), &hkey);
+
+      if (status != DB_SUCCESS) {
+         SetMidasStatus(error, fPrintError, path, "db_find_key", status);
+         return;
+      }
+      
+      status = db_set_num_values(fDB, hkey, new_size);
+      if (status != SUCCESS) {
+         SetMidasStatus(error, fPrintError, path, "db_set_num_values", status);
+         return;
+      }
+
       SetOk(error);
    }
 
@@ -247,38 +258,103 @@ public:
       SetOk(error);
    }
 
-   void RIA(const char* varname, std::vector<int> *value, bool create, int create_size, MVOdbError* error)
+   int CheckSize(const std::string& path, const char* varname, int tid, int tsize, MVOdbError* error)
    {
-      std::string path = Path(varname);
+      int xtid = 0;
+      int xnum_values = 0;
+      int xtotal_size = 0;
+      int xitem_size = 0;
 
-      int num = 0;
-      int esz = 0;
-
-      RAInfo(varname, &num, &esz, error);
+      ReadKey(varname, &xtid, &xnum_values, &xtotal_size, &xitem_size, error);
 
       if (error && error->fError)
-         return;
+         return -1;
 
-      if (num <= 0 || esz <= 0) {
-         if (create) {
-            WIA(varname, *value, error);
-            return;
-         } else {
-            SetError(error, fPrintError, path, "Array does not exist");
-            return;
-         }
+      if (xtid == 0) {
+         return -1;
       }
 
-      value->clear();
-      value->resize(num);
+      if (xitem_size != tsize) {
+         return -1;
+      }
 
-      assert(esz == sizeof(int));
+      if (xtid != tid) {
+         return -1;
+      }
 
-      RA(path, TID_INT, &((*value)[0]), num*sizeof(int), error);
+      return xnum_values;
    }
 
+   int CWA(const std::string& path, const char* varname, int tid, int tsize, int size, const void* data, bool create, int create_size, MVOdbError* error)
+   {
+      int num = CheckSize(path, varname, TID_INT, sizeof(int), error);
+
+      if (num >= 0) {
+         return num;
+      }
+
+      if (!create) {
+         return 0;
+      }
+
+      WA(varname, tid, data, size*tsize, size, error);
+      
+      if (create_size > size) {
+         Resize(varname, create_size, error);
+      }
+
+      return CheckSize(path, varname, TID_INT, sizeof(int), error);
+   }
+
+   template <class X> void RXA(const char* varname, int tid, std::vector<X> *value, bool create, int create_size, MVOdbError* error)
+   {
+      std::string path = Path(varname);
+      int size = 0;
+      const void* vptr = NULL;
+      if (value) {
+         size = value->size();
+         vptr = &((*value)[0]);
+      }
+
+      int num = CWA(path, varname, tid, sizeof(X), size, vptr, create, create_size, error);
+
+      if (value) {
+         value->clear();
+         if (num > 0) {
+            value->resize(num);
+            RA(path, tid, &((*value)[0]), num*sizeof(X), error);
+         }
+      }
+   }
+
+   void RIA(const char* varname, std::vector<int> *value, bool create, int create_size, MVOdbError* error)
+   {
+      RXA<int>(varname, TID_INT, value, create, create_size, error);
+   }
+
+   void RFA(const char* varname, std::vector<float> *value, bool create, int create_size, MVOdbError* error)
+   {
+      RXA<float>(varname, TID_FLOAT, value, create, create_size, error);
+   }
+
+   void RDA(const char* varname, std::vector<double> *value, bool create, int create_size, MVOdbError* error)
+   {
+      RXA<double>(varname, TID_DOUBLE, value, create, create_size, error);
+   }
+
+   void RU16A(const char* varname, std::vector<uint16_t> *value, bool create, int create_size, MVOdbError* error)
+   {
+      RXA<uint16_t>(varname, TID_WORD, value, create, create_size, error);
+   }
+   
+   void RU32A(const char* varname, std::vector<uint32_t> *value, bool create, int create_size, MVOdbError* error)
+   {
+      RXA<uint32_t>(varname, TID_DWORD, value, create, create_size, error);
+   }
+   
    void RBA(const char* varname, std::vector<bool> *value, bool create, int create_size, MVOdbError* error)
    {
+#if 0
       std::string path;
       path += fRoot;
       path += "/";
@@ -331,81 +407,13 @@ public:
       }
 
       free(buf);
+#endif
    }
 
-   void RU16A(const char* varname, std::vector<uint16_t> *value, bool create, int create_size, MVOdbError* error)
-   {
-
-   }
-   
-   void RU32A(const char* varname, std::vector<uint32_t> *value, bool create, int create_size, MVOdbError* error)
-   {
-
-   }
-   
-   void RFA(const char* varname, std::vector<float> *value, bool create, int create_size, MVOdbError* error)
-   {
-
-   }
-   
-   void RDA(const char* varname, std::vector<double> *value, bool create, int create_size, MVOdbError* error)
-   {
-      std::string path;
-      path += fRoot;
-      path += "/";
-      path += varname;
-
-      if (value) {
-         value->clear();
-      }
-   
-      if (fTrace) {
-         printf("Read ODB %s\n", path.c_str());
-      }
-
-      int num = 0;
-      int esz = 0;
-
-      RAInfo(varname, &num, &esz, error);
-
-      if (error && error->fError)
-         return;
-
-      if (num <= 0 || esz <= 0) {
-         if (create) {
-            num = create_size;
-            esz = sizeof(double);
-         } else {
-            return;
-         }
-      }
-
-      assert(esz == sizeof(double));
-
-      int size = sizeof(double)*num;
-
-      assert(size > 0);
-
-      double* buf = (double*)malloc(size);
-      assert(buf);
-      memset(buf, 0, size);
-      int status = db_get_value(fDB, 0, path.c_str(), buf, &size, TID_DOUBLE, create);
-
-      if (status != DB_SUCCESS) {
-         printf("RDA: db_get_value status %d\n", status);
-      }
-
-      if (value) {
-         for (int i=0; i<num; i++) {
-            value->push_back(buf[i]);
-         }
-      }
-
-      free(buf);
-   }
 
    void RSA(const char* varname, std::vector<std::string> *value, bool create, int create_size, int string_size, MVOdbError* error)
    {
+#if 0
       std::string path;
       path += fRoot;
       path += "/";
@@ -462,6 +470,7 @@ public:
       }
 
       free(buf);
+#endif
    }
 
    void W(const char* varname, int index, int tid, const void* v, int size, MVOdbError* error)
@@ -518,12 +527,25 @@ public:
    void WA(const char* varname, int tid, const void* v, int size, int count, MVOdbError* error)
    {
       std::string path = Path(varname);
-   
-      int status = db_set_value(fDB, 0, path.c_str(), v, size, count, tid);
 
-      if (status != DB_SUCCESS) {
-         SetMidasStatus(error, fPrintError, path, "db_set_value", status);
-         return;
+      int status;
+
+      if (size == 0) {
+         status = db_create_key(fDB, 0, path.c_str(), tid);
+
+         if (status != DB_SUCCESS) {
+            SetMidasStatus(error, fPrintError, path, "db_set_value", status);
+            return;
+         }
+      } else {
+         status = db_set_value(fDB, 0, path.c_str(), v, size, count, tid);
+
+         //printf("WA db_set_value(tid %d, size %d, count %d) status %d\n", tid, size, count, status);
+         
+         if (status != DB_SUCCESS) {
+            SetMidasStatus(error, fPrintError, path, "db_set_value", status);
+            return;
+         }
       }
 
       SetOk(error);

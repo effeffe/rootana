@@ -164,6 +164,8 @@ int main(int argc, char *argv[])
 
    MVOdb* test = odb->Chdir("test_mvodb", true);
 
+   test->SetPrintError(true);
+
    int ivalue = 1;
    float fvalue = 2.2;
    double dvalue = 3.3;
@@ -209,11 +211,42 @@ int main(int argc, char *argv[])
    test->WS("string", 0, "write test string");
 
    printf("\n");
+   printf("Test read arrays of all data types:\n");
+   printf("\n");
+
+   std::vector<int> ia;
+   ia.push_back(1);
+   ia.push_back(2);
+   ia.push_back(3);
+   test->RIA("ia", &ia, true, 0);
+   // read non-existant array
+   test->RIA("ia-noexist", &ia, false, 0);
+   // create 10 element array, init to zero (ia is empty)
+   ia.clear();
+   test->RIA("ia10zero", &ia, true, 10);
+   // create 10 element array, init from ia
+   ia.clear();
+   ia.push_back(11);
+   ia.push_back(22);
+   test->RIA("ia10", &ia, true, 10);
+   // create 10 element array, init to zero (passed NULL instead of &ia)
+   test->RIA("createia10", NULL, true, 10);
+
+   std::vector<double> da;
+   da.push_back(1.1);
+   da.push_back(1.2);
+   da.push_back(1.3);
+   da.push_back(1.4);
+   test->RDA("da", &da, true, 0);
+
+   printf("\n");
    printf("Test special cases:\n");
    printf("\n");
 
    test->RI("nonexistant", 0, &ivalue, false);
    test->RI("nonexistant_with_index", 1, &ivalue, true);
+   // wrong data type: ODB is INT, we ask for DOUBLE
+   test->RDA("ia10", &da, false, 0);
 
 #if 0
    printf("read array size of /test: %d\n", gOdb->odbReadArraySize("/test"));
