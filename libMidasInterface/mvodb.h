@@ -25,13 +25,20 @@ public:
    
    // read array information: number of elements and element size (string size for TID_STRING arrays)
 
-   //virtual void RAInfo(const char* varname, int *num_elements, int *element_size, MVOdbError* error = NULL) = 0;
-
    virtual void ReadKey(const char* varname, int *tid, int *num_values, int *total_size, int *item_size, MVOdbError* error = NULL) = 0;
 
    virtual void ReadDir(std::vector<std::string>* varname, std::vector<int> *tid, std::vector<int> *num_values, std::vector<int> *total_size, std::vector<int> *item_size, MVOdbError* error = NULL) = 0;
 
-   // create and read individual variables or array elements
+   //
+   // create and read individual odb variables or array elements
+   //
+   // all Rx read functions do this:
+   //
+   // if varname exists, it's value read from odb and returned
+   // if odb read fails (invalid array index, wrong data type, etc), value is left unchanged (but see db_get_value)
+   // if varname does not exist and create is false, value is returned unchanged
+   // if create is true, varname is created in odb with given value
+   //
 
    virtual void RB(const char* varname, int index, bool   *value, bool create, MVOdbError* error = NULL) = 0; // TID_BOOL
    virtual void RI(const char* varname, int index, int    *value, bool create, MVOdbError* error = NULL) = 0; // TID_INT
@@ -41,7 +48,20 @@ public:
    virtual void RU16(const char* varname, int index, uint16_t *value, bool create, MVOdbError* error = NULL) = 0; // TID_WORD
    virtual void RU32(const char* varname, int index, uint32_t *value, bool create, MVOdbError* error = NULL) = 0; // TID_DWORD
 
-   // create and read whole arrays
+   //
+   // create and read whole odb arrays
+   //
+   // all RxA read functions do this:
+   //
+   // if varname exists, it's value read from odb and returned
+   // if odb read fails (wrong data type, etc), value is left unchanged (but see db_get_value)
+   // if varname does not exist and create is false, value is returned unchanged
+   // if create is true, a new array is created with given value, if "create_size" is non-zero, array size is extended to this value
+   //
+   // all RxA read functions can be used to create new empty arrays:
+   //
+   // odb->RxA(varname, NULL, true, array_size); // create new array with size "array_size"
+   //
 
    virtual void RBA(const char* varname, std::vector<bool>   *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
    virtual void RIA(const char* varname, std::vector<int>    *value, bool create, int create_size, MVOdbError* error = NULL) = 0;

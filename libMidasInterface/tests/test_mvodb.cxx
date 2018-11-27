@@ -239,6 +239,27 @@ int main(int argc, char *argv[])
    da.push_back(1.4);
    test->RDA("da", &da, true, 0);
 
+   std::vector<float> fa;
+   fa.push_back(2.1);
+   fa.push_back(2.2);
+   fa.push_back(2.3);
+   fa.push_back(20.3);
+   fa.push_back(21.3);
+   test->RFA("fa", &fa, true, 0);
+
+   std::vector<bool> ba;
+   ba.push_back(true);
+   ba.push_back(false);
+   ba.push_back(true);
+   test->RBA("ba", &ba, true, 0);
+
+   std::vector<std::string> sa;
+   ba.push_back("line1");
+   ba.push_back("line2");
+   ba.push_back("line3");
+   ba.push_back("line4");
+   test->RSA("sa", &sa, true, 0, 32);
+
    printf("\n");
    printf("Test special cases:\n");
    printf("\n");

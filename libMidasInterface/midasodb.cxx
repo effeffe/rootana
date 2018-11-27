@@ -258,7 +258,7 @@ public:
       SetOk(error);
    }
 
-   int CheckSize(const std::string& path, const char* varname, int tid, int tsize, MVOdbError* error)
+   int GetArraySize(const std::string& path, const char* varname, int tid, int tsize, MVOdbError* error)
    {
       int xtid = 0;
       int xnum_values = 0;
@@ -274,20 +274,22 @@ public:
          return -1;
       }
 
-      if (xitem_size != tsize) {
-         return -1;
-      }
+      printf("varname [%s], requested/odb: tid %d/%d, tsize %d/%d, num_values /%d, total_size /%d\n", varname, tid, xtid, tsize, xitem_size, xnum_values, xtotal_size);
 
-      if (xtid != tid) {
-         return -1;
-      }
+      //if (xitem_size != tsize) {
+      //   return ...;
+      //}
+
+      //if (xtid != tid) {
+      //   return ...;
+      //}
 
       return xnum_values;
    }
 
-   int CWA(const std::string& path, const char* varname, int tid, int tsize, int size, const void* data, bool create, int create_size, MVOdbError* error)
+   int MaybeCreateArray(const std::string& path, const char* varname, int tid, int tsize, int size, const void* data, bool create, int create_size, MVOdbError* error)
    {
-      int num = CheckSize(path, varname, TID_INT, sizeof(int), error);
+      int num = GetArraySize(path, varname, tid, tsize, error);
 
       if (num >= 0) {
          return num;
@@ -303,12 +305,13 @@ public:
          Resize(varname, create_size, error);
       }
 
-      return CheckSize(path, varname, TID_INT, sizeof(int), error);
+      return GetArraySize(path, varname, tid, tsize, error);
    }
 
    template <class X> void RXA(const char* varname, int tid, std::vector<X> *value, bool create, int create_size, MVOdbError* error)
    {
       std::string path = Path(varname);
+      
       int size = 0;
       const void* vptr = NULL;
       if (value) {
@@ -316,7 +319,7 @@ public:
          vptr = &((*value)[0]);
       }
 
-      int num = CWA(path, varname, tid, sizeof(X), size, vptr, create, create_size, error);
+      int num = MaybeCreateArray(path, varname, tid, sizeof(X), size, vptr, create, create_size, error);
 
       if (value) {
          value->clear();
@@ -354,122 +357,83 @@ public:
    
    void RBA(const char* varname, std::vector<bool> *value, bool create, int create_size, MVOdbError* error)
    {
-#if 0
-      std::string path;
-      path += fRoot;
-      path += "/";
-      path += varname;
-   
-      if (value) {
-         value->clear();
-      }
-
-      if (fTrace) {
-         printf("Read ODB %s\n", path.c_str());
-      }
-
-      int num = 0;
-      int esz = 0;
-
-      RAInfo(varname, &num, &esz, error);
-
-      if (error && error->fError)
-         return;
-
-      if (num <= 0 || esz <= 0) {
-         if (create) {
-            num = create_size;
-            esz = sizeof(BOOL);
-         } else {
-            return;
-         }
-      }
-
-      assert(esz == sizeof(BOOL));
-
-      int size = sizeof(BOOL)*num;
-
-      assert(size > 0);
-
-      BOOL* buf = (BOOL*)malloc(size);
-      assert(buf);
-      memset(buf, 0, size);
-      int status = db_get_value(fDB, 0, path.c_str(), buf, &size, TID_BOOL, create);
-
-      if (status != DB_SUCCESS) {
-         printf("RBA: db_get_value status %d\n", status);
-      }
+      std::vector<BOOL> xvalue;
+      std::vector<BOOL> *xvalue_ptr = NULL;
 
       if (value) {
-         for (int i=0; i<num; i++) {
-            value->push_back(buf[i]);
+         for (int i=0; i<value->size(); i++) {
+            if ((*value)[i])
+               xvalue.push_back(TRUE);
+            else
+               xvalue.push_back(FALSE);
          }
+         xvalue_ptr = &xvalue;
       }
 
-      free(buf);
-#endif
+      RXA<BOOL>(varname, TID_BOOL, xvalue_ptr, create, create_size, error);
+
+      if (value) {
+         for (int i=0; i<xvalue.size(); i++) {
+            if (xvalue[i])
+               value->push_back(true);
+            else
+               value->push_back(false);
+         }
+      }
    }
-
 
    void RSA(const char* varname, std::vector<std::string> *value, bool create, int create_size, int string_size, MVOdbError* error)
    {
 #if 0
-      std::string path;
-      path += fRoot;
-      path += "/";
-      path += varname;
+      std::string path = Path(varname);
+      
+      int xtid = 0;
+      int xnum_values = 0;
+      int xtotal_size = 0;
+      int xitem_size = 0;
 
-      if (value) {
-         value->clear();
-      }
+      for (int i=0; i<2; i++) {
+         ReadKey(varname, &xtid, &xnum_values, &xtotal_size, &xitem_size, error);
+         
+         bool try_create = false;
+         
+         if (error && error->fError) {
+            try_create = true;
+         }
+         
+         if (xtid == 0) {
+            try_create = true;
+         }
+         
+         printf("varname [%s], requested/odb: tid %d/%d, tsize %d/%d, num_values /%d, total_size /%d\n", varname, tid, xtid, tsize, xitem_size, xnum_values, xtotal_size);
 
-      if (fTrace) {
-         printf("Read ODB %s\n", path.c_str());
-      }
+         if (!try_create) {
+            break;
+         }
+         
+         if (try_create) {
 
-      int num = 0;
-      int esz = 0;
+            // FIXME: this is wrong: what if value is NULL, we still need to create correct size with correct string_size
+            
+            if (value) {
+               WSA(varname, value, create, create_size, string_size, error);
+            }
 
-      RAInfo(varname, &num, &esz, error);
+            if (create_size > size) {
+               Resize(varname, create_size, error);
+            }
 
-      if (error && error->fError)
-         return;
-
-      bool create_first = false;
-
-      if (num <= 0 || esz <= 0) {
-         if (create) {
-            num = create_size;
-            esz = string_size;
-            create_first = true;
-         } else {
-            return;
+            break;
          }
       }
 
-      int size = esz*num;
-
-      assert(size > 0);
-
-      char* buf = (char*)malloc(size);
-
-      int status;
-      if (create_first) {
-         memset(buf, 0, size);
-         status = db_set_value(fDB, 0, path.c_str(), buf, size, num, TID_STRING);
+      if (value) {
+         value->clear();
+         if (num > 0) {
+            value->resize(num);
+            RA(path, tid, &((*value)[0]), num*sizeof(X), error);
+         }
       }
-
-      status = db_get_value(fDB, 0, path.c_str(), buf, &size, TID_STRING, create);
-
-      if (status != DB_SUCCESS) {
-         printf("RSA: db_get_value status %d\n", status);
-      }
-
-      for (int i=0; i<num; i++) {
-         value->push_back(buf+esz*i);
-      }
-
-      free(buf);
 #endif
    }
 
