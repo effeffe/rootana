@@ -254,11 +254,19 @@ int main(int argc, char *argv[])
    test->RBA("ba", &ba, true, 0);
 
    std::vector<std::string> sa;
-   ba.push_back("line1");
-   ba.push_back("line2");
-   ba.push_back("line3");
-   ba.push_back("line4");
+   sa.push_back("line1");
+   sa.push_back("line2");
+   sa.push_back("line3");
+   sa.push_back("line4");
    test->RSA("sa", &sa, true, 0, 32);
+
+   // create 10 element array, init from ia
+   sa.clear();
+   sa.push_back("xx1");
+   sa.push_back("xx2");
+   test->RSA("sa10", &sa, true, 10, 32);
+   // create 10 element array, init to zero (passed NULL instead of &sa)
+   test->RSA("createsa10", NULL, true, 10, 32);
 
    printf("\n");
    printf("Test special cases:\n");

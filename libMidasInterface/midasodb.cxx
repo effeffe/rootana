@@ -161,6 +161,19 @@ public:
       SetOk(error);
    }
 
+   void ResizeStringArray(const char* varname, int new_size, int new_string_length, MVOdbError* error)
+   {
+      std::string path = Path(varname);
+      
+      int status = db_resize_string(fDB, 0, path.c_str(), new_size, new_string_length);
+      if (status != SUCCESS) {
+         SetMidasStatus(error, fPrintError, path, "db_resize_string", status);
+         return;
+      }
+
+      SetOk(error);
+   }
+
    void R(const char* varname, int index, int tid, void *value, int size, bool create, MVOdbError* error)
    {
       std::string path = Path(varname);
@@ -274,7 +287,7 @@ public:
          return -1;
       }
 
-      printf("varname [%s], requested/odb: tid %d/%d, tsize %d/%d, num_values /%d, total_size /%d\n", varname, tid, xtid, tsize, xitem_size, xnum_values, xtotal_size);
+      //printf("varname [%s], requested/odb: tid %d/%d, tsize %d/%d, num_values /%d, total_size /%d\n", varname, tid, xtid, tsize, xitem_size, xnum_values, xtotal_size);
 
       //if (xitem_size != tsize) {
       //   return ...;
@@ -382,9 +395,8 @@ public:
       }
    }
 
-   void RSA(const char* varname, std::vector<std::string> *value, bool create, int create_size, int string_size, MVOdbError* error)
+   void RSA(const char* varname, std::vector<std::string> *value, bool create, int create_size, int create_string_length, MVOdbError* error)
    {
-#if 0
       std::string path = Path(varname);
       
       int xtid = 0;
@@ -397,44 +409,49 @@ public:
          
          bool try_create = false;
          
-         if (error && error->fError) {
+         if ((error && error->fError) || (xtid==0)) {
             try_create = true;
          }
          
-         if (xtid == 0) {
-            try_create = true;
-         }
-         
-         printf("varname [%s], requested/odb: tid %d/%d, tsize %d/%d, num_values /%d, total_size /%d\n", varname, tid, xtid, tsize, xitem_size, xnum_values, xtotal_size);
+         //printf("varname [%s], requested/odb: tid %d/%d, tsize /%d, num_values /%d, total_size /%d, try_create %d\n", varname, TID_STRING, xtid, xitem_size, xnum_values, xtotal_size, try_create);
 
          if (!try_create) {
             break;
          }
-         
-         if (try_create) {
 
-            // FIXME: this is wrong: what if value is NULL, we still need to create correct size with correct string_size
+         if (!create) {
+            SetError(error, fPrintError, path, "Does not exist");
+            return;
+         }
+
+         if (value) {
+            WSA(varname, *value, create_string_length, error);
             
-            if (value) {
-               WSA(varname, value, create, create_size, string_size, error);
-            }
-
-            if (create_size > size) {
+            if (create_size > value->size()) {
                Resize(varname, create_size, error);
             }
-
-            break;
+            
+         } else {
+            WS(varname, 0, "", error);
+            ResizeStringArray(varname, create_size, create_string_length, error);
          }
       }
 
       if (value) {
          value->clear();
-         if (num > 0) {
-            value->resize(num);
-            RA(path, tid, &((*value)[0]), num*sizeof(X), error);
+         if (xnum_values > 0) {
+            int bufsize = xnum_values*xitem_size;
+            char* buf = (char*)malloc(bufsize);
+            assert(buf != NULL);
+            memset(buf, 0, bufsize);
+            RA(path, TID_STRING, buf, bufsize, error);
+            for (int i=0; i<xnum_values; i++) {
+               value->push_back(buf+i*xitem_size);
+            }
+            free(buf);
+            buf = NULL;
          }
       }
-#endif
    }
 
    void W(const char* varname, int index, int tid, const void* v, int size, MVOdbError* error)
@@ -492,17 +509,17 @@ public:
    {
       std::string path = Path(varname);
 
-      int status;
+      //printf("WA(tid %d, size %d, count %d)\n", tid, size, count);
 
       if (size == 0) {
-         status = db_create_key(fDB, 0, path.c_str(), tid);
+         int status = db_create_key(fDB, 0, path.c_str(), tid);
 
          if (status != DB_SUCCESS) {
             SetMidasStatus(error, fPrintError, path, "db_set_value", status);
             return;
          }
       } else {
-         status = db_set_value(fDB, 0, path.c_str(), v, size, count, tid);
+         int status = db_set_value(fDB, 0, path.c_str(), v, size, count, tid);
 
          //printf("WA db_set_value(tid %d, size %d, count %d) status %d\n", tid, size, count, status);
          

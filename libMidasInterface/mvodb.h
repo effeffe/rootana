@@ -67,7 +67,7 @@ public:
    virtual void RIA(const char* varname, std::vector<int>    *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
    virtual void RDA(const char* varname, std::vector<double> *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
    virtual void RFA(const char* varname, std::vector<float>  *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
-   virtual void RSA(const char* varname, std::vector<std::string> *value, bool create, int create_size, int string_size, MVOdbError* error = NULL) = 0;
+   virtual void RSA(const char* varname, std::vector<std::string> *value, bool create, int create_size, int create_string_length, MVOdbError* error = NULL) = 0;
    virtual void RU16A(const char* varname, std::vector<uint16_t> *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
    virtual void RU32A(const char* varname, std::vector<uint32_t> *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
 
@@ -87,7 +87,7 @@ public:
    virtual void WIA(const char* varname, const std::vector<int>&    v, MVOdbError* error = NULL) = 0;
    virtual void WDA(const char* varname, const std::vector<double>& v, MVOdbError* error = NULL) = 0;
    virtual void WFA(const char* varname, const std::vector<float>&  v, MVOdbError* error = NULL) = 0;
-   virtual void WSA(const char* varname, const std::vector<std::string>& v, int odb_string_length, MVOdbError* error = NULL) = 0;
+   virtual void WSA(const char* varname, const std::vector<std::string>& v, int string_length, MVOdbError* error = NULL) = 0;
    virtual void WU16A(const char* varname, const std::vector<uint16_t>& v, MVOdbError* error = NULL) = 0;
    virtual void WU32A(const char* varname, const std::vector<uint32_t>& v, MVOdbError* error = NULL) = 0;
 
