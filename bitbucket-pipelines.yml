@@ -1,0 +1,104 @@
+# This is a build configuration to compile rootana on various linux 
+# distributions that have had root installed. This includes all images available 
+# from rootproject (except ubuntu-base as it doesn't have root):
+# https://hub.docker.com/u/rootproject/
+# At the time of writing there are not a docker image with midas installed
+# so the HAVE_MIDAS flag is not tested
+
+# Check our guides at https://confluence.atlassian.com/x/5Q4SMw for more examples.
+# Only use spaces to indent your .yml configuration.
+
+pipelines:
+  default:
+  - parallel:
+    - step:
+        name: Build on Ubuntu 16
+        image: rootproject/root-ubuntu16
+        script:
+          - cat /etc/*release
+          - echo $ROOTSYS
+          - echo "Root version"
+          - root-config --version
+          - root-config --libs
+          - root-config --glibs
+          - gcc -v
+          - make
+          - . thisrootana.sh
+          - echo $ROOTANASYS
+
+    - step:
+        name: Build on CERN Centos
+        image: rootproject/root-cc7
+        script:
+          - cat /etc/*release
+          - echo $ROOTSYS
+          - echo "Root version"
+          - root-config --version
+          - root-config --libs
+          - root-config --glibs
+          - gcc -v
+          - make
+          - . thisrootana.sh
+          - echo $ROOTANASYS
+
+    - step:
+        name: Build on CentOS 7
+        image: rootproject/root-centos
+        script:
+          - cat /etc/*release
+          - echo $ROOTSYS
+          - echo "Root version"
+          - root-config --version
+          - root-config --libs
+          - root-config --glibs
+          - gcc -v
+          - make
+          - . thisrootana.sh
+          - echo $ROOTANASYS
+
+    #Fedora is broken... the docker image is missing libraries: 
+    #/usr/bin/ld: cannot find -lROOTDataFrame
+    #/usr/bin/ld: cannot find -lROOTVecOps
+    #despite root-config --glibs showing them
+    #- step:
+    #    name: Build on Fedora
+    #    image: rootproject/root-fedora
+    #    script:
+    #      - echo $ROOTSYS
+    #      - echo "Root version"
+    #      - root-config --version
+    #      - root-config --libs
+    #      - root-config --glibs
+    #      - gcc -v
+    #      - make
+    #      - . thisrootana.sh
+    #      - echo $ROOTANASYS
+
+    - step:
+        name: Build on Ubuntu
+        image: rootproject/root-ubuntu
+        script:
+          - cat /etc/*release
+          - echo $ROOTSYS
+          - root-config --version
+          - root-config --libs
+          - root-config --glibs
+          - gcc -v
+          - make
+          - . thisrootana.sh
+          - echo $ROOTANASYS
+          
+    - step:
+        name: Build on CERN Centos7 with MIDAS
+        image: jmckenna/midas_docker
+        script:
+          - cat /etc/*release
+          - echo $ROOTSYS
+          - root-config --version
+          - root-config --libs
+          - root-config --glibs
+          - gcc -v
+          - make
+          - . thisrootana.sh
+          - echo $ROOTANASYS
+          
