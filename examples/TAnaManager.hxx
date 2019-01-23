@@ -11,7 +11,7 @@
 //#define USE_V1720_CORRELATIONS
 //#define USE_V1730DPP
 //#define USE_V1730RAW
-//#define USE_DT724
+#define USE_DT724
 #define USE_TRB3
 #define USE_CAMACADC
 
@@ -31,6 +31,9 @@
 /// so that we can access the same information in a display or a batch
 /// analyzer.
 /// Change the set of ifdef's above to define which equipment to use.
+///
+/// We simplify a lot of code by mostly using an array of THistogramArrayBase classes
+/// for storing different histograms.
 class TAnaManager  {
 public:
   TAnaManager();
@@ -39,11 +42,24 @@ public:
   /// Processes the midas event, fills histograms, etc.
   int ProcessMidasEvent(TDataContainer& dataContainer);
 
+  /// Update those histograms that only need to be updated when we are plotting.
+  void UpdateForPlotting();
+
+  void Initialize();
+
+  bool CheckOption(std::string option);
+    
   void BeginRun(int transition,int run,int time) {};
   void EndRun(int transition,int run,int time) {};
 
+  // Add a THistogramArrayBase object to the list
+  void AddHistogram(THistogramArrayBase* histo);
 
-	/// Methods for determining if we have a particular set of histograms.
+  std::vector<THistogramArrayBase*> GetHistograms() {
+    return fHistos;
+  }  
+  
+  /// Methods for determining if we have a particular set of histograms.
 	bool HaveV792Histograms();
 	bool HaveV1190Histograms();
 	bool HaveL2249Histograms();
@@ -91,6 +107,11 @@ private:
   // Make some cross-channel histograms
   TH2F *fV1720PHCompare;
   TH2F *fV1720TimeCompare;
+
+
+  
+  std::vector<THistogramArrayBase*> fHistos;
+
 };
 
 

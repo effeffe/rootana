@@ -34,7 +34,7 @@
 class THistogramArrayBase : public std::vector<TH1*> {
  public:
   THistogramArrayBase():fNumberChannelsInGroups(-1),fGroupName(""),fChannelName(""),
-    fDisableAutoUpdate(false),fHasAutoUpdate(false),fSubTabName("DEFAULT"),fTabName("DEFAULT"),
+    fDisableAutoUpdate(false),fHasAutoUpdate(false),fSubTabName("DEFAULT"),fTabName(""),
     fUpdateWhenPlotted(false){};
 
   virtual ~THistogramArrayBase(){}

@@ -7,6 +7,7 @@
 /// Reset the histograms for this canvas
 TDT724Waveform::TDT724Waveform(){
 
+  SetSubTabName("DT724 Waveforms");
   SetNanosecsPerSample(10); //ADC clock runs at 100Mhz on the 724 = units of 10 nsecs
 	
 	CreateHistograms();

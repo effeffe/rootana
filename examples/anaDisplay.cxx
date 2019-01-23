@@ -35,7 +35,15 @@ public:
   void AddAllCanvases(){
 
     // Set up tabbed canvases
-        
+    std::vector<THistogramArrayBase*> histos = anaManager->GetHistograms();
+    
+    for (unsigned int i = 0; i < histos.size(); i++) {
+      TCanvasHandleBase* canvas = histos[i]->CreateCanvas();
+      if (canvas) {
+        AddSingleCanvas(canvas, histos[i]->GetTabName());
+      }
+    }
+    
     if(anaManager->HaveV792Histograms()) 
       AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetV792Histograms(),"V792"));
     

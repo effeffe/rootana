@@ -62,8 +62,10 @@ TAnaManager::TAnaManager(){
 
 	fDT724Waveform = 0;
 #ifdef USE_DT724
-	fDT724Waveform = new TDT724Waveform();
-	fDT724Waveform->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
+        AddHistogram(new TDT724Waveform());
+        
+	//fDT724Waveform = new TDT724Waveform();
+	//fDT724Waveform->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
 #endif
 
         fTRB3Histograms = 0;
@@ -88,13 +90,31 @@ TAnaManager::TAnaManager(){
 	fCamacADCHistograms->DisableAutoUpdate();  // disable auto-update.  Update histo in AnaManager.
 #endif
 
+
+      
 };
 
+
+void TAnaManager::AddHistogram(THistogramArrayBase* histo) {
+  histo->DisableAutoUpdate();
+
+  //histo->CreateHistograms();
+  fHistos.push_back(histo);
+
+}
 
 
 int TAnaManager::ProcessMidasEvent(TDataContainer& dataContainer){
 
-
+  // Fill all the  histograms
+  for (unsigned int i = 0; i < fHistos.size(); i++) {
+    // Some histograms are very time-consuming to draw, so we can
+    // delay their update until the canvas is actually drawn.
+    if (!fHistos[i]->IsUpdateWhenPlotted()) {
+      fHistos[i]->UpdateHistograms(dataContainer);
+    }
+  }
+  
 	if(fV792Histogram) fV792Histogram->UpdateHistograms(dataContainer); 
   	if(fV1190Histogram)  fV1190Histogram->UpdateHistograms(dataContainer); 
 	if(fL2249Histogram)  fL2249Histogram->UpdateHistograms(dataContainer); 
@@ -109,8 +129,7 @@ int TAnaManager::ProcessMidasEvent(TDataContainer& dataContainer){
         if(fTRB3DiffHistograms)  fTRB3DiffHistograms->UpdateHistograms(dataContainer); 
         if(fCamacADCHistograms)  fCamacADCHistograms->UpdateHistograms(dataContainer); 
 
-        // Do little analysis of the V1720 data, as example...
-        if(fV1720Waveform){
+        if(1){
           
           TV1720RawData *v1720 = dataContainer.GetEventData<TV1720RawData>("W200");
 
