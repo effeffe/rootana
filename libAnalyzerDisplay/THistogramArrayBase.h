@@ -112,7 +112,7 @@ class THistogramArrayBase : public std::vector<TH1*> {
   /// rather than AProcessMidasEvent(). This should only be set
   /// to true for histograms that only are plotting information
   /// for a single event (ie, don't set this for any histogram that is cumulative).
-  virtual void SetUpdateWhenPlotted(bool whenupdate) {
+  virtual void SetUpdateOnlyWhenPlotted(bool whenupdate) {
     fUpdateWhenPlotted = whenupdate;
   }  
   

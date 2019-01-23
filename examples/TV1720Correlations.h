@@ -9,6 +9,7 @@
 class TV1720Correlations : public THistogramArrayBase {
 public:
   TV1720Correlations(){
+    SetSubTabName("V1720 Correlations");
     CreateHistograms();
   };
   virtual ~TV1720Correlations(){};

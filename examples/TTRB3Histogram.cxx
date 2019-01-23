@@ -9,6 +9,7 @@ const int Nfpga = 4;
 /// Reset the histograms for this canvas
 TTRB3Histograms::TTRB3Histograms(){  
 
+  SetSubTabName("TRB3 Histograms");
   SetGroupName("FPGA");
   SetNumberChannelsInGroup(NchannelPerFpga);
   CreateHistograms();
@@ -89,6 +90,7 @@ void TTRB3Histograms::BeginRun(int transition,int run,int time){
 /// Reset the histograms for this canvas
 TTRB3FineHistograms::TTRB3FineHistograms(){  
 
+  SetSubTabName("TRB3 Fine Histograms");
   SetGroupName("FPGA");
   SetNumberChannelsInGroup(NchannelPerFpga);
   CreateHistograms();
@@ -161,6 +163,7 @@ void TTRB3FineHistograms::BeginRun(int transition,int run,int time){
 /// Reset the histograms for this canvas
 TTRB3DiffHistograms::TTRB3DiffHistograms(){  
 
+  SetSubTabName("TRB3 Diff Histograms");
   SetGroupName("FPGA");
   SetNumberChannelsInGroup(NchannelPerFpga);
   fReferenceFpga = 0; 

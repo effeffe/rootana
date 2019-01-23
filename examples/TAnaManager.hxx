@@ -13,7 +13,7 @@
 //#define USE_V1730RAW
 #define USE_DT724
 #define USE_TRB3
-#define USE_CAMACADC
+//#define USE_CAMACADC
 
 #include "TV792Histogram.h"
 #include "TV1190Histogram.h"
@@ -55,60 +55,21 @@ public:
   // Add a THistogramArrayBase object to the list
   void AddHistogram(THistogramArrayBase* histo);
 
+  // Little trick; we only fill the transient histograms here (not cumulative), since we don't want
+  // to fill histograms for events that we are not displaying.
+  // It is pretty slow to fill histograms for each event.
+  void UpdateTransientPlots(TDataContainer& dataContainer);
+  
+  // Get the histograms
   std::vector<THistogramArrayBase*> GetHistograms() {
     return fHistos;
   }  
-  
-  /// Methods for determining if we have a particular set of histograms.
-	bool HaveV792Histograms();
-	bool HaveV1190Histograms();
-	bool HaveL2249Histograms();
-	bool HaveAgilentistograms();
-	bool HaveV1720Histograms();
-  	bool HaveV1720Correlations();
-	bool HaveV1730DPPistograms();
-	bool HaveV1730Rawistograms();
-	bool HaveDT724Histograms();
-  	bool HaveTRB3Histograms();
-  	bool HaveCamacADCHistograms();
-
-	/// Methods for getting particular set of histograms.
-	TV792Histograms* GetV792Histograms();
-	TV1190Histograms* GetV1190Histograms();
-	TL2249Histograms* GetL2249Histograms();
-	TAgilentHistograms* GetAgilentistograms();
-	TV1720Waveform* GetV1720Histograms();
-  	TV1720Correlations* GetV1720Correlations();
-	TV1730DppWaveform* GetV1730DPPistograms();
-	TV1730RawWaveform* GetV1730Rawistograms();
-	TDT724Waveform* GetDT724Histograms();
-        TTRB3Histograms* GetTRB3Histograms();
-  TTRB3FineHistograms* GetTRB3FineHistograms(){return fTRB3FineHistograms;}
-        TTRB3DiffHistograms* GetTRB3DiffHistograms();
-        TCamacADCHistograms* GetCamacADCHistograms();
-
 
 private:
-
-	TV792Histograms *fV792Histogram;
-	TV1190Histograms *fV1190Histogram;
-	TL2249Histograms *fL2249Histogram;
-	TAgilentHistograms *fAgilentHistogram;
-	TV1720Waveform *fV1720Waveform;
-  	TV1720Correlations *fV1720Correlations;
-	TV1730DppWaveform *fV1730DppWaveform;
-	TV1730RawWaveform *fV1730RawWaveform;
-	TDT724Waveform *fDT724Waveform;
-  	TTRB3Histograms *fTRB3Histograms;
-  	TTRB3FineHistograms *fTRB3FineHistograms;
-    	TTRB3DiffHistograms *fTRB3DiffHistograms;
-    	TCamacADCHistograms *fCamacADCHistograms;
 
   // Make some cross-channel histograms
   TH2F *fV1720PHCompare;
   TH2F *fV1720TimeCompare;
-
-
   
   std::vector<THistogramArrayBase*> fHistos;
 

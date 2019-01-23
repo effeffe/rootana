@@ -7,6 +7,7 @@ const int Nchannels = 5;
 /// Reset the histograms for this canvas
 TAgilentHistograms::TAgilentHistograms(){  
   
+  SetSubTabName("Agilent");
   CreateHistograms();
 }
 

@@ -8,6 +8,7 @@ const int Nchannels = 64;
 /// Reset the histograms for this canvas
 TV1190Histograms::TV1190Histograms(){  
   
+  SetSubTabName("V1190");
   CreateHistograms();
 }
 
