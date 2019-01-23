@@ -132,6 +132,7 @@ OBJS += obj/TCamacADCData.o
 
 OBJS += obj/TRootanaDisplay.o
 OBJS += obj/TMainDisplayWindow.o
+OBJS += obj/THistogramArrayBase.o
 OBJS += obj/TSimpleExampleCanvas.o
 OBJS += obj/TComplicatedExampleCanvas.o
 OBJS += obj/TInterestingEventManager.o
