@@ -6,7 +6,7 @@
 #include <string>
 #include <stdlib.h>
 
-#include "TFancyHistogramCanvas.hxx"
+#include "TCanvasHandleBase.hxx"
 #include "TDataContainer.hxx"
 #include "TH1F.h"
 #include <vector>
