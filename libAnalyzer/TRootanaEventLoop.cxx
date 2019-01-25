@@ -162,6 +162,14 @@ void TRootanaEventLoop::SetTHttpServerReadWrite(bool readwrite){
 #endif
 }
 
+#ifdef HAVE_THTTP_SERVER
+THttpServer* TRootanaEventLoop::GetTHttpServer(){
+  return gRoot_http_serv;
+}
+#endif
+
+
+
 void TRootanaEventLoop::PrintHelp(){
 
   printf("\nUsage:\n");
