@@ -1017,7 +1017,7 @@ void UnpackVF48::UnpackEvent(int unit, int group, const uint32_t data[], int wco
               trailerTrigNo = trigNo;
 
               if (disasm)
-		printf("unit %d, word %5d: 0x%08x: Event trailer: unit %d, group %d, trigger %d, module complete mask 0x%x\n", unit, i, w, unit, group, trigNo, m->completeGroupMask);
+		printf("unit %d, word %5d: 0x%08x: Event trailer: unit %d, group %d, trigger %d, module complete mask 0x%x\n", unit, i, w, unit, group, trailerTrigNo, m->completeGroupMask);
               
               m->channels[chan].complete = true;
               
