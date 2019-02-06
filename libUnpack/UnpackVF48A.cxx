@@ -1019,7 +1019,7 @@ void UnpackVF48::UnpackEvent(int unit, int group, const uint32_t data[], int wco
               
               m->channels[chan].complete = true;
               
-              if (trigNo != headerTrigNo)
+              if (trigNo != (uint32_t)headerTrigNo)
                  {
                     printf("*** Unit %d, group %d, trigger %d: event trailer trigger mismatch: see %d, should be %d\n", unit, group, headerTrigNo, trigNo, m->trigger);
                     fBadDataCount++;
