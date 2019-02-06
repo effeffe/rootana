@@ -252,10 +252,10 @@ int main(int argc, char *argv[])
 	 help(); // does not return
        args.push_back(argv[i]);
      }
-
+#ifdef HAVE_MIDAS
    const char* hostname = NULL;
    const char* exptname = NULL;
-
+#endif
    for (unsigned int i=1; i<args.size(); i++) // loop over the commandline options
      {
        const char* arg = args[i].c_str();

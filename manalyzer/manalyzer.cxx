@@ -1426,9 +1426,10 @@ int manalyzer_main(int argc, char *argv[])
    int  tcpPort = 0;
    int  xmlTcpPort = 0;
    int  httpPort = 0;
+   #ifdef HAVE_MIDAS
    const char* hostname = NULL;
    const char* exptname = NULL;
-
+   #endif
    int num_skip = 0;
    int num_analyze = 0;
 
@@ -1476,10 +1477,12 @@ int manalyzer_main(int argc, char *argv[])
          xmlTcpPort = atoi(arg+2);
       } else if (strncmp(arg,"-R",2)==0) { // Set the ROOT THttpServer HTTP port
          httpPort = atoi(arg+2);
+         #ifdef HAVE_MIDAS
       } else if (strncmp(arg,"-H",2)==0) {
          hostname = strdup(arg+2);
       } else if (strncmp(arg,"-E",2)==0) {
          exptname = strdup(arg+2);
+         #endif
       } else if (strcmp(arg,"-h")==0) {
          help(); // does not return
       } else if (arg[0] == '-') {
