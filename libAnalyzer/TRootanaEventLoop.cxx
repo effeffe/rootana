@@ -202,7 +202,8 @@ void TRootanaEventLoop::PrintHelp(){
 // copied almost completely from MIDAS system.c
 int ss_daemon_init(){
 
-  bool keep_stdout = false;
+  //Unused:
+  //bool keep_stdout = false;
 #ifdef OS_LINUX
 
    /* only implemented for UNIX */

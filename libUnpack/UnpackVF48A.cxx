@@ -613,8 +613,10 @@ static void DumpWords(const uint32_t* wptr, int wcount)
 
 void UnpackVF48::UnpackEvent(int unit, int group, const uint32_t data[], int wcount)
 {
-  static bool swap = false;
-
+  #define SWAP 0
+  #if SWAP
+  static bool swap = SWAP;
+  #endif
   assert(unit>=0);
   assert(unit<VF48_MAX_MODULES);
 
@@ -645,7 +647,7 @@ void UnpackVF48::UnpackEvent(int unit, int group, const uint32_t data[], int wco
     {
       uint32_t w = data[i];
 
-#if 0
+#if SWAP
       if (((w&0xF0FFFFFF)==0xF0FFFFFF) && (w != 0xFFFFFFFF))
          swap = true;
 
