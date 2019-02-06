@@ -263,10 +263,12 @@ int main(int argc, char *argv[])
 	   
        if (strncmp(arg,"-e",2)==0)  // Event cutoff flag (only applicable in offline mode)
 	 gEventCutoff = atoi(arg+2);
+#ifdef HAVE_MIDAS
        else if (strncmp(arg,"-H",2)==0)
 	 hostname = strdup(arg+2);
        else if (strncmp(arg,"-E",2)==0)
 	 exptname = strdup(arg+2);
+#endif
        else if (strncmp(arg,"-O",2)==0)
 	 gSaveOdb = true;
        else if (strncmp(arg,"-p",2)==0)
