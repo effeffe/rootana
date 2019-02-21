@@ -202,7 +202,8 @@ void TRootanaEventLoop::PrintHelp(){
 // copied almost completely from MIDAS system.c
 int ss_daemon_init(){
 
-  bool keep_stdout = false;
+  //Unused:
+  //bool keep_stdout = false;
 #ifdef OS_LINUX
 
    /* only implemented for UNIX */
@@ -274,9 +275,10 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
 #ifdef HAVE_THTTP_SERVER
   int  rhttpdPort = 0; // ROOT THttpServer port
 #endif
+#ifdef HAVE_MIDAS
   const char* hostname = NULL;
   const char* exptname = NULL;
-  
+#endif  
   for (unsigned int i=1; i<args.size(); i++) // loop over the commandline options
     {
       const char* arg = args[i].c_str();
@@ -296,10 +298,12 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
 	testMode = true;
       else if (strcmp(arg,"-D")==0)
 	daemonMode = true;
+	#ifdef HAVE_MIDAS
       else if (strncmp(arg,"-H",2)==0)
 	hostname = strdup(arg+2);
       else if (strncmp(arg,"-E",2)==0)
 	exptname = strdup(arg+2);
+	#endif
       else if (strncmp(arg,"-b",2)==0){
 	fBufferName = std::string(arg+2);        
       }else if (strcmp(arg,"-h")==0)

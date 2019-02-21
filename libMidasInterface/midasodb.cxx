@@ -374,7 +374,7 @@ public:
       std::vector<BOOL> *xvalue_ptr = NULL;
 
       if (value) {
-         for (int i=0; i<value->size(); i++) {
+         for (std::size_t i=0; i<value->size(); i++) {
             if ((*value)[i])
                xvalue.push_back(TRUE);
             else
@@ -386,7 +386,7 @@ public:
       RXA<BOOL>(varname, TID_BOOL, xvalue_ptr, create, create_size, error);
 
       if (value) {
-         for (int i=0; i<xvalue.size(); i++) {
+         for (std::size_t i=0; i<xvalue.size(); i++) {
             if (xvalue[i])
                value->push_back(true);
             else
@@ -427,7 +427,7 @@ public:
          if (value) {
             WSA(varname, *value, create_string_length, error);
             
-            if (create_size > value->size()) {
+            if (create_size > (int)value->size()) {
                Resize(varname, create_size, error);
             }
             

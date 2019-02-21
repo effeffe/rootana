@@ -92,7 +92,7 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
           uint32_t word = fData[pointer];
           // Look for the epoch counter word; use this epoch word for all subsequent TDCs...
           if((word & 0xe0000000) == 0x60000000)
-            uint32_t epochWord = word;
+            epochWord = word;
 
           if((word & 0xe0000000) == 0x80000000){
             uint32_t tdcWord = fData[pointer];

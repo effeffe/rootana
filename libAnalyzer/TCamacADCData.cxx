@@ -56,7 +56,7 @@ TCamacData::TCamacData(int bklen, int bktype, const char* name, void *pdata):
     
   }
 
-  if(fMeasurements.size() != ntriggers){
+  if((int)fMeasurements.size() != ntriggers){
     std::cout << "TCamacData::CamacData: Triggers don't match!! " << ntriggers << " " << fMeasurements.size() << std::endl;
   }
 

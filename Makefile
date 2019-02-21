@@ -352,7 +352,7 @@ obj/%.o: manalyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 manalyzer/manalyzer.exe: lib/librootana.a
-	make -C manalyzer ROOTANASYS=.. $(MAKEFLAGS)
+	make -C manalyzer ROOTANASYS=.. $(MFLAGS)
 
 html/index.html:
 	-mkdir html

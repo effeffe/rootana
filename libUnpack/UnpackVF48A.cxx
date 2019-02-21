@@ -613,8 +613,10 @@ static void DumpWords(const uint32_t* wptr, int wcount)
 
 void UnpackVF48::UnpackEvent(int unit, int group, const uint32_t data[], int wcount)
 {
-  static bool swap = false;
-
+  #define SWAP 0
+  #if SWAP
+  static bool swap = SWAP;
+  #endif
   assert(unit>=0);
   assert(unit<VF48_MAX_MODULES);
 
@@ -645,7 +647,7 @@ void UnpackVF48::UnpackEvent(int unit, int group, const uint32_t data[], int wco
     {
       uint32_t w = data[i];
 
-#if 0
+#if SWAP
       if (((w&0xF0FFFFFF)==0xF0FFFFFF) && (w != 0xFFFFFFFF))
          swap = true;
 
@@ -1015,11 +1017,11 @@ void UnpackVF48::UnpackEvent(int unit, int group, const uint32_t data[], int wco
               trailerTrigNo = trigNo;
 
               if (disasm)
-		printf("unit %d, word %5d: 0x%08x: Event trailer: unit %d, group %d, trigger %d, module complete mask 0x%x\n", unit, i, w, unit, group, trigNo, m->completeGroupMask);
+		printf("unit %d, word %5d: 0x%08x: Event trailer: unit %d, group %d, trigger %d, module complete mask 0x%x\n", unit, i, w, unit, group, trailerTrigNo, m->completeGroupMask);
               
               m->channels[chan].complete = true;
               
-              if (trigNo != headerTrigNo)
+              if (trigNo != (uint32_t)headerTrigNo)
                  {
                     printf("*** Unit %d, group %d, trigger %d: event trailer trigger mismatch: see %d, should be %d\n", unit, group, headerTrigNo, trigNo, m->trigger);
                     fBadDataCount++;
