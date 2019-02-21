@@ -18,7 +18,7 @@
 /// 
 /// Users of this abstract base class should implement a class
 /// derived from must THistogramArrayBase that
-///  1) define the histograms that you want in the constructor.
+///  1) define the histograms that you want in CreateHistogram() and calls CreateHistogram in your constructor.
 ///  2) implement the UpdateHistograms(TDataContainer&) method.
 ///
 /// Most, though not all, of logic of this histogram array is based on it being 
@@ -44,9 +44,12 @@ class THistogramArrayBase : public std::vector<TH1*> {
 
   /// A helper method for accessing each histogram.  Does bounds checking.
   TH1* GetHistogram(unsigned i);
+
+  /// Function to create histograms; users will want to implement this function
+  virtual void CreateHistograms(){};
   
   /// Take actions at begin run
-  virtual void BeginRun(int transition,int run,int time){};
+  virtual void BeginRun(int transition,int run,int time){  CreateHistograms();};
 
   /// Take actions at end run  
   virtual void EndRun(int transition,int run,int time){};
