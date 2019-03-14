@@ -7,7 +7,7 @@
 //#define USE_V1190
 //#define USE_L2249
 //#define USE_AGILENT
-//#define USE_V1720
+#define USE_V1720
 //#define USE_V1720_CORRELATIONS
 //#define USE_V1730DPP
 //#define USE_V1730RAW

@@ -90,7 +90,7 @@ int TAnaManager::ProcessMidasEvent(TDataContainer& dataContainer){
     TV1720RawData *v1720 = dataContainer.GetEventData<TV1720RawData>("W200");
     
     if(v1720 && !v1720->IsZLECompressed()){      
-      
+
       double time[2],ph[2];
       
       for(int i = 0; i < 2; i++){ // loop first two channels
@@ -111,8 +111,10 @@ int TAnaManager::ProcessMidasEvent(TDataContainer& dataContainer){
         ph[i] = max_adc_value;
               //std::cout << i << " "  << max_adc_time << " " << max_adc_value << std::endl;
       }
+#ifdef USE_V1720
       fV1720PHCompare->Fill(ph[0],ph[1]);
       fV1720TimeCompare->Fill(time[0],time[1]);
+#endif      
     }
   }
   return 1;

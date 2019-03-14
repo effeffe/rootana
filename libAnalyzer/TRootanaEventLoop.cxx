@@ -578,6 +578,7 @@ struct timeval lastTimeProcessed;
 void onlineEventHandler(const void*pheader,const void*pdata,int size)
 {
 
+
   // If we are already processing a previous event, then just dump this one.
   // !!!!!!!!!!! This is adding a potential dangerous race condition!!!!!
   // !!!!!!!!!!! Need to think hard if this is safe!!!!!!!!!!!!!!!!!!!!!!
@@ -589,6 +590,7 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
   // events after the end of the run.  Trying to fill a histogram will result in
   // seg-faults, since the histograms will have been deleted when the last ROOT file
   // was closed.
+  
   if(TRootanaEventLoop::Get().IsRootOutputEnabled() 
      && !TRootanaEventLoop::Get().IsRootFileValid()){
 
@@ -632,6 +634,7 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
     }
   }
 
+
   // Make a MIDAS event.
   TMidasEvent event;
   memcpy(event.GetEventHeader(), pheader, sizeof(TMidas_EVENT_HEADER));
@@ -659,7 +662,6 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
 
   // Cleanup the information for this event.
   TRootanaEventLoop::Get().GetDataContainer()->CleanupEvent();
-
 
   // Do another check.  If the event timestamp is more than 10 sec older than the current timestamp,
   // then the analyzer is probably falling behind the data taking.  Warn user.
@@ -753,12 +755,13 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    //}else{
    midas->eventRequest(fBufferName.c_str(),-1,-1,(1<<1)); 
    //}
+
    
    if(gUseOnlyRecent){
      std::cout << "Using 'Only Recent Data' mode; all events more than 1 second old will be discarded." << std::endl;
    }
    
-   // printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
+   //printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
    
    TPeriodicClass tm(100,MidasPollHandlerLocal);
 
