@@ -84,6 +84,7 @@ function plotAllHistogramsJSROOT(plotType,divNames, histogramNameList, deleteDyg
 
     $("#graphdiv").html("");
 
+    
     // Loop over the different histograms we got back.
     // Need to handle the overlay plots different from the single/multiple plots.
     for (var i=0;i<histo.length;++i){
@@ -105,8 +106,14 @@ function plotAllHistogramsJSROOT(plotType,divNames, histogramNameList, deleteDyg
     }
 
 
-     document.getElementById("readstatus").innerHTML = "Rootana data correctly read";
-     document.getElementById("readstatus").style.color = 'black';      
+    // Make sure we got something sensible back
+    if(histo[0]){
+      document.getElementById("readstatus").innerHTML =  "Rootana data correctly read";
+      document.getElementById("readstatus").style.color = 'black';
+    }else{
+      document.getElementById("readstatus").innerHTML = "Didn't get sensible rootana data for " + histogramNameList[0];
+      document.getElementById("readstatus").style.color = 'red';
+    }
 
    }).catch(function(error) {  // Handle exception if we didn't find the histogram...
 
