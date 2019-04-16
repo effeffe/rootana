@@ -188,8 +188,11 @@ bool TMidasOnline::sleep(int mdelay)
     return true;
   
   //ss_suspend_set_dispatch(CH_IPC, 0, (int (*)(void)) cm_dispatch_ipc);
+  #ifdef CH_IPC
   ss_suspend_set_dispatch(CH_IPC, 0, NULL);
-
+  #else
+  ss_suspend_set_dispatch_ipc(NULL);
+  #endif
  int status = ss_suspend(mdelay, 0);
   if (status == SS_SUCCESS)
     return true;

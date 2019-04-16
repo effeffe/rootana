@@ -132,6 +132,7 @@ OBJS += obj/TCamacADCData.o
 
 OBJS += obj/TRootanaDisplay.o
 OBJS += obj/TMainDisplayWindow.o
+OBJS += obj/THistogramArrayBase.o
 OBJS += obj/TSimpleExampleCanvas.o
 OBJS += obj/TComplicatedExampleCanvas.o
 OBJS += obj/TInterestingEventManager.o
@@ -190,6 +191,8 @@ ifdef HAVE_ROOT
 ALL  += libMidasServer/test_midasServer.o libMidasServer/test_midasServer.exe
 ifdef HAVE_MIDAS
 ALL  += libMidasInterface/tests/testODB.o libMidasInterface/tests/testODB.exe
+ALL  += libMidasInterface/tests/test_mvodb.o
+ALL  += libMidasInterface/tests/test_mvodb.exe
 endif
 endif
 
@@ -211,6 +214,14 @@ OBJS += obj/lz4.o
 OBJS += obj/lz4hc.o
 OBJS += obj/xxhash.o
 OBJS += obj/lz4frame.o
+OBJS += obj/mvodb.o
+OBJS += obj/nullodb.o
+ifdef HAVE_MIDAS
+OBJS += obj/midasodb.o
+endif
+
+# manalyzer
+
 OBJS += obj/manalyzer.o
 
 all: $(ALL)
@@ -341,7 +352,7 @@ obj/%.o: manalyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 manalyzer/manalyzer.exe: lib/librootana.a
-	make -C manalyzer ROOTANASYS=.. $(MAKEFLAGS)
+	make -C manalyzer ROOTANASYS=.. $(MFLAGS)
 
 html/index.html:
 	-mkdir html

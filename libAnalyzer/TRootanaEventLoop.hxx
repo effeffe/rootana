@@ -20,6 +20,9 @@
 #include "TDirectory.h"
 #include <TTimer.h>
 #include <TFile.h>
+#ifdef HAVE_THTTP_SERVER
+#include "THttpServer.h"
+#endif
 
 /// This is a base class for event loops that are derived from rootana.
 /// 
@@ -229,7 +232,13 @@ protected:
 
   /// Also a special version of usage for TRootanaDisplay.  See CheckOptionRAD
   virtual void UsageRAD(void);
- 
+
+  /// Get pointer to THttpServer, in order to further configure it.
+  /// Warning: pointer will be zero if THttpServer not initialized
+#ifdef HAVE_THTTP_SERVER
+  THttpServer* GetTHttpServer();
+#endif
+  
 private:
   
   /// Help Message

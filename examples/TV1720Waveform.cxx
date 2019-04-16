@@ -7,6 +7,8 @@
 /// Reset the histograms for this canvas
 TV1720Waveform::TV1720Waveform(){
 
+  SetSubTabName("V1720 Waveforms");
+  SetUpdateOnlyWhenPlotted(true);
   SetNanosecsPerSample(4); //ADC clock runs at 250Mhz on the v1720 = units of 4 nsecs
 
   CreateHistograms();

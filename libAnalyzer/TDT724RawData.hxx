@@ -21,7 +21,7 @@ public:
 
   /// Get Errors
   uint32_t GetSample(int i){
-		if(i >= 0 && i < fSamples.size())
+		if(i >= 0 && i < (int)fSamples.size())
 			return fSamples[i];
 		return 9999999;
 	}

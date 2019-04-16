@@ -35,6 +35,10 @@ fBankType(bktype), fBankName(name),fData(pdata){
   //  GetDouble()
   const double* GetDouble() const { return reinterpret_cast<const double*>(fData); }
 
+  //  GetChar()
+  const char* GetChar() const { return reinterpret_cast<const char*>(fData); }
+
+
   int GetSize() const {return fSize;}
 
   int GetType() const {return fBankType;}

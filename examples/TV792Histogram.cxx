@@ -9,6 +9,7 @@ const int Nchannels = 32;
 /// Reset the histograms for this canvas
 TV792Histograms::TV792Histograms(){  
   
+  SetSubTabName("V792");
   CreateHistograms();
 }
 

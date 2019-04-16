@@ -21,7 +21,7 @@ public:
 	bool GetSamplesEnabled(){return (header1 & 0x08000000) >> 27;}
 	int GetNSamples(){
 		int header_size = (header1 & 0xfff)*8;
-		if(header_size != fSamples.size())
+		if(header_size != (int)fSamples.size())
 			std::cerr << "v17390::ChannelMeasurement N samples doesn't match!!" 
 								<< header_size << " " << fSamples.size() <<std::endl;
 		return header_size;
@@ -31,7 +31,7 @@ public:
 
   /// Get Errors
   uint32_t GetSample(int i){
-		if(i >= 0 && i < fSamples.size())
+		if(i >= 0 && i < (int)fSamples.size())
 			return fSamples[i];
 		return 9999999;
 	}
