@@ -14,6 +14,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdio>
 #include <stdint.h>
 
 class MVOdbError;
