@@ -297,17 +297,27 @@ static double GetTimeSec()
 }
 #endif
 
+
 class RunHandler
 {
 public:
    TARunInfo* fRunInfo;
    std::vector<TARunObject*> fRunRun;
    std::vector<std::string>  fArgs;
+   std::vector<std::deque<TAFlowEvent*>> flow_queue;
+     
+   std::vector<std::mutex> flow_queue_mutex; //multithread lock
+   
+   std::vector<std::thread*> threads;
+   int nModules; //Size of fRunRun
+   uint queue_depth=1000;  //Maximum depth for flow_queue (limit memory consumption)
+   TAFlowEvent* last_item_in_queue;
 
    RunHandler(const std::vector<std::string>& args) // ctor
    {
       fRunInfo = NULL;
       fArgs = args;
+      last_item_in_queue=new TAFlowEvent(NULL); //Dummy pointer to safely mark the end of flow
    }
 
    ~RunHandler() // dtor
@@ -317,6 +327,62 @@ public:
          fRunInfo = NULL;
       }
    }
+   
+   
+   void DequeFlowQueue(int i)
+   {
+      bool data_processing=true;
+
+      while (data_processing)
+      {  
+         bool is_empty=true;
+         {
+            std::lock_guard<std::mutex> lock(flow_queue_mutex[i]);
+            is_empty=flow_queue[i].empty();
+         }
+         if (is_empty)
+         {
+            usleep(10);
+            continue;
+         }
+         size_t next_queue_size=0;
+         if (i<nModules-1) // If not the last module
+         {
+            std::lock_guard<std::mutex> lock(flow_queue_mutex[i+1]);
+            next_queue_size=flow_queue[i+1].size();
+         }
+         if (next_queue_size>queue_depth) //Events queue up in next module too large... wait...
+         {
+            usleep(100);
+            //printf("Thread %d waiting as next module has %d jobs to do...it is %d \n",i,flow_queue[i+1].size(),flow_queue[i+1].empty());
+           continue;
+         }
+         TAFlowEvent* flow=NULL;
+         { //Lock scope
+            std::lock_guard<std::mutex> lock(flow_queue_mutex[i]);
+            flow=std::move(flow_queue[i].front());
+            flow_queue[i].pop_front();
+         }
+         //If the flow has the last item, stop this thread
+         if (flow==last_item_in_queue)
+         {
+            data_processing=false;
+         }
+         else
+         {
+            flow=fRunRun[i]->AnalyzeFlowEvent(fRunInfo, NULL, flow);
+         }
+         if (i==nModules-1) //If I am the last module... free memory, else queue up for next module to process
+         {
+            delete flow;
+         }
+         else 
+         {
+            std::lock_guard<std::mutex> lock(flow_queue_mutex[i+1]);
+            flow_queue[i+1].push_back(flow);
+         }
+      }
+   }
 
    void CreateRun(int run_number, const char* file_name)
    {
@@ -324,9 +390,19 @@ public:
       assert(fRunRun.size() == 0);
       
       fRunInfo = new TARunInfo(run_number, file_name, fArgs);
-
-      for (unsigned i=0; i<(*gModules).size(); i++)
+      nModules=(*gModules).size();
+      flow_queue.resize(nModules);
+      //flag_queue.resize(nModules);
+      std::vector<std::mutex> mutsize(nModules);
+      flow_queue_mutex.swap(mutsize);
+      threads.resize(nModules);
+      for (int i=0; i<nModules; i++)
+      {
+         printf("Create flow_queue thread %d\n",i);
          fRunRun.push_back((*gModules)[i]->NewRunObject(fRunInfo));
+         //std::thread proc (&RunHandler::DequeFlowQueue,this,i);
+         threads[i]=new std::thread(&RunHandler::DequeFlowQueue,this,i);
+	   }
    }
 
    void BeginRun()
@@ -341,14 +417,25 @@ public:
    {
       assert(fRunInfo);
 
-      for (unsigned i=0; i<fRunRun.size(); i++)
-         fRunRun[i]->PreEndRun(fRunInfo, &fRunInfo->fFlowQueue);
-
+   
       // FIXME: flags may be set to TAFlag_QUIT, which should
       // be propagated to the called of EndRun() who should
       // detect it and cause the analyzer to shutdown.
       TAFlags flags = 0;
       AnalyzeFlowQueue(&flags);
+      { //lock scope
+         std::lock_guard<std::mutex> lock(flow_queue_mutex[0]);
+         flow_queue[0].push_back(last_item_in_queue);
+      }
+      for (int i=0; i<nModules; i++)
+      {
+         printf("Waiting for thread %d to finish...\n",i);
+         threads[i]->join();
+      }
+
+      for (unsigned i=0; i<fRunRun.size(); i++)
+         fRunRun[i]->PreEndRun(fRunInfo, &fRunInfo->fFlowQueue);
+
 
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->EndRun(fRunInfo);
@@ -384,9 +471,15 @@ public:
          fRunRun[i]->AnalyzeSpecialEvent(fRunInfo, event);
    }
 
+
    TAFlowEvent* AnalyzeFlowEvent(TAFlags* flags, TAFlowEvent* flow)
    {
-      for (unsigned i=0; i<fRunRun.size(); i++) {
+      {
+         std::lock_guard<std::mutex> lock(flow_queue_mutex[0]);
+         flow_queue[0].push_back(flow);
+      }
+      return NULL;
+/*      for (unsigned i=0; i<fRunRun.size(); i++) {
          flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
          if (!flow)
             break;
@@ -396,7 +489,8 @@ public:
             break;
       }
 
-      return flow;
+
+     return flow;*/
    }
 
    void AnalyzeFlowQueue(TAFlags* ana_flags)

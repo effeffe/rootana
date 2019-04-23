@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <thread>
+#include <mutex>
 
 #include "rootana_config.h"
 #include "midasio.h"
