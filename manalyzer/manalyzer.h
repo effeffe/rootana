@@ -71,7 +71,7 @@ class TARunObject
  public:
    TARunObject(TARunInfo* runinfo); // ctor
    virtual ~TARunObject() {}; // dtor
-
+   static std::mutex ModuleLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
  public:
    virtual void BeginRun(TARunInfo* runinfo); // begin of run
    virtual void EndRun(TARunInfo* runinfo); // end of run
@@ -147,9 +147,7 @@ class TARootHelper
    TARootHelper() { }; // hidden default constructor
 };
 #endif
-
-int manalyzer_main(int argc, char* argv[]);
-
+int manalyzer_main(int argc, char *argv[]);
 #endif
 
 /* emacs

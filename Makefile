@@ -351,6 +351,7 @@ obj/%.o: old_analyzer/%.cxx
 obj/%.o: manalyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
+
 manalyzer/manalyzer.exe: lib/librootana.a
 	make -C manalyzer ROOTANASYS=.. $(MFLAGS)
 
