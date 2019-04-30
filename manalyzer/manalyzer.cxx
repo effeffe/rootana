@@ -309,7 +309,7 @@ public:
    std::vector<std::deque<TAFlowEvent*>> mt_flow_queue;
    std::vector<std::mutex> mt_flow_queue_mutex; //multithread lock when moving flow between queues
    std::vector<std::thread*> mt_threads; //Processing threads (one per TARunObject)
-   uint queue_depth=1000;  //Maximum depth for flow_queue (limit memory consumption)
+   uint queue_depth=100;  //Maximum depth for flow_queue (limit memory consumption)
    TAFlowEvent* last_item_in_queue;
    
    RunHandler(const std::vector<std::string>& args) // ctor
