@@ -529,7 +529,7 @@ public:
          std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[0]);
          mt_flow_queue[0].push_back(flow);
          mt_flag_queue[0].push_back(flags);
-         PrintQueueLength();
+         //PrintQueueLength();
          return NULL;
       }
       else
