@@ -307,6 +307,7 @@ public:
 
    //Items for multithreaded mode
    std::vector<std::deque<TAFlowEvent*>> mt_flow_queue;
+   std::vector<std::deque<TAFlags*>> mt_flag_queue;
    std::vector<std::mutex> mt_flow_queue_mutex; //multithread lock when moving flow between queues
    std::vector<std::thread*> mt_threads; //Processing threads (one per TARunObject)
    uint queue_depth=100;  //Maximum depth for flow_queue (limit memory consumption)
@@ -361,15 +362,23 @@ public:
          }
          if (next_queue_size>queue_depth) //Events queue up in next module too large... wait...
          {
+            { //Check flag at front of queue (has Quit be called?)
+               std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[i+1]);
+               TAFlags* f=mt_flag_queue[i].front();
+               if ((*f) & TAFlag_QUIT) data_processing=false;
+            }
             usleep(100);
             //printf("Thread %d waiting as next module has %d jobs to do...it is %d \n",i,flow_queue[i+1].size(),flow_queue[i+1].empty());
            continue;
          }
          TAFlowEvent* flow=NULL;
+         TAFlags* flag=NULL;
          { //Lock scope
             std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[i]);
             flow=std::move(mt_flow_queue[i].front());
+            flag=std::move(mt_flag_queue[i].front());
             mt_flow_queue[i].pop_front();
+            mt_flag_queue[i].pop_front();
          }
          //If the flow has the last item, stop this thread
          if (flow==last_item_in_queue)
@@ -378,8 +387,18 @@ public:
          }
          else
          {
-            //If the module is thread safe
-            flow=fRunRun[i]->AnalyzeFlowEvent(fRunInfo, NULL, flow);
+            flow=fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flag, flow);
+            if ((*flag) & TAFlag_QUIT)
+            {
+               data_processing=false; //Stop this thread...
+               //Stop all other threads (tell all threads before this 
+               //one, ones after will get the quit through the flow)
+               for (int j=0; j<i; j++)
+               {
+                  std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[j]);
+                  mt_flag_queue[j].push_front(flag);
+               }
+            }
          }
          if (i==nModules-1) //If I am the last module... free memory, else queue up for next module to process
          {
@@ -389,6 +408,7 @@ public:
          {
             std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[i+1]);
             mt_flow_queue[i+1].push_back(flow);
+            mt_flag_queue[i+1].push_back(flag);
          }
       }
    }
@@ -403,6 +423,7 @@ public:
       {
          int nModules=(*gModules).size();
          mt_flow_queue.resize(nModules);
+         mt_flag_queue.resize(nModules);
          std::vector<std::mutex> mutsize(nModules);
          mt_flow_queue_mutex.swap(mutsize);
          mt_threads.resize(nModules);
@@ -443,6 +464,7 @@ public:
          { //lock scope
             std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[0]);
             mt_flow_queue[0].push_back(last_item_in_queue);
+            mt_flag_queue[0].push_back(&flags);
          }
          for (unsigned i=0; i<fRunRun.size(); i++)
          {
@@ -506,7 +528,8 @@ public:
       {
          std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[0]);
          mt_flow_queue[0].push_back(flow);
-         //PrintQueueLength();
+         mt_flag_queue[0].push_back(flags);
+         PrintQueueLength();
          return NULL;
       }
       else
