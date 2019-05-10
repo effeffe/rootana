@@ -332,6 +332,28 @@ public:
    }
    
    //Multithreaded process with queue of flow events
+   void MultithreadQueueItem(TAFlags* flags, TAFlowEvent* flow)
+   {
+      size_t queue_size=0;
+      {  //Lock mutex for queue and check size
+         std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[0]);
+         queue_size=mt_flow_queue[0].size();
+      }
+      while (queue_size>queue_depth) //Too many events queued.. wait and try again
+      {
+         usleep(100);
+         {
+            std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[0]);
+            queue_size=mt_flow_queue[0].size();
+         }
+      }
+      //Lock and queue events
+      std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[0]);
+      mt_flow_queue[0].push_back(flow);
+      mt_flag_queue[0].push_back(flags);
+      return;
+   }
+
    void DequeFlowQueue(int i)
    {
       bool data_processing=true;
@@ -520,15 +542,14 @@ public:
        printf("%d:\t%zu\n",i,mt_flow_queue[i].size());
      }
    }
+
    
    TAFlowEvent* AnalyzeFlowEvent(TAFlags* flags, TAFlowEvent* flow)
    {
       
       if (multithread)
       {
-         std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[0]);
-         mt_flow_queue[0].push_back(flow);
-         mt_flag_queue[0].push_back(flags);
+         MultithreadQueueItem(flags, flow);
          //PrintQueueLength();
          return NULL;
       }
