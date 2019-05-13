@@ -31,23 +31,23 @@ public:
    virtual void ReadDir(std::vector<std::string>* varname, std::vector<int> *tid, std::vector<int> *num_values, std::vector<int> *total_size, std::vector<int> *item_size, MVOdbError* error = NULL) = 0;
 
    //
-   // create and read individual odb variables or array elements
+   // create and read individual odb variables
    //
    // all Rx read functions do this:
    //
    // if varname exists, it's value read from odb and returned
-   // if odb read fails (invalid array index, wrong data type, etc), value is left unchanged (but see db_get_value)
+   // if odb read fails (wrong data type, etc), value is left unchanged (but see db_get_value)
    // if varname does not exist and create is false, value is returned unchanged
-   // if create is true, varname is created in odb with given value
+   // if create is true, varname is created in odb with given value and given string length
    //
 
-   virtual void RB(const char* varname, int index, bool   *value, bool create, MVOdbError* error = NULL) = 0; // TID_BOOL
-   virtual void RI(const char* varname, int index, int    *value, bool create, MVOdbError* error = NULL) = 0; // TID_INT
-   virtual void RD(const char* varname, int index, double *value, bool create, MVOdbError* error = NULL) = 0; // TID_DOUBLE
-   virtual void RF(const char* varname, int index, float  *value, bool create, MVOdbError* error = NULL) = 0; // TID_FLOAT
-   virtual void RS(const char* varname, int index, std::string *value, bool create, MVOdbError* error = NULL) = 0; // TID_STRING
-   virtual void RU16(const char* varname, int index, uint16_t *value, bool create, MVOdbError* error = NULL) = 0; // TID_WORD
-   virtual void RU32(const char* varname, int index, uint32_t *value, bool create, MVOdbError* error = NULL) = 0; // TID_DWORD
+   virtual void RB(const char* varname, bool   *value, bool create = false, MVOdbError* error = NULL) = 0; // TID_BOOL
+   virtual void RI(const char* varname, int    *value, bool create = false, MVOdbError* error = NULL) = 0; // TID_INT
+   virtual void RD(const char* varname, double *value, bool create = false, MVOdbError* error = NULL) = 0; // TID_DOUBLE
+   virtual void RF(const char* varname, float  *value, bool create = false, MVOdbError* error = NULL) = 0; // TID_FLOAT
+   virtual void RS(const char* varname, std::string *value, bool create = false, int create_string_length = 0, MVOdbError* error = NULL) = 0; // TID_STRING
+   virtual void RU16(const char* varname, uint16_t *value, bool create = false, MVOdbError* error = NULL) = 0; // TID_WORD
+   virtual void RU32(const char* varname, uint32_t *value, bool create = false, MVOdbError* error = NULL) = 0; // TID_DWORD
 
    //
    // create and read whole odb arrays
@@ -74,13 +74,13 @@ public:
 
    // create and write individual variables
 
-   virtual void WB(const char* varname, int index, bool   v, MVOdbError* error = NULL) = 0;
-   virtual void WI(const char* varname, int index, int    v, MVOdbError* error = NULL) = 0;
-   virtual void WD(const char* varname, int index, double v, MVOdbError* error = NULL) = 0;
-   virtual void WF(const char* varname, int index, float  v, MVOdbError* error = NULL) = 0;
-   virtual void WS(const char* varname, int index, const char* v, MVOdbError* error = NULL) = 0;
-   virtual void WU16(const char* varname, int index, uint16_t v, MVOdbError* error = NULL) = 0;
-   virtual void WU32(const char* varname, int index, uint32_t v, MVOdbError* error = NULL) = 0;
+   virtual void WB(const char* varname, bool   v, MVOdbError* error = NULL) = 0;
+   virtual void WI(const char* varname, int    v, MVOdbError* error = NULL) = 0;
+   virtual void WD(const char* varname, double v, MVOdbError* error = NULL) = 0;
+   virtual void WF(const char* varname, float  v, MVOdbError* error = NULL) = 0;
+   virtual void WS(const char* varname, const char* v, MVOdbError* error = NULL) = 0;
+   virtual void WU16(const char* varname, uint16_t v, MVOdbError* error = NULL) = 0;
+   virtual void WU32(const char* varname, uint32_t v, MVOdbError* error = NULL) = 0;
 
    // create and write whole arrays
 

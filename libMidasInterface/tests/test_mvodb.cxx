@@ -159,7 +159,7 @@ int main(int argc, char *argv[])
 
    int runno = 1234;
 
-   odb->RI("runinfo/run number", 0, &runno, false);
+   odb->RI("runinfo/run number", &runno, false);
 
    printf("read run number (RI): %d\n", runno);
 
@@ -180,14 +180,14 @@ int main(int argc, char *argv[])
    printf("Test read of all data types:\n");
    printf("\n");
 
-   test->RI("int", 0, &ivalue, true);
-   test->RF("float", 0, &fvalue, true);
-   test->RD("double", 0, &dvalue, true);
-   test->RB("bool0", 0, &bvalue0, true);
-   test->RB("bool1", 0, &bvalue1, true);
-   test->RU16("u16", 0, &u16value, true);
-   test->RU32("u32", 0, &u32value, true);
-   test->RS("string", 0, &svalue, true);
+   test->RI("int", &ivalue, true);
+   test->RF("float", &fvalue, true);
+   test->RD("double", &dvalue, true);
+   test->RB("bool0", &bvalue0, true);
+   test->RB("bool1", &bvalue1, true);
+   test->RU16("u16", &u16value, true);
+   test->RU32("u32", &u32value, true);
+   test->RS("string", &svalue, true);
 
    printf("int: %d\n", ivalue);
    printf("float: %f\n", fvalue);
@@ -202,14 +202,14 @@ int main(int argc, char *argv[])
    printf("Test write of all data types:\n");
    printf("\n");
 
-   test->WI("int", 0, 10);
-   test->WF("float", 0, 11.1);
-   test->WD("double", 0, 22.2);
-   test->WB("bool0", 0, true);
-   test->WB("bool1", 0, false);
-   test->WU16("u16", 0, 0xcdef);
-   test->WU32("u32", 0, 0xdeadf00d);
-   test->WS("string", 0, "write test string");
+   test->WI("int", 10);
+   test->WF("float", 11.1);
+   test->WD("double", 22.2);
+   test->WB("bool0", true);
+   test->WB("bool1", false);
+   test->WU16("u16", 0xcdef);
+   test->WU32("u32", 0xdeadf00d);
+   test->WS("string", "write test string");
 
    printf("\n");
    printf("Test read arrays of all data types:\n");
@@ -273,8 +273,7 @@ int main(int argc, char *argv[])
    printf("Test special cases:\n");
    printf("\n");
 
-   test->RI("nonexistant", 0, &ivalue, false);
-   test->RI("nonexistant_with_index", 1, &ivalue, true);
+   test->RI("nonexistant", &ivalue, false);
    // wrong data type: ODB is INT, we ask for DOUBLE
    test->RDA("ia10", &da, false, 0);
 

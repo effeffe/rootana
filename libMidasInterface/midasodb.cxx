@@ -15,12 +15,14 @@
 #include "mvodb.h"
 #include "midas.h"
 
+#if 0
 static std::string toString(int value)
 {
    char buf[256];
    sprintf(buf, "%d", value);
    return buf;
 }
+#endif
 
 class MidasOdb: public MVOdb
 {
@@ -174,82 +176,56 @@ public:
       SetOk(error);
    }
 
-   void R(const char* varname, int index, int tid, void *value, int size, bool create, MVOdbError* error)
+   void R(const char* varname, int tid, void *value, int size, bool create, MVOdbError* error)
    {
-      std::string path = Path(varname);
-   
-      path += "[";
-      path += toString(index);
-      path += "]";
-
-      if (create && index > 0) {
-         std::string msg = "";
-         msg += "Cannot create arrays while reading \"";
-         msg += path;
-         msg += "\", \"create\" should be false or \"index\" should be zero";
-         SetError(error, fPrintError, path, msg);
-         return;
-      }
-   
       assert(value);
-
+      std::string path = Path(varname);
       int status = db_get_value(fDB, 0, path.c_str(), value, &size, tid, create);
-      
       if (status != DB_SUCCESS) {
          SetMidasStatus(error, fPrintError, path, "db_get_value", status);
          return;
       }
-
       SetOk(error);
    }
 
-   void RI(const char* varname, int index, int *value, bool create, MVOdbError* error)
+   void RI(const char* varname, int *value, bool create, MVOdbError* error)
    {
-      R(varname, index, TID_INT, value, sizeof(int), create, error);
+      R(varname, TID_INT, value, sizeof(int), create, error);
    }
 
-   void RU16(const char* varname, int index, uint16_t *value, bool create, MVOdbError* error)
+   void RU16(const char* varname, uint16_t *value, bool create, MVOdbError* error)
    {
-      R(varname, index, TID_WORD, value, sizeof(uint16_t), create, error);
+      R(varname, TID_WORD, value, sizeof(uint16_t), create, error);
    }
 
-   void RU32(const char* varname, int index, uint32_t *value, bool create, MVOdbError* error)
+   void RU32(const char* varname, uint32_t *value, bool create, MVOdbError* error)
    {
-      R(varname, index, TID_DWORD, value, sizeof(uint32_t), create, error);
+      R(varname, TID_DWORD, value, sizeof(uint32_t), create, error);
    }
 
-   void RD(const char* varname, int index, double *value, bool create, MVOdbError* error)
+   void RD(const char* varname, double *value, bool create, MVOdbError* error)
    {
-      R(varname, index, TID_DOUBLE, value, sizeof(double), create, error);
+      R(varname, TID_DOUBLE, value, sizeof(double), create, error);
    }
 
-   void RF(const char* varname, int index, float *value, bool create, MVOdbError* error)
+   void RF(const char* varname, float *value, bool create, MVOdbError* error)
    {
-      R(varname, index, TID_FLOAT, value, sizeof(float), create, error);
+      R(varname, TID_FLOAT, value, sizeof(float), create, error);
    }
 
-   void RB(const char* varname, int index, bool *value, bool create, MVOdbError* error)
+   void RB(const char* varname, bool *value, bool create, MVOdbError* error)
    {
       assert(value);
       BOOL v = *value;
-      R(varname, index, TID_BOOL, &v, sizeof(BOOL), create, error);
+      R(varname, TID_BOOL, &v, sizeof(BOOL), create, error);
       *value = v;
    }
 
-   void RS(const char* varname, int index, std::string* value, bool create, MVOdbError* error)
+   void RS(const char* varname, std::string* value, bool create, int create_string_length, MVOdbError* error)
    {
       std::string path = Path(varname);
    
-      if (create && index > 0) {
-         std::string msg = "";
-         msg += "String arrays must be created using WSA() or RSA(). Error while reading \"";
-         msg += path;
-         msg += "\", \"create\" should be false or \"index\" should be zero";
-         SetError(error, fPrintError, path, msg);
-         return;
-      }
-   
-      int status = db_get_value_string(fDB, 0, path.c_str(), index, value, create);
+      int status = db_get_value_string(fDB, 0, path.c_str(), 0, value, create);
 
       if (status != DB_SUCCESS) {
          SetMidasStatus(error, fPrintError, path, "db_get_value_string", status);
@@ -432,7 +408,7 @@ public:
             }
             
          } else {
-            WS(varname, 0, "", error);
+            WS(varname, "", error);
             ResizeStringArray(varname, create_size, create_string_length, error);
          }
       }
@@ -454,7 +430,7 @@ public:
       }
    }
 
-   void W(const char* varname, int index, int tid, const void* v, int size, MVOdbError* error)
+   void W(const char* varname, int tid, const void* v, int size, MVOdbError* error)
    {
       std::string path = Path(varname);
    
@@ -468,41 +444,41 @@ public:
       SetOk(error);
    }
 
-   void WB(const char* varname, int index, bool v, MVOdbError* error)
+   void WB(const char* varname, bool v, MVOdbError* error)
    {
       BOOL vv = v;
-      W(varname, index, TID_BOOL, &vv, sizeof(BOOL), error);
+      W(varname, TID_BOOL, &vv, sizeof(BOOL), error);
    }
 
-   void WI(const char* varname, int index, int v, MVOdbError* error)
+   void WI(const char* varname, int v, MVOdbError* error)
    {
-      W(varname, index, TID_INT, &v, sizeof(int), error);
+      W(varname, TID_INT, &v, sizeof(int), error);
    }
 
-   void WU16(const char* varname, int index, uint16_t v, MVOdbError* error)
+   void WU16(const char* varname, uint16_t v, MVOdbError* error)
    {
-      W(varname, index, TID_WORD, &v, sizeof(uint16_t), error);
+      W(varname, TID_WORD, &v, sizeof(uint16_t), error);
    }
    
-   void WU32(const char* varname, int index, uint32_t v, MVOdbError* error)
+   void WU32(const char* varname, uint32_t v, MVOdbError* error)
    {
-      W(varname, index, TID_DWORD, &v, sizeof(uint32_t), error);
+      W(varname, TID_DWORD, &v, sizeof(uint32_t), error);
    }
    
-   void WD(const char* varname, int index, double v, MVOdbError* error)
+   void WD(const char* varname, double v, MVOdbError* error)
    {
-      W(varname, index, TID_DOUBLE, &v, sizeof(double), error);
+      W(varname, TID_DOUBLE, &v, sizeof(double), error);
    }
 
-   void WF(const char* varname, int index, float v, MVOdbError* error)
+   void WF(const char* varname, float v, MVOdbError* error)
    {
-      W(varname, index, TID_FLOAT, &v, sizeof(float), error);
+      W(varname, TID_FLOAT, &v, sizeof(float), error);
    }
 
-   void WS(const char* varname, int index, const char* v, MVOdbError* error)
+   void WS(const char* varname, const char* v, MVOdbError* error)
    {
       int len = strlen(v);
-      W(varname, index, TID_STRING, v, len+1, error);
+      W(varname, TID_STRING, v, len+1, error);
    }
 
    void WA(const char* varname, int tid, const void* v, int size, int count, MVOdbError* error)

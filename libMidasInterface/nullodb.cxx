@@ -61,29 +61,29 @@ public:
       SetOk(error);
    }
 
-   void RB(const char* varname, int index, bool   *value, bool create, MVOdbError* error) { SetOk(error); };
-   void RI(const char* varname, int index, int    *value, bool create, MVOdbError* error) { SetOk(error); };
-   void RD(const char* varname, int index, double *value, bool create, MVOdbError* error) { SetOk(error); };
-   void RF(const char* varname, int index, float  *value, bool create, MVOdbError* error) { SetOk(error); };
-   void RS(const char* varname, int index, std::string *value, bool create, MVOdbError* error) { SetOk(error); };
-   void RU16(const char* varname, int index, uint16_t *value, bool create, MVOdbError* error) { SetOk(error); };
-   void RU32(const char* varname, int index, uint32_t *value, bool create, MVOdbError* error) { SetOk(error); };
+   void RB(const char* varname, bool   *value, bool create, MVOdbError* error) { SetOk(error); };
+   void RI(const char* varname, int    *value, bool create, MVOdbError* error) { SetOk(error); };
+   void RD(const char* varname, double *value, bool create, MVOdbError* error) { SetOk(error); };
+   void RF(const char* varname, float  *value, bool create, MVOdbError* error) { SetOk(error); };
+   void RS(const char* varname, std::string *value, bool create, int create_string_length, MVOdbError* error) { SetOk(error); };
+   void RU16(const char* varname, uint16_t *value, bool create, MVOdbError* error) { SetOk(error); };
+   void RU32(const char* varname, uint32_t *value, bool create, MVOdbError* error) { SetOk(error); };
 
    void RBA(const char* varname, std::vector<bool> *value, bool create, int create_size, MVOdbError* error) { SetOk(error); };
    void RIA(const char* varname, std::vector<int> *value,  bool create, int create_size, MVOdbError* error) { SetOk(error); };
    void RDA(const char* varname, std::vector<double> *value,  bool create, int create_size, MVOdbError* error) { SetOk(error); };
    void RFA(const char* varname, std::vector<float>  *value,  bool create, int create_size, MVOdbError* error) { SetOk(error); };
-   void RSA(const char* varname, std::vector<std::string> *value, bool create, int create_size, int string_size, MVOdbError* error) { SetOk(error); };
+   void RSA(const char* varname, std::vector<std::string> *value, bool create, int create_size, int create_string_length, MVOdbError* error) { SetOk(error); };
    void RU16A(const char* varname, std::vector<uint16_t> *value,  bool create, int create_size, MVOdbError* error) { SetOk(error); };
    void RU32A(const char* varname, std::vector<uint32_t> *value,  bool create, int create_size, MVOdbError* error) { SetOk(error); };
 
-   void WB(const char* varname, int index,   bool v,   MVOdbError* error) { SetOk(error); };
-   void WI(const char* varname, int index,   int v,    MVOdbError* error)  { SetOk(error); };
-   void WD(const char* varname, int index,   double v, MVOdbError* error) { SetOk(error); };
-   void WF(const char* varname, int index,   float  v, MVOdbError* error) { SetOk(error); };
-   void WS(const char* varname, int index,   const char* v, MVOdbError* error) { SetOk(error); };
-   void WU16(const char* varname, int index, uint16_t v, MVOdbError* error) { SetOk(error); };
-   void WU32(const char* varname, int index, uint32_t v, MVOdbError* error) { SetOk(error); };
+   void WB(const char* varname, bool v,   MVOdbError* error) { SetOk(error); };
+   void WI(const char* varname, int v,    MVOdbError* error)  { SetOk(error); };
+   void WD(const char* varname, double v, MVOdbError* error) { SetOk(error); };
+   void WF(const char* varname, float  v, MVOdbError* error) { SetOk(error); };
+   void WS(const char* varname, const char* v, MVOdbError* error) { SetOk(error); };
+   void WU16(const char* varname, uint16_t v, MVOdbError* error) { SetOk(error); };
+   void WU32(const char* varname, uint32_t v, MVOdbError* error) { SetOk(error); };
 
    void WBA(const char* varname, const std::vector<bool>& v, MVOdbError* error) { SetOk(error); };
    void WIA(const char* varname, const std::vector<int>& v, MVOdbError* error) { SetOk(error); };
