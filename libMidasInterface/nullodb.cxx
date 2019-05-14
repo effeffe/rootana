@@ -77,6 +77,14 @@ public:
    void RU16A(const char* varname, std::vector<uint16_t> *value,  bool create, int create_size, MVOdbError* error) { SetOk(error); };
    void RU32A(const char* varname, std::vector<uint32_t> *value,  bool create, int create_size, MVOdbError* error) { SetOk(error); };
 
+   void RBAI(const char* varname, int index, bool   *value, MVOdbError* error) { SetOk(error); };
+   void RIAI(const char* varname, int index, int    *value, MVOdbError* error) { SetOk(error); };
+   void RDAI(const char* varname, int index, double *value, MVOdbError* error) { SetOk(error); };
+   void RFAI(const char* varname, int index, float  *value, MVOdbError* error) { SetOk(error); };
+   void RSAI(const char* varname, int index, std::string *value, MVOdbError* error) { SetOk(error); };
+   void RU16AI(const char* varname, int index, uint16_t *value, MVOdbError* error) { SetOk(error); };
+   void RU32AI(const char* varname, int index, uint32_t *value, MVOdbError* error) { SetOk(error); };
+
    void WB(const char* varname, bool v,   MVOdbError* error) { SetOk(error); };
    void WI(const char* varname, int v,    MVOdbError* error)  { SetOk(error); };
    void WD(const char* varname, double v, MVOdbError* error) { SetOk(error); };
@@ -92,6 +100,14 @@ public:
    void WSA(const char* varname, const std::vector<std::string>& data, int odb_string_length, MVOdbError* error) { SetOk(error); };
    void WU16A(const char* varname, const std::vector<uint16_t>& v, MVOdbError* error) { SetOk(error); };
    void WU32A(const char* varname, const std::vector<uint32_t>& v, MVOdbError* error) { SetOk(error); };
+
+   void WBAI(const char* varname, int index, bool v,   MVOdbError* error) { SetOk(error); };
+   void WIAI(const char* varname, int index, int v,    MVOdbError* error)  { SetOk(error); };
+   void WDAI(const char* varname, int index, double v, MVOdbError* error) { SetOk(error); };
+   void WFAI(const char* varname, int index, float  v, MVOdbError* error) { SetOk(error); };
+   void WSAI(const char* varname, int index, const char* v, MVOdbError* error) { SetOk(error); };
+   void WU16AI(const char* varname, int index, uint16_t v, MVOdbError* error) { SetOk(error); };
+   void WU32AI(const char* varname, int index, uint32_t v, MVOdbError* error) { SetOk(error); };
 
    void Delete(const char* odbname, MVOdbError* error) { SetOk(error); };
 };

@@ -15,14 +15,12 @@
 #include "mvodb.h"
 #include "midas.h"
 
-#if 0
 static std::string toString(int value)
 {
    char buf[256];
    sprintf(buf, "%d", value);
    return buf;
 }
-#endif
 
 class MidasOdb: public MVOdb
 {
@@ -226,6 +224,68 @@ public:
       std::string path = Path(varname);
    
       int status = db_get_value_string(fDB, 0, path.c_str(), 0, value, create);
+
+      if (status != DB_SUCCESS) {
+         SetMidasStatus(error, fPrintError, path, "db_get_value_string", status);
+         return;
+      }
+
+      SetOk(error);
+   }
+
+   void RAI(const char* varname, int index, int tid, void *value, int size, MVOdbError* error)
+   {
+      assert(value);
+      std::string path = Path(varname);
+      path += "[";
+      path += toString(index);
+      path += "]";
+      int status = db_get_value(fDB, 0, path.c_str(), value, &size, tid, FALSE);
+      if (status != DB_SUCCESS) {
+         SetMidasStatus(error, fPrintError, path, "db_get_value", status);
+         return;
+      }
+      SetOk(error);
+   }
+
+   void RIAI(const char* varname, int index, int *value, MVOdbError* error)
+   {
+      RAI(varname, index, TID_INT, value, sizeof(int), error);
+   }
+
+   void RU16AI(const char* varname, int index, uint16_t *value, MVOdbError* error)
+   {
+      RAI(varname, index, TID_WORD, value, sizeof(uint16_t), error);
+   }
+
+   void RU32AI(const char* varname, int index, uint32_t *value, MVOdbError* error)
+   {
+      RAI(varname, index, TID_DWORD, value, sizeof(uint32_t), error);
+   }
+
+   void RDAI(const char* varname, int index, double *value, MVOdbError* error)
+   {
+      RAI(varname, index, TID_DOUBLE, value, sizeof(double), error);
+   }
+
+   void RFAI(const char* varname, int index, float *value, MVOdbError* error)
+   {
+      RAI(varname, index, TID_FLOAT, value, sizeof(float), error);
+   }
+
+   void RBAI(const char* varname, int index, bool *value, MVOdbError* error)
+   {
+      assert(value);
+      BOOL v = *value;
+      RAI(varname, index, TID_BOOL, &v, sizeof(BOOL), error);
+      *value = v;
+   }
+
+   void RSAI(const char* varname, int index, std::string* value, MVOdbError* error)
+   {
+      std::string path = Path(varname);
+   
+      int status = db_get_value_string(fDB, 0, path.c_str(), index, value, FALSE);
 
       if (status != DB_SUCCESS) {
          SetMidasStatus(error, fPrintError, path, "db_get_value_string", status);
@@ -479,6 +539,60 @@ public:
    {
       int len = strlen(v);
       W(varname, TID_STRING, v, len+1, error);
+   }
+
+   void WAI(const char* varname, int index, int tid, const void* v, int size, MVOdbError* error)
+   {
+      std::string path = Path(varname);
+      path += "[";
+      path += toString(index);
+      path += "]";
+   
+      int status = db_set_value(fDB, 0, path.c_str(), v, size, 1, tid);
+
+      if (status != DB_SUCCESS) {
+         SetMidasStatus(error, fPrintError, path, "db_set_value", status);
+         return;
+      }
+
+      SetOk(error);
+   }
+
+   void WBAI(const char* varname, int index, bool v, MVOdbError* error)
+   {
+      BOOL vv = v;
+      WAI(varname, index, TID_BOOL, &vv, sizeof(BOOL), error);
+   }
+
+   void WIAI(const char* varname, int index, int v, MVOdbError* error)
+   {
+      WAI(varname, index, TID_INT, &v, sizeof(int), error);
+   }
+
+   void WU16AI(const char* varname, int index, uint16_t v, MVOdbError* error)
+   {
+      WAI(varname, index, TID_WORD, &v, sizeof(uint16_t), error);
+   }
+   
+   void WU32AI(const char* varname, int index, uint32_t v, MVOdbError* error)
+   {
+      WAI(varname, index, TID_DWORD, &v, sizeof(uint32_t), error);
+   }
+   
+   void WDAI(const char* varname, int index, double v, MVOdbError* error)
+   {
+      WAI(varname, index, TID_DOUBLE, &v, sizeof(double), error);
+   }
+
+   void WFAI(const char* varname, int index, float v, MVOdbError* error)
+   {
+      WAI(varname, index, TID_FLOAT, &v, sizeof(float), error);
+   }
+
+   void WSAI(const char* varname, int index, const char* v, MVOdbError* error)
+   {
+      int len = strlen(v);
+      WAI(varname, index, TID_STRING, v, len+1, error);
    }
 
    void WA(const char* varname, int tid, const void* v, int size, int count, MVOdbError* error)

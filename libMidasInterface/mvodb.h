@@ -72,6 +72,24 @@ public:
    virtual void RU16A(const char* varname, std::vector<uint16_t> *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
    virtual void RU32A(const char* varname, std::vector<uint32_t> *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
 
+   //
+   // read odb array elements
+   //
+   // all RxAI read functions do this:
+   //
+   // if varname exists, it's value read from odb and returned
+   // if odb read fails (index out of range, wrong data type, etc), value is left unchanged (but see db_get_value)
+   // if varname does not exist, value is returned unchanged
+   //
+
+   virtual void RBAI(const char* varname, int index, bool   *value, MVOdbError* error = NULL) = 0; // TID_BOOL
+   virtual void RIAI(const char* varname, int index, int    *value, MVOdbError* error = NULL) = 0; // TID_INT
+   virtual void RDAI(const char* varname, int index, double *value, MVOdbError* error = NULL) = 0; // TID_DOUBLE
+   virtual void RFAI(const char* varname, int index, float  *value, MVOdbError* error = NULL) = 0; // TID_FLOAT
+   virtual void RSAI(const char* varname, int index, std::string *value, MVOdbError* error = NULL) = 0; // TID_STRING
+   virtual void RU16AI(const char* varname, int index, uint16_t *value, MVOdbError* error = NULL) = 0; // TID_WORD
+   virtual void RU32AI(const char* varname, int index, uint32_t *value, MVOdbError* error = NULL) = 0; // TID_DWORD
+
    // create and write individual variables
 
    virtual void WB(const char* varname, bool   v, MVOdbError* error = NULL) = 0;
@@ -91,6 +109,16 @@ public:
    virtual void WSA(const char* varname, const std::vector<std::string>& v, int string_length, MVOdbError* error = NULL) = 0;
    virtual void WU16A(const char* varname, const std::vector<uint16_t>& v, MVOdbError* error = NULL) = 0;
    virtual void WU32A(const char* varname, const std::vector<uint32_t>& v, MVOdbError* error = NULL) = 0;
+
+   // write array elements
+
+   virtual void WBAI(const char* varname, int index, bool   v, MVOdbError* error = NULL) = 0;
+   virtual void WIAI(const char* varname, int index, int    v, MVOdbError* error = NULL) = 0;
+   virtual void WDAI(const char* varname, int index, double v, MVOdbError* error = NULL) = 0;
+   virtual void WFAI(const char* varname, int index, float  v, MVOdbError* error = NULL) = 0;
+   virtual void WSAI(const char* varname, int index, const char* v, MVOdbError* error = NULL) = 0;
+   virtual void WU16AI(const char* varname, int index, uint16_t v, MVOdbError* error = NULL) = 0;
+   virtual void WU32AI(const char* varname, int index, uint32_t v, MVOdbError* error = NULL) = 0;
 
    // delete functions
    virtual void Delete(const char* odbname, MVOdbError* error = NULL) = 0;
