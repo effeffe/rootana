@@ -64,7 +64,7 @@ public:
    // if odb read fails (wrong data type, etc), value is left unchanged (but see db_get_value)
    // if varname does not exist and create is false, value is returned unchanged
    // if create is true, a new array is created and filled with data from the "value" vector.
-   // if "create_size" is non-zero, the newly created array size is extended to this size
+   // if "create_size" is non-zero, the newly created array size is resized to "create_size"
    //
    // std::vector<int> a;
    // odb->RIA("a", &a);

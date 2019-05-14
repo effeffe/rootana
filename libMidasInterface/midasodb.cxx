@@ -138,7 +138,7 @@ public:
       SetOk(error);
    }
 
-   void Resize(const char* varname, int new_size, MVOdbError* error)
+   void ResizeArray(const char* varname, int new_size, MVOdbError* error)
    {
       std::string path = Path(varname);
 
@@ -221,7 +221,12 @@ public:
 
    void RS(const char* varname, std::string* value, bool create, int create_string_length, MVOdbError* error)
    {
+      assert(value);
       std::string path = Path(varname);
+
+      if (create && create_string_length > value->capacity()) {
+         value->reserve(create_string_length);
+      }
    
       int status = db_get_value_string(fDB, 0, path.c_str(), 0, value, create);
 
@@ -283,6 +288,7 @@ public:
 
    void RSAI(const char* varname, int index, std::string* value, MVOdbError* error)
    {
+      assert(value);
       std::string path = Path(varname);
    
       int status = db_get_value_string(fDB, 0, path.c_str(), index, value, FALSE);
@@ -307,74 +313,67 @@ public:
       SetOk(error);
    }
 
-   int GetArraySize(const std::string& path, const char* varname, int tid, int tsize, MVOdbError* error)
+   void GetArraySize(const char* varname, int* pnum_values, int* pitem_size, MVOdbError* error)
    {
       int xtid = 0;
-      int xnum_values = 0;
+      //int xnum_values = 0;
       int xtotal_size = 0;
-      int xitem_size = 0;
+      //int xitem_size = 0;
 
-      ReadKey(varname, &xtid, &xnum_values, &xtotal_size, &xitem_size, error);
-
-      if (error && error->fError)
-         return -1;
+      ReadKey(varname, &xtid, pnum_values, &xtotal_size, pitem_size, error);
 
       if (xtid == 0) {
-         return -1;
+         *pnum_values = -1;
+         *pitem_size = -1;
       }
-
-      //printf("varname [%s], requested/odb: tid %d/%d, tsize %d/%d, num_values /%d, total_size /%d\n", varname, tid, xtid, tsize, xitem_size, xnum_values, xtotal_size);
-
-      //if (xitem_size != tsize) {
-      //   return ...;
-      //}
-
-      //if (xtid != tid) {
-      //   return ...;
-      //}
-
-      return xnum_values;
-   }
-
-   int MaybeCreateArray(const std::string& path, const char* varname, int tid, int tsize, int size, const void* data, bool create, int create_size, MVOdbError* error)
-   {
-      int num = GetArraySize(path, varname, tid, tsize, error);
-
-      if (num >= 0) {
-         return num;
-      }
-
-      if (!create) {
-         return 0;
-      }
-
-      WA(varname, tid, data, size*tsize, size, error);
-      
-      if (create_size > size) {
-         Resize(varname, create_size, error);
-      }
-
-      return GetArraySize(path, varname, tid, tsize, error);
    }
 
    template <class X> void RXA(const char* varname, int tid, std::vector<X> *value, bool create, int create_size, MVOdbError* error)
    {
       std::string path = Path(varname);
-      
-      int size = 0;
-      const void* vptr = NULL;
-      if (value) {
-         size = value->size();
-         vptr = &((*value)[0]);
+
+      int num_values = 0;
+      int item_size = 0;
+
+      GetArraySize(varname, &num_values, &item_size, error);
+
+      if (value == NULL) {
+         if (create && create_size > 0) {
+            if (num_values < 0) {
+               // does not exist, create it
+               X v = 0;
+               W(varname, tid, &v, sizeof(X), error);
+               if (error && error->fError)
+                  return;
+               ResizeArray(varname, create_size, error);
+            } else if (num_values != create_size) {
+               // wrong size, resize it
+               ResizeArray(varname, create_size, error);
+               return;
+            }
+         }
+         return;
       }
 
-      int num = MaybeCreateArray(path, varname, tid, sizeof(X), size, vptr, create, create_size, error);
+      if (num_values > 0) { // array exists
+         value->resize(num_values);
+         RA(path, tid, &((*value)[0]), num_values*sizeof(X), error);
+         return;
+      }
 
-      if (value) {
-         value->clear();
-         if (num > 0) {
-            value->resize(num);
-            RA(path, tid, &((*value)[0]), num*sizeof(X), error);
+      // array does not exist
+
+      if (!create)
+         return;
+      
+      WA(varname, tid, &((*value)[0]), value->size()*sizeof(X), value->size(), error);
+
+      if (error && error->fError)
+         return;
+
+      if (create_size > 0) {
+         if (create_size != value->size()) {
+            ResizeArray(varname, create_size, error);
          }
       }
    }
@@ -434,58 +433,94 @@ public:
    void RSA(const char* varname, std::vector<std::string> *value, bool create, int create_size, int create_string_length, MVOdbError* error)
    {
       std::string path = Path(varname);
-      
-      int xtid = 0;
-      int xnum_values = 0;
-      int xtotal_size = 0;
-      int xitem_size = 0;
 
-      for (int i=0; i<2; i++) {
-         ReadKey(varname, &xtid, &xnum_values, &xtotal_size, &xitem_size, error);
-         
-         bool try_create = false;
-         
-         if ((error && error->fError) || (xtid==0)) {
-            try_create = true;
-         }
-         
-         //printf("varname [%s], requested/odb: tid %d/%d, tsize /%d, num_values /%d, total_size /%d, try_create %d\n", varname, TID_STRING, xtid, xitem_size, xnum_values, xtotal_size, try_create);
+      int num_values = 0;
+      int item_size = 0;
 
-         if (!try_create) {
-            break;
-         }
+      GetArraySize(varname, &num_values, &item_size, error);
 
-         if (!create) {
-            SetError(error, fPrintError, path, "Does not exist");
-            return;
-         }
-
-         if (value) {
-            WSA(varname, *value, create_string_length, error);
-            
-            if (create_size > (int)value->size()) {
-               Resize(varname, create_size, error);
+      if (value == NULL) {
+         if (create && (create_size > 0) && (create_string_length > 0)) {
+            if (num_values < 0) {
+               // does not exist, create it
+               WS(varname, "", error);
+               if (error && error->fError)
+                  return;
+               ResizeStringArray(varname, create_size, create_string_length, error);
+            } else if ((num_values != create_size) || (item_size != create_string_length)) {
+               // wrong size, resize it
+               ResizeStringArray(varname, create_size, create_string_length, error);
+               return;
             }
-            
-         } else {
-            WS(varname, "", error);
-            ResizeStringArray(varname, create_size, create_string_length, error);
+         }
+         return;
+      }
+
+      // array exists, read it
+      
+      if (num_values > 0) {
+         value->clear();
+         int bufsize = num_values*item_size;
+         char* buf = (char*)malloc(bufsize);
+         assert(buf != NULL);
+         memset(buf, 0, bufsize);
+         RA(path, TID_STRING, buf, bufsize, error);
+         for (int i=0; i<num_values; i++) {
+            value->push_back(buf+i*item_size);
+         }
+         free(buf);
+         buf = NULL;
+         return;
+      }
+
+      // array does not exist
+      
+      if (!create)
+         return;
+
+      //if (!(create_string_length > 0)) {
+      //   SetError(error, fPrintError, path, "RSA() with create==true must have create_string_length>0");
+      //   return;
+      //}
+
+      int string_length = 0;
+      for (size_t i = 0; i < value->size(); i++) {
+         if ((*value)[i].length() > string_length)
+            string_length = (*value)[i].length();
+      }
+      string_length += 1; // add space for string terminator NUL character '\0'
+
+      if (create_string_length > string_length)
+         string_length = create_string_length;
+
+      char* buf = NULL;
+
+      int bufsize = value->size()*string_length;
+
+      if (bufsize > 0) {
+         buf = (char*)malloc(bufsize);
+         assert(buf != NULL);
+         memset(buf, 0, bufsize);
+
+         for (size_t i=0; i<value->size(); i++) {
+            strlcpy(buf+i*string_length, (*value)[i].c_str(), string_length);
          }
       }
 
-      if (value) {
-         value->clear();
-         if (xnum_values > 0) {
-            int bufsize = xnum_values*xitem_size;
-            char* buf = (char*)malloc(bufsize);
-            assert(buf != NULL);
-            memset(buf, 0, bufsize);
-            RA(path, TID_STRING, buf, bufsize, error);
-            for (int i=0; i<xnum_values; i++) {
-               value->push_back(buf+i*xitem_size);
-            }
-            free(buf);
-            buf = NULL;
+      WA(varname, TID_STRING, buf, bufsize, value->size(), error);
+
+      if (buf) {
+         free(buf);
+         buf = NULL;
+      }
+
+      if (error && error->fError)
+         return;
+
+      if ((create_size > 0) && (create_string_length > 0)) {
+         if ((value->size() != create_size) || (string_length != create_string_length)) {
+            // wrong size, resize it
+            ResizeStringArray(varname, create_size, create_string_length, error);
          }
       }
    }
@@ -605,7 +640,7 @@ public:
          int status = db_create_key(fDB, 0, path.c_str(), tid);
 
          if (status != DB_SUCCESS) {
-            SetMidasStatus(error, fPrintError, path, "db_set_value", status);
+            SetMidasStatus(error, fPrintError, path, "db_create_key", status);
             return;
          }
       } else {
