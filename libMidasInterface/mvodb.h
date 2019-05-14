@@ -5,8 +5,6 @@
 
   Contents:     Virtual ODB interface
 
-  Discussion:
-
 \********************************************************************/
 
 #ifndef INCLUDE_MVODB_H
@@ -14,7 +12,7 @@
 
 #include <string>
 #include <vector>
-#include <cstdio>
+//#include <cstdio>
 #include <stdint.h>
 
 class MVOdbError;
@@ -22,23 +20,31 @@ class MVOdbError;
 class MVOdb
 {
 public:
-   virtual MVOdb* Chdir(const char* subdirname, bool create, MVOdbError* error = NULL) = 0;
+   // navigate into subdirectory
+   
+   virtual MVOdb* Chdir(const char* subdirname, bool create = false, MVOdbError* error = NULL) = 0;
    
    // read array information: number of elements and element size (string size for TID_STRING arrays)
 
    virtual void ReadKey(const char* varname, int *tid, int *num_values, int *total_size, int *item_size, MVOdbError* error = NULL) = 0;
+
+   // read the contents of current directory
 
    virtual void ReadDir(std::vector<std::string>* varname, std::vector<int> *tid, std::vector<int> *num_values, std::vector<int> *total_size, std::vector<int> *item_size, MVOdbError* error = NULL) = 0;
 
    //
    // create and read individual odb variables
    //
-   // all Rx read functions do this:
+   // all Rx() read functions do this:
    //
    // if varname exists, it's value read from odb and returned
    // if odb read fails (wrong data type, etc), value is left unchanged (but see db_get_value)
    // if varname does not exist and create is false, value is returned unchanged
    // if create is true, varname is created in odb with given value and given string length
+   //
+   // int a = 10; // default value
+   // odb->RI("a", &a); // read from odb, keep default value if does not exist
+   // odb->RI("a", &a, true); // read from odb, create with default value if does not exist
    //
 
    virtual void RB(const char* varname, bool   *value, bool create = false, MVOdbError* error = NULL) = 0; // TID_BOOL
@@ -50,36 +56,50 @@ public:
    virtual void RU32(const char* varname, uint32_t *value, bool create = false, MVOdbError* error = NULL) = 0; // TID_DWORD
 
    //
-   // create and read whole odb arrays
+   // read or create odb arrays
    //
-   // all RxA read functions do this:
+   // all RxA() read functions do this:
    //
-   // if varname exists, it's value read from odb and returned
+   // if array varname exists, it's contents is read into the "value" vector, size of "value" vector is same as the odb array size.
    // if odb read fails (wrong data type, etc), value is left unchanged (but see db_get_value)
    // if varname does not exist and create is false, value is returned unchanged
-   // if create is true, a new array is created with given value, if "create_size" is non-zero, array size is extended to this value
+   // if create is true, a new array is created and filled with data from the "value" vector.
+   // if "create_size" is non-zero, the newly created array size is extended to this size
    //
-   // all RxA read functions can be used to create new empty arrays:
+   // std::vector<int> a;
+   // odb->RIA("a", &a);
+   // odb->RIA("a", &a, true);
+   // odb->RIA("a", &a, true, 10);
+   //
+   // in addition, the RxA functions provide a way to ensure that arrays in odb have the correct (expected) size:
+   //
+   // if "value" is NULL, and "create" is true, and "create_size" is not zero,
+   // if array varname exists, it's size is changed to "create_size"
+   // if array varname does not exist, it is created with size "create_size":
    //
    // odb->RxA(varname, NULL, true, array_size); // create new array with size "array_size"
    //
 
-   virtual void RBA(const char* varname, std::vector<bool>   *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
-   virtual void RIA(const char* varname, std::vector<int>    *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
-   virtual void RDA(const char* varname, std::vector<double> *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
-   virtual void RFA(const char* varname, std::vector<float>  *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
-   virtual void RSA(const char* varname, std::vector<std::string> *value, bool create, int create_size, int create_string_length, MVOdbError* error = NULL) = 0;
-   virtual void RU16A(const char* varname, std::vector<uint16_t> *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
-   virtual void RU32A(const char* varname, std::vector<uint32_t> *value, bool create, int create_size, MVOdbError* error = NULL) = 0;
+   virtual void RBA(const char* varname, std::vector<bool>   *value, bool create = false, int create_size = 0, MVOdbError* error = NULL) = 0;
+   virtual void RIA(const char* varname, std::vector<int>    *value, bool create = false, int create_size = 0, MVOdbError* error = NULL) = 0;
+   virtual void RDA(const char* varname, std::vector<double> *value, bool create = false, int create_size = 0, MVOdbError* error = NULL) = 0;
+   virtual void RFA(const char* varname, std::vector<float>  *value, bool create = false, int create_size = 0, MVOdbError* error = NULL) = 0;
+   virtual void RSA(const char* varname, std::vector<std::string> *value, bool create = false, int create_size = 0, int create_string_length = 0, MVOdbError* error = NULL) = 0;
+   virtual void RU16A(const char* varname, std::vector<uint16_t> *value, bool create = false, int create_size = 0, MVOdbError* error = NULL) = 0;
+   virtual void RU32A(const char* varname, std::vector<uint32_t> *value, bool create = false, int create_size = 0, MVOdbError* error = NULL) = 0;
 
    //
    // read odb array elements
    //
-   // all RxAI read functions do this:
+   // all RxAI() read functions do this:
    //
    // if varname exists, it's value read from odb and returned
    // if odb read fails (index out of range, wrong data type, etc), value is left unchanged (but see db_get_value)
    // if varname does not exist, value is returned unchanged
+   //
+   // the RxAI() cannot create arrays, use RxA(varname, NULL, true, array_size) to ensure that arrays exist and have the correct (expected) size.
+   //
+   // instead of looping over all array elements, use RxA(varname, &v) to read the whole array at once.
    //
 
    virtual void RBAI(const char* varname, int index, bool   *value, MVOdbError* error = NULL) = 0; // TID_BOOL
@@ -120,7 +140,8 @@ public:
    virtual void WU16AI(const char* varname, int index, uint16_t v, MVOdbError* error = NULL) = 0;
    virtual void WU32AI(const char* varname, int index, uint32_t v, MVOdbError* error = NULL) = 0;
 
-   // delete functions
+   // delete odb entries from the current directory
+   
    virtual void Delete(const char* odbname, MVOdbError* error = NULL) = 0;
 
    // report errors to stderr or not
