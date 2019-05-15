@@ -224,9 +224,7 @@ public:
       assert(value);
       std::string path = Path(varname);
 
-      if (create && create_string_length > value->capacity()) {
-         value->reserve(create_string_length);
-      }
+      // FIXME: create_string_length is ignored
    
       int status = db_get_value_string(fDB, 0, path.c_str(), 0, value, create);
 
@@ -452,7 +450,7 @@ public:
          if (create && (create_size > 0) && (create_string_length > 0)) {
             if (num_values < 0) {
                // does not exist, create it
-               WS(varname, "", error);
+               WS(varname, "", create_string_length, error);
                if (error && error->fError)
                   return;
                ResizeStringArray(varname, create_size, create_string_length, error);
@@ -579,8 +577,9 @@ public:
       W(varname, TID_FLOAT, &v, sizeof(float), error);
    }
 
-   void WS(const char* varname, const char* v, MVOdbError* error)
+   void WS(const char* varname, const char* v, int string_length, MVOdbError* error)
    {
+      // FIXME: string_length is ignored
       int len = strlen(v);
       W(varname, TID_STRING, v, len+1, error);
    }

@@ -310,17 +310,34 @@ int main(int argc, char *argv[])
      test->WS("test_size", "12345");
      std::string s;
      test->RS("test_size", &s);
-     printf("read test_size [%s] length %d, capacity %d\n", s.c_str(), (int)s.length(), (int)s.capacity());
+     printf("read test_size     [%s]\n", s.c_str());
+   }
+   {
+     test->WS("test_size_32", "1234567890", 32);
+     std::string s;
+     test->RS("test_size_32", &s);
+     printf("read test_size_32  [%s]\n", s.c_str());
+   }
+   {
+     test->WS("test_size_5", "1234567890", 5);
+     std::string s;
+     test->RS("test_size_5", &s);
+     printf("read test_size_5   [%s]\n", s.c_str());
    }
    {
      std::string s = "1234567890";
-     test->RS("test_size_2", &s, true);
-     printf("read test_size_2 [%s] length %d, capacity %d\n", s.c_str(), (int)s.length(), (int)s.capacity());
+     test->RS("test_rsize", &s, true);
+     printf("read test_rsize    [%s]\n", s.c_str());
    }
    {
      std::string s = "123456";
-     test->RS("test_size_3", &s, true, 32);
-     printf("read test_size_3 [%s] length %d, capacity %d\n", s.c_str(), (int)s.length(), (int)s.capacity());
+     test->RS("test_size_r32", &s, true, 32);
+     printf("read test_size_r32 [%s]\n", s.c_str());
+   }
+   {
+     std::string s = "1234567890";
+     test->RS("test_size_r8", &s, true, 8);
+     printf("read test_size_r8  [%s]\n", s.c_str());
    }
 
    printf("\n");

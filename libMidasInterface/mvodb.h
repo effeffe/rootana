@@ -116,7 +116,7 @@ public:
    virtual void WI(const char* varname, int    v, MVOdbError* error = NULL) = 0;
    virtual void WD(const char* varname, double v, MVOdbError* error = NULL) = 0;
    virtual void WF(const char* varname, float  v, MVOdbError* error = NULL) = 0;
-   virtual void WS(const char* varname, const char* v, MVOdbError* error = NULL) = 0;
+   virtual void WS(const char* varname, const char* v, int string_length = 0, MVOdbError* error = NULL) = 0;
    virtual void WU16(const char* varname, uint16_t v, MVOdbError* error = NULL) = 0;
    virtual void WU32(const char* varname, uint32_t v, MVOdbError* error = NULL) = 0;
 
