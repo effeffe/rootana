@@ -16,6 +16,13 @@
 #include "TMidasEvent.h"
 #include "mvodb.h"
 
+std::string toString(int i)
+{
+  char buf[256];
+  sprintf(buf, "%d", i);
+  return buf;
+}
+
 // Main function call
 
 int main(int argc, char *argv[])
@@ -48,6 +55,8 @@ int main(int argc, char *argv[])
    else
      httpfile = true;
 
+   TMidasOnline *midas = NULL;
+   
    MVOdb* odb = NULL;
 
    if (nullodb)
@@ -58,7 +67,7 @@ int main(int argc, char *argv[])
    else if (online)
      {
        printf("Using MidasOdb\n");
-       TMidasOnline *midas = TMidasOnline::instance();
+       midas = TMidasOnline::instance();
 
        int err = midas->connect(hostname, exptname, "test_mvodb");
        if (err != 0)
@@ -165,6 +174,8 @@ int main(int argc, char *argv[])
 
    MVOdb* test = odb->Chdir("test_mvodb", true);
 
+   assert(test != NULL);
+
    test->SetPrintError(true);
 
    int ivalue = 1;
@@ -210,6 +221,28 @@ int main(int argc, char *argv[])
    test->WU16("u16", 0xcdef);
    test->WU32("u32", 0xdeadf00d);
    test->WS("string", "write test string");
+
+   printf("\n");
+   printf("Test read after write of all data types:\n");
+   printf("\n");
+
+   test->RI("int", &ivalue, true);
+   test->RF("float", &fvalue, true);
+   test->RD("double", &dvalue, true);
+   test->RB("bool0", &bvalue0, true);
+   test->RB("bool1", &bvalue1, true);
+   test->RU16("u16", &u16value, true);
+   test->RU32("u32", &u32value, true);
+   test->RS("string", &svalue, true);
+
+   printf("int: %d\n", ivalue);
+   printf("float: %f\n", fvalue);
+   printf("double: %f\n", dvalue);
+   printf("bool0: %d\n", bvalue0);
+   printf("bool1: %d\n", bvalue1);
+   printf("u16: 0x%04x\n", u16value);
+   printf("u32: 0x%08x\n", u32value);
+   printf("string: \"%s\"\n", svalue.c_str());
 
    printf("\n");
    printf("Test read arrays of all data types:\n");
@@ -270,48 +303,164 @@ int main(int argc, char *argv[])
    test->RSA("createsa10", NULL, true, 10, 32);
 
    printf("\n");
+   printf("Test string sizes:\n");
+   printf("\n");
+
+   {
+     test->WS("test_size", "12345");
+     std::string s;
+     test->RS("test_size", &s);
+     printf("read test_size [%s] length %d, capacity %d\n", s.c_str(), (int)s.length(), (int)s.capacity());
+   }
+   {
+     std::string s = "1234567890";
+     test->RS("test_size_2", &s, true);
+     printf("read test_size_2 [%s] length %d, capacity %d\n", s.c_str(), (int)s.length(), (int)s.capacity());
+   }
+   {
+     std::string s = "123456";
+     test->RS("test_size_3", &s, true, 32);
+     printf("read test_size_3 [%s] length %d, capacity %d\n", s.c_str(), (int)s.length(), (int)s.capacity());
+   }
+
+   printf("\n");
+   printf("Test creating and resizing arrays:\n");
+   printf("\n");
+
+   {
+     test->RIA("create_ia15", NULL, true, 15);
+     test->RBA("create_ba12", NULL, true, 12);
+     test->RSA("create_sa5", NULL, true, 5, 32);
+   }
+   {
+     test->RIA("resize_ia10", NULL, true, 5);
+     test->RIA("resize_ia10", NULL, true, 10);
+     test->RSA("resize_sa3", NULL, true, 5, 32);
+     test->WSAI("resize_sa3", 0, "00000000");
+     test->WSAI("resize_sa3", 1, "11111111");
+     test->WSAI("resize_sa3", 2, "22222222");
+     test->WSAI("resize_sa3", 3, "33333333");
+     test->WSAI("resize_sa3", 4, "44444444");
+     test->RSA("resize_sa3", NULL, true, 3, 5);
+   }
+
+   printf("\n");
+   printf("Test array index access:\n");
+   printf("\n");
+
+   {
+     std::vector<int> ia;
+     ia.push_back(10);
+     ia.push_back(11);
+     ia.push_back(12);
+     test->WIA("index_ia", ia);
+     for (int i=0; i<5; i++) {
+       int ivalue = 999;
+       test->RIAI("index_ia", i, &ivalue);
+       printf("index %d value %d\n", i, ivalue);
+     }
+     for (int i=0; i<4; i++) {
+       int ivalue = 20+i;
+       test->WIAI("index_ia", i, ivalue);
+     }
+     for (int i=0; i<5; i++) {
+       int ivalue = 999;
+       test->RIAI("index_ia", i, &ivalue);
+       printf("index %d value %d\n", i, ivalue);
+     }
+   }
+   
+   printf("\n");
+   printf("Test string array index access:\n");
+   printf("\n");
+
+   {
+     std::vector<std::string> sa;
+     sa.push_back("sa0");
+     sa.push_back("sa1");
+     sa.push_back("sa2");
+     test->WSA("index_sa", sa, 32);
+     for (int i=0; i<5; i++) {
+       std::string s = "aaa";
+       test->RSAI("index_sa", i, &s);
+       printf("index %d value [%s]\n", i, s.c_str());
+     }
+     for (int i=0; i<4; i++) {
+       std::string s = "sa_qqq";
+       s += toString(i);
+       test->WSAI("index_sa", i, s.c_str());
+     }
+     for (int i=0; i<5; i++) {
+       std::string s = "bbb";
+       test->RSAI("index_sa", i, &s);
+       printf("index %d value [%s]\n", i, s.c_str());
+     }
+   }
+   
+   printf("\n");
    printf("Test special cases:\n");
    printf("\n");
 
-   test->RI("nonexistant", &ivalue, false);
-   // wrong data type: ODB is INT, we ask for DOUBLE
-   test->RDA("ia10", &da, false, 0);
+   {
+     printf("test RI() of non existant variable:\n");
+     int ivalue = 999;
+     test->RI("nonexistant", &ivalue);
+     printf("RI() returned ivalue %d\n", ivalue);
+     printf("\n");
 
-#if 0
-   printf("read array size of /test: %d\n", gOdb->odbReadArraySize("/test"));
-   printf("read array size of /runinfo/run number: %d\n", gOdb->odbReadArraySize("/runinfo/Run number"));
-   printf("read array size of /test/intarr: %d\n", gOdb->odbReadArraySize("/test/intarr"));
-   printf("read array values:\n");
-   int size = gOdb->odbReadArraySize("/test/intarr");
-   for (int i=0; i<size; i++)
-     printf("  intarr[%d] = %d\n", i, gOdb->odbReadInt("/test/intarr", i));
-   printf("read double value: %f\n", gOdb->odbReadDouble("/test/dblvalue"));
-   printf("read uint32 value: %d\n", gOdb->odbReadUint32("/test/dwordvalue"));
-   printf("read bool value: %d\n", gOdb->odbReadBool("/test/boolvalue"));
-   const char* s = gOdb->odbReadString("/test/stringvalue");
-   int len=0;
-   if (s)
-     len = strlen(s);
-   printf("read string value: [%s] length %d\n", s, len);
+     printf("test RDA() of integer array:\n");
+     // wrong data type: ODB is INT, we ask for DOUBLE
+     test->RDA("ia10", &da, false, 0);
+     printf("RDA() returned array [%d]\n", (int)da.size());
+     printf("\n");
 
-   printf("\nTry non-existent entries...\n\n");
+     printf("test RI() of array ia10:\n");
+     ivalue = 999;
+     test->RI("ia10", &ivalue);
+     printf("RI() returned ivalue %d\n", ivalue);
+     printf("\n");
 
-   printf("read array size: %d\n", gOdb->odbReadArraySize("/test/doesnotexist"));
-   printf("read uint32 value: %d\n", gOdb->odbReadUint32("/test/doesnotexist", 0, -9999));
+     printf("test index of non-array:\n");
+     ivalue = 999;
+     test->RIAI("int", 10, &ivalue);
+     printf("RIAI() returned ivalue %d\n", ivalue);
+     printf("\n");
 
-   printf("\nTry wrong types...\n\n");
+     printf("test invalid index -1:\n");
+     ivalue = 999;
+     test->RIAI("ia10", -1, &ivalue);
+     printf("RIAI() returned ivalue %d\n", ivalue);
+     printf("\n");
 
-   printf("read float value: %f\n", gOdb->odbReadDouble("/test/fltvalue"));
-   printf("read uint32 value: %d\n", gOdb->odbReadUint32("/test/wordvalue"));
-   printf("read int value: %d\n", gOdb->odbReadInt("/test/wordvalue"));
+     printf("test invalid index 999:\n");
+     ivalue = 999;
+     test->RIAI("ia10", 999, &ivalue);
+     printf("RIAI() returned ivalue %d\n", ivalue);
+     printf("\n");
 
-   printf("\nTry wrong array indices...\n\n");
+     printf("test string array invalid index -1:\n");
+     svalue = "aaa";
+     test->RSAI("sa10", -1, &svalue);
+     printf("RSAI() returned [%s]\n", svalue.c_str());
+     printf("\n");
 
-   printf("try to index a non-array: %f\n", gOdb->odbReadDouble("/test/dblvalue", 10, -9999));
-   printf("try invalid index -1: %d\n", gOdb->odbReadInt("/test/intarr", -1, -9999));
-   printf("try invalid index 999: %d\n", gOdb->odbReadInt("/test/intarr", 999, -9999));
-   printf("try invalid index 1 for double value: %f\n", gOdb->odbReadDouble("/test/dblvalue", 1, -9999));
-#endif
+     printf("test string array invalid index 999:\n");
+     svalue = "aaa";
+     test->RSAI("sa10", 999, &svalue);
+     printf("RSAI() returned [%s]\n", svalue.c_str());
+     printf("\n");
+
+     printf("test write invalid index -1:\n");
+     test->WIAI("ia10", -1, 10);
+     printf("\n");
+
+     printf("test string write invalid index -1:\n");
+     test->WSAI("sa10", -1, "aaa");
+     printf("\n");
+   }
+
+   if (midas)
+     midas->disconnect();
    
    return 0;
 }

@@ -121,6 +121,11 @@ public:
    virtual void WU32(const char* varname, uint32_t v, MVOdbError* error = NULL) = 0;
 
    // create and write whole arrays
+   //
+   // the WSA() function for writing string arrays requires string length argument
+   // because ODB string arrays have fixed element length and it must be specified
+   // at array creation (write) time
+   //
 
    virtual void WBA(const char* varname, const std::vector<bool>&   v, MVOdbError* error = NULL) = 0;
    virtual void WIA(const char* varname, const std::vector<int>&    v, MVOdbError* error = NULL) = 0;

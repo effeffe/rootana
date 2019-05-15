@@ -245,6 +245,10 @@ public:
       path += "[";
       path += toString(index);
       path += "]";
+      if (index < 0) {
+         SetError(error, fPrintError, path, "RxAI() called with negative array index");
+         return;
+      }
       int status = db_get_value(fDB, 0, path.c_str(), value, &size, tid, FALSE);
       if (status != DB_SUCCESS) {
          SetMidasStatus(error, fPrintError, path, "db_get_value", status);
@@ -290,6 +294,11 @@ public:
    {
       assert(value);
       std::string path = Path(varname);
+
+      if (index < 0) {
+         SetError(error, fPrintError, path, "RSAI() called with negative array index");
+         return;
+      }
    
       int status = db_get_value_string(fDB, 0, path.c_str(), index, value, FALSE);
 
@@ -582,6 +591,16 @@ public:
       path += "[";
       path += toString(index);
       path += "]";
+
+      if (index < 0) {
+         SetError(error, fPrintError, path, "WxAI() called with negative array index");
+         return;
+      }
+
+      SetError(error, fPrintError, path, "WxAI() functions are broken");
+      return;
+
+      //printf("WAI(\"%s\", [%d], %d) path [%s]\n", varname, index, tid, path.c_str());
    
       int status = db_set_value(fDB, 0, path.c_str(), v, size, 1, tid);
 
