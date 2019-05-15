@@ -225,8 +225,13 @@ public:
       std::string path = Path(varname);
 
       // FIXME: create_string_length is ignored
-   
+
+#ifdef HAVE_DB_GET_VALUE_STRING_CREATE_STRING_LENGTH
+      int status = db_get_value_string(fDB, 0, path.c_str(), 0, value, create, create_string_length);
+#else
+#warning This MIDAS has an old version of db_get_value_string() and RS() will ignore the create_string_length argument.
       int status = db_get_value_string(fDB, 0, path.c_str(), 0, value, create);
+#endif
 
       if (status != DB_SUCCESS) {
          SetMidasStatus(error, fPrintError, path, "db_get_value_string", status);
@@ -579,9 +584,16 @@ public:
 
    void WS(const char* varname, const char* v, int string_length, MVOdbError* error)
    {
-      // FIXME: string_length is ignored
-      int len = strlen(v);
-      W(varname, TID_STRING, v, len+1, error);
+      if (string_length > 0) {
+         char* buf = (char*)malloc(string_length);
+         assert(buf);
+         strlcpy(buf, v, string_length);
+         W(varname, TID_STRING, buf, string_length, error);
+         free(buf);
+      } else {
+         int len = strlen(v);
+         W(varname, TID_STRING, v, len+1, error);
+      }
    }
 
    void WAI(const char* varname, int index, int tid, const void* v, int size, MVOdbError* error)
