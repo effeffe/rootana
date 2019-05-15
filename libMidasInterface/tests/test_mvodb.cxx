@@ -252,9 +252,9 @@ int main(int argc, char *argv[])
    ia.push_back(1);
    ia.push_back(2);
    ia.push_back(3);
-   test->RIA("ia", &ia, true, 0);
+   test->RIA("ia", &ia, true);
    // read non-existant array
-   test->RIA("ia-noexist", &ia, false, 0);
+   test->RIA("ia-noexist", &ia);
    // create 10 element array, init to zero (ia is empty)
    ia.clear();
    test->RIA("ia10zero", &ia, true, 10);
@@ -339,6 +339,13 @@ int main(int argc, char *argv[])
      test->RS("test_size_r8", &s, true, 8);
      printf("read test_size_r8  [%s]\n", s.c_str());
    }
+   {
+     test->RSA("test_size_a8", NULL, true, 2, 8);
+     std::string s = "1234567890";
+     test->WSAI("test_size_a8", 0, s.c_str());
+     test->RSAI("test_size_a8", 0, &s);
+     printf("read test_size_a8  [%s]\n", s.c_str());
+   }
 
    printf("\n");
    printf("Test creating and resizing arrays:\n");
@@ -386,7 +393,7 @@ int main(int argc, char *argv[])
        printf("index %d value %d\n", i, ivalue);
      }
    }
-   
+
    printf("\n");
    printf("Test string array index access:\n");
    printf("\n");
@@ -413,7 +420,25 @@ int main(int argc, char *argv[])
        printf("index %d value [%s]\n", i, s.c_str());
      }
    }
-   
+
+   printf("\n");
+   printf("Test string truncation:\n");
+   printf("\n");
+
+   {
+     std::vector<std::string> sa;
+     sa.push_back("1234567890");
+     sa.push_back("aaa1");
+     sa.push_back("aaa2");
+     test->WSA("trunc_sa5", sa, 5);
+     test->WSAI("trunc_sa5", 1, "1234567890");
+     for (int i=0; i<5; i++) {
+       std::string s = "bbb";
+       test->RSAI("trunc_sa5", i, &s);
+       printf("index %d value [%s]\n", i, s.c_str());
+     }
+   }
+
    printf("\n");
    printf("Test special cases:\n");
    printf("\n");

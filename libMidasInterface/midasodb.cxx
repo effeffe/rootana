@@ -587,21 +587,25 @@ public:
    void WAI(const char* varname, int index, int tid, const void* v, int size, MVOdbError* error)
    {
       std::string path = Path(varname);
-      path += "[";
-      path += toString(index);
-      path += "]";
 
       if (index < 0) {
          SetError(error, fPrintError, path, "WxAI() called with negative array index");
          return;
       }
 
-      SetError(error, fPrintError, path, "WxAI() functions are broken");
-      return;
+      //printf("WAI(\"%s\", [%d], %d) path [%s], size %d\n", varname, index, tid, path.c_str(), size);
 
-      //printf("WAI(\"%s\", [%d], %d) path [%s]\n", varname, index, tid, path.c_str());
+      int status;
+      HNDLE hkey;
+
+      status = db_find_key(fDB, 0, path.c_str(), &hkey);
    
-      int status = db_set_value(fDB, 0, path.c_str(), v, size, 1, tid);
+      if (status != DB_SUCCESS) {
+         SetMidasStatus(error, fPrintError, path, "db_find_key", status);
+         return;
+      }
+
+      status = db_set_data_index(fDB, hkey, v, size, index, tid);
 
       if (status != DB_SUCCESS) {
          SetMidasStatus(error, fPrintError, path, "db_set_value", status);
@@ -644,8 +648,18 @@ public:
 
    void WSAI(const char* varname, int index, const char* v, MVOdbError* error)
    {
-      int len = strlen(v);
-      WAI(varname, index, TID_STRING, v, len+1, error);
+      int num_elements = 0;
+      int element_size = 0;
+      RAInfo(varname, &num_elements, &element_size, error);
+      if (error && error->fError)
+         return;
+      if (element_size <= 0)
+         return;
+      char* buf = (char*)malloc(element_size);
+      assert(buf);
+      strlcpy(buf, v, element_size);
+      WAI(varname, index, TID_STRING, buf, element_size, error);
+      free(buf);
    }
 
    void WA(const char* varname, int tid, const void* v, int size, int count, MVOdbError* error)

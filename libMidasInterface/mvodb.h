@@ -136,6 +136,9 @@ public:
    virtual void WU32A(const char* varname, const std::vector<uint32_t>& v, MVOdbError* error = NULL) = 0;
 
    // write array elements
+   //
+   // writing beyound the end of an existing array will grow the array
+   //
 
    virtual void WBAI(const char* varname, int index, bool   v, MVOdbError* error = NULL) = 0;
    virtual void WIAI(const char* varname, int index, int    v, MVOdbError* error = NULL) = 0;
