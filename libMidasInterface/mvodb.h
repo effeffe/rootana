@@ -159,7 +159,8 @@ public:
 
 MVOdb* MakeNullOdb();
 MVOdb* MakeMidasOdb(int hDB, MVOdbError* error = NULL);
-//MVOdb* MakeXmlOdb(???);
+MVOdb* MakeXmlFileOdb(const char* filename, MVOdbError* error = NULL);
+MVOdb* MakeXmlBufferOdb(const char* buf, int bufsize, MVOdbError* error = NULL);
 //MVOdb* MakeJsonOdb(???);
 //MVOdb* MakeJsonRpcOdb(???);
 

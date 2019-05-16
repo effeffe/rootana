@@ -761,6 +761,7 @@ public:
 
 MVOdb* MakeMidasOdb(int hDB, MVOdbError* error)
 {
+   SetOk(error);
    return new MidasOdb(hDB, "");
 }
 

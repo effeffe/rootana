@@ -78,18 +78,11 @@ int main(int argc, char *argv[])
 
        odb = MakeMidasOdb(midas->fDB);
      }
-#if 0
    else if (xmlfile)
      {
-#ifdef HAVE_ROOT_XML
-       XmlOdb* odb = new XmlOdb(filename);
-       //odb->DumpTree();
-       gOdb = odb;
-#else
-       printf("This program is compiled without support for XML ODB access\n");
-       return -1;
-#endif
+       odb = MakeXmlFileOdb(filename);
      }
+#if 0
    else if (jsonfile)
      {
 #ifdef HAVE_ROOT_XML

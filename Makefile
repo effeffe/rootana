@@ -219,6 +219,7 @@ OBJS += obj/nullodb.o
 ifdef HAVE_MIDAS
 OBJS += obj/midasodb.o
 endif
+OBJS += obj/mxmlodb.o
 
 # manalyzer
 
