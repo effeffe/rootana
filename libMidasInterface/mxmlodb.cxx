@@ -13,12 +13,12 @@
 #include "mvodb.h"
 #include "mxml.h"
 
-#include <TList.h>
+//#include <TList.h>
 
 #include <stdlib.h>
-#include "TXMLNode.h"
-#include "TXMLAttr.h"
-#include "TDOMParser.h"
+//#include "TXMLNode.h"
+//#include "TXMLAttr.h"
+//#include "TDOMParser.h"
 #include "rootana_stdint.h"
 
 /// Access to ODB saved in XML format inside midas .mid files
@@ -26,18 +26,25 @@
 class XmlOdb : public MVOdb
 {
 public:
-   TXMLNode* fOdb;    ///< Pointer to the root of the ODB tree
+   PMXML_NODE fRoot; // root of XML document
+   PMXML_NODE fDir;  // current ODB directory
    bool fPrintError;
 
 public:
    XmlOdb() // ctor
    {
       fPrintError = false;
+      fRoot = NULL;
+      fDir = NULL;
    }
 
    ~XmlOdb() // dtor
    {
-
+      if (fRoot) {
+         mxml_free_tree(fRoot);
+         fRoot = NULL;
+      }
+      fDir = NULL;
    }
 
 public:
@@ -51,15 +58,43 @@ public:
       return fPrintError;
    }
 
-   TXMLNode* FindNode(TXMLNode* node, const char* name)
+   const char* GetAttrName(PMXML_NODE node, int i)
    {
-      for (; node != NULL; node = node->GetNextNode()) {
+      assert(i>=0);
+      assert(i<node->n_attributes);
+      return node->attribute_name + i*MXML_NAME_LENGTH;
+   }
+
+   const char* GetAttrValue(PMXML_NODE node, int i)
+   {
+      assert(i>=0);
+      assert(i<node->n_attributes);
+      return node->attribute_value[i];
+   }
+
+   /// Return the value of the named attribute
+   const char* GetAttrValue(PMXML_NODE node, const char* attrName)
+   {
+      for (int i=0; i<node->n_attributes; i++) {
+         //printf("attribute name: \"%s\", value: \"%s\"\n",attr->GetName(),attr->GetValue());
+         
+         if (strcmp(GetAttrName(node, i), attrName) == 0)
+            return GetAttrValue(node, i);
+      }
+      return NULL;
+   }
+
+#if 0
+   TXMLNode* FindNode(TXMLNode* dir, const char* name)
+   {
+      for (int i=0; i<dir->n_children; i++) {
+         PMXML_NODE node = dir->child + i;
          //printf("node name: \"%s\"\n",node->GetNodeName());
-         if (strcmp(node->GetNodeName(),name) == 0)
+         if (strcmp(node->name, name) == 0)
             return node;
          
-         if (node->HasChildren()) {
-            TXMLNode* found = FindNode(node->GetChildren(),name);
+         if (node->n_children > 0) {
+            PMXML_NODE* found = FindNode(node, name);
             if (found)
                return found;
          }
@@ -67,97 +102,75 @@ public:
       
       return NULL;
    }
+#endif
    
    /// Print out the contents of the ODB tree
-   void DumpTree(TXMLNode* node = NULL, int level = 0)
+   void DumpTree(PMXML_NODE node = NULL, int level = 0)
    {
       if (!node)
-         node = fOdb;
+         node = fDir;
       
       if (!node) {
          fprintf(stderr,"XmlOdb::DumpTree: node is NULL!\n");
          return;
       }
 
-      while (node) {
+      for (int i=0; i<level; i++)
+         printf(" ");
+      printf("node name: \"%s\"\n", node->name);
+      for (int i=0; i<node->n_attributes; i++) {
          for (int i=0; i<level; i++)
             printf(" ");
-         printf("node name: \"%s\"\n",node->GetNodeName());
-         TList* attrs = node->GetAttributes();
-         TIter next(attrs);                           
-         while (TXMLAttr *attr = (TXMLAttr*)next()) {
-            for (int i=0; i<level; i++)
-               printf(" ");
-            printf("attribute name: \"%s\", value: \"%s\"\n",attr->GetName(),attr->GetValue());
-         }
-         const char*text = node->GetText();
-         if (text) {
-            for (int i=0; i<level; i++)
-               printf(" ");
-            printf("node text: \"%s\"\n",node->GetText());
-         }
-         if (node->HasChildren())
-            DumpTree(node->GetChildren(),level + 1);
-         node = node->GetNextNode();
+         printf("attribute name: \"%s\", value: \"%s\"\n", GetAttrName(node, i), GetAttrValue(node, i));
       }
-      //printf("no more next nodes...\n");
+      if (node->value) {
+         for (int i=0; i<level; i++)
+            printf(" ");
+         printf("node text: \"%s\"\n", node->value);
+      }
+      for (int i=0; i<node->n_children; i++)
+         DumpTree(node->child + i, level + 1);
    }
 
    /// Print out the directory structure of the ODB tree
-   void DumpDirTree(TXMLNode* node = NULL, int level = 0)
+   void DumpDirTree(PMXML_NODE node = NULL, int level = 0)
    {
       if (!node)
-         node = fOdb;
+         node = fDir;
       
       if (!node) {
          fprintf(stderr,"XmlOdb::DumpDirTree: node is NULL!\n");
          return;
       }
 
-      for (; node != NULL; node = node->GetNextNode()) {
-         const char* name = node->GetNodeName();
+      const char* name = node->name;
          
-         if (strcmp(name,"dir") != 0)
-            continue;
+      if (strcmp(name,"dir") != 0)
+         return;
          
+      for (int i=0; i<level; i++)
+         printf(" ");
+      printf("node name: \"%s\"\n", node->name);
+
+      for (int i=0; i<node->n_attributes; i++) {
          for (int i=0; i<level; i++)
             printf(" ");
-         printf("node name: \"%s\"\n",node->GetNodeName());
-         TList* attrs = node->GetAttributes();
-         TIter next(attrs);                           
-         while (TXMLAttr *attr = (TXMLAttr*)next()) {
-            for (int i=0; i<level; i++)
-               printf(" ");
-            printf("attribute name: \"%s\", value: \"%s\"\n",attr->GetName(),attr->GetValue());
-         }
-         if (node->HasChildren())
-            DumpDirTree(node->GetChildren(),level + 1);
+         printf("attribute name: \"%s\", value: \"%s\"\n", GetAttrName(node, i), GetAttrValue(node, i));
       }
-      //printf("no more next nodes...\n");
+      
+      for (int i=0; i<node->n_children; i++) {
+         DumpDirTree(node->child + i, level + 1);
+      }
    }
 
-   /// Return the value of the named attribute
-   const char* GetAttrValue(TXMLNode* node, const char* attrName)
-   {
-      TList* attrs = node->GetAttributes();
-      TIter next(attrs);                           
-      while (TXMLAttr *attr = (TXMLAttr*)next()) {
-         //printf("attribute name: \"%s\", value: \"%s\"\n",attr->GetName(),attr->GetValue());
-         
-         if (strcmp(attr->GetName(),attrName)==0)
-            return attr->GetValue();
-      }
-      return NULL;
-   }
-   
    /// Follow the ODB path through the XML DOM tree
-   TXMLNode* FindPath(TXMLNode* node, const char* path)
+   PMXML_NODE FindPath(PMXML_NODE dir, const char* path)
    {
-      if (!fOdb)
+      if (!fDir)
          return NULL;
       
-      if (!node)
-         node = fOdb->GetChildren();
+      if (!dir)
+         dir = fDir;
       
       while (1) {
          // skip leading slashes
@@ -165,7 +178,7 @@ public:
             path++;
          
          if (*path == 0)
-            return node;
+            return dir;
          
          const int kElemSize = 256;
          char elem[kElemSize+1];
@@ -181,9 +194,11 @@ public:
       
          //printf("looking for \"%s\" more \"%s\"\n",elem,path);
       
-         for (; node != NULL; node = node->GetNextNode()) {
-            const char* nodename = node->GetNodeName();
-            const char* namevalue = GetAttrValue(node,"name");
+         for (int i=0; i<dir->n_children; i++) {
+            PMXML_NODE node = dir->child + i;
+            
+            const char* nodename = node->name;
+            const char* namevalue = GetAttrValue(node, "name");
             
             //printf("node name: \"%s\", \"name\" value: \"%s\"\n",node->GetNodeName(),namevalue);
             
@@ -198,10 +213,10 @@ public:
             // compare directory names
             //
 	  
-            if (strcasecmp(elem,namevalue) == 0) {
+            if (strcasecmp(elem, namevalue) == 0) {
                if (isDir) {
                   // found the right subdirectory, descend into it
-                  node = node->GetChildren();
+                  dir = node;
                   break;
                } else if (isKey || isKeyArray) {
                   return node;
@@ -212,23 +227,23 @@ public:
    }
    
    /// Same as FindPath(), but also index into an array
-   TXMLNode* FindArrayPath(TXMLNode*node,const char* path,const char* type,int index)
+   PMXML_NODE FindArrayPath(PMXML_NODE node, const char* path, const char* type, int index)
    {
-      if (!fOdb)
+      if (!fDir)
          return NULL;
 
       if (!node)
-         node = fOdb->GetChildren();
+         node = fDir;
 
       node = FindPath(node, path);
       
       if (!node)
          return NULL;
       
-      const char* nodename = node->GetNodeName();
-      const char* num_values = GetAttrValue(node,"num_values");
+      const char* nodename = node->name;
+      const char* num_values = GetAttrValue(node, "num_values");
       
-      const char* typevalue = GetAttrValue(node,"type");
+      const char* typevalue = GetAttrValue(node, "type");
       
       if (!typevalue || (strcasecmp(typevalue,type) != 0)) {
          fprintf(stderr,"XmlOdb::FindArrayPath: Type mismatch: \'%s\' has type \'%s\', we expected \'%s\'\n", path, typevalue, type);
@@ -255,20 +270,17 @@ public:
 
       //printf("nodename [%s]\n", nodename);
       
-      TXMLNode* elem = node->GetChildren();
-      
-      for (int i=0; elem!=NULL; ) {
-         const char* name = elem->GetNodeName();
+      for (int i=0, count = 0; i<node->n_children; i++) {
+         PMXML_NODE elem = node->child + i;
+         const char* name = elem->name;
          //const char* text = elem->GetText();
          //printf("index %d, name [%s] text [%s]\n", i, name, text);
          
          if (strcmp(name,"value") == 0) {
-            if (i == index)
+            if (count == index)
                return elem;
-            i++;
+            count++;
          }
-         
-         elem = elem->GetNextNode();
       }
 
       return node;
@@ -327,6 +339,8 @@ public:
    void RU16AI(const char* varname, int index, uint16_t *value, MVOdbError* error) { SetOk(error); };
    void RU32AI(const char* varname, int index, uint32_t *value, MVOdbError* error) { SetOk(error); };
 
+   // write functions do nothing
+
    void WB(const char* varname, bool v,   MVOdbError* error) { SetOk(error); };
    void WI(const char* varname, int v,    MVOdbError* error)  { SetOk(error); };
    void WD(const char* varname, double v, MVOdbError* error) { SetOk(error); };
@@ -350,6 +364,8 @@ public:
    void WSAI(const char* varname, int index, const char* v, MVOdbError* error) { SetOk(error); };
    void WU16AI(const char* varname, int index, uint16_t v, MVOdbError* error) { SetOk(error); };
    void WU32AI(const char* varname, int index, uint32_t v, MVOdbError* error) { SetOk(error); };
+
+   // delete function does nothing
 
    void Delete(const char* odbname, MVOdbError* error) { SetOk(error); };
 };
@@ -432,21 +448,21 @@ XmlOdb::XmlOdb(const char* filename) //ctor
 
 uint32_t XmlOdb::odbReadUint32(const char*name, int index, uint32_t defaultValue)
 {
-  TXMLNode *node = FindArrayPath(NULL,name,"DWORD",index);
+  PMXML_NODE node = FindArrayPath(NULL, name, "DWORD", index);
   if (!node)
     return defaultValue;
-  const char* text = node->GetText();
+  const char* text = node->value;
   if (!text)
     return defaultValue;
-  return strtoul(text,NULL,0);
+  return strtoul(text, NULL, 0);
 }
 
 double   XmlOdb::odbReadDouble(const char*name, int index, double defaultValue)
 {
-  TXMLNode *node = FindArrayPath(NULL,name,"DOUBLE",index);
+  PMXML_NODE node = FindArrayPath(NULL, name, "DOUBLE", index);
   if (!node)
     return defaultValue;
-  const char* text = node->GetText();
+  const char* text = node->value;
   if (!text)
     return defaultValue;
   return atof(text);
@@ -454,10 +470,10 @@ double   XmlOdb::odbReadDouble(const char*name, int index, double defaultValue)
 
 float  XmlOdb::odbReadFloat(const char*name, int index, float defaultValue)
 {
-  TXMLNode *node = FindArrayPath(NULL,name,"FLOAT",index);
+  PMXML_NODE node = FindArrayPath(NULL, name, "FLOAT", index);
   if (!node)
     return defaultValue;
-  const char* text = node->GetText();
+  const char* text = node->value;
   if (!text)
     return defaultValue;
   return atof(text);
@@ -465,10 +481,10 @@ float  XmlOdb::odbReadFloat(const char*name, int index, float defaultValue)
 
 int      XmlOdb::odbReadInt(   const char*name, int index, int      defaultValue)
 {
-  TXMLNode *node = FindArrayPath(NULL,name,"INT",index);
+  PMXML_NODE node = FindArrayPath(NULL, name, "INT", index);
   if (!node)
     return defaultValue;
-  const char* text = node->GetText();
+  const char* text = node->value;
   if (!text)
     return defaultValue;
   return atoi(text);
@@ -480,10 +496,10 @@ int      XmlOdb::odbReadInt(   const char*name, int index, int      defaultValue
 
 bool     XmlOdb::odbReadBool(  const char*name, int index, bool     defaultValue)
 {
-  TXMLNode *node = FindArrayPath(NULL,name,"BOOL",index);
+  PMXML_NODE node = FindArrayPath(NULL, name, "BOOL", index);
   if (!node)
     return defaultValue;
-  const char* text = node->GetText();
+  const char* text = node->value;
   if (!text)
     return defaultValue;
   if (*text == 'n')
@@ -493,10 +509,10 @@ bool     XmlOdb::odbReadBool(  const char*name, int index, bool     defaultValue
 
 const char* XmlOdb::odbReadString(const char* name, int index, const char* defaultValue)
 {
-  TXMLNode *node = FindArrayPath(NULL, name, "STRING", index);
+  PMXML_NODE node = FindArrayPath(NULL, name, "STRING", index);
   if (!node)
     return defaultValue;
-  const char* text = node->GetText();
+  const char* text = node->value;
   if (!text)
     return defaultValue;
   return text;
@@ -504,10 +520,10 @@ const char* XmlOdb::odbReadString(const char* name, int index, const char* defau
 
 int XmlOdb::odbReadArraySize(const char*name)
 {
-  TXMLNode *node = FindPath(NULL,name);
+  PMXML_NODE node = FindPath(NULL, name);
   if (!node)
     return 0;
-  const char* num_values = GetAttrValue(node,"num_values");
+  const char* num_values = GetAttrValue(node, "num_values");
   if (!num_values)
     return 1;
   return atoi(num_values);
