@@ -1566,7 +1566,7 @@ static void help()
   printf("\t-m: Enable memory leak debugging\n");
   printf("\t-g: Enable graphics display when processing data files\n");
   printf("\t-i: Enable intractive mode\n");
-  printf("\t-mt: Enable multithreaded mode\n");
+  printf("\t--mt: Enable multithreaded mode\n");
   printf("\t--: All following arguments are passed to the analyzer modules Init() method\n");
   printf("\n");
   printf("Example1: analyze online data: ./analyzer.exe -P9091\n");
@@ -1593,8 +1593,6 @@ int manalyzer_main(int argc, char *argv[])
    for (int i=0; i<argc; i++) {
       if (strcmp(argv[i],"-h")==0)
          help(); // does not return
-      if (strcmp(argv[i],"-mt")==0)
-         multithread=true;
       args.push_back(argv[i]);
    }
 
@@ -1657,6 +1655,8 @@ int manalyzer_main(int argc, char *argv[])
       } else if (strncmp(arg,"-E",2)==0) {
          exptname = strdup(arg+2);
          #endif
+      } else if (strncmp(arg,"--mt",4)==0) {
+         multithread=true;
       } else if (strcmp(arg,"-h")==0) {
          help(); // does not return
       } else if (arg[0] == '-') {
