@@ -7,10 +7,7 @@
 
 \********************************************************************/
 
-//#include <stdio.h>
-//#include <string.h> // strlen()
-//#include <assert.h>
-//#include <stdlib.h> // malloc()
+#include <stdio.h> // sprintf(), fprintf()
 
 #include "mvodb.h"
 
