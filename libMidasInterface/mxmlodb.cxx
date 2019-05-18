@@ -7,18 +7,19 @@
 //
 
 #include <stdio.h>
-#include <iostream>
+//#include <iostream>
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h> // memset()
 
 #include "mvodb.h"
 #include "mxml.h"
 
 //#include <TList.h>
-
-#include <stdlib.h>
 //#include "TXMLNode.h"
 //#include "TXMLAttr.h"
 //#include "TDOMParser.h"
+
 #include "rootana_stdint.h"
 
 /// Access to ODB saved in XML format inside midas .mid files
@@ -115,16 +116,16 @@ public:
          return;
       }
 
-      for (int i=0; i<level; i++)
+      for (int k=0; k<level; k++)
          printf(" ");
       printf("node name: \"%s\"\n", node->name);
       for (int i=0; i<node->n_attributes; i++) {
-         for (int i=0; i<level; i++)
+         for (int k=0; k<level; k++)
             printf(" ");
          printf("attribute name: \"%s\", value: \"%s\"\n", GetAttrName(node, i), GetAttrValue(node, i));
       }
       if (node->value) {
-         for (int i=0; i<level; i++)
+         for (int k=0; k<level; k++)
             printf(" ");
          printf("node text: \"%s\"\n", node->value);
       }
@@ -148,12 +149,12 @@ public:
       if (strcmp(name,"dir") != 0)
          return;
          
-      for (int i=0; i<level; i++)
+      for (int k=0; k<level; k++)
          printf(" ");
       printf("node name: \"%s\"\n", node->name);
 
       for (int i=0; i<node->n_attributes; i++) {
-         for (int i=0; i<level; i++)
+         for (int k=0; k<level; k++)
             printf(" ");
          printf("attribute name: \"%s\", value: \"%s\"\n", GetAttrName(node, i), GetAttrValue(node, i));
       }
