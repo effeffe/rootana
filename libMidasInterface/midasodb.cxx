@@ -384,7 +384,7 @@ public:
          return;
 
       if (create_size > 0) {
-         if (create_size != value->size()) {
+         if (create_size != (int)value->size()) {
             ResizeArray(varname, create_size, error);
          }
       }
@@ -497,7 +497,7 @@ public:
 
       int string_length = 0;
       for (size_t i = 0; i < value->size(); i++) {
-         if ((*value)[i].length() > string_length)
+         if (((int)(*value)[i].length()) > string_length)
             string_length = (*value)[i].length();
       }
       string_length += 1; // add space for string terminator NUL character '\0'
@@ -530,7 +530,7 @@ public:
          return;
 
       if ((create_size > 0) && (create_string_length > 0)) {
-         if ((value->size() != create_size) || (string_length != create_string_length)) {
+         if ((((int)value->size()) != create_size) || (string_length != create_string_length)) {
             // wrong size, resize it
             ResizeStringArray(varname, create_size, create_string_length, error);
          }
