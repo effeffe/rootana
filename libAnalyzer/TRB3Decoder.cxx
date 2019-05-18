@@ -146,7 +146,7 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
     fTime = fData[6];
     
     // Loop over rest of bank
-    uint32_t fpgaWord, headerWord;
+    uint32_t fpgaWord = 0, headerWord = 0;
     //std::cout << "Number of words: " << GetSize() << std::endl;
     for(int pointer = 7; pointer < bklen; pointer++){
       
