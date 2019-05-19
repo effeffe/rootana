@@ -39,7 +39,10 @@ public:
    MVOdb* Chdir(const char* subdir, bool create, MVOdbError* error)
    {
       SetOk(error);
-      return new NullOdb;
+      if (create)
+         return new NullOdb;
+      else
+         return NULL;
    }
 
    //void RAInfo(const char* varname, int* num_elements, int* element_size, MVOdbError* error)

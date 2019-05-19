@@ -60,6 +60,7 @@ public:
 
    MVOdb* Chdir(const char* subdir, bool create, MVOdbError* error)
    {
+      // FIXME: "create" is ignored
       std::string path = Path(subdir);
       MidasOdb* p = new MidasOdb(fDB, path.c_str());
       return p;

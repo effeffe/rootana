@@ -492,6 +492,30 @@ int main(int argc, char *argv[])
      printf("test string write invalid index -1:\n");
      test->WSAI("sa10", -1, "aaa");
      printf("\n");
+
+     {
+       printf("test Chdir(true):\n");
+       MVOdb* dir = test->Chdir("subdir", true);
+       printf(" returned %p\n", dir);
+     }
+
+     {
+       printf("test Chdir(false):\n");
+       MVOdb* dir = test->Chdir("non-existant-subdir", false);
+       printf(" returned %p\n", dir);
+     }
+
+     {
+       printf("test Chdir(\"not a dir\", true):\n");
+       MVOdb* dir = test->Chdir("ia10", true);
+       printf(" returned %p\n", dir);
+     }
+
+     {
+       printf("test Chdir(\"not a dir\", false):\n");
+       MVOdb* dir = test->Chdir("ia10", false);
+       printf(" returned %p\n", dir);
+     }
    }
 
    if (midas)

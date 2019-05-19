@@ -20,7 +20,9 @@ class MVOdbError;
 class MVOdb
 {
 public:
-   // navigate into subdirectory
+   // navigate into subdirectory.
+   //
+   // returns NULL is subdirname does not exist and "create" is false.
    
    virtual MVOdb* Chdir(const char* subdirname, bool create = false, MVOdbError* error = NULL) = 0;
    

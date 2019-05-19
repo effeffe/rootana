@@ -1,13 +1,14 @@
 //
 // ALPHA ROOT analyzer
 //
+// Access to ODB stored in XML odb save file or ODB XML dump in MIDAS data file.
+//
 // Name: mxmlodb.cxx
 // Author: K.Olchanski, 11-July-2006
 // Author: K.Olchanski, 16-May-2019
 //
 
 #include <stdio.h>
-//#include <iostream>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h> // memset()
@@ -15,12 +16,25 @@
 #include "mvodb.h"
 #include "mxml.h"
 
-//#include <TList.h>
-//#include "TXMLNode.h"
-//#include "TXMLAttr.h"
-//#include "TDOMParser.h"
-
 #include "rootana_stdint.h"
+
+static PMXML_NODE FindNode(PMXML_NODE dir, const char* name)
+{
+   for (int i=0; i<dir->n_children; i++) {
+      PMXML_NODE node = dir->child + i;
+      //printf("node name: \"%s\"\n",node->GetNodeName());
+      if (strcmp(node->name, name) == 0)
+         return node;
+      
+      if (node->n_children > 0) {
+         PMXML_NODE found = FindNode(node, name);
+         if (found)
+            return found;
+      }
+   }
+   
+   return NULL;
+}
 
 /// Access to ODB saved in XML format inside midas .mid files
 
@@ -29,14 +43,21 @@ class XmlOdb : public MVOdb
 public:
    PMXML_NODE fRoot; // root of XML document
    PMXML_NODE fDir;  // current ODB directory
+   std::string fPath; // path to correct ODB directory
    bool fPrintError;
 
 public:
-   XmlOdb() // ctor
+   XmlOdb(PMXML_NODE root, PMXML_NODE dir, MVOdbError* error) // ctor
    {
       fPrintError = false;
-      fRoot = NULL;
-      fDir = NULL;
+      fRoot = root;
+      fDir  = dir;
+      fPath = "";
+
+      //DumpTree(fRoot);
+      //DumpTree(fDir);
+      
+      SetOk(error);
    }
 
    ~XmlOdb() // dtor
@@ -57,6 +78,39 @@ public:
    bool GetPrintError() const
    {
       return fPrintError;
+   }
+
+   void SetNotFound(MVOdbError* error, const char* varname)
+   {
+      if (!error)
+         return;
+      std::string path;
+      path += fPath;
+      path += "/";
+      path += varname;
+      std::string msg;
+      msg += "Cannot find ";
+      msg += "\"";
+      msg += path;
+      msg += "\"";
+      SetError(error, fPrintError, path, msg);
+   }
+
+   void SetNullValue(MVOdbError* error, const char* varname)
+   {
+      if (!error)
+         return;
+      std::string path;
+      path += fPath;
+      path += "/";
+      path += varname;
+      std::string msg;
+      msg += "XML node for ";
+      msg += "\"";
+      msg += path;
+      msg += "\"";
+      msg += " is NULL";
+      SetError(error, fPrintError, path, msg);
    }
 
    const char* GetAttrName(PMXML_NODE node, int i)
@@ -85,26 +139,6 @@ public:
       return NULL;
    }
 
-#if 0
-   TXMLNode* FindNode(TXMLNode* dir, const char* name)
-   {
-      for (int i=0; i<dir->n_children; i++) {
-         PMXML_NODE node = dir->child + i;
-         //printf("node name: \"%s\"\n",node->GetNodeName());
-         if (strcmp(node->name, name) == 0)
-            return node;
-         
-         if (node->n_children > 0) {
-            PMXML_NODE* found = FindNode(node, name);
-            if (found)
-               return found;
-         }
-      }
-      
-      return NULL;
-   }
-#endif
-   
    /// Print out the contents of the ODB tree
    void DumpTree(PMXML_NODE node = NULL, int level = 0)
    {
@@ -167,11 +201,7 @@ public:
    /// Follow the ODB path through the XML DOM tree
    PMXML_NODE FindPath(PMXML_NODE dir, const char* path)
    {
-      if (!fDir)
-         return NULL;
-      
-      if (!dir)
-         dir = fDir;
+      assert(dir);
       
       while (1) {
          // skip leading slashes
@@ -181,19 +211,19 @@ public:
          if (*path == 0)
             return dir;
          
-         const int kElemSize = 256;
-         char elem[kElemSize+1];
-         memset(elem,0,kElemSize+1);
+         std::string elem;
          
          // copy the next path element into "elem"-
          // copy "path" until we hit "/" or end of string
-         for (int i=0; i<kElemSize; i++) {
+         while (1) {
             if (*path==0 || *path=='/')
                break;
-            elem[i] = *path++;
+            elem += *path++;
          }
       
-         //printf("looking for \"%s\" more \"%s\"\n",elem,path);
+         //printf("looking for \"%s\" more \"%s\"\n", elem.c_str(), path);
+
+         PMXML_NODE found = NULL;
       
          for (int i=0; i<dir->n_children; i++) {
             PMXML_NODE node = dir->child + i;
@@ -201,11 +231,11 @@ public:
             const char* nodename = node->name;
             const char* namevalue = GetAttrValue(node, "name");
             
-            //printf("node name: \"%s\", \"name\" value: \"%s\"\n",node->GetNodeName(),namevalue);
+            //printf("node name: \"%s\", \"name\" value: \"%s\"\n", node->name, namevalue);
             
-            bool isDir = strcmp(nodename,"dir") == 0;
-            bool isKey = strcmp(nodename,"key") == 0;
-            bool isKeyArray = strcmp(nodename,"keyarray") == 0;
+            bool isDir = strcmp(nodename, "dir") == 0;
+            bool isKey = strcmp(nodename, "key") == 0;
+            bool isKeyArray = strcmp(nodename, "keyarray") == 0;
             
             if (!isKey && !isDir && !isKeyArray)
                continue;
@@ -214,27 +244,27 @@ public:
             // compare directory names
             //
 	  
-            if (strcasecmp(elem, namevalue) == 0) {
+            if (strcasecmp(elem.c_str(), namevalue) == 0) {
                if (isDir) {
                   // found the right subdirectory, descend into it
-                  dir = node;
+                  found = node;
                   break;
                } else if (isKey || isKeyArray) {
                   return node;
                }
             }
          }
+
+         if (!found)
+            return NULL;
+         dir = found;
       }
    }
    
    /// Same as FindPath(), but also index into an array
    PMXML_NODE FindArrayPath(PMXML_NODE node, const char* path, const char* type, int index)
    {
-      if (!fDir)
-         return NULL;
-
-      if (!node)
-         node = fDir;
+      assert(node);
 
       node = FindPath(node, path);
       
@@ -287,19 +317,41 @@ public:
       return node;
    }
    
-   int      odbReadAny(   const char*name, int index, int tid,void* buf, int bufsize=0);
-   int      odbReadInt(   const char*name, int index, int      defaultValue);
-   uint32_t odbReadUint32(const char*name, int index, uint32_t defaultValue);
-   bool     odbReadBool(  const char*name, int index, bool     defaultValue);
-   double   odbReadDouble(const char*name, int index, double   defaultValue);
-   float    odbReadFloat(const char*name, int index, float  defaultValue);
-   const char* odbReadString(const char*name, int index, const char* defaultValue);
-   int      odbReadArraySize(const char*name);
-   
    MVOdb* Chdir(const char* subdir, bool create, MVOdbError* error)
    {
+      PMXML_NODE node = FindPath(fDir, subdir);
+      if (!node) {
+         //printf("Not Found subdir [%s], create %d\n", subdir, create);
+         if (create) {
+            SetOk(error);
+            return MakeNullOdb();
+         }
+         SetNotFound(error, subdir);
+         return NULL;
+      }
+
+      if (strcmp(node->name, "dir") != 0) {
+         std::string msg;
+         msg += "\"";
+         msg += subdir;
+         msg += "\"";
+         msg += " XML node is ";
+         msg += "\"";
+         msg += node->name;
+         msg += "\"";
+         msg += " instead of \"dir\"";
+         SetError(error, fPrintError, fPath, msg);
+         return NULL;
+      }
+
+      //printf("Found subdir [%s]\n", subdir);
+      //DumpTree(node);
+
+      XmlOdb* x = new XmlOdb(NULL, node, error);
+      x->fPath = fPath + "/" + subdir;
+      
       SetOk(error);
-      return NULL;
+      return x;
    }
 
    void ReadKey(const char* varname, int *tid, int *num_values, int *total_size, int *item_size, MVOdbError* error)
@@ -308,21 +360,50 @@ public:
       if (num_values) *num_values = 0;
       if (total_size) *total_size = 0;
       if (item_size)  *item_size = 0;
+      // FIXME: not implemented
       SetOk(error);
    }
 
    void ReadDir(std::vector<std::string>* varname, std::vector<int> *tid, std::vector<int> *num_values, std::vector<int> *total_size, std::vector<int> *item_size, MVOdbError* error)
    {
+      // FIXME: not implemented
       SetOk(error);
    }
 
-   void RB(const char* varname, bool   *value, bool create, MVOdbError* error) { SetOk(error); };
-   void RI(const char* varname, int    *value, bool create, MVOdbError* error) { SetOk(error); };
-   void RD(const char* varname, double *value, bool create, MVOdbError* error) { SetOk(error); };
-   void RF(const char* varname, float  *value, bool create, MVOdbError* error) { SetOk(error); };
-   void RS(const char* varname, std::string *value, bool create, int create_string_length, MVOdbError* error) { SetOk(error); };
-   void RU16(const char* varname, uint16_t *value, bool create, MVOdbError* error) { SetOk(error); };
-   void RU32(const char* varname, uint32_t *value, bool create, MVOdbError* error) { SetOk(error); };
+   void RB(const char* varname, bool   *value, bool create, MVOdbError* error)
+   {
+      RBAI(varname, 0, value, error);
+   };
+
+   void RI(const char* varname, int    *value, bool create, MVOdbError* error)
+   {
+      RIAI(varname, 0, value, error);
+   };
+
+   void RD(const char* varname, double *value, bool create, MVOdbError* error)
+   {
+      RDAI(varname, 0, value, error);
+   };
+      
+   void RF(const char* varname, float  *value, bool create, MVOdbError* error)
+   {
+      RFAI(varname, 0, value, error);
+   };
+      
+   void RS(const char* varname, std::string *value, bool create, int create_string_length, MVOdbError* error)
+   {
+      RSAI(varname, 0, value, error);
+   };
+
+   void RU16(const char* varname, uint16_t *value, bool create, MVOdbError* error)
+   {
+      RU16AI(varname, 0, value, error);
+   };
+
+   void RU32(const char* varname, uint32_t *value, bool create, MVOdbError* error)
+   {
+      RU32AI(varname, 0, value, error);
+   };
 
    void RBA(const char* varname, std::vector<bool> *value, bool create, int create_size, MVOdbError* error) { SetOk(error); };
    void RIA(const char* varname, std::vector<int> *value,  bool create, int create_size, MVOdbError* error) { SetOk(error); };
@@ -332,13 +413,149 @@ public:
    void RU16A(const char* varname, std::vector<uint16_t> *value,  bool create, int create_size, MVOdbError* error) { SetOk(error); };
    void RU32A(const char* varname, std::vector<uint32_t> *value,  bool create, int create_size, MVOdbError* error) { SetOk(error); };
 
-   void RBAI(const char* varname, int index, bool   *value, MVOdbError* error) { SetOk(error); };
-   void RIAI(const char* varname, int index, int    *value, MVOdbError* error) { SetOk(error); };
-   void RDAI(const char* varname, int index, double *value, MVOdbError* error) { SetOk(error); };
-   void RFAI(const char* varname, int index, float  *value, MVOdbError* error) { SetOk(error); };
-   void RSAI(const char* varname, int index, std::string *value, MVOdbError* error) { SetOk(error); };
-   void RU16AI(const char* varname, int index, uint16_t *value, MVOdbError* error) { SetOk(error); };
-   void RU32AI(const char* varname, int index, uint32_t *value, MVOdbError* error) { SetOk(error); };
+   void RBAI(const char* varname, int index, bool   *value, MVOdbError* error)
+   {
+      PMXML_NODE node = FindArrayPath(fDir, varname, "BOOL", index);
+      if (!node) {
+         SetNotFound(error, varname);
+         return;
+      }
+
+      const char* text = node->value;
+      if (!text) {
+         SetNullValue(error, varname);
+         return;
+      }
+
+      if (value) {
+         if (*text == 'n')
+            *value = false;
+         else
+            *value = true;
+      }
+
+      SetOk(error);
+   }
+
+   void RIAI(const char* varname, int index, int    *value, MVOdbError* error)
+   {
+      PMXML_NODE node = FindArrayPath(fDir, varname, "INT", index);
+      if (!node) {
+         SetNotFound(error, varname);
+         return;
+      }
+
+      const char* text = node->value;
+      if (!text) {
+         SetNullValue(error, varname);
+         return;
+      }
+
+      if (value)
+         *value = atoi(text);
+
+      SetOk(error);
+   }
+   
+   void RDAI(const char* varname, int index, double *value, MVOdbError* error)
+   {
+      PMXML_NODE node = FindArrayPath(fDir, varname, "DOUBLE", index);
+      if (!node) {
+         SetNotFound(error, varname);
+         return;
+      }
+
+      const char* text = node->value;
+      if (!text) {
+         SetNullValue(error, varname);
+         return;
+      }
+
+      if (value)
+         *value = atof(text);
+
+      SetOk(error);
+   }
+   
+   void RFAI(const char* varname, int index, float  *value, MVOdbError* error)
+   {
+      PMXML_NODE node = FindArrayPath(fDir, varname, "FLOAT", index);
+      if (!node) {
+         SetNotFound(error, varname);
+         return;
+      }
+
+      const char* text = node->value;
+      if (!text) {
+         SetNullValue(error, varname);
+         return;
+      }
+
+      if (value)
+         *value = atof(text);
+
+      SetOk(error);
+   }
+   
+   void RSAI(const char* varname, int index, std::string *value, MVOdbError* error)
+   {
+      PMXML_NODE node = FindArrayPath(fDir, varname, "STRING", index);
+      if (!node) {
+         SetNotFound(error, varname);
+         return;
+      }
+
+      const char* text = node->value;
+      if (!text) {
+         SetNullValue(error, varname);
+         return;
+      }
+
+      if (value)
+         *value = text;
+
+      SetOk(error);
+   }
+   
+   void RU16AI(const char* varname, int index, uint16_t *value, MVOdbError* error)
+   {
+      PMXML_NODE node = FindArrayPath(fDir, varname, "WORD", index);
+      if (!node) {
+         SetNotFound(error, varname);
+         return;
+      }
+
+      const char* text = node->value;
+      if (!text) {
+         SetNullValue(error, varname);
+         return;
+      }
+
+      if (value)
+         *value = strtoul(text, NULL, 0);
+
+      SetOk(error);
+   }
+
+   void RU32AI(const char* varname, int index, uint32_t *value, MVOdbError* error)
+   {
+      PMXML_NODE node = FindArrayPath(fDir, varname, "DWORD", index);
+      if (!node) {
+         SetNotFound(error, varname);
+         return;
+      }
+
+      const char* text = node->value;
+      if (!text) {
+         SetNullValue(error, varname);
+         return;
+      }
+
+      if (value)
+         *value = strtoul(text, NULL, 0);
+
+      SetOk(error);
+   }
 
    // write functions do nothing
 
@@ -447,78 +664,7 @@ XmlOdb::XmlOdb(const char* filename) //ctor
 }
 #endif
 
-uint32_t XmlOdb::odbReadUint32(const char*name, int index, uint32_t defaultValue)
-{
-  PMXML_NODE node = FindArrayPath(NULL, name, "DWORD", index);
-  if (!node)
-    return defaultValue;
-  const char* text = node->value;
-  if (!text)
-    return defaultValue;
-  return strtoul(text, NULL, 0);
-}
-
-double   XmlOdb::odbReadDouble(const char*name, int index, double defaultValue)
-{
-  PMXML_NODE node = FindArrayPath(NULL, name, "DOUBLE", index);
-  if (!node)
-    return defaultValue;
-  const char* text = node->value;
-  if (!text)
-    return defaultValue;
-  return atof(text);
-}
-
-float  XmlOdb::odbReadFloat(const char*name, int index, float defaultValue)
-{
-  PMXML_NODE node = FindArrayPath(NULL, name, "FLOAT", index);
-  if (!node)
-    return defaultValue;
-  const char* text = node->value;
-  if (!text)
-    return defaultValue;
-  return atof(text);
-}
-
-int      XmlOdb::odbReadInt(   const char*name, int index, int      defaultValue)
-{
-  PMXML_NODE node = FindArrayPath(NULL, name, "INT", index);
-  if (!node)
-    return defaultValue;
-  const char* text = node->value;
-  if (!text)
-    return defaultValue;
-  return atoi(text);
-  //printf("for \'%s\', type is \'%s\', text is \'%s\'\n", name, typevalue, text);
-  //DumpTree(node);
-  //exit(1);
-  return 0;
-}
-
-bool     XmlOdb::odbReadBool(  const char*name, int index, bool     defaultValue)
-{
-  PMXML_NODE node = FindArrayPath(NULL, name, "BOOL", index);
-  if (!node)
-    return defaultValue;
-  const char* text = node->value;
-  if (!text)
-    return defaultValue;
-  if (*text == 'n')
-    return false;
-  return true;
-}
-
-const char* XmlOdb::odbReadString(const char* name, int index, const char* defaultValue)
-{
-  PMXML_NODE node = FindArrayPath(NULL, name, "STRING", index);
-  if (!node)
-    return defaultValue;
-  const char* text = node->value;
-  if (!text)
-    return defaultValue;
-  return text;
-}
-
+#if 0
 int XmlOdb::odbReadArraySize(const char*name)
 {
   PMXML_NODE node = FindPath(NULL, name);
@@ -529,17 +675,43 @@ int XmlOdb::odbReadArraySize(const char*name)
     return 1;
   return atoi(num_values);
 }
+#endif
 
 MVOdb* MakeXmlFileOdb(const char* filename, MVOdbError* error)
 {
-   SetOk(error);
-   return new XmlOdb();
+   char err[256];
+   int err_line = 0;
+   PMXML_NODE node = mxml_parse_file(filename, err, sizeof(err), &err_line);
+   if (!node) {
+      std::string msg;
+      msg += "mxml_parse_file() error ";
+      msg += "\"";
+      msg += err;
+      msg += "\"";
+      msg += " file ";
+      msg += filename;
+      msg += " line ";
+      msg += err_line;
+      SetError(error, true, filename, msg);
+      return MakeNullOdb();
+   }
+
+   PMXML_NODE odb_node = FindNode(node, "odb");
+
+   if (!odb_node) {
+      std::string msg;
+      msg += "invalid XML tree: no ODB tag";
+      SetError(error, true, filename, msg);
+      return MakeNullOdb();
+   }
+
+   return new XmlOdb(node, odb_node, error);
 }
 
 MVOdb* MakeXmlBufferOdb(const char* buf, int bufsize, MVOdbError* error)
 {
    SetOk(error);
-   return new XmlOdb();
+   return new XmlOdb(NULL, NULL, error);
 }
 
 /* emacs
