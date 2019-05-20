@@ -443,35 +443,70 @@ int main(int argc, char *argv[])
      printf("RI() returned ivalue %d\n", ivalue);
      printf("\n");
 
-     printf("test RDA() of integer array:\n");
-     // wrong data type: ODB is INT, we ask for DOUBLE
-     test->RDA("ia10", &da, false, 0);
-     printf("RDA() returned array [%d]\n", (int)da.size());
-     printf("\n");
+     {
+       printf("test RDA() of integer array:\n");
+       // wrong data type: ODB is INT, we ask for DOUBLE
+       test->RDA("ia10", &da, false, 0);
+       printf("RDA() returned array [%d]\n", (int)da.size());
+       printf("\n");
+     }
+       
+     {
+       printf("test RD() of integer array:\n");
+       // wrong data type: ODB is INT, we ask for DOUBLE
+       double v = 999.9;
+       test->RD("ia10", &v);
+       printf("RD() returned %f\n", v);
+       printf("\n");
+     }
 
-     printf("test RI() of array ia10:\n");
-     ivalue = 999;
-     test->RI("ia10", &ivalue);
-     printf("RI() returned ivalue %d\n", ivalue);
-     printf("\n");
+     {
+       printf("test RI() of array ia10:\n");
+       int ivalue = 999;
+       test->RI("ia10", &ivalue);
+       printf("RI() returned ivalue %d\n", ivalue);
+       printf("\n");
+     }
 
-     printf("test index of non-array:\n");
-     ivalue = 999;
-     test->RIAI("int", 10, &ivalue);
-     printf("RIAI() returned ivalue %d\n", ivalue);
-     printf("\n");
+     {
+       printf("test RIA() of non-array int:\n");
+       std::vector<int> ia;
+       test->RIA("int", &ia);
+       printf("RIA() returned array size %d\n", (int)ia.size());
+       printf("\n");
+     }
 
-     printf("test invalid index -1:\n");
-     ivalue = 999;
-     test->RIAI("ia10", -1, &ivalue);
-     printf("RIAI() returned ivalue %d\n", ivalue);
-     printf("\n");
+     {
+       printf("test index 0 of non-array int:\n");
+       int ivalue = 999;
+       test->RIAI("int", 0, &ivalue);
+       printf("RIAI() returned ivalue %d\n", ivalue);
+       printf("\n");
+     }
 
-     printf("test invalid index 999:\n");
-     ivalue = 999;
-     test->RIAI("ia10", 999, &ivalue);
-     printf("RIAI() returned ivalue %d\n", ivalue);
-     printf("\n");
+     {
+       printf("test index of non-array int:\n");
+       int ivalue = 999;
+       test->RIAI("int", 10, &ivalue);
+       printf("RIAI() returned ivalue %d\n", ivalue);
+       printf("\n");
+     }
+
+     {
+       printf("test invalid index -1 of array ia10:\n");
+       int ivalue = 999;
+       test->RIAI("ia10", -1, &ivalue);
+       printf("RIAI() returned ivalue %d\n", ivalue);
+       printf("\n");
+     }
+
+     {
+       printf("test invalid index 999 of array ia10:\n");
+       int ivalue = 999;
+       test->RIAI("ia10", 999, &ivalue);
+       printf("RIAI() returned ivalue %d\n", ivalue);
+       printf("\n");
+     }
 
      printf("test string array invalid index -1:\n");
      svalue = "aaa";
