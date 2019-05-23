@@ -3,7 +3,7 @@
 #include "TTRB3Data.hxx"
 #include "TDirectory.h"
 
-const int NchannelPerFpga = 32; /// what is right value?
+const int NchannelPerFpga = 64; /// what is right value?
 const int Nfpga = 4;
 
 /// Reset the histograms for this canvas
