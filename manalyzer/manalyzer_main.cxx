@@ -5,9 +5,10 @@
 //
 
 #include "manalyzer.h"
+
 int main(int argc, char* argv[])
 {
-  return manalyzer_main(argc, argv);
+   return manalyzer_main(argc, argv);
 }
 
 /* emacs

@@ -6,13 +6,14 @@
 
 #include <stdio.h>
 #include <assert.h>
+
 #include "manalyzer.h"
 #include "midasio.h"
 
 //////////////////////////////////////////////////////////
 
 static bool gTrace = false;
-bool multithread = false;
+static bool gMultithread = false;
 
 //////////////////////////////////////////////////////////
 //
@@ -297,7 +298,6 @@ static double GetTimeSec()
 }
 #endif
 
-
 class RunHandler
 {
 public:
@@ -306,20 +306,20 @@ public:
    std::vector<std::string>  fArgs;
 
    //Items for multithreaded mode
-   std::vector<std::deque<TAFlowEvent*>> mt_flow_queue;
-   std::vector<std::deque<TAFlags*>> mt_flag_queue;
-   std::vector<std::mutex> mt_flow_queue_mutex; //multithread lock when moving flow between queues
-   std::vector<std::thread*> mt_threads; //Processing threads (one per TARunObject)
-   uint queue_depth=100;  //Maximum depth for flow_queue (limit memory consumption)
-   TAFlowEvent* last_item_in_queue;
+   std::vector<std::deque<TAFlowEvent*>> fMtFlowQueue;
+   std::vector<std::deque<TAFlags*>> fMtFlagQueue;
+   std::vector<std::mutex> fMtFlowQueueMutex; //multithread lock when moving flow between queues
+   std::vector<std::thread*> fMtThreads; //Processing threads (one per TARunObject)
+   uint fMtQueueDepth=100;  //Maximum depth for flow_queue (limit memory consumption)
+   TAFlowEvent* fMtLastItemInQueue;
    
    RunHandler(const std::vector<std::string>& args) // ctor
    {
       fRunInfo = NULL;
       fArgs = args;
-      if (multithread)
+      if (gMultithread)
          //Dummy pointer to safely mark the end of flow
-         last_item_in_queue=new TAFlowEvent(NULL); 
+         fMtLastItemInQueue=new TAFlowEvent(NULL); 
 
    }
 
@@ -334,23 +334,23 @@ public:
    //Multithreaded process with queue of flow events
    void MultithreadQueueItem(TAFlags* flags, TAFlowEvent* flow)
    {
-      size_t queue_size=0;
+      size_t QueueSize=0;
       {  //Lock mutex for queue and check size
-         std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[0]);
-         queue_size=mt_flow_queue[0].size();
+         std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[0]);
+         QueueSize=fMtFlowQueue[0].size();
       }
-      while (queue_size>queue_depth) //Too many events queued.. wait and try again
+      while (QueueSize>fMtQueueDepth) //Too many events queued.. wait and try again
       {
          usleep(100);
          {
-            std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[0]);
-            queue_size=mt_flow_queue[0].size();
+            std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[0]);
+            QueueSize=fMtFlowQueue[0].size();
          }
       }
       //Lock and queue events
-      std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[0]);
-      mt_flow_queue[0].push_back(flow);
-      mt_flag_queue[0].push_back(flags);
+      std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[0]);
+      fMtFlowQueue[0].push_back(flow);
+      fMtFlagQueue[0].push_back(flags);
       return;
    }
 
@@ -358,7 +358,7 @@ public:
    {
       bool data_processing=true;
       int nModules=(*gModules).size();
-      if (!multithread)
+      if (!gMultithread)
       {
          printf("DequeFlowQueue function should only be called in multithead mode!\n");
          exit(1);
@@ -368,25 +368,25 @@ public:
       {  
          bool is_empty=true;
          {
-            std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[i]);
-            is_empty=mt_flow_queue[i].empty();
+            std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i]);
+            is_empty=fMtFlowQueue[i].empty();
          }
          if (is_empty)
          {
             usleep(10);
             continue;
          }
-         size_t next_queue_size=0;
+         size_t NextQueueSize=0;
          if (i<nModules-1) // If not the last module
          {
-            std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[i+1]);
-            next_queue_size=mt_flow_queue[i+1].size();
+            std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i+1]);
+            NextQueueSize=fMtFlowQueue[i+1].size();
          }
-         if (next_queue_size>queue_depth) //Events queue up in next module too large... wait...
+         if (NextQueueSize>fMtQueueDepth) //Events queue up in next module too large... wait...
          {
             { //Check flag at front of queue (has Quit be called?)
-               std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[i+1]);
-               TAFlags* f=mt_flag_queue[i].front();
+               std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i+1]);
+               TAFlags* f=fMtFlagQueue[i].front();
                if ((*f) & TAFlag_QUIT) data_processing=false;
             }
             usleep(100);
@@ -396,14 +396,14 @@ public:
          TAFlowEvent* flow=NULL;
          TAFlags* flag=NULL;
          { //Lock scope
-            std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[i]);
-            flow=std::move(mt_flow_queue[i].front());
-            flag=std::move(mt_flag_queue[i].front());
-            mt_flow_queue[i].pop_front();
-            mt_flag_queue[i].pop_front();
+            std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i]);
+            flow=std::move(fMtFlowQueue[i].front());
+            flag=std::move(fMtFlagQueue[i].front());
+            fMtFlowQueue[i].pop_front();
+            fMtFlagQueue[i].pop_front();
          }
          //If the flow has the last item, stop this thread
-         if (flow==last_item_in_queue)
+         if (flow==fMtLastItemInQueue)
          {
             data_processing=false;
          }
@@ -417,8 +417,8 @@ public:
                //one, ones after will get the quit through the flow)
                for (int j=0; j<i; j++)
                {
-                  std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[j]);
-                  mt_flag_queue[j].push_front(flag);
+                  std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[j]);
+                  fMtFlagQueue[j].push_front(flag);
                }
             }
          }
@@ -428,9 +428,9 @@ public:
          }
          else 
          {
-            std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[i+1]);
-            mt_flow_queue[i+1].push_back(flow);
-            mt_flag_queue[i+1].push_back(flag);
+            std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i+1]);
+            fMtFlowQueue[i+1].push_back(flow);
+            fMtFlagQueue[i+1].push_back(flag);
          }
       }
    }
@@ -441,19 +441,19 @@ public:
       assert(fRunRun.size() == 0);
       
       fRunInfo = new TARunInfo(run_number, file_name, fArgs);
-      if (multithread)
+      if (gMultithread)
       {
          int nModules=(*gModules).size();
-         mt_flow_queue.resize(nModules);
-         mt_flag_queue.resize(nModules);
+         fMtFlowQueue.resize(nModules);
+         fMtFlagQueue.resize(nModules);
          std::vector<std::mutex> mutsize(nModules);
-         mt_flow_queue_mutex.swap(mutsize);
-         mt_threads.resize(nModules);
+         fMtFlowQueueMutex.swap(mutsize);
+         fMtThreads.resize(nModules);
          for (int i=0; i<nModules; i++)
          {
-            printf("Create mt_flow_queue thread %d\n",i);
+            printf("Create fMtFlowQueue thread %d\n",i);
             fRunRun.push_back((*gModules)[i]->NewRunObject(fRunInfo));
-            mt_threads[i]=new std::thread(&RunHandler::DequeFlowQueue,this,i);
+            fMtThreads[i]=new std::thread(&RunHandler::DequeFlowQueue,this,i);
          }
       }
       else
@@ -481,17 +481,17 @@ public:
       // detect it and cause the analyzer to shutdown.
       TAFlags flags = 0;
       AnalyzeFlowQueue(&flags);
-      if (multithread)
+      if (gMultithread)
       {
          { //lock scope
-            std::lock_guard<std::mutex> lock(mt_flow_queue_mutex[0]);
-            mt_flow_queue[0].push_back(last_item_in_queue);
-            mt_flag_queue[0].push_back(&flags);
+            std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[0]);
+            fMtFlowQueue[0].push_back(fMtLastItemInQueue);
+            fMtFlagQueue[0].push_back(&flags);
          }
          for (unsigned i=0; i<fRunRun.size(); i++)
          {
             printf("Waiting for thread %d to finish...\n",i);
-            mt_threads[i]->join();
+            fMtThreads[i]->join();
          }
       }
       for (unsigned i=0; i<fRunRun.size(); i++)
@@ -539,15 +539,13 @@ public:
      printf("Flow queue lengths:\n");
      for (unsigned i=0; i<fRunRun.size(); i++)
      {
-       printf("%d:\t%zu\n",i,mt_flow_queue[i].size());
+       printf("%d:\t%zu\n",i,fMtFlowQueue[i].size());
      }
    }
 
-   
    TAFlowEvent* AnalyzeFlowEvent(TAFlags* flags, TAFlowEvent* flow)
    {
-      
-      if (multithread)
+      if (gMultithread)
       {
          MultithreadQueueItem(flags, flow);
          //PrintQueueLength();
@@ -1575,12 +1573,12 @@ static void help()
 }
 
 //Initialise global mutex for TARunObjects that have functions that are not thread safe
-std::mutex TARunObject::ModuleLock;
+std::mutex TARunObject::gfModuleLock;
 
 // Main function call
-int manalyzer_main(int argc, char *argv[])
-{
 
+int manalyzer_main(int argc, char* argv[])
+{
    setbuf(stdout, NULL);
    setbuf(stderr, NULL);
  
@@ -1607,6 +1605,7 @@ int manalyzer_main(int argc, char *argv[])
    int num_analyze = 0;
 
    TMWriterInterface *writer = NULL;
+
    bool event_dump = false;
    bool demo_mode = false;
    bool root_graphics = false;
@@ -1656,7 +1655,7 @@ int manalyzer_main(int argc, char *argv[])
          exptname = strdup(arg+2);
          #endif
       } else if (strncmp(arg,"--mt",4)==0) {
-         multithread=true;
+         gMultithread=true;
       } else if (strcmp(arg,"-h")==0) {
          help(); // does not return
       } else if (arg[0] == '-') {
