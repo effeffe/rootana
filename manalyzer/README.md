@@ -255,9 +255,12 @@ TARootHelper data members:
 
 ### manalyzer multithreaded mode and TAMultithreadHelper
 
-Multithreading works by giving each module its own thread, passing flow events between these thread via queues.
+Multithreading works by giving each module its own thread, passing flow events between these thread via queues
 
-Running with the flag --mt will enable PER-MODULE multithreading.
+Running with the flag --mt will enable PER-MODULE multithreading. Eg
+```bash
+./manalyzer_example_flow.exe --mt --demo
+```
 Multithreading configuration settings can be changed with the flags:
   
 * --mtql NNN		Number of flow events to queue per module. A more events queue, the more memory will be consumed
@@ -291,7 +294,6 @@ std::lock_guard<std::mutex> lock(TAMultithreadHelper::gfLock);
 SomeNotThreadSafeFunctions()
 } //When lock goes out of scope, gfLock is unlocked
 ```
-
 
 Deconstructors for data put into the flow must be setup in the flow classes, not inside your modules. Do not put local variables into the flow, I recommend creading pointers and insert those.
 
