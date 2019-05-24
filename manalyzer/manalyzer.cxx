@@ -187,6 +187,7 @@ void TAFactory::Finish()
 #include "netDirectoryServer.h"
 #endif
 
+char*         TARootHelper::fOutputFileName = NULL;
 TApplication* TARootHelper::fgApp = NULL;
 TDirectory*   TARootHelper::fgDir = NULL;
 XmlServer*    TARootHelper::fgXmlServer = NULL;
@@ -196,11 +197,13 @@ TARootHelper::TARootHelper(const TARunInfo* runinfo) // ctor
 {
    if (gTrace)
       printf("TARootHelper::ctor!\n");
-
    char xfilename[1024];
-   sprintf(xfilename, "output%05d.root", runinfo->fRunNo);
-
-   fOutputFile = new TFile(xfilename, "RECREATE");
+   if (!TARootHelper::fOutputFileName)
+   {
+      sprintf(xfilename, "output%05d.root", runinfo->fRunNo);
+      TARootHelper::fOutputFileName=xfilename;
+   }
+   fOutputFile = new TFile(TARootHelper::fOutputFileName, "RECREATE");
    
    assert(fOutputFile->IsOpen()); // FIXME: survive failure to open ROOT file
 
@@ -1605,11 +1608,14 @@ static void help()
   printf("\t-i: Enable intractive mode\n");
 #ifdef MODULE_MULTITHREAD
   printf("\t--mt: Enable multithreaded mode. Extra multithread config settings:\n");
-  printf("\t\t--mtql NNN: Module thread queue length (buffer).              Default: %d\n",TAMultithreadHelper::gfMtMaxBacklog);
-  printf("\t\t--mtse NNN: Module thread sleep time with empty queue.        Default: %d\n",TAMultithreadHelper::gfMtQueueEmptyUSleepTime );
-  printf("\t\t--mtsf NNN: Module thread sleep time when next queue is full. Default: %d\n",TAMultithreadHelper::gfMtQueueFullUSleepTime );
+  printf("\t\t--mtqlNNN: Module thread queue length (buffer).              Default: %d\n",TAMultithreadHelper::gfMtMaxBacklog);
+  printf("\t\t--mtseNNN: Module thread sleep time with empty queue.        Default: %d\n",TAMultithreadHelper::gfMtQueueEmptyUSleepTime );
+  printf("\t\t--mtsfNNN: Module thread sleep time when next queue is full. Default: %d\n",TAMultithreadHelper::gfMtQueueFullUSleepTime );
 #else
   printf("\t--mt: Enable multithreaded mode[DISABLED WHEN COMPILED]\n");
+#endif
+#ifdef HAVE_ROOT
+  printf("\t--root XXX.root: Specify output root file filename\n");
 #endif
   printf("\t--: All following arguments are passed to the analyzer modules Init() method\n");
   printf("\n");
@@ -1705,13 +1711,19 @@ int manalyzer_main(int argc, char* argv[])
          #endif
          #ifdef MODULE_MULTITHREAD
       } else if (strncmp(arg,"--mtql",6)==0) {
-         multithreadQueueLength = atoi(arg+2);
+         multithreadQueueLength = atoi(arg+6);
       } else if (strncmp(arg,"--mtse",6)==0) {
-         multithreadWaitEmpty = atoi(arg+2);
+         multithreadWaitEmpty = atoi(arg+6);
       } else if (strncmp(arg,"--mtsf",6)==0) {
-         multithreadWaitFull = atoi(arg+2);
+         multithreadWaitFull = atoi(arg+6);
       } else if (strncmp(arg,"--mt",4)==0) {
          multithread=true;
+         #endif
+         #ifdef HAVE_ROOT
+      } else if (strncmp(arg,"--root",6)==0) {
+          TARootHelper::fOutputFileName = strdup(args[i+1].c_str());
+          i++;
+          continue;
          #endif
       } else if (strcmp(arg,"-h")==0) {
          help(); // does not return
