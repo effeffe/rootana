@@ -271,7 +271,7 @@ TAMultithreadHelper::~TAMultithreadHelper()
 }
 bool TAMultithreadHelper::gfMultithread            = false;
 uint TAMultithreadHelper::gfMtQueueFullUSleepTime  = 100; //u seconds
-uint TAMultithreadHelper::gfMtQueueEmptyUSleepTime = 10; //u seconds
+uint TAMultithreadHelper::gfMtQueueEmptyUSleepTime = 100; //u seconds
 uint TAMultithreadHelper::gfMtMaxBacklog           = 100;
 std::mutex TAMultithreadHelper::gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
 #endif
@@ -401,18 +401,20 @@ public:
          size_t NextQueueSize=0;
          if (i<nModules-1) // If not the last module
          {
-            { //Scope for thread lock
+            { //Lock guard scope
                std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i+1]);
                NextQueueSize=fMtFlowQueue[i+1].size();
-               if (NextQueueSize>fMtQueueDepth) //Events queue up in next module too large... wait...
-               { //Check flag at front of queue (has Quit be called?)
-                  TAFlags* f=fMtFlagQueue[i].front();
-                  if ((*f) & TAFlag_QUIT) data_processing=false;
-               }
+               //Check flag at front of queue (ie has Quit been called?)
+               TAFlags* f=fMtFlagQueue[i].front();
+               if ((*f) & TAFlag_QUIT) data_processing=false;
             }
-            usleep(100);
-            //printf("Thread %d waiting as next module has %d jobs to do...it is %d \n",i,flow_queue[i+1].size(),flow_queue[i+1].empty());
-           continue;
+            if (NextQueueSize>fMtQueueDepth) //Events queue up in next module too large... wait...
+            { 
+               //printf("Sleep for %d\n",TAMultithreadHelper::gfMtQueueFullUSleepTime);
+               usleep(TAMultithreadHelper::gfMtQueueFullUSleepTime);
+               //printf("Thread %d waiting as next module has %d jobs to do...it is %d \n",i,fMtFlagQueue[i+1].size(),fMtFlagQueue[i+1].empty());
+               continue;
+            }
          }
          TAFlowEvent* flow=NULL;
          TAFlags* flag=NULL;
@@ -427,7 +429,7 @@ public:
          if ((*flag) & TAFlag_SKIP)
          {
             delete flow;
-            if (flag) delete flag;
+            //delete flag;
             continue;
          }
 
@@ -453,7 +455,7 @@ public:
          if (i==nModules-1) //If I am the last module... free memory, else queue up for next module to process
          {
             delete flow;
-            delete flag;
+            //delete flag;
          }
          else 
          {
@@ -1603,9 +1605,9 @@ static void help()
   printf("\t-i: Enable intractive mode\n");
 #ifdef MODULE_MULTITHREAD
   printf("\t--mt: Enable multithreaded mode. Extra multithread config settings:\n");
-  printf("\t\t--mtql NNN: Module thread queue length (buffer).       Default:%d\n",TAMultithreadHelper::gfMtMaxBacklog);
-  printf("\t\t--mtse NNN: Module thread sleep time with empty queue. Default:%d\n",TAMultithreadHelper::gfMtQueueEmptyUSleepTime );
-  printf("\t\t--mtsf NNN: Module thread queue length (buffer).       Default:%d\n",TAMultithreadHelper::gfMtQueueFullUSleepTime );
+  printf("\t\t--mtql NNN: Module thread queue length (buffer).              Default: %d\n",TAMultithreadHelper::gfMtMaxBacklog);
+  printf("\t\t--mtse NNN: Module thread sleep time with empty queue.        Default: %d\n",TAMultithreadHelper::gfMtQueueEmptyUSleepTime );
+  printf("\t\t--mtsf NNN: Module thread sleep time when next queue is full. Default: %d\n",TAMultithreadHelper::gfMtQueueFullUSleepTime );
 #else
   printf("\t--mt: Enable multithreaded mode[DISABLED WHEN COMPILED]\n");
 #endif
