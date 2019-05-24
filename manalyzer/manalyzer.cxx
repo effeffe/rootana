@@ -1603,9 +1603,9 @@ static void help()
   printf("\t-i: Enable intractive mode\n");
 #ifdef MODULE_MULTITHREAD
   printf("\t--mt: Enable multithreaded mode. Extra multithread config settings:\n");
-  printf("\t\t--mtql: Module thread queue length (buffer).       Default:%d\n",TAMultithreadHelper::gfMtMaxBacklog);
-  printf("\t\t--mtse: Module thread sleep time with empty queue. Default:%d\n",TAMultithreadHelper::gfMtQueueEmptyUSleepTime );
-  printf("\t\t--mtsf: Module thread queue length (buffer).       Default:%d\n",TAMultithreadHelper::gfMtQueueFullUSleepTime );
+  printf("\t\t--mtql NNN: Module thread queue length (buffer).       Default:%d\n",TAMultithreadHelper::gfMtMaxBacklog);
+  printf("\t\t--mtse NNN: Module thread sleep time with empty queue. Default:%d\n",TAMultithreadHelper::gfMtQueueEmptyUSleepTime );
+  printf("\t\t--mtsf NNN: Module thread queue length (buffer).       Default:%d\n",TAMultithreadHelper::gfMtQueueFullUSleepTime );
 #else
   printf("\t--mt: Enable multithreaded mode[DISABLED WHEN COMPILED]\n");
 #endif
@@ -1701,12 +1701,12 @@ int manalyzer_main(int argc, char* argv[])
       } else if (strncmp(arg,"-E",2)==0) {
          exptname = strdup(arg+2);
          #endif
-         #ifdef MULTITHREAD_MODULE
-      } else if (strncmp(arg,"--mtql",2)==0) {
+         #ifdef MODULE_MULTITHREAD
+      } else if (strncmp(arg,"--mtql",6)==0) {
          multithreadQueueLength = atoi(arg+2);
-      } else if (strncmp(arg,"--mtse",2)==0) {
+      } else if (strncmp(arg,"--mtse",6)==0) {
          multithreadWaitEmpty = atoi(arg+2);
-      } else if (strncmp(arg,"--mtsf",2)==0) {
+      } else if (strncmp(arg,"--mtsf",6)==0) {
          multithreadWaitFull = atoi(arg+2);
       } else if (strncmp(arg,"--mt",4)==0) {
          multithread=true;
@@ -1742,14 +1742,20 @@ int manalyzer_main(int argc, char* argv[])
    TARootHelper::fgDir = new TDirectory("manalyzer", "location of histograms");
    TARootHelper::fgDir->cd();
 #endif
-#ifdef MULTITHREAD_MODULE
+#ifdef MODULE_MULTITHREAD
    TAMultithreadHelper::gfMultithread = multithread;
-   if (multithreadQueueLength)
+   if (multithreadQueueLength) {
       TAMultithreadHelper::gfMtMaxBacklog=multithreadQueueLength;
-   if (multithreadWaitEmpty)
+      printf("Setting Multithread Queue length to %d\n",TAMultithreadHelper::gfMtMaxBacklog);
+  }
+   if (multithreadWaitEmpty) {
       TAMultithreadHelper::gfMtQueueEmptyUSleepTime=multithreadWaitEmpty;
-   if (multithreadWaitFull)
+      printf("Setting Sleep time when multithread queue is empty to %d\n",TAMultithreadHelper::gfMtQueueEmptyUSleepTime);
+  }
+   if (multithreadWaitFull) {
       TAMultithreadHelper::gfMtQueueFullUSleepTime=multithreadWaitFull;
+      printf("Setting Sleep time when next multithread queue is full to %d\n",TAMultithreadHelper::gfMtQueueFullUSleepTime);
+  }
 #endif
 #ifdef XHAVE_LIBNETDIRECTORY
    if (tcpPort) {
