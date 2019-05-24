@@ -401,15 +401,14 @@ public:
          size_t NextQueueSize=0;
          if (i<nModules-1) // If not the last module
          {
-            std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i+1]);
-            NextQueueSize=fMtFlowQueue[i+1].size();
-         }
-         if (NextQueueSize>fMtQueueDepth) //Events queue up in next module too large... wait...
-         {
-            { //Check flag at front of queue (has Quit be called?)
+            { //Scope for thread lock
                std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i+1]);
-               TAFlags* f=fMtFlagQueue[i].front();
-               if ((*f) & TAFlag_QUIT) data_processing=false;
+               NextQueueSize=fMtFlowQueue[i+1].size();
+               if (NextQueueSize>fMtQueueDepth) //Events queue up in next module too large... wait...
+               { //Check flag at front of queue (has Quit be called?)
+                  TAFlags* f=fMtFlagQueue[i].front();
+                  if ((*f) & TAFlag_QUIT) data_processing=false;
+               }
             }
             usleep(100);
             //printf("Thread %d waiting as next module has %d jobs to do...it is %d \n",i,flow_queue[i+1].size(),flow_queue[i+1].empty());
@@ -423,14 +422,15 @@ public:
             flag=fMtFlagQueue[i].front();
             fMtFlowQueue[i].pop_front();
             fMtFlagQueue[i].pop_front();
-            if ((*flag) & TAFlag_QUIT) data_processing=false;
-            if ((*flag) & TAFlag_SKIP)
-            {
-               delete flow;
-               delete flag;
-               continue;
-            }
          }
+         if ((*flag) & TAFlag_QUIT) data_processing=false;
+         if ((*flag) & TAFlag_SKIP)
+         {
+            delete flow;
+            if (flag) delete flag;
+            continue;
+         }
+
          //If the flow has the last item, stop this thread
          if (flow==fMtLastItemInQueue)
          {
@@ -1602,10 +1602,10 @@ static void help()
   printf("\t-g: Enable graphics display when processing data files\n");
   printf("\t-i: Enable intractive mode\n");
 #ifdef MODULE_MULTITHREAD
-  printf("\t--mt: Enable multithreaded mode\n");
-  printf("\t--mtql: Module thread queue length (buffer).       Default:%d\n",TAMultithreadInfo::gfMtMaxBacklog);
-  printf("\t--mtse: Module thread sleep time with empty queue. Default:%d\n",TAMultithreadInfo::gfMtQueueEmptyUSleepTime );
-  printf("\t--mtsf: Module thread queue length (buffer).       Default:%d\n",TAMultithreadInfo::gfMtQueueFullUSleepTime );
+  printf("\t--mt: Enable multithreaded mode. Extra multithread config settings:\n");
+  printf("\t\t--mtql: Module thread queue length (buffer).       Default:%d\n",TAMultithreadInfo::gfMtMaxBacklog);
+  printf("\t\t--mtse: Module thread sleep time with empty queue. Default:%d\n",TAMultithreadInfo::gfMtQueueEmptyUSleepTime );
+  printf("\t\t--mtsf: Module thread queue length (buffer).       Default:%d\n",TAMultithreadInfo::gfMtQueueFullUSleepTime );
 #else
   printf("\t--mt: Enable multithreaded mode[DISABLED WHEN COMPILED]\n");
 #endif
@@ -1710,7 +1710,6 @@ int manalyzer_main(int argc, char* argv[])
          multithreadWaitFull = atoi(arg+2);
       } else if (strncmp(arg,"--mt",4)==0) {
          multithread=true;
-
          #endif
       } else if (strcmp(arg,"-h")==0) {
          help(); // does not return
