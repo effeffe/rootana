@@ -60,7 +60,6 @@ class TAFlowEvent
    TAFlowEvent() {}; // hidden default constructor 
 };
 
-
 typedef int TAFlags;
 
 #define TAFlag_OK          0
@@ -74,6 +73,7 @@ class TARunObject
  public:
    TARunObject(TARunInfo* runinfo); // ctor
    virtual ~TARunObject() {}; // dtor
+
  public:
    virtual void BeginRun(TARunInfo* runinfo); // begin of run
    virtual void EndRun(TARunInfo* runinfo); // end of run
