@@ -256,24 +256,24 @@ TARootHelper::~TARootHelper() // dtor
 
 //////////////////////////////////////////////////////////
 //
-// Methods and Defaults of TAMultithreadInfo
+// Methods and Defaults of TAMultithreadHelper
 //
 //////////////////////////////////////////////////////////
 
 #ifdef MODULE_MULTITHREAD
-TAMultithreadInfo::TAMultithreadInfo()
+TAMultithreadHelper::TAMultithreadHelper()
 {
 //ctor
 }
-TAMultithreadInfo::~TAMultithreadInfo()
+TAMultithreadHelper::~TAMultithreadHelper()
 {
 //dtor
 }
-bool TAMultithreadInfo::gfMultithread            = false;
-uint TAMultithreadInfo::gfMtQueueFullUSleepTime  = 100; //u seconds
-uint TAMultithreadInfo::gfMtQueueEmptyUSleepTime = 10; //u seconds
-uint TAMultithreadInfo::gfMtMaxBacklog           = 100;
-std::mutex TAMultithreadInfo::gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
+bool TAMultithreadHelper::gfMultithread            = false;
+uint TAMultithreadHelper::gfMtQueueFullUSleepTime  = 100; //u seconds
+uint TAMultithreadHelper::gfMtQueueEmptyUSleepTime = 10; //u seconds
+uint TAMultithreadHelper::gfMtMaxBacklog           = 100;
+std::mutex TAMultithreadHelper::gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
 #endif
 
 //////////////////////////////////////////////////////////
@@ -339,7 +339,7 @@ public:
       fRunInfo = NULL;
       fArgs = args;
       #ifdef MODULE_MULTITHREAD
-      if (TAMultithreadInfo::gfMultithread)
+      if (TAMultithreadHelper::gfMultithread)
          //Dummy pointer to safely mark the end of flow
          fMtLastItemInQueue=new TAFlowEvent(NULL); 
       #endif
@@ -380,7 +380,7 @@ public:
    {
       bool data_processing=true;
       int nModules=(*gModules).size();
-      if (!TAMultithreadInfo::gfMultithread)
+      if (!TAMultithreadHelper::gfMultithread)
       {
          printf("PerModuleThread function should only be called in multithead mode!\n");
          exit(1);
@@ -395,7 +395,7 @@ public:
          }
          if (is_empty)
          {
-            usleep(TAMultithreadInfo::gfMtQueueEmptyUSleepTime);
+            usleep(TAMultithreadHelper::gfMtQueueEmptyUSleepTime);
             continue;
          }
          size_t NextQueueSize=0;
@@ -471,8 +471,8 @@ public:
       
       fRunInfo = new TARunInfo(run_number, file_name, fArgs);
       #ifdef MODULE_MULTITHREAD
-      fRunInfo->fMtInfo=new TAMultithreadInfo();
-      if (TAMultithreadInfo::gfMultithread)
+      fRunInfo->fMtInfo=new TAMultithreadHelper();
+      if (TAMultithreadHelper::gfMultithread)
       {
          int nModules=(*gModules).size();
          fMtFlowQueue.resize(nModules);
@@ -515,7 +515,7 @@ public:
       TAFlags flags = 0;
       AnalyzeFlowQueue(&flags);
       #ifdef MODULE_MULTITHREAD
-      if (TAMultithreadInfo::gfMultithread)
+      if (TAMultithreadHelper::gfMultithread)
       {
          { //lock scope
             std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[0]);
@@ -581,7 +581,7 @@ public:
    TAFlowEvent* AnalyzeFlowEvent(TAFlags* flags, TAFlowEvent* flow)
    {
       #ifdef MODULE_MULTITHREAD
-      if (TAMultithreadInfo::gfMultithread)
+      if (TAMultithreadHelper::gfMultithread)
       {
          MultithreadQueueItem(flags, flow);
          //PrintQueueLength();
@@ -1603,9 +1603,9 @@ static void help()
   printf("\t-i: Enable intractive mode\n");
 #ifdef MODULE_MULTITHREAD
   printf("\t--mt: Enable multithreaded mode. Extra multithread config settings:\n");
-  printf("\t\t--mtql: Module thread queue length (buffer).       Default:%d\n",TAMultithreadInfo::gfMtMaxBacklog);
-  printf("\t\t--mtse: Module thread sleep time with empty queue. Default:%d\n",TAMultithreadInfo::gfMtQueueEmptyUSleepTime );
-  printf("\t\t--mtsf: Module thread queue length (buffer).       Default:%d\n",TAMultithreadInfo::gfMtQueueFullUSleepTime );
+  printf("\t\t--mtql: Module thread queue length (buffer).       Default:%d\n",TAMultithreadHelper::gfMtMaxBacklog);
+  printf("\t\t--mtse: Module thread sleep time with empty queue. Default:%d\n",TAMultithreadHelper::gfMtQueueEmptyUSleepTime );
+  printf("\t\t--mtsf: Module thread queue length (buffer).       Default:%d\n",TAMultithreadHelper::gfMtQueueFullUSleepTime );
 #else
   printf("\t--mt: Enable multithreaded mode[DISABLED WHEN COMPILED]\n");
 #endif
@@ -1743,13 +1743,13 @@ int manalyzer_main(int argc, char* argv[])
    TARootHelper::fgDir->cd();
 #endif
 #ifdef MULTITHREAD_MODULE
-   TAMultithreadInfo::gfMultithread = multithread;
+   TAMultithreadHelper::gfMultithread = multithread;
    if (multithreadQueueLength)
-      TAMultithreadInfo::gfMtMaxBacklog=multithreadQueueLength;
+      TAMultithreadHelper::gfMtMaxBacklog=multithreadQueueLength;
    if (multithreadWaitEmpty)
-      TAMultithreadInfo::gfMtQueueEmptyUSleepTime=multithreadWaitEmpty;
+      TAMultithreadHelper::gfMtQueueEmptyUSleepTime=multithreadWaitEmpty;
    if (multithreadWaitFull)
-      TAMultithreadInfo::gfMtQueueFullUSleepTime=multithreadWaitFull;
+      TAMultithreadHelper::gfMtQueueFullUSleepTime=multithreadWaitFull;
 #endif
 #ifdef XHAVE_LIBNETDIRECTORY
    if (tcpPort) {

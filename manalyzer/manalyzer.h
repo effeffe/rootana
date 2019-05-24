@@ -14,7 +14,7 @@
 #include "VirtualOdb.h"
 
 class TARootHelper;
-class TAMultithreadInfo;
+class TAMultithreadHelper;
 class TAFlowEvent;
 
 class TARunInfo
@@ -24,7 +24,7 @@ class TARunInfo
    std::string fFileName;
    VirtualOdb* fOdb;
    TARootHelper* fRoot;
-   TAMultithreadInfo* fMtInfo;
+   TAMultithreadHelper* fMtInfo;
    std::vector<std::string> fArgs;
    std::deque<TAFlowEvent*> fFlowQueue;
    
@@ -151,7 +151,7 @@ class TARootHelper
 #endif
 
 #ifdef MODULE_MULTITHREAD
-class TAMultithreadInfo
+class TAMultithreadHelper
 {
   public:
      static bool gfMultithread;
@@ -160,8 +160,8 @@ class TAMultithreadInfo
      static uint gfMtMaxBacklog;
      static std::mutex gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
 
-     TAMultithreadInfo();
-     ~TAMultithreadInfo();
+     TAMultithreadHelper();
+     ~TAMultithreadHelper();
 };
 #endif
 
