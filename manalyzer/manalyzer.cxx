@@ -13,7 +13,6 @@
 //////////////////////////////////////////////////////////
 
 static bool gTrace = false;
-static bool gMultithread = false;
 
 //////////////////////////////////////////////////////////
 //
@@ -257,6 +256,28 @@ TARootHelper::~TARootHelper() // dtor
 
 //////////////////////////////////////////////////////////
 //
+// Methods and Defaults of TAMultithreadInfo
+//
+//////////////////////////////////////////////////////////
+
+#ifdef MODULE_MULTITHREAD
+TAMultithreadInfo::TAMultithreadInfo()
+{
+//ctor
+}
+TAMultithreadInfo::~TAMultithreadInfo()
+{
+//dtor
+}
+bool TAMultithreadInfo::gfMultithread            = false;
+uint TAMultithreadInfo::gfMtQueueFullUSleepTime  = 100; //u seconds
+uint TAMultithreadInfo::gfMtQueueEmptyUSleepTime = 10; //u seconds
+uint TAMultithreadInfo::gfMtMaxBacklog           = 100;
+std::mutex TAMultithreadInfo::gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
+#endif
+
+//////////////////////////////////////////////////////////
+//
 // Methods of TARegister
 //
 //////////////////////////////////////////////////////////
@@ -317,10 +338,11 @@ public:
    {
       fRunInfo = NULL;
       fArgs = args;
-      if (gMultithread)
+      #ifdef MODULE_MULTITHREAD
+      if (TAMultithreadInfo::gfMultithread)
          //Dummy pointer to safely mark the end of flow
          fMtLastItemInQueue=new TAFlowEvent(NULL); 
-
+      #endif
    }
 
    ~RunHandler() // dtor
@@ -330,7 +352,7 @@ public:
          fRunInfo = NULL;
       }
    }
-   
+   #ifdef MODULE_MULTITHREAD
    //Multithreaded process with queue of flow events
    void MultithreadQueueItem(TAFlags* flags, TAFlowEvent* flow)
    {
@@ -354,13 +376,13 @@ public:
       return;
    }
 
-   void DequeFlowQueue(int i)
+   void PerModuleThread(int i)
    {
       bool data_processing=true;
       int nModules=(*gModules).size();
-      if (!gMultithread)
+      if (!TAMultithreadInfo::gfMultithread)
       {
-         printf("DequeFlowQueue function should only be called in multithead mode!\n");
+         printf("PerModuleThread function should only be called in multithead mode!\n");
          exit(1);
       }
 
@@ -373,7 +395,7 @@ public:
          }
          if (is_empty)
          {
-            usleep(10);
+            usleep(TAMultithreadInfo::gfMtQueueEmptyUSleepTime);
             continue;
          }
          size_t NextQueueSize=0;
@@ -397,10 +419,17 @@ public:
          TAFlags* flag=NULL;
          { //Lock scope
             std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i]);
-            flow=std::move(fMtFlowQueue[i].front());
-            flag=std::move(fMtFlagQueue[i].front());
+            flow=fMtFlowQueue[i].front();
+            flag=fMtFlagQueue[i].front();
             fMtFlowQueue[i].pop_front();
             fMtFlagQueue[i].pop_front();
+            if ((*flag) & TAFlag_QUIT) data_processing=false;
+            if ((*flag) & TAFlag_SKIP)
+            {
+               delete flow;
+               delete flag;
+               continue;
+            }
          }
          //If the flow has the last item, stop this thread
          if (flow==fMtLastItemInQueue)
@@ -410,9 +439,8 @@ public:
          else
          {
             flow=fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flag, flow);
-            if ((*flag) & TAFlag_QUIT)
+            if (!data_processing)
             {
-               data_processing=false; //Stop this thread...
                //Stop all other threads (tell all threads before this 
                //one, ones after will get the quit through the flow)
                for (int j=0; j<i; j++)
@@ -425,6 +453,7 @@ public:
          if (i==nModules-1) //If I am the last module... free memory, else queue up for next module to process
          {
             delete flow;
+            delete flag;
          }
          else 
          {
@@ -434,14 +463,16 @@ public:
          }
       }
    }
-
+   #endif
    void CreateRun(int run_number, const char* file_name)
    {
       assert(fRunInfo == NULL);
       assert(fRunRun.size() == 0);
       
       fRunInfo = new TARunInfo(run_number, file_name, fArgs);
-      if (gMultithread)
+      #ifdef MODULE_MULTITHREAD
+      fRunInfo->fMtInfo=new TAMultithreadInfo();
+      if (TAMultithreadInfo::gfMultithread)
       {
          int nModules=(*gModules).size();
          fMtFlowQueue.resize(nModules);
@@ -453,14 +484,16 @@ public:
          {
             printf("Create fMtFlowQueue thread %d\n",i);
             fRunRun.push_back((*gModules)[i]->NewRunObject(fRunInfo));
-            fMtThreads[i]=new std::thread(&RunHandler::DequeFlowQueue,this,i);
+            fMtThreads[i]=new std::thread(&RunHandler::PerModuleThread,this,i);
          }
       }
       else
+      #endif
       {
          for (unsigned i=0; i<(*gModules).size(); i++)
             fRunRun.push_back((*gModules)[i]->NewRunObject(fRunInfo));
       }
+      
    }
 
    void BeginRun()
@@ -481,7 +514,8 @@ public:
       // detect it and cause the analyzer to shutdown.
       TAFlags flags = 0;
       AnalyzeFlowQueue(&flags);
-      if (gMultithread)
+      #ifdef MODULE_MULTITHREAD
+      if (TAMultithreadInfo::gfMultithread)
       {
          { //lock scope
             std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[0]);
@@ -494,6 +528,7 @@ public:
             fMtThreads[i]->join();
          }
       }
+      #endif
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->PreEndRun(fRunInfo, &fRunInfo->fFlowQueue);
 
@@ -545,13 +580,15 @@ public:
 
    TAFlowEvent* AnalyzeFlowEvent(TAFlags* flags, TAFlowEvent* flow)
    {
-      if (gMultithread)
+      #ifdef MODULE_MULTITHREAD
+      if (TAMultithreadInfo::gfMultithread)
       {
          MultithreadQueueItem(flags, flow);
          //PrintQueueLength();
          return NULL;
       }
       else
+      #endif
       {
          for (unsigned i=0; i<fRunRun.size(); i++) {
             flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
@@ -1564,7 +1601,14 @@ static void help()
   printf("\t-m: Enable memory leak debugging\n");
   printf("\t-g: Enable graphics display when processing data files\n");
   printf("\t-i: Enable intractive mode\n");
+#ifdef MODULE_MULTITHREAD
   printf("\t--mt: Enable multithreaded mode\n");
+  printf("\t--mtql: Module thread queue length (buffer).       Default:%d\n",TAMultithreadInfo::gfMtMaxBacklog);
+  printf("\t--mtse: Module thread sleep time with empty queue. Default:%d\n",TAMultithreadInfo::gfMtQueueEmptyUSleepTime );
+  printf("\t--mtsf: Module thread queue length (buffer).       Default:%d\n",TAMultithreadInfo::gfMtQueueFullUSleepTime );
+#else
+  printf("\t--mt: Enable multithreaded mode[DISABLED WHEN COMPILED]\n");
+#endif
   printf("\t--: All following arguments are passed to the analyzer modules Init() method\n");
   printf("\n");
   printf("Example1: analyze online data: ./analyzer.exe -P9091\n");
@@ -1572,8 +1616,6 @@ static void help()
   exit(1);
 }
 
-//Initialise global mutex for TARunObjects that have functions that are not thread safe
-std::mutex TARunObject::gfModuleLock;
 
 // Main function call
 
@@ -1610,6 +1652,11 @@ int manalyzer_main(int argc, char* argv[])
    bool demo_mode = false;
    bool root_graphics = false;
    bool interactive = false;
+
+   bool multithread = false;
+   uint multithreadQueueLength=0;
+   uint multithreadWaitEmpty=0;
+   uint multithreadWaitFull=0;
 
    std::vector<std::string> files;
    std::vector<std::string> modargs;
@@ -1654,8 +1701,17 @@ int manalyzer_main(int argc, char* argv[])
       } else if (strncmp(arg,"-E",2)==0) {
          exptname = strdup(arg+2);
          #endif
+         #ifdef MULTITHREAD_MODULE
+      } else if (strncmp(arg,"--mtql",2)==0) {
+         multithreadQueueLength = atoi(arg+2);
+      } else if (strncmp(arg,"--mtse",2)==0) {
+         multithreadWaitEmpty = atoi(arg+2);
+      } else if (strncmp(arg,"--mtsf",2)==0) {
+         multithreadWaitFull = atoi(arg+2);
       } else if (strncmp(arg,"--mt",4)==0) {
-         gMultithread=true;
+         multithread=true;
+
+         #endif
       } else if (strcmp(arg,"-h")==0) {
          help(); // does not return
       } else if (arg[0] == '-') {
@@ -1687,7 +1743,15 @@ int manalyzer_main(int argc, char* argv[])
    TARootHelper::fgDir = new TDirectory("manalyzer", "location of histograms");
    TARootHelper::fgDir->cd();
 #endif
-
+#ifdef MULTITHREAD_MODULE
+   TAMultithreadInfo::gfMultithread = multithread;
+   if (multithreadQueueLength)
+      TAMultithreadInfo::gfMtMaxBacklog=multithreadQueueLength;
+   if (multithreadWaitEmpty)
+      TAMultithreadInfo::gfMtQueueEmptyUSleepTime=multithreadWaitEmpty;
+   if (multithreadWaitFull)
+      TAMultithreadInfo::gfMtQueueFullUSleepTime=multithreadWaitFull;
+#endif
 #ifdef XHAVE_LIBNETDIRECTORY
    if (tcpPort) {
       VerboseNetDirectoryServer(true);

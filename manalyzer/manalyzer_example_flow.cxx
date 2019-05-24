@@ -170,8 +170,10 @@ public:
           Object1* o1 = flow->Find<Object1>();
           if (o1) {
              //Lock while in the scope of these brackets
-             std::lock_guard<std::mutex> lock(TARunObject::gfModuleLock);
-             printf("Do some function here\n");
+             #ifdef MODULE_MULTITHREAD
+             std::lock_guard<std::mutex> lock(runinfo->fMtInfo->gfLock);
+             #endif
+             printf("Do some function here... maybe some fitting function from root that isn't threadsafe\n");
           }
       }
 

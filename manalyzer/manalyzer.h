@@ -14,6 +14,7 @@
 #include "VirtualOdb.h"
 
 class TARootHelper;
+class TAMultithreadInfo;
 class TAFlowEvent;
 
 class TARunInfo
@@ -23,6 +24,7 @@ class TARunInfo
    std::string fFileName;
    VirtualOdb* fOdb;
    TARootHelper* fRoot;
+   TAMultithreadInfo* fMtInfo;
    std::vector<std::string> fArgs;
    std::deque<TAFlowEvent*> fFlowQueue;
    
@@ -58,6 +60,7 @@ class TAFlowEvent
    TAFlowEvent() {}; // hidden default constructor 
 };
 
+
 typedef int TAFlags;
 
 #define TAFlag_OK          0
@@ -71,7 +74,6 @@ class TARunObject
  public:
    TARunObject(TARunInfo* runinfo); // ctor
    virtual ~TARunObject() {}; // dtor
-   static std::mutex gfModuleLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
  public:
    virtual void BeginRun(TARunInfo* runinfo); // begin of run
    virtual void EndRun(TARunInfo* runinfo); // end of run
@@ -147,6 +149,22 @@ class TARootHelper
    TARootHelper() { }; // hidden default constructor
 };
 #endif
+
+#ifdef MODULE_MULTITHREAD
+class TAMultithreadInfo
+{
+  public:
+     static bool gfMultithread;
+     static uint gfMtQueueFullUSleepTime; //u seconds
+     static uint gfMtQueueEmptyUSleepTime; //u seconds
+     static uint gfMtMaxBacklog;
+     static std::mutex gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
+
+     TAMultithreadInfo();
+     ~TAMultithreadInfo();
+};
+#endif
+
 
 int manalyzer_main(int argc, char* argv[]);
 

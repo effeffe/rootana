@@ -285,6 +285,12 @@ ifdef HAVE_LIBNETDIRECTORY
 else
 	echo "//#define HAVE_LIBNETDIRECTORY 1" >> $(RC)
 endif
+ifdef NO_MODULE_MULTITHREAD
+	echo "//#define MODULE_MULTITHREAD 1" >> $(RC)
+else
+	echo "#define MODULE_MULTITHREAD 1" >> $(RC)
+endif
+
 	echo "// end" >> $(RC)
 	-rm -f $(RF)
 	touch $(RF)
