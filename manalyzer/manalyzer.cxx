@@ -203,6 +203,15 @@ TARootHelper::TARootHelper(const TARunInfo* runinfo) // ctor
       sprintf(xfilename, "output%05d.root", runinfo->fRunNo);
       TARootHelper::fOutputFileName=xfilename;
    }
+
+   //Get the last 5 charaters of the output file name
+   std::string extension="";
+   if (TARootHelper::fOutputFileName.size()>5)
+      TARootHelper::fOutputFileName.substr(TARootHelper::fOutputFileName.size()-5,5);
+   //If .root wasn't specified, add it
+   if (extension.compare(".root")!=0)
+      TARootHelper::fOutputFileName+=".root";
+
    fOutputFile = new TFile(TARootHelper::fOutputFileName.data(), "RECREATE");
    
    assert(fOutputFile->IsOpen()); // FIXME: survive failure to open ROOT file
@@ -1615,7 +1624,7 @@ static void help()
   printf("\t--mt: Enable multithreaded mode[DISABLED WHEN COMPILED]\n");
 #endif
 #ifdef HAVE_ROOT
-  printf("\t--root XXX.root: Specify output root file filename\n");
+  printf("\t-OXXX.root: Specify output root file filename (.root extension optional)\n");
 #endif
   printf("\t--: All following arguments are passed to the analyzer modules Init() method\n");
   printf("\n");
@@ -1720,9 +1729,8 @@ int manalyzer_main(int argc, char* argv[])
          multithread=true;
          #endif
          #ifdef HAVE_ROOT
-      } else if (strncmp(arg,"--root",6)==0) {
-          TARootHelper::fOutputFileName = strdup(args[i+1].c_str());
-          i++;
+      } else if (strncmp(arg,"-O",2)==0) {
+          TARootHelper::fOutputFileName = strdup(arg+2);
           continue;
          #endif
       } else if (strcmp(arg,"-h")==0) {
