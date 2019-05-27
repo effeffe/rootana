@@ -161,10 +161,16 @@ public:
 
 MVOdb* MakeNullOdb();
 MVOdb* MakeMidasOdb(int hDB, MVOdbError* error = NULL);
+
 MVOdb* MakeXmlFileOdb(const char* filename, MVOdbError* error = NULL);
 MVOdb* MakeXmlBufferOdb(const char* buf, int bufsize, MVOdbError* error = NULL);
-//MVOdb* MakeJsonOdb(???);
+
+MVOdb* MakeJsonFileOdb(const char* filename, MVOdbError* error = NULL);
+MVOdb* MakeJsonBufferOdb(const char* buf, int bufsize, MVOdbError* error = NULL);
 //MVOdb* MakeJsonRpcOdb(???);
+
+/// Access ODB from a midas file dump. FOrmat could be .xml, .json or .odb
+MVOdb* MakeFileDumpOdb(const char* buf, int bufsize, MVOdbError* error = NULL);
 
 class MVOdbError
 {

@@ -82,82 +82,43 @@ int main(int argc, char *argv[])
      {
        odb = MakeXmlFileOdb(filename);
      }
-#if 0
    else if (jsonfile)
      {
-#ifdef HAVE_ROOT_XML
-       XmlOdb* odb = new XmlOdb(filename);
-       //odb->DumpTree();
-       gOdb = odb;
-#else
-       printf("This program is compiled without support for XML ODB access\n");
-       return -1;
-#endif
-     }
-   else if (httpfile)
-     {
-#ifdef HAVE_ROOT
-       HttpOdb* odb = new HttpOdb(filename);
-       //odb->DumpTree();
-       gOdb = odb;
-#else
-       printf("This program is compiled without support for HTTP ODB access\n");
-       return -1;
-#endif
+       odb = MakeJsonFileOdb(filename);
      }
    else
      {
-#ifdef HAVE_ROOT
        TMidasFile f;
        bool tryOpen = f.Open(filename);
 
-       if (!tryOpen)
-         {
-           printf("Cannot open input file \"%s\"\n",filename);
-           return -1;
-         }
+       if (!tryOpen) {
+         printf("Cannot open input file \"%s\"\n",filename);
+         return -1;
+       }
 
-       while (1)
-         {
-           TMidasEvent event;
-           if (!f.Read(&event))
-             break;
+       while (1) {
+         TMidasEvent event;
+         if (!f.Read(&event))
+           break;
+         
+         int eventId = event.GetEventId();
+         //printf("Have an event of type %d\n",eventId);
+         
+         if ((eventId & 0xFFFF) != 0x8000)
+           continue;
+         
+         // begin run
+         //event.Print();
+         
+         odb = MakeFileDumpOdb(event.GetData(),event.GetDataSize());
+         break;
+       }
 
-           int eventId = event.GetEventId();
-           //printf("Have an event of type %d\n",eventId);
-
-           if ((eventId & 0xFFFF) == 0x8000)
-             {
-               // begin run
-               //event.Print();
-
-               //
-               // Load ODB contents from the ODB XML file
-               //
-               if (gOdb) {
-                 delete gOdb;
-                 gOdb = NULL;
-               }
-#ifdef HAVE_ROOT_XML
-               gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
-#else
-               printf("This program is compiled without support for XML ODB access\n");
-#endif
-               break;
-             }
-         }
-
-       if (!gOdb)
-         {
-           printf("Failed to load ODB from input file \"%s\"\n",filename);
-           return -1;
-         }
-#else
-       printf("This program is compiled without support for XML ODB access\n");
-       return -1;
-#endif
+       if (!odb) {
+         printf("Failed to load ODB from input file \"%s\"\n",filename);
+         return -1;
+       }
      }
-#endif
 
    int runno = 1234;
 

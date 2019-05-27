@@ -83,6 +83,12 @@ void SetError(MVOdbError* error, bool print, const std::string& path, const std:
    }
 }
 
+MVOdb* MakeFileDumpOdb(const char* buf, int bufsize, MVOdbError* error)
+{
+   printf("MakeFileDumpOdb: odb dump size %d, first char \'%c\'\n", bufsize, buf[0]);
+   return MakeNullOdb();
+}
+
 /* emacs
  * Local Variables:
  * tab-width: 8
