@@ -135,7 +135,7 @@ class THttpServer;
 class TARootHelper
 {
  public:
-   static char* fOutputFileName;
+   static std::string fOutputFileName;
    TFile* fOutputFile;
    static TDirectory*   fgDir;
    static TApplication* fgApp;

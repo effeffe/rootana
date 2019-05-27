@@ -187,7 +187,7 @@ void TAFactory::Finish()
 #include "netDirectoryServer.h"
 #endif
 
-char*         TARootHelper::fOutputFileName = NULL;
+std::string   TARootHelper::fOutputFileName = "";
 TApplication* TARootHelper::fgApp = NULL;
 TDirectory*   TARootHelper::fgDir = NULL;
 XmlServer*    TARootHelper::fgXmlServer = NULL;
@@ -198,12 +198,12 @@ TARootHelper::TARootHelper(const TARunInfo* runinfo) // ctor
    if (gTrace)
       printf("TARootHelper::ctor!\n");
    char xfilename[1024];
-   if (!TARootHelper::fOutputFileName)
+   if (TARootHelper::fOutputFileName.empty())
    {
       sprintf(xfilename, "output%05d.root", runinfo->fRunNo);
       TARootHelper::fOutputFileName=xfilename;
    }
-   fOutputFile = new TFile(TARootHelper::fOutputFileName, "RECREATE");
+   fOutputFile = new TFile(TARootHelper::fOutputFileName.data(), "RECREATE");
    
    assert(fOutputFile->IsOpen()); // FIXME: survive failure to open ROOT file
 
