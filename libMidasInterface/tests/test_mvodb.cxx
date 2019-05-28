@@ -23,6 +23,30 @@ std::string toString(int i)
   return buf;
 }
 
+void print_ia(const std::vector<int> &ia)
+{
+   int size = ia.size();
+   printf("int[%d] has [", size);
+   for (int i=0; i<size; i++) {
+      if (i>0)
+         printf(", ");
+      printf("%d", ia[i]);
+   }
+   printf("]");
+}
+
+void print_da(const std::vector<double> &da)
+{
+   int size = da.size();
+   printf("int[%d] has [", size);
+   for (int i=0; i<size; i++) {
+      if (i>0)
+         printf(", ");
+      printf("%f", da[i]);
+   }
+   printf("]");
+}
+
 // Main function call
 
 int main(int argc, char *argv[])
@@ -208,23 +232,45 @@ int main(int argc, char *argv[])
    printf("Test read arrays of all data types:\n");
    printf("\n");
 
-   std::vector<int> ia;
-   ia.push_back(1);
-   ia.push_back(2);
-   ia.push_back(3);
-   test->RIA("ia", &ia, true);
-   // read non-existant array
-   test->RIA("ia-noexist", &ia);
-   // create 10 element array, init to zero (ia is empty)
-   ia.clear();
-   test->RIA("ia10zero", &ia, true, 10);
-   // create 10 element array, init from ia
-   ia.clear();
-   ia.push_back(11);
-   ia.push_back(22);
-   test->RIA("ia10", &ia, true, 10);
-   // create 10 element array, init to zero (passed NULL instead of &ia)
-   test->RIA("createia10", NULL, true, 10);
+   {
+      printf("read int array ia:\n");
+      std::vector<int> ia;
+      ia.push_back(1);
+      ia.push_back(2);
+      ia.push_back(3);
+      test->RIA("ia", &ia, true);
+      printf("RIA() returned: ");
+      print_ia(ia);
+      printf("\n");
+   }
+
+   {
+      printf("read non-existant array ia-noexist:\n");
+      std::vector<int> ia;
+      ia.push_back(1);
+      ia.push_back(2);
+      ia.push_back(3);
+      test->RIA("ia-noexist", &ia);
+      printf("RIA() returned: ");
+      print_ia(ia);
+      printf("\n");
+   }
+
+   {
+      // create 10 element array, init to zero (ia is empty)
+      std::vector<int> ia;
+      test->RIA("ia10zero", &ia, true, 10);
+      // create 10 element array, init from ia
+      ia.clear();
+      ia.push_back(11);
+      ia.push_back(22);
+      test->RIA("ia10", &ia, true, 10);
+   }
+
+   {
+      // create 10 element array, init to zero (passed NULL instead of &ia)
+      test->RIA("createia10", NULL, true, 10);
+   }
 
    std::vector<double> da;
    da.push_back(1.1);
@@ -400,6 +446,24 @@ int main(int argc, char *argv[])
    }
 
    printf("\n");
+   printf("Test against subdirectory:\n");
+   printf("\n");
+
+   {
+      MVOdb* subdir = test->Chdir("subdir", true);
+      subdir->WI("i", 10); // write something into subdir
+      int i = 1111;
+      test->RI("subdir", &i); // invalid read from a non-int
+      test->WI("subdir", 10); // invalid write into existing subdir
+      std::vector<int> ia;
+      ia.push_back(111);
+      ia.push_back(222);
+      ia.push_back(333);
+      test->WIA("subdir", ia); // invalid write into existing subdir
+      test->RIA("subdir", &ia, true); // invalid read from non-int-array
+   }
+
+   printf("\n");
    printf("Test special cases:\n");
    printf("\n");
 
@@ -414,7 +478,8 @@ int main(int argc, char *argv[])
        printf("test RDA() of integer array:\n");
        // wrong data type: ODB is INT, we ask for DOUBLE
        test->RDA("ia10", &da, false, 0);
-       printf("RDA() returned array [%d]\n", (int)da.size());
+       printf("RDA() returned: ");
+       print_da(da);
        printf("\n");
      }
        

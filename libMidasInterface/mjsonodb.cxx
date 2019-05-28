@@ -25,105 +25,6 @@ static std::string toString(int i)
    return buf;
 }
 
-#if 0
-/// Print out the contents of the ODB tree
-static void DumpTree(PMXML_NODE node, int level = 0)
-{
-   assert(node);
-
-   for (int k=0; k<level; k++)
-      printf(" ");
-   printf("node name: \"%s\"\n", node->name);
-   for (int i=0; i<node->n_attributes; i++) {
-      for (int k=0; k<level; k++)
-         printf(" ");
-      printf("attribute name: \"%s\", value: \"%s\"\n", GetAttrName(node, i), GetAttrValue(node, i));
-   }
-   if (node->value) {
-      for (int k=0; k<level; k++)
-         printf(" ");
-      printf("node text: \"%s\"\n", node->value);
-   }
-   for (int i=0; i<node->n_children; i++)
-      DumpTree(node->child + i, level + 1);
-}
-
-/// Print out the directory structure of the ODB tree
-static void DumpDirTree(PMXML_NODE node, int level = 0)
-{
-   assert(node);
-
-   const char* name = node->name;
-   
-   if (strcmp(name,"dir") != 0)
-      return;
-   
-   for (int k=0; k<level; k++)
-      printf(" ");
-   printf("node name: \"%s\"\n", node->name);
-   
-   for (int i=0; i<node->n_attributes; i++) {
-      for (int k=0; k<level; k++)
-         printf(" ");
-      printf("attribute name: \"%s\", value: \"%s\"\n", GetAttrName(node, i), GetAttrValue(node, i));
-   }
-   
-   for (int i=0; i<node->n_children; i++) {
-      DumpDirTree(node->child + i, level + 1);
-   }
-}
-#endif
-
-#if 0
-template <typename T>
-static T GetXmlValue(const char* text);
-
-template<>
-int GetXmlValue<int>(const char* text)
-{
-   return atoi(text);
-}
-
-template<>
-double GetXmlValue<double>(const char* text)
-{
-   return atof(text);
-}
-
-template<>
-float GetXmlValue<float>(const char* text)
-{
-   return atof(text);
-}
-
-template<>
-bool GetXmlValue<bool>(const char* text)
-{
-   if (*text == 'n')
-      return false;
-   else
-      return true;
-}
-
-template<>
-uint16_t GetXmlValue<uint16_t>(const char* text)
-{
-   return 0xFFFF & strtoul(text, NULL, 0);
-}
-
-template<>
-uint32_t GetXmlValue<uint32_t>(const char* text)
-{
-   return strtoul(text, NULL, 0);
-}
-
-template<>
-std::string GetXmlValue<std::string>(const char* text)
-{
-   return text;
-}
-#endif
-
 /// Access to ODB saved in JSON format inside midas .mid files
 
 class JsonOdb : public MVOdb
@@ -141,10 +42,6 @@ public:
       fRoot = root;
       fDir  = dir;
       fPath = "";
-
-      //DumpTree(fRoot);
-      //DumpTree(fDir);
-      
       SetOk(error);
    }
 
@@ -170,36 +67,41 @@ public:
 
    void SetNotFound(MVOdbError* error, const char* varname)
    {
-      if (!error)
-         return;
+      std::string msg;
+      msg += "Cannot find ";
+      msg += "\"";
+      msg += varname;
+      msg += "\"";
+      SetError(error, fPrintError, fPath, msg);
+   }
+
+   void SetVarError(MVOdbError* error, const char* varname, std::string msg)
+   {
+      std::string path;
+      path += fPath;
+      path += "/";
+      path += varname;
+      SetError(error, fPrintError, path, msg);
+   }
+
+   void SetWrongType(MVOdbError* error, const char* varname, const MJsonNode* node, const char* wanted_type)
+   {
       std::string path;
       path += fPath;
       path += "/";
       path += varname;
       std::string msg;
-      msg += "Cannot find ";
+      msg += "JSON node type mismatch: cannot convert node type ";
+      msg += MJsonNode::TypeToString(node->GetType());
+      msg += " to c++ type ";
       msg += "\"";
-      msg += path;
+      msg += wanted_type;
       msg += "\"";
       SetError(error, fPrintError, path, msg);
    }
 
-   void SetNullValue(MVOdbError* error, const char* varname)
-   {
-      if (!error)
-         return;
-      std::string path;
-      path += fPath;
-      path += "/";
-      path += varname;
-      std::string msg;
-      msg += "XML node for ";
-      msg += "\"";
-      msg += path;
-      msg += "\"";
-      msg += " is NULL";
-      SetError(error, fPrintError, path, msg);
-   }
+   template <typename T>
+   bool GetJsonValue(const char* varname, const MJsonNode* node, T* value, MVOdbError *error);
 
    /// Follow the ODB path through the JSON tree
    static MJsonNode* FindPath(MJsonNode* dir, const char* path)
@@ -231,25 +133,8 @@ public:
          const MJsonStringVector* s = dir->GetObjectNames();
          const MJsonNodeVector*   n = dir->GetObjectNodes();
          assert(s->size() == n->size());
+
          for (unsigned i=0; i<s->size(); i++) {
-            //const MJsonNode* node = (*a)[i];
-            
-            //const char* nodename = node->name;
-            //const char* namevalue = GetAttr(node, "name");
-            
-            //printf("node name: \"%s\", \"name\" value: \"%s\"\n", node->name, namevalue);
-            
-            //bool isDir = strcmp(nodename, "dir") == 0;
-            //bool isKey = strcmp(nodename, "key") == 0;
-            //bool isKeyArray = strcmp(nodename, "keyarray") == 0;
-            
-            //if (!isKey && !isDir && !isKeyArray)
-            //   continue;
-	  
-            //
-            // compare directory names
-            //
-	  
             if (strcasecmp(elem.c_str(), (*s)[i].c_str()) == 0) {
                if (dir->GetType() == MJSON_OBJECT) {
                   // found the right subdirectory, descend into it
@@ -289,7 +174,7 @@ public:
          msg += "\"";
          msg += MJsonNode::TypeToString(node->GetType());
          msg += "\"";
-         msg += " instead of \"dir\"";
+         msg += " instead of subdirectory";
          SetError(error, fPrintError, fPath, msg);
          return NULL;
       }
@@ -355,33 +240,14 @@ public:
       RU32AI(varname, 0, value, error);
    };
 
-#if 0
-   MJsonNode* FindJsonNode(MJsonNode* dir, const char* varname, const char* type, MVOdbError* error)
-   {
-      MJsonNode* node = FindPath(dir, varname);
-      if (!node) {
-         SetNotFound(error, varname);
-         return NULL;
-      }
-
-      if (strcmp(GetAttr(node, "type"), type) != 0) {
-         fprintf(stderr, "type mismatch!\n");
-         SetNullValue(error, varname);
-         return NULL;
-      }
-
-      return node;
-   }
-#endif
-
    template <typename T>
-   void RXA(const char* varname, const char* type, std::vector<T> *value, MVOdbError* error)
+   void RXA(const char* varname, std::vector<T> *value, MVOdbError* error)
    {
       if (!value) {
          SetOk(error);
          return;
       }
-      
+
       MJsonNode* node = FindPath(fDir, varname);
       if (!node) {
          SetNotFound(error, varname);
@@ -391,95 +257,71 @@ public:
       //DumpTree(node);
 
       if (node->GetType() == MJSON_OBJECT) {
-         fprintf(stderr, "wrong type: MJSON_OBJECT in RXA!\n");
+         SetVarError(error, varname, "JSON node is a subdirectory");
          return;
       } else if (node->GetType() == MJSON_ARRAY) {
-#if 0
-         const char* num_values_text = GetAttr(node, "num_values");
-         if (!num_values_text) {
-            fprintf(stderr, "no num_values!\n");
-            SetNullValue(error, varname);
-            return;
-         }
-         
-         int num_values = atoi(num_values_text);
-         
-         if (num_values != node->n_children) {
-            fprintf(stderr, "num_values mismatch %d vs %d children!\n", num_values, node->n_children);
-            SetNullValue(error, varname);
-            return;
-         }
-         
-         for (int i=0; i<node->n_children; i++) {
-            PMXML_NODE elem = node->child+i;
-            const char* text = elem->value;
-            if (!text) {
-               SetNullValue(error, varname);
-               return;
-            }
-            T v = GetXmlValue<T>(text);
+
+         const MJsonNodeVector* a = node->GetArray();
+
+         int num_values = a->size();
+
+         value->clear();
+
+         for (int i=0; i<num_values; i++) {
+            const MJsonNode* elem = (*a)[i];
+            T v;
+            bool ok = GetJsonValue<T>(varname, elem, &v, error);
+            if (!ok)
+               break;
             value->push_back(v);
          }
-
-         SetOk(error);
-         return;
-#endif
       } else {
-#if 0
-         const char* text = node->value;
-         if (!text) {
-            SetNullValue(error, varname);
+         T v;
+         bool ok = GetJsonValue<T>(varname, node, &v, error);
+         if (!ok)
             return;
-         }
-         T v = GetXmlValue<T>(text);
+         value->clear();
          value->push_back(v);
-         SetOk(error);
-         return;
-      } else {
-         fprintf(stderr, "unexpected node %s\n", node->name);
-         SetNullValue(error, varname);
-#endif
-         return;
       }
    };
 
    void RBA(const char* varname, std::vector<bool> *value, bool create, int create_size, MVOdbError* error)
    {
-      RXA(varname, "BOOL", value, error);
+      RXA(varname, value, error);
    }
 
    void RIA(const char* varname, std::vector<int> *value,  bool create, int create_size, MVOdbError* error)
    {
-      RXA(varname, "INT", value, error);
+      RXA(varname, value, error);
    }
 
    void RDA(const char* varname, std::vector<double> *value,  bool create, int create_size, MVOdbError* error)
    {
-      RXA(varname, "DOUBLE", value, error);
+      RXA(varname, value, error);
    }
    
    void RFA(const char* varname, std::vector<float>  *value,  bool create, int create_size, MVOdbError* error)
    {
-      RXA(varname, "FLOAT", value, error);
+      RXA(varname, value, error);
    }
    
    void RSA(const char* varname, std::vector<std::string> *value, bool create, int create_size, int create_string_length, MVOdbError* error)
    {
-      RXA(varname, "STRING", value, error);
+      RXA(varname, value, error);
    }
 
    void RU16A(const char* varname, std::vector<uint16_t> *value,  bool create, int create_size, MVOdbError* error)
    {
-      RXA(varname, "WORD", value, error);
+      RXA(varname, value, error);
    }
 
    void RU32A(const char* varname, std::vector<uint32_t> *value,  bool create, int create_size, MVOdbError* error)
    {
-      RXA(varname, "DWORD", value, error);
+      RXA(varname, value, error);
    }
 
    template <typename T>
-   void RXAI(const char* varname, int index, const char* type, T* value, MVOdbError* error)
+   void RXAI(const char* varname, int index, T* value, MVOdbError* error)
    {
       if (!value) {
          SetOk(error);
@@ -492,107 +334,91 @@ public:
          return;
       }
 
-#if 0
-      //DumpTree(node);
+      //printf("varname [%s] index %d, found node %p:\n", varname, index, node);
+      //node->Dump();
 
-      if (strcmp(node->name, "keyarray") == 0) {
-         const char* num_values_text = GetAttr(node, "num_values");
-         if (!num_values_text) {
-            fprintf(stderr, "no num_values!\n");
-            SetNullValue(error, varname);
-            return;
-         }
-         
-         int num_values = atoi(num_values_text);
-         
-         if (num_values != node->n_children) {
-            fprintf(stderr, "num_values mismatch %d vs %d children!\n", num_values, node->n_children);
-            SetNullValue(error, varname);
-            return;
-         }
+      if (node->GetType() == MJSON_OBJECT) {
+         SetVarError(error, varname, "JSON node is a subdirectory");
+         return;
+      } else if (node->GetType() == MJSON_ARRAY) {
+         //DumpTree(node);
 
+         const MJsonNodeVector* a = node->GetArray();
+
+         int num_values = a->size();
+         
          if (index < 0) {
-            fprintf(stderr, "bad index %d, num_values %d!\n", index, num_values);
-            SetNullValue(error, varname);
+            std::string msg;
+            msg += "bad index ";
+            msg += toString(index);
+            msg += " for array of size ";
+            msg += toString(num_values);
+            SetVarError(error, varname, msg);
             return;
          }
          
          if (index >= num_values) {
-            fprintf(stderr, "bad index %d, num_values %d!\n", index, num_values);
-            SetNullValue(error, varname);
+            std::string msg;
+            msg += "bad index ";
+            msg += toString(index);
+            msg += " for array of size ";
+            msg += toString(num_values);
+            SetVarError(error, varname, msg);
             return;
          }
          
-         PMXML_NODE elem = node->child+index;
-         const char* text = elem->value;
-         if (!text) {
-            SetNullValue(error, varname);
-            return;
-         }
+         MJsonNode* elem = (*a)[index];
 
-         *value = GetXmlValue<T>(text);
-
-         SetOk(error);
-         return;
-      } else if (strcmp(node->name, "key") == 0) {
-
-         if (index != 0) {
-            fprintf(stderr, "non-zero index %d for non-array!\n", index);
-            SetNullValue(error, varname);
-            return;
-         }
-
-         const char* text = node->value;
-         if (!text) {
-            SetNullValue(error, varname);
-            return;
-         }
-
-         *value = GetXmlValue<T>(text);
-
-         SetOk(error);
+         GetJsonValue<T>(varname, elem, value, error);
          return;
       } else {
-         fprintf(stderr, "unexpected node %s\n", node->name);
-         SetNullValue(error, varname);
+         if (index != 0) {
+            std::string msg;
+            msg += "non-zero index ";
+            msg += toString(index);
+            msg += " for non-array";
+            SetVarError(error, varname, msg);
+            return;
+         }
+
+         GetJsonValue<T>(varname, node, value, error);
          return;
       }
-#endif
    }
 
    void RBAI(const char* varname, int index, bool   *value, MVOdbError* error)
    {
-      RXAI(varname, index, "BOOL", value, error);
+      RXAI(varname, index, value, error);
    }
 
    void RIAI(const char* varname, int index, int    *value, MVOdbError* error)
    {
-      RXAI(varname, index, "INT", value, error);
+      RXAI(varname, index, value, error);
    }
    
    void RDAI(const char* varname, int index, double *value, MVOdbError* error)
    {
-      RXAI(varname, index, "DOUBLE", value, error);
+      RXAI(varname, index, value, error);
    }
    
    void RFAI(const char* varname, int index, float  *value, MVOdbError* error)
    {
-      RXAI(varname, index, "FLOAT", value, error);
+      RXAI(varname, index, value, error);
    }
    
    void RSAI(const char* varname, int index, std::string *value, MVOdbError* error)
    {
-      RXAI(varname, index, "STRING", value, error);
+      RXAI(varname, index, value, error);
    }
    
    void RU16AI(const char* varname, int index, uint16_t *value, MVOdbError* error)
    {
-      RXAI(varname, index, "WORD", value, error);
+      RXAI(varname, index, value, error);
    }
 
    void RU32AI(const char* varname, int index, uint32_t *value, MVOdbError* error)
    {
-      RXAI(varname, index, "DWORD", value, error);
+      RXAI(varname, index, value, error);
    }
 
    // write functions do nothing
@@ -625,6 +451,75 @@ public:
 
    void Delete(const char* odbname, MVOdbError* error) { SetOk(error); };
 };
+
+template<>
+bool JsonOdb::GetJsonValue<int>(const char* varname, const MJsonNode* node, int* value, MVOdbError* error)
+{
+   switch (node->GetType()) {
+   case MJSON_INT: *value = node->GetInt(); SetOk(error); return true;
+   default: SetWrongType(error, varname, node, "int"); return false;
+   }
+}
+
+template<>
+bool JsonOdb::GetJsonValue<double>(const char* varname, const MJsonNode* node, double* value, MVOdbError* error)
+{
+   switch (node->GetType()) {
+   //case MJSON_INT: *value = node->GetInt(); SetOk(error); return true;
+   case MJSON_NUMBER: *value = node->GetDouble(); SetOk(error); return true;
+   default: SetWrongType(error, varname, node, "double"); return false;
+   }
+}
+
+template<>
+bool JsonOdb::GetJsonValue<float>(const char* varname, const MJsonNode* node, float* value, MVOdbError* error)
+{
+   switch (node->GetType()) {
+   //case MJSON_INT: *value = node->GetInt(); SetOk(error); return true;
+   case MJSON_NUMBER: *value = node->GetDouble(); SetOk(error); return true;
+   default: SetWrongType(error, varname, node, "float"); return false;
+   }
+}
+
+template<>
+bool JsonOdb::GetJsonValue<bool>(const char* varname, const MJsonNode* node, bool* value, MVOdbError* error)
+{
+   switch (node->GetType()) {
+   //case MJSON_INT: *value = node->GetInt(); SetOk(error); return true;
+   //case MJSON_NUMBER: *value = node->GetDouble(); SetOk(error); return true;
+   case MJSON_BOOL: *value = node->GetBool(); SetOk(error); return true;
+   default: SetWrongType(error, varname, node, "bool"); return false;
+   }
+}
+
+template<>
+bool JsonOdb::GetJsonValue<uint16_t>(const char* varname, const MJsonNode* node, uint16_t* value, MVOdbError* error)
+{
+   switch (node->GetType()) {
+   case MJSON_INT: *value = (0xFFFF & node->GetInt()); SetOk(error); return true;
+   case MJSON_STRING: *value = (0xFFFF & strtoul(node->GetString().c_str(), NULL, 0)); SetOk(error); return true;
+   default: SetWrongType(error, varname, node, "uint16_t"); return false;
+   }
+}
+
+template<>
+bool JsonOdb::GetJsonValue<uint32_t>(const char* varname, const MJsonNode* node, uint32_t* value, MVOdbError* error)
+{
+   switch (node->GetType()) {
+   case MJSON_INT: *value = node->GetInt(); SetOk(error); return true;
+   case MJSON_STRING: *value = strtoul(node->GetString().c_str(), NULL, 0); SetOk(error); return true;
+   default: SetWrongType(error, varname, node, "uint32_t"); return false;
+   }
+}
+
+template<>
+bool JsonOdb::GetJsonValue<std::string>(const char* varname, const MJsonNode* node, std::string* value, MVOdbError* error)
+{
+   switch (node->GetType()) {
+   case MJSON_STRING: *value = node->GetString(); SetOk(error); return true;
+   default: SetWrongType(error, varname, node, "std::string"); return false;
+   }
+}
 
 MVOdb* MakeJsonFileOdb(const char* filename, MVOdbError* error)
 {

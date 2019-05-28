@@ -18,6 +18,13 @@
 
 #include "rootana_stdint.h"
 
+static std::string toString(int i)
+{
+   char buf[256];
+   sprintf(buf, "%d", i);
+   return buf;
+}
+
 static PMXML_NODE FindNode(PMXML_NODE dir, const char* name)
 {
    for (int i=0; i<dir->n_children; i++) {
@@ -207,8 +214,6 @@ public:
 
    void SetNotFound(MVOdbError* error, const char* varname)
    {
-      if (!error)
-         return;
       std::string path;
       path += fPath;
       path += "/";
@@ -223,8 +228,6 @@ public:
 
    void SetNullValue(MVOdbError* error, const char* varname)
    {
-      if (!error)
-         return;
       std::string path;
       path += fPath;
       path += "/";
@@ -413,7 +416,7 @@ public:
          SetOk(error);
          return;
       }
-      
+
       PMXML_NODE node = FindXmlNode(fDir, varname, type, error);
       if (!node)
          return;
@@ -436,6 +439,8 @@ public:
             return;
          }
          
+         value->clear();
+      
          for (int i=0; i<node->n_children; i++) {
             PMXML_NODE elem = node->child+i;
             const char* text = elem->value;
@@ -455,6 +460,7 @@ public:
             SetNullValue(error, varname);
             return;
          }
+         value->clear();
          T v = GetXmlValue<T>(text);
          value->push_back(v);
          SetOk(error);
@@ -672,7 +678,7 @@ MVOdb* MakeXmlFileOdb(const char* filename, MVOdbError* error)
       msg += " file ";
       msg += filename;
       msg += " line ";
-      msg += err_line;
+      msg += toString(err_line);
       SetError(error, true, filename, msg);
       return MakeNullOdb();
    }
@@ -727,7 +733,7 @@ MVOdb* MakeXmlBufferOdb(const char* buf, int bufsize, MVOdbError* error)
       msg += err;
       msg += "\"";
       msg += " line ";
-      msg += err_line;
+      msg += toString(err_line);
       SetError(error, true, "buffer", msg);
       return MakeNullOdb();
    }
