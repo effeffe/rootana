@@ -1,11 +1,10 @@
 //
 // ALPHA ROOT analyzer
 //
-// Access to ODB stored in XML odb save file or ODB XML dump in MIDAS data file.
+// Access to ODB stored in JSON odb save file or ODB JSON dump in MIDAS data file.
 //
-// Name: mxmlodb.cxx
-// Author: K.Olchanski, 11-July-2006
-// Author: K.Olchanski, 16-May-2019
+// Name: mjsonodb.cxx
+// Author: K.Olchanski, 28-May-2019
 //
 
 #include <stdio.h>
@@ -27,52 +26,6 @@ static std::string toString(int i)
 }
 
 #if 0
-static PMXML_NODE FindNode(PMXML_NODE dir, const char* name)
-{
-   for (int i=0; i<dir->n_children; i++) {
-      PMXML_NODE node = dir->child + i;
-      //printf("node name: \"%s\"\n",node->GetNodeName());
-      if (strcmp(node->name, name) == 0)
-         return node;
-      
-      if (node->n_children > 0) {
-         PMXML_NODE found = FindNode(node, name);
-         if (found)
-            return found;
-      }
-   }
-   
-   return NULL;
-}
-
-/// Return the name of the indexed attribute
-static const char* GetAttrName(PMXML_NODE node, int i)
-{
-   assert(i>=0);
-   assert(i<node->n_attributes);
-   return node->attribute_name + i*MXML_NAME_LENGTH;
-}
-
-/// Return the value of the indexed attribute
-static const char* GetAttrValue(PMXML_NODE node, int i)
-{
-   assert(i>=0);
-   assert(i<node->n_attributes);
-   return node->attribute_value[i];
-}
-
-/// Return the value of the named attribute
-static const char* GetAttr(PMXML_NODE node, const char* attrName)
-{
-   for (int i=0; i<node->n_attributes; i++) {
-      //printf("attribute name: \"%s\", value: \"%s\"\n",attr->GetName(),attr->GetValue());
-      
-      if (strcmp(GetAttrName(node, i), attrName) == 0)
-         return GetAttrValue(node, i);
-   }
-   return NULL;
-}
-
 /// Print out the contents of the ODB tree
 static void DumpTree(PMXML_NODE node, int level = 0)
 {
@@ -119,7 +72,9 @@ static void DumpDirTree(PMXML_NODE node, int level = 0)
       DumpDirTree(node->child + i, level + 1);
    }
 }
+#endif
 
+#if 0
 template <typename T>
 static T GetXmlValue(const char* text);
 
@@ -174,7 +129,7 @@ std::string GetXmlValue<std::string>(const char* text)
 class JsonOdb : public MVOdb
 {
 public:
-   MJsonNode* fRoot; // root of XML document
+   MJsonNode* fRoot; // root of JSON document, NULL if we are a subdirectory
    MJsonNode* fDir;  // current ODB directory
    std::string fPath; // path to correct ODB directory
    bool fPrintError;
@@ -246,7 +201,7 @@ public:
       SetError(error, fPrintError, path, msg);
    }
 
-   /// Follow the ODB path through the XML DOM tree
+   /// Follow the ODB path through the JSON tree
    static MJsonNode* FindPath(MJsonNode* dir, const char* path)
    {
       assert(dir);
@@ -330,7 +285,7 @@ public:
          msg += "\"";
          msg += subdir;
          msg += "\"";
-         msg += " XML node is ";
+         msg += " JSON node is ";
          msg += "\"";
          msg += MJsonNode::TypeToString(node->GetType());
          msg += "\"";
