@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
    TMidasOnline *midas = NULL;
    
    MVOdb* odb = NULL;
+   MVOdbError odberror;
 
    if (nullodb)
      {
@@ -76,15 +77,15 @@ int main(int argc, char *argv[])
            return -1;
          }
 
-       odb = MakeMidasOdb(midas->fDB);
+       odb = MakeMidasOdb(midas->fDB, &odberror);
      }
    else if (xmlfile)
      {
-       odb = MakeXmlFileOdb(filename);
+       odb = MakeXmlFileOdb(filename, &odberror);
      }
    else if (jsonfile)
      {
-       odb = MakeJsonFileOdb(filename);
+       odb = MakeJsonFileOdb(filename, &odberror);
      }
    else
      {
@@ -110,7 +111,7 @@ int main(int argc, char *argv[])
          // begin run
          //event.Print();
          
-         odb = MakeFileDumpOdb(event.GetData(),event.GetDataSize());
+         odb = MakeFileDumpOdb(event.GetData(),event.GetDataSize(), &odberror);
          break;
        }
 
@@ -119,6 +120,11 @@ int main(int argc, char *argv[])
          return -1;
        }
      }
+
+   if (odberror.fError) {
+      fprintf(stderr, "Cannot make MVOdb object, error: %s\n", odberror.fErrorString.c_str());
+      exit(1);
+   }
 
    int runno = 1234;
 
@@ -521,3 +527,10 @@ int main(int argc, char *argv[])
 }
 
 //end
+/* emacs
+ * Local Variables:
+ * tab-width: 8
+ * c-basic-offset: 3
+ * indent-tabs-mode: nil
+ * End:
+ */

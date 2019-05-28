@@ -12,11 +12,19 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h> // memset()
+#include <errno.h> // errno
 
 #include "mvodb.h"
 #include "mjson.h"
 
 #include "rootana_stdint.h"
+
+static std::string toString(int i)
+{
+   char buf[256];
+   sprintf(buf, "%d", i);
+   return buf;
+}
 
 #if 0
 static PMXML_NODE FindNode(PMXML_NODE dir, const char* name)
@@ -159,19 +167,20 @@ std::string GetXmlValue<std::string>(const char* text)
 {
    return text;
 }
+#endif
 
-/// Access to ODB saved in XML format inside midas .mid files
+/// Access to ODB saved in JSON format inside midas .mid files
 
-class XmlOdb : public MVOdb
+class JsonOdb : public MVOdb
 {
 public:
-   PMXML_NODE fRoot; // root of XML document
-   PMXML_NODE fDir;  // current ODB directory
+   MJsonNode* fRoot; // root of XML document
+   MJsonNode* fDir;  // current ODB directory
    std::string fPath; // path to correct ODB directory
    bool fPrintError;
 
 public:
-   XmlOdb(PMXML_NODE root, PMXML_NODE dir, MVOdbError* error) // ctor
+   JsonOdb(MJsonNode* root, MJsonNode* dir, MVOdbError* error) // ctor
    {
       fPrintError = false;
       fRoot = root;
@@ -184,10 +193,10 @@ public:
       SetOk(error);
    }
 
-   ~XmlOdb() // dtor
+   ~JsonOdb() // dtor
    {
       if (fRoot) {
-         mxml_free_tree(fRoot);
+         delete fRoot;
          fRoot = NULL;
       }
       fDir = NULL;
@@ -238,7 +247,7 @@ public:
    }
 
    /// Follow the ODB path through the XML DOM tree
-   static PMXML_NODE FindPath(PMXML_NODE dir, const char* path)
+   static MJsonNode* FindPath(MJsonNode* dir, const char* path)
    {
       assert(dir);
       
@@ -262,34 +271,37 @@ public:
       
          //printf("looking for \"%s\" more \"%s\"\n", elem.c_str(), path);
 
-         PMXML_NODE found = NULL;
-      
-         for (int i=0; i<dir->n_children; i++) {
-            PMXML_NODE node = dir->child + i;
+         MJsonNode* found = NULL;
+
+         const MJsonStringVector* s = dir->GetObjectNames();
+         const MJsonNodeVector*   n = dir->GetObjectNodes();
+         assert(s->size() == n->size());
+         for (unsigned i=0; i<s->size(); i++) {
+            //const MJsonNode* node = (*a)[i];
             
-            const char* nodename = node->name;
-            const char* namevalue = GetAttr(node, "name");
+            //const char* nodename = node->name;
+            //const char* namevalue = GetAttr(node, "name");
             
             //printf("node name: \"%s\", \"name\" value: \"%s\"\n", node->name, namevalue);
             
-            bool isDir = strcmp(nodename, "dir") == 0;
-            bool isKey = strcmp(nodename, "key") == 0;
-            bool isKeyArray = strcmp(nodename, "keyarray") == 0;
+            //bool isDir = strcmp(nodename, "dir") == 0;
+            //bool isKey = strcmp(nodename, "key") == 0;
+            //bool isKeyArray = strcmp(nodename, "keyarray") == 0;
             
-            if (!isKey && !isDir && !isKeyArray)
-               continue;
+            //if (!isKey && !isDir && !isKeyArray)
+            //   continue;
 	  
             //
             // compare directory names
             //
 	  
-            if (strcasecmp(elem.c_str(), namevalue) == 0) {
-               if (isDir) {
+            if (strcasecmp(elem.c_str(), (*s)[i].c_str()) == 0) {
+               if (dir->GetType() == MJSON_OBJECT) {
                   // found the right subdirectory, descend into it
-                  found = node;
+                  found = (*n)[i];
                   break;
-               } else if (isKey || isKeyArray) {
-                  return node;
+               } else {
+                  return (*n)[i];
                }
             }
          }
@@ -302,7 +314,7 @@ public:
    
    MVOdb* Chdir(const char* subdir, bool create, MVOdbError* error)
    {
-      PMXML_NODE node = FindPath(fDir, subdir);
+      MJsonNode* node = FindPath(fDir, subdir);
       if (!node) {
          //printf("Not Found subdir [%s], create %d\n", subdir, create);
          if (create) {
@@ -313,14 +325,14 @@ public:
          return NULL;
       }
 
-      if (strcmp(node->name, "dir") != 0) {
+      if (node->GetType() != MJSON_OBJECT) {
          std::string msg;
          msg += "\"";
          msg += subdir;
          msg += "\"";
          msg += " XML node is ";
          msg += "\"";
-         msg += node->name;
+         msg += MJsonNode::TypeToString(node->GetType());
          msg += "\"";
          msg += " instead of \"dir\"";
          SetError(error, fPrintError, fPath, msg);
@@ -330,7 +342,7 @@ public:
       //printf("Found subdir [%s]\n", subdir);
       //DumpTree(node);
 
-      XmlOdb* x = new XmlOdb(NULL, node, error);
+      JsonOdb* x = new JsonOdb(NULL, node, error);
       x->fPath = fPath + "/" + subdir;
       
       SetOk(error);
@@ -388,9 +400,10 @@ public:
       RU32AI(varname, 0, value, error);
    };
 
-   PMXML_NODE FindXmlNode(PMXML_NODE dir, const char* varname, const char* type, MVOdbError* error)
+#if 0
+   MJsonNode* FindJsonNode(MJsonNode* dir, const char* varname, const char* type, MVOdbError* error)
    {
-      PMXML_NODE node = FindPath(dir, varname);
+      MJsonNode* node = FindPath(dir, varname);
       if (!node) {
          SetNotFound(error, varname);
          return NULL;
@@ -404,6 +417,7 @@ public:
 
       return node;
    }
+#endif
 
    template <typename T>
    void RXA(const char* varname, const char* type, std::vector<T> *value, MVOdbError* error)
@@ -413,13 +427,19 @@ public:
          return;
       }
       
-      PMXML_NODE node = FindXmlNode(fDir, varname, type, error);
-      if (!node)
+      MJsonNode* node = FindPath(fDir, varname);
+      if (!node) {
+         SetNotFound(error, varname);
          return;
+      }
 
       //DumpTree(node);
 
-      if (strcmp(node->name, "keyarray") == 0) {
+      if (node->GetType() == MJSON_OBJECT) {
+         fprintf(stderr, "wrong type: MJSON_OBJECT in RXA!\n");
+         return;
+      } else if (node->GetType() == MJSON_ARRAY) {
+#if 0
          const char* num_values_text = GetAttr(node, "num_values");
          if (!num_values_text) {
             fprintf(stderr, "no num_values!\n");
@@ -448,7 +468,9 @@ public:
 
          SetOk(error);
          return;
-      } else if (strcmp(node->name, "key") == 0) {
+#endif
+      } else {
+#if 0
          const char* text = node->value;
          if (!text) {
             SetNullValue(error, varname);
@@ -461,6 +483,7 @@ public:
       } else {
          fprintf(stderr, "unexpected node %s\n", node->name);
          SetNullValue(error, varname);
+#endif
          return;
       }
    };
@@ -508,10 +531,13 @@ public:
          return;
       }
 
-      PMXML_NODE node = FindXmlNode(fDir, varname, type, error);
-      if (!node)
+      MJsonNode* node = FindPath(fDir, varname);
+      if (!node) {
+         SetNotFound(error, varname);
          return;
+      }
 
+#if 0
       //DumpTree(node);
 
       if (strcmp(node->name, "keyarray") == 0) {
@@ -576,6 +602,7 @@ public:
          SetNullValue(error, varname);
          return;
       }
+#endif
    }
 
    void RBAI(const char* varname, int index, bool   *value, MVOdbError* error)
@@ -643,129 +670,43 @@ public:
 
    void Delete(const char* odbname, MVOdbError* error) { SetOk(error); };
 };
-#endif
-
-#if 0
-XmlOdb::XmlOdb(const char*xbuf,int bufLength) //ctor
-{
-   fPrintError = true;
-
-  fOdb = NULL;
-  fParser = new TDOMParser();
-  fParser->SetValidate(false);
-
-  char*buf = (char*)malloc(bufLength);
-  memcpy(buf, xbuf, bufLength);
-  for (int i=0; i<bufLength; i++)
-    if (!isascii(buf[i])) {
-      buf[i] = 'X';
-    } else if (buf[i]=='\n') {
-    } else if (buf[i]=='\r') {
-    } else if (!isprint(buf[i])) {
-      buf[i] = 'X';
-    } else if (buf[i] == 0x1D) {
-      buf[i] = 'X';
-    }
-
-  char* xend = strstr(buf,"odb>");
-  if (xend)
-    xend[4] = 0;
-
-  //printf("end: %s\n", buf+bufLength-5);
-
-  fParser->ParseBuffer(buf,bufLength);
-  free(buf);
-  TXMLDocument* doc = fParser->GetXMLDocument();
-  if (!doc)
-    {
-      fprintf(stderr,"XmlOdb::XmlOdb: Malformed ODB dump: cannot get XML document\n");
-      return;
-    }
-
-  fOdb = FindNode(doc->GetRootNode(),"odb");
-  if (!fOdb)
-    {
-      fprintf(stderr,"XmlOdb::XmlOdb: Malformed ODB dump: cannot find <odb> tag\n");
-      return;
-    }
-}
-
-XmlOdb::XmlOdb(const char* filename) //ctor
-{
-   fPrintError = true;
-
-  fOdb = NULL;
-  fParser = new TDOMParser();
-  fParser->SetValidate(false);
-
-  int status = fParser->ParseFile(filename);
-  if (status != 0)
-    {
-      fprintf(stderr,"XmlOdb::XmlOdb: Failed to parse XML file \'%s\', ParseFile() returned %d\n", filename, status);
-      return;
-    }
-
-  TXMLDocument* doc = fParser->GetXMLDocument();
-  if (!doc)
-    {
-      fprintf(stderr,"XmlOdb::XmlOdb: Malformed ODB dump: cannot get XML document\n");
-      return;
-    }
-
-  fOdb = FindNode(doc->GetRootNode(),"odb");
-  if (!fOdb)
-    {
-      fprintf(stderr,"XmlOdb::XmlOdb: Malformed ODB dump: cannot find <odb> tag\n");
-      return;
-    }
-}
-#endif
-
-#if 0
-int XmlOdb::odbReadArraySize(const char*name)
-{
-  PMXML_NODE node = FindPath(NULL, name);
-  if (!node)
-    return 0;
-  const char* num_values = GetAttr(node, "num_values");
-  if (!num_values)
-    return 1;
-  return atoi(num_values);
-}
-#endif
 
 MVOdb* MakeJsonFileOdb(const char* filename, MVOdbError* error)
 {
-   return MakeNullOdb();
-#if 0
-   char err[256];
-   int err_line = 0;
-   PMXML_NODE node = mxml_parse_file(filename, err, sizeof(err), &err_line);
-   if (!node) {
-      std::string msg;
-      msg += "mxml_parse_file() error ";
-      msg += "\"";
-      msg += err;
-      msg += "\"";
-      msg += " file ";
-      msg += filename;
-      msg += " line ";
-      msg += err_line;
-      SetError(error, true, filename, msg);
-      return MakeNullOdb();
+   std::string data;
+
+   {
+      FILE *fp = fopen(filename, "r");
+      if (!fp) {
+         std::string msg;
+         msg += "Cannot open file ";
+         msg += "\"";
+         msg += filename;
+         msg += "\"";
+         msg += " fopen() errno: ";
+         msg += toString(errno);
+         msg += " (";
+         msg += strerror(errno);
+         msg += ")";
+         SetError(error, true, filename, msg);
+         return MakeNullOdb();
+      }
+      
+      while (1) {
+         char buf[1024*1024];
+         const char* s = fgets(buf, sizeof(buf), fp);
+         if (!s)
+            break;
+         data += s;
+      }
+      
+      fclose(fp);
+      fp = NULL;
    }
 
-   PMXML_NODE odb_node = FindNode(node, "odb");
-
-   if (!odb_node) {
-      std::string msg;
-      msg += "invalid XML tree: no ODB tag";
-      SetError(error, true, filename, msg);
-      return MakeNullOdb();
-   }
-
-   return new XmlOdb(node, odb_node, error);
-#endif
+   MJsonNode* root = MJsonNode::Parse(data.c_str());
+   //root->Dump();
+   return new JsonOdb(root, root, error);
 }
 
 MVOdb* MakeJsonBufferOdb(const char* buf, int bufsize, MVOdbError* error)

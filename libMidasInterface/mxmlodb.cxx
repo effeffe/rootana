@@ -64,6 +64,7 @@ static const char* GetAttr(PMXML_NODE node, const char* attrName)
    return NULL;
 }
 
+#if 0
 /// Print out the contents of the ODB tree
 static void DumpTree(PMXML_NODE node, int level = 0)
 {
@@ -110,6 +111,7 @@ static void DumpDirTree(PMXML_NODE node, int level = 0)
       DumpDirTree(node->child + i, level + 1);
    }
 }
+#endif
 
 template <typename T>
 static T GetXmlValue(const char* text);
@@ -644,82 +646,6 @@ public:
 };
 
 #if 0
-XmlOdb::XmlOdb(const char*xbuf,int bufLength) //ctor
-{
-   fPrintError = true;
-
-  fOdb = NULL;
-  fParser = new TDOMParser();
-  fParser->SetValidate(false);
-
-  char*buf = (char*)malloc(bufLength);
-  memcpy(buf, xbuf, bufLength);
-  for (int i=0; i<bufLength; i++)
-    if (!isascii(buf[i])) {
-      buf[i] = 'X';
-    } else if (buf[i]=='\n') {
-    } else if (buf[i]=='\r') {
-    } else if (!isprint(buf[i])) {
-      buf[i] = 'X';
-    } else if (buf[i] == 0x1D) {
-      buf[i] = 'X';
-    }
-
-  char* xend = strstr(buf,"odb>");
-  if (xend)
-    xend[4] = 0;
-
-  //printf("end: %s\n", buf+bufLength-5);
-
-  fParser->ParseBuffer(buf,bufLength);
-  free(buf);
-  TXMLDocument* doc = fParser->GetXMLDocument();
-  if (!doc)
-    {
-      fprintf(stderr,"XmlOdb::XmlOdb: Malformed ODB dump: cannot get XML document\n");
-      return;
-    }
-
-  fOdb = FindNode(doc->GetRootNode(),"odb");
-  if (!fOdb)
-    {
-      fprintf(stderr,"XmlOdb::XmlOdb: Malformed ODB dump: cannot find <odb> tag\n");
-      return;
-    }
-}
-
-XmlOdb::XmlOdb(const char* filename) //ctor
-{
-   fPrintError = true;
-
-  fOdb = NULL;
-  fParser = new TDOMParser();
-  fParser->SetValidate(false);
-
-  int status = fParser->ParseFile(filename);
-  if (status != 0)
-    {
-      fprintf(stderr,"XmlOdb::XmlOdb: Failed to parse XML file \'%s\', ParseFile() returned %d\n", filename, status);
-      return;
-    }
-
-  TXMLDocument* doc = fParser->GetXMLDocument();
-  if (!doc)
-    {
-      fprintf(stderr,"XmlOdb::XmlOdb: Malformed ODB dump: cannot get XML document\n");
-      return;
-    }
-
-  fOdb = FindNode(doc->GetRootNode(),"odb");
-  if (!fOdb)
-    {
-      fprintf(stderr,"XmlOdb::XmlOdb: Malformed ODB dump: cannot find <odb> tag\n");
-      return;
-    }
-}
-#endif
-
-#if 0
 int XmlOdb::odbReadArraySize(const char*name)
 {
   PMXML_NODE node = FindPath(NULL, name);
@@ -765,8 +691,57 @@ MVOdb* MakeXmlFileOdb(const char* filename, MVOdbError* error)
 
 MVOdb* MakeXmlBufferOdb(const char* buf, int bufsize, MVOdbError* error)
 {
-   SetOk(error);
-   return new XmlOdb(NULL, NULL, error);
+#if 0
+   // note: this code was in the old XmlOdb.cxx file
+   // probably needed to clean up strange characters
+   // that upset the ROOT/libxml XML parser. Stefan's mxml
+   // XML parser probably does not need it, but if we see
+   // reports of XML parser failure where the old XmlOdb
+   // used to work, then we should put this code back. K.O.
+   
+   char*buf = (char*)malloc(bufLength);
+   memcpy(buf, xbuf, bufLength);
+   for (int i=0; i<bufLength; i++)
+      if (!isascii(buf[i])) {
+         buf[i] = 'X';
+      } else if (buf[i]=='\n') {
+      } else if (buf[i]=='\r') {
+      } else if (!isprint(buf[i])) {
+         buf[i] = 'X';
+      } else if (buf[i] == 0x1D) {
+         buf[i] = 'X';
+      }
+   
+   char* xend = strstr(buf,"odb>");
+   if (xend)
+      xend[4] = 0;
+#endif
+
+   char err[256];
+   int err_line = 0;
+   PMXML_NODE node = mxml_parse_buffer(buf, err, sizeof(err), &err_line);
+   if (!node) {
+      std::string msg;
+      msg += "mxml_parse_buffer() error ";
+      msg += "\"";
+      msg += err;
+      msg += "\"";
+      msg += " line ";
+      msg += err_line;
+      SetError(error, true, "buffer", msg);
+      return MakeNullOdb();
+   }
+
+   PMXML_NODE odb_node = FindNode(node, "odb");
+
+   if (!odb_node) {
+      std::string msg;
+      msg += "invalid XML tree: no ODB tag";
+      SetError(error, true, "buffer", msg);
+      return MakeNullOdb();
+   }
+
+   return new XmlOdb(node, odb_node, error);
 }
 
 /* emacs
