@@ -241,6 +241,11 @@ public:
       SetError(error, fPrintError, path, msg);
    }
 
+   bool IsReadOnly() const
+   {
+      return true;
+   }
+   
    /// Follow the ODB path through the XML DOM tree
    static PMXML_NODE FindPath(PMXML_NODE dir, const char* path)
    {
@@ -308,13 +313,12 @@ public:
    {
       PMXML_NODE node = FindPath(fDir, subdir);
       if (!node) {
-         //printf("Not Found subdir [%s], create %d\n", subdir, create);
-         if (create) {
-            SetOk(error);
-            return MakeNullOdb();
-         }
          SetNotFound(error, subdir);
-         return NULL;
+         if (create) {
+            return MakeNullOdb();
+         } else {
+            return NULL;
+         }
       }
 
       if (strcmp(node->name, "dir") != 0) {
@@ -328,7 +332,10 @@ public:
          msg += "\"";
          msg += " instead of \"dir\"";
          SetError(error, fPrintError, fPath, msg);
-         return NULL;
+         if (create)
+            return MakeNullOdb();
+         else
+            return NULL;
       }
 
       //printf("Found subdir [%s]\n", subdir);

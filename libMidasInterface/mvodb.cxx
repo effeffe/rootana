@@ -57,7 +57,7 @@ void SetMidasStatus(MVOdbError* error, bool print, const std::string& path, cons
       }
    } else {
       if (print) {
-         fprintf(stderr, "MVOdb::SetMidasStatus: Error: MIDAS %s() for ODB path \"%s\" returned status %d\n", midas_func_name, path.c_str(), status);
+         fprintf(stderr, "MVOdb::SetMidasStatus: Error: MIDAS %s() at ODB path \"%s\" returned status %d\n", midas_func_name, path.c_str(), status);
       }
    }
 }

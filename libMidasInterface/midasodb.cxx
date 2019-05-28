@@ -58,12 +58,42 @@ public:
       return fPrintError;
    }
 
+   bool IsReadOnly() const
+   {
+      return false;
+   }
+
    MVOdb* Chdir(const char* subdir, bool create, MVOdbError* error)
    {
-      // FIXME: "create" is ignored
       std::string path = Path(subdir);
-      MidasOdb* p = new MidasOdb(fDB, path.c_str());
-      return p;
+      HNDLE hkey;
+      int status = db_find_key(fDB, 0, path.c_str(), &hkey);
+      if (status == DB_SUCCESS) {
+         KEY key;
+         status = db_get_key(fDB, hkey, &key);
+         if (status != DB_SUCCESS) {
+            SetMidasStatus(error, fPrintError, path, "db_get_key", status);
+            return MakeNullOdb();
+         }
+         if (key.type != TID_KEY) {
+            SetError(error, fPrintError, path, "ODB path is not a directory");
+            if (create)
+               return MakeNullOdb();
+            else
+               return NULL;
+         }
+         return new MidasOdb(fDB, path.c_str());
+      } else if (!create) {
+         SetMidasStatus(error, fPrintError, path, "db_find_key", status);
+         return NULL;
+      } else {
+         status = db_create_key(fDB, 0, path.c_str(), TID_KEY);
+         if (status != DB_SUCCESS) {
+            SetMidasStatus(error, fPrintError, path, "db_create_key", status);
+            return MakeNullOdb();
+         }
+         return new MidasOdb(fDB, path.c_str());
+      }
    }
 
    void RAInfo(const char* varname, int* num_elements, int* element_size, MVOdbError* error)
@@ -225,8 +255,6 @@ public:
       assert(value);
       std::string path = Path(varname);
 
-      // FIXME: create_string_length is ignored
-
 #ifdef HAVE_DB_GET_VALUE_STRING_CREATE_STRING_LENGTH
       int status = db_get_value_string(fDB, 0, path.c_str(), 0, value, create, create_string_length);
 #else
@@ -334,6 +362,11 @@ public:
       //int xitem_size = 0;
 
       ReadKey(varname, &xtid, pnum_values, &xtotal_size, pitem_size, error);
+
+      if (xtid == TID_KEY) {
+         *pnum_values = -1;
+         *pitem_size = -1;
+      }
 
       if (xtid == 0) {
          *pnum_values = -1;

@@ -47,6 +47,14 @@ void print_da(const std::vector<double> &da)
    printf("]");
 }
 
+static int gCountFail = 0;
+
+void report_fail(const char* text)
+{
+   printf("FAIL: %s\n", text);
+   gCountFail++;
+}
+
 // Main function call
 
 int main(int argc, char *argv[])
@@ -105,14 +113,17 @@ int main(int argc, char *argv[])
      }
    else if (xmlfile)
      {
+       printf("Using XmlOdb\n");
        odb = MakeXmlFileOdb(filename, &odberror);
      }
    else if (jsonfile)
      {
+       printf("Using JsonOdb\n");
        odb = MakeJsonFileOdb(filename, &odberror);
      }
    else
      {
+       printf("Using FileDumpOdb\n");
        TMidasFile f;
        bool tryOpen = f.Open(filename);
 
@@ -150,9 +161,13 @@ int main(int argc, char *argv[])
       exit(1);
    }
 
+   printf("\n");
+   printf("Starting tests:\n");
+   printf("\n");
+
    int runno = 1234;
 
-   odb->RI("runinfo/run number", &runno, false);
+   odb->RI("runinfo/run number", &runno);
 
    printf("read run number (RI): %d\n", runno);
 
@@ -162,71 +177,111 @@ int main(int argc, char *argv[])
 
    test->SetPrintError(true);
 
+   bool isreadonly = test->IsReadOnly();
+
+   if (isreadonly) {
+      printf("\n");
+      printf("This ODB is read-only!\n");
+   }
+
+   printf("\n");
+   printf("Test create-and-read of all data types (set default values):\n");
+   printf("\n");
+
+   int cycle  = 1;
+   test->RI("cycle", &cycle, true);
+   printf("RI() cycle: %d\n", cycle);
+
    int ivalue = 1;
+   test->RI("int", &ivalue, true);
+   printf("RI() int: %d\n", ivalue);
+
    float fvalue = 2.2;
+   test->RF("float", &fvalue, true);
+   printf("RF() float: %f\n", fvalue);
+
    double dvalue = 3.3;
-   bool bvalue0 = false;
-   bool bvalue1 = true;
+   test->RD("double", &dvalue, true);
+   printf("RD() double: %f\n", dvalue);
+
+   bool bvalue_a = false;
+   test->RB("bool_a", &bvalue_a, true);
+   printf("bool_a: %d\n", bvalue_a);
+
+   bool bvalue_b = true;
+   test->RB("bool_b", &bvalue_b, true);
+   printf("bool_b: %d\n", bvalue_b);
+
    uint16_t u16value = 0xabcd;
+   test->RU16("u16", &u16value, true);
+   printf("RU16() u16: 0x%04x\n", u16value);
+
    uint32_t u32value = 0x12345678;
+   test->RU32("u32", &u32value, true);
+   printf("RU32() u32: 0x%08x\n", u32value);
+
    std::string svalue = "test string";
-
-   printf("\n");
-   printf("Test read of all data types:\n");
-   printf("\n");
-
-   test->RI("int", &ivalue, true);
-   test->RF("float", &fvalue, true);
-   test->RD("double", &dvalue, true);
-   test->RB("bool0", &bvalue0, true);
-   test->RB("bool1", &bvalue1, true);
-   test->RU16("u16", &u16value, true);
-   test->RU32("u32", &u32value, true);
    test->RS("string", &svalue, true);
-
-   printf("int: %d\n", ivalue);
-   printf("float: %f\n", fvalue);
-   printf("double: %f\n", dvalue);
-   printf("bool0: %d\n", bvalue0);
-   printf("bool1: %d\n", bvalue1);
-   printf("u16: 0x%04x\n", u16value);
-   printf("u32: 0x%08x\n", u32value);
-   printf("string: \"%s\"\n", svalue.c_str());
+   printf("RS() string: \"%s\"\n", svalue.c_str());
 
    printf("\n");
-   printf("Test write of all data types:\n");
+   printf("Test write of all data types (overwrite default values):\n");
    printf("\n");
 
-   test->WI("int", 10);
-   test->WF("float", 11.1);
-   test->WD("double", 22.2);
-   test->WB("bool0", true);
-   test->WB("bool1", false);
-   test->WU16("u16", 0xcdef);
-   test->WU32("u32", 0xdeadf00d);
-   test->WS("string", "write test string");
+   test->WI("cycle", cycle+1);
+
+   int wi = 10 + 100*cycle;
+   test->WI("int", wi);
+   float wf = 11.1 + 100*cycle;
+   test->WF("float", wf);
+   double wd = 22.2 + 100*cycle;
+   test->WD("double", wd);
+   bool wba = true;
+   test->WB("bool_a", wba);
+   bool wbb = false;
+   test->WB("bool_b", wbb);
+   uint16_t wu16 = 0xcdef;
+   test->WU16("u16", wu16);
+   uint32_t wu32 = 0xdeadf00d;
+   test->WU32("u32", wu32);
+   std::string ws = "write test string cycle " + toString(cycle);
+   test->WS("string", ws.c_str());
 
    printf("\n");
-   printf("Test read after write of all data types:\n");
+   printf("Test read of new values for all data types:\n");
    printf("\n");
 
-   test->RI("int", &ivalue, true);
-   test->RF("float", &fvalue, true);
-   test->RD("double", &dvalue, true);
-   test->RB("bool0", &bvalue0, true);
-   test->RB("bool1", &bvalue1, true);
-   test->RU16("u16", &u16value, true);
-   test->RU32("u32", &u32value, true);
-   test->RS("string", &svalue, true);
+   int ri = 1;
+   test->RI("int", &ri);
+   printf("int: %d -> %d -> %d\n", ivalue, wi, ri);
 
-   printf("int: %d\n", ivalue);
-   printf("float: %f\n", fvalue);
-   printf("double: %f\n", dvalue);
-   printf("bool0: %d\n", bvalue0);
-   printf("bool1: %d\n", bvalue1);
-   printf("u16: 0x%04x\n", u16value);
-   printf("u32: 0x%08x\n", u32value);
-   printf("string: \"%s\"\n", svalue.c_str());
+   float rf = 2.2;
+   test->RF("float", &rf);
+   printf("float: %f -> %f -> %f\n", fvalue, wf, rf);
+
+   double rd = 3.3;
+   test->RD("double", &rd);
+   printf("double: %f -> %f -> %f\n", dvalue, wd, rd);
+
+   bool rba = false;
+   test->RB("bool_a", &rba);
+   printf("bool_a: %d -> %d -> %d\n", bvalue_a, wba, rba);
+
+   bool rbb = false;
+   test->RB("bool_b", &rbb);
+   printf("bool_b: %d -> %d -> %d\n", bvalue_b, wbb, rbb);
+
+   uint16_t ru16 = 0x4444;
+   test->RU16("u16", &ru16);
+   printf("u16: 0x%04x -> 0x%04x -> 0x%04x\n", u16value, wu16, ru16);
+
+   uint32_t ru32 = 0x55555555;
+   test->RU32("u32", &ru32);
+   printf("u32: 0x%08x -> 0x%08x -> 0x%08x\n", u32value, wu32, ru32);
+
+   std::string rs = "rs";
+   test->RS("string", &rs);
+   printf("string: \"%s\" -> \"%s\" -> \"%s\"\n", svalue.c_str(), ws.c_str(), rs.c_str());
 
    printf("\n");
    printf("Test read arrays of all data types:\n");
@@ -450,17 +505,31 @@ int main(int argc, char *argv[])
    printf("\n");
 
    {
+      printf("Creating subdir\n");
       MVOdb* subdir = test->Chdir("subdir", true);
+      printf("Creating subdir/i\n");
       subdir->WI("i", 10); // write something into subdir
       int i = 1111;
+      printf("RI(subdir)\n");
       test->RI("subdir", &i); // invalid read from a non-int
+      printf("WI(subdir)\n");
       test->WI("subdir", 10); // invalid write into existing subdir
       std::vector<int> ia;
       ia.push_back(111);
       ia.push_back(222);
       ia.push_back(333);
+      printf("WIA(subdir)\n");
       test->WIA("subdir", ia); // invalid write into existing subdir
+      printf("RIA(subdir)\n");
+      test->RIA("subdir", &ia); // invalid read from non-int-array
+      printf("RIA() returned: ");
+      print_ia(ia);
+      printf("\n");
+      printf("RIA(subdir, create=true)\n");
       test->RIA("subdir", &ia, true); // invalid read from non-int-array
+      printf("RIA() returned: ");
+      print_ia(ia);
+      printf("\n");
    }
 
    printf("\n");
@@ -504,7 +573,8 @@ int main(int argc, char *argv[])
        printf("test RIA() of non-array int:\n");
        std::vector<int> ia;
        test->RIA("int", &ia);
-       printf("RIA() returned array size %d\n", (int)ia.size());
+       printf("RIA() returned: ");
+       print_ia(ia);
        printf("\n");
      }
 
@@ -560,33 +630,45 @@ int main(int argc, char *argv[])
      test->WSAI("sa10", -1, "aaa");
      printf("\n");
 
+     printf("\n");
+     printf("Test Chdir():\n");
+     printf("\n");
+
      {
        printf("test Chdir(true):\n");
-       MVOdb* dir = test->Chdir("subdir", true);
-       printf(" returned %p\n", dir);
+       MVOdb* dir = test->Chdir("test_subdir", true);
+       printf("Chdir() returned %p\n", dir);
+       if (dir == NULL) report_fail("Chdir(new directory, true)");
      }
 
      {
        printf("test Chdir(false):\n");
        MVOdb* dir = test->Chdir("non-existant-subdir", false);
-       printf(" returned %p\n", dir);
+       printf("Chdir() returned %p\n", dir);
+       if (dir != NULL) report_fail("Chdir(new directory, false)");
      }
 
      {
        printf("test Chdir(\"not a dir\", true):\n");
        MVOdb* dir = test->Chdir("ia10", true);
-       printf(" returned %p\n", dir);
+       printf("Chdir() returned %p\n", dir);
+       if (dir == NULL) report_fail("Chdir(not a directory, true)");
      }
 
      {
        printf("test Chdir(\"not a dir\", false):\n");
        MVOdb* dir = test->Chdir("ia10", false);
        printf(" returned %p\n", dir);
+       if (dir != NULL) report_fail("Chdir(not a directory, false)");
      }
    }
 
    if (midas)
      midas->disconnect();
+
+   printf("\n");
+   printf("Number of FAILED tests: %d\n", gCountFail);
+   printf("\n");
    
    return 0;
 }

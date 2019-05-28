@@ -100,6 +100,11 @@ public:
       SetError(error, fPrintError, path, msg);
    }
 
+   bool IsReadOnly() const
+   {
+      return true;
+   }
+
    template <typename T>
    bool GetJsonValue(const char* varname, const MJsonNode* node, T* value, MVOdbError *error);
 
@@ -156,13 +161,12 @@ public:
    {
       MJsonNode* node = FindPath(fDir, subdir);
       if (!node) {
-         //printf("Not Found subdir [%s], create %d\n", subdir, create);
-         if (create) {
-            SetOk(error);
-            return MakeNullOdb();
-         }
          SetNotFound(error, subdir);
-         return NULL;
+         if (create) {
+            return MakeNullOdb();
+         } else {
+            return NULL;
+         }
       }
 
       if (node->GetType() != MJSON_OBJECT) {
@@ -176,7 +180,10 @@ public:
          msg += "\"";
          msg += " instead of subdirectory";
          SetError(error, fPrintError, fPath, msg);
-         return NULL;
+         if (create)
+            return MakeNullOdb();
+         else
+            return NULL;
       }
 
       //printf("Found subdir [%s]\n", subdir);

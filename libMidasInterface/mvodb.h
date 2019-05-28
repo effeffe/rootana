@@ -20,9 +20,14 @@ class MVOdbError;
 class MVOdb
 {
 public:
+   // check if this ODB interface allows writing
+   virtual bool IsReadOnly() const = 0;
+   
    // navigate into subdirectory.
    //
    // returns NULL is subdirname does not exist and "create" is false.
+   // returns NULL is subdirname is not a subdirectory and "create" is false
+   // never returns NULL if "create" is true - returns a subdirectory or NullOdb if there was an error
    
    virtual MVOdb* Chdir(const char* subdirname, bool create = false, MVOdbError* error = NULL) = 0;
    
