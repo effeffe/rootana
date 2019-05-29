@@ -6,8 +6,11 @@
 #include <string>
 #include <vector>
 #include <deque>
+
+#ifdef HAVE_CXX11_THREADS
 #include <thread>
 #include <mutex>
+#endif
 
 #include "rootana_config.h"
 #include "midasio.h"

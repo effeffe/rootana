@@ -333,6 +333,9 @@ static double GetTimeSec()
 }
 #endif
 
+typedef std::deque<TAFlowEvent*> EventQueue;
+typedef std::deque<TAFlags*> FlagsQueue;
+
 class RunHandler
 {
 public:
@@ -340,22 +343,25 @@ public:
    std::vector<TARunObject*> fRunRun;
    std::vector<std::string>  fArgs;
 
+#ifdef HAVE_CXX11_THREADS
    //Items for multithreaded mode
-   std::vector<std::deque<TAFlowEvent*>> fMtFlowQueue;
-   std::vector<std::deque<TAFlags*>>     fMtFlagQueue;
-   std::vector<std::mutex>               fMtFlowQueueMutex; // multithread lock when moving flow between queues
-   std::vector<std::thread*>             fMtThreads; // Processing threads (one per TARunObject)
-   int                                   fMtQueueDepth = 100; //Maximum depth for flow_queue (limit memory consumption)
-   TAFlowEvent*                          fMtLastItemInQueue; // special end-of-run marker event
+   std::vector<EventQueue>   fMtFlowQueue;
+   std::vector<FlagsQueue>   fMtFlagQueue;
+   std::vector<std::mutex>   fMtFlowQueueMutex; // multithread lock when moving flow between queues
+   std::vector<std::thread*> fMtThreads; // Processing threads (one per TARunObject)
+   int                       fMtQueueDepth = 100; //Maximum depth for flow_queue (limit memory consumption)
+   TAFlowEvent*              fMtLastItemInQueue; // special end-of-run marker event
+#endif
    
    RunHandler(const std::vector<std::string>& args) // ctor
    {
       fRunInfo = NULL;
       fArgs = args;
-#ifdef MODULE_MULTITHREAD
-      if (TAMultithreadHelper::gfMultithread)
+#ifdef HAVE_CXX11_THREADS
+      if (TAMultithreadHelper::gfMultithread) {
          //Dummy pointer to safely mark the end of flow
-         fMtLastItemInQueue = new TAFlowEvent(NULL); 
+         fMtLastItemInQueue = new TAFlowEvent(NULL);
+      }
 #endif
    }
 
@@ -365,6 +371,7 @@ public:
          delete fRunInfo;
          fRunInfo = NULL;
       }
+      // FIXME: do we need to delete fMtLastItemInQueue? K.O.
    }
 
 #ifdef MODULE_MULTITHREAD
@@ -588,9 +595,10 @@ public:
          fRunRun[i]->AnalyzeSpecialEvent(fRunInfo, event);
    }
 
+#ifdef HAVE_CXX11_THREADS
    //Function to print the length of the flow queue when in multithread mode
    //Maybe make root update a graphical window?
-   void PrintQueueLength()
+   void PrintMtQueueLength()
    {
      printf("Flow queue lengths:\n");
      for (unsigned i=0; i<fRunRun.size(); i++)
@@ -598,6 +606,7 @@ public:
        printf("%d:\t%zu\n",i,fMtFlowQueue[i].size());
      }
    }
+#endif
 
    TAFlowEvent* AnalyzeFlowEvent(TAFlags* flags, TAFlowEvent* flow)
    {
@@ -1663,10 +1672,10 @@ int manalyzer_main(int argc, char* argv[])
    int  tcpPort = 0;
    int  xmlTcpPort = 0;
    int  httpPort = 0;
-   #ifdef HAVE_MIDAS
+#ifdef HAVE_MIDAS
    const char* hostname = NULL;
    const char* exptname = NULL;
-   #endif
+#endif
    int num_skip = 0;
    int num_analyze = 0;
 
@@ -1677,10 +1686,12 @@ int manalyzer_main(int argc, char* argv[])
    bool root_graphics = false;
    bool interactive = false;
 
+#ifdef HAVE_CXX11_THREADS
    bool multithread = false;
    int  multithreadQueueLength = 0;
    int  multithreadWaitEmpty   = 0;
    int  multithreadWaitFull    = 0;
+#endif
 
    std::vector<std::string> files;
    std::vector<std::string> modargs;
