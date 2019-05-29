@@ -4,8 +4,6 @@
 // K.Olchanski
 //
 
-#error PR12 merge in progress
-
 #include <stdio.h>
 #include <assert.h>
 
@@ -277,16 +275,18 @@ TARootHelper::~TARootHelper() // dtor
 #ifdef MODULE_MULTITHREAD
 TAMultithreadHelper::TAMultithreadHelper()
 {
-//ctor
+   //ctor
 }
+
 TAMultithreadHelper::~TAMultithreadHelper()
 {
-//dtor
+   //dtor
 }
+
 bool TAMultithreadHelper::gfMultithread            = false;
-uint TAMultithreadHelper::gfMtQueueFullUSleepTime  = 100; //u seconds
-uint TAMultithreadHelper::gfMtQueueEmptyUSleepTime = 100; //u seconds
-uint TAMultithreadHelper::gfMtMaxBacklog           = 100;
+int TAMultithreadHelper::gfMtQueueFullUSleepTime  = 100; //u seconds
+int TAMultithreadHelper::gfMtQueueEmptyUSleepTime = 100; //u seconds
+int TAMultithreadHelper::gfMtMaxBacklog           = 100;
 std::mutex TAMultithreadHelper::gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
 #endif
 
@@ -342,11 +342,11 @@ public:
 
    //Items for multithreaded mode
    std::vector<std::deque<TAFlowEvent*>> fMtFlowQueue;
-   std::vector<std::deque<TAFlags*>> fMtFlagQueue;
-   std::vector<std::mutex> fMtFlowQueueMutex; //multithread lock when moving flow between queues
-   std::vector<std::thread*> fMtThreads; //Processing threads (one per TARunObject)
-   uint fMtQueueDepth=100;  //Maximum depth for flow_queue (limit memory consumption)
-   TAFlowEvent* fMtLastItemInQueue;
+   std::vector<std::deque<TAFlags*>>     fMtFlagQueue;
+   std::vector<std::mutex>               fMtFlowQueueMutex; // multithread lock when moving flow between queues
+   std::vector<std::thread*>             fMtThreads; // Processing threads (one per TARunObject)
+   int                                   fMtQueueDepth = 100; //Maximum depth for flow_queue (limit memory consumption)
+   TAFlowEvent*                          fMtLastItemInQueue; // special end-of-run marker event
    
    RunHandler(const std::vector<std::string>& args) // ctor
    {
@@ -1673,9 +1673,9 @@ int manalyzer_main(int argc, char* argv[])
    bool interactive = false;
 
    bool multithread = false;
-   uint multithreadQueueLength=0;
-   uint multithreadWaitEmpty=0;
-   uint multithreadWaitFull=0;
+   int  multithreadQueueLength = 0;
+   int  multithreadWaitEmpty   = 0;
+   int  multithreadWaitFull    = 0;
 
    std::vector<std::string> files;
    std::vector<std::string> modargs;

@@ -156,9 +156,9 @@ class TAMultithreadHelper
 {
   public:
      static bool gfMultithread;
-     static uint gfMtQueueFullUSleepTime; //u seconds
-     static uint gfMtQueueEmptyUSleepTime; //u seconds
-     static uint gfMtMaxBacklog;
+     static int  gfMtQueueFullUSleepTime; //u seconds
+     static int  gfMtQueueEmptyUSleepTime; //u seconds
+     static int  gfMtMaxBacklog;
      static std::mutex gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
 
      TAMultithreadHelper();
