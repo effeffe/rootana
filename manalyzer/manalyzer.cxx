@@ -352,11 +352,11 @@ public:
    {
       fRunInfo = NULL;
       fArgs = args;
-      #ifdef MODULE_MULTITHREAD
+#ifdef MODULE_MULTITHREAD
       if (TAMultithreadHelper::gfMultithread)
          //Dummy pointer to safely mark the end of flow
-         fMtLastItemInQueue=new TAFlowEvent(NULL); 
-      #endif
+         fMtLastItemInQueue = new TAFlowEvent(NULL); 
+#endif
    }
 
    ~RunHandler() // dtor
@@ -366,7 +366,8 @@ public:
          fRunInfo = NULL;
       }
    }
-   #ifdef MODULE_MULTITHREAD
+
+#ifdef MODULE_MULTITHREAD
    //Multithreaded process with queue of flow events
    void MultithreadQueueItem(TAFlags* flags, TAFlowEvent* flow)
    {
@@ -479,14 +480,16 @@ public:
          }
       }
    }
-   #endif
+#endif
+
    void CreateRun(int run_number, const char* file_name)
    {
       assert(fRunInfo == NULL);
       assert(fRunRun.size() == 0);
       
       fRunInfo = new TARunInfo(run_number, file_name, fArgs);
-      #ifdef MODULE_MULTITHREAD
+
+#ifdef MODULE_MULTITHREAD
       fRunInfo->fMtInfo=new TAMultithreadHelper();
       if (TAMultithreadHelper::gfMultithread)
       {
@@ -504,7 +507,7 @@ public:
          }
       }
       else
-      #endif
+#endif
       {
          for (unsigned i=0; i<(*gModules).size(); i++)
             fRunRun.push_back((*gModules)[i]->NewRunObject(fRunInfo));
@@ -530,7 +533,8 @@ public:
       // detect it and cause the analyzer to shutdown.
       TAFlags flags = 0;
       AnalyzeFlowQueue(&flags);
-      #ifdef MODULE_MULTITHREAD
+
+#ifdef MODULE_MULTITHREAD
       if (TAMultithreadHelper::gfMultithread)
       {
          { //lock scope
@@ -544,7 +548,8 @@ public:
             fMtThreads[i]->join();
          }
       }
-      #endif
+#endif
+      
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->PreEndRun(fRunInfo, &fRunInfo->fFlowQueue);
 
@@ -596,7 +601,7 @@ public:
 
    TAFlowEvent* AnalyzeFlowEvent(TAFlags* flags, TAFlowEvent* flow)
    {
-      #ifdef MODULE_MULTITHREAD
+#ifdef MODULE_MULTITHREAD
       if (TAMultithreadHelper::gfMultithread)
       {
          MultithreadQueueItem(flags, flow);
@@ -604,7 +609,7 @@ public:
          return NULL;
       }
       else
-      #endif
+#endif
       {
          for (unsigned i=0; i<fRunRun.size(); i++) {
             flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
@@ -1714,13 +1719,13 @@ int manalyzer_main(int argc, char* argv[])
          xmlTcpPort = atoi(arg+2);
       } else if (strncmp(arg,"-R",2)==0) { // Set the ROOT THttpServer HTTP port
          httpPort = atoi(arg+2);
-         #ifdef HAVE_MIDAS
+#ifdef HAVE_MIDAS
       } else if (strncmp(arg,"-H",2)==0) {
          hostname = strdup(arg+2);
       } else if (strncmp(arg,"-E",2)==0) {
          exptname = strdup(arg+2);
-         #endif
-         #ifdef MODULE_MULTITHREAD
+#endif
+#ifdef MODULE_MULTITHREAD
       } else if (strncmp(arg,"--mtql",6)==0) {
          multithreadQueueLength = atoi(arg+6);
       } else if (strncmp(arg,"--mtse",6)==0) {
@@ -1729,12 +1734,12 @@ int manalyzer_main(int argc, char* argv[])
          multithreadWaitFull = atoi(arg+6);
       } else if (strncmp(arg,"--mt",4)==0) {
          multithread=true;
-         #endif
-         #ifdef HAVE_ROOT
+#endif
+#ifdef HAVE_ROOT
       } else if (strncmp(arg,"-O",2)==0) {
           TARootHelper::fOutputFileName = strdup(arg+2);
           continue;
-         #endif
+#endif
       } else if (strcmp(arg,"-h")==0) {
          help(); // does not return
       } else if (arg[0] == '-') {

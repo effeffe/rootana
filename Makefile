@@ -288,10 +288,10 @@ ifdef HAVE_LIBNETDIRECTORY
 else
 	echo "//#define HAVE_LIBNETDIRECTORY 1" >> $(RC)
 endif
-ifdef NO_MODULE_MULTITHREAD
-	echo "//#define MODULE_MULTITHREAD 1" >> $(RC)
+ifdef HAVE_CXX11_THREADS
+	echo "#define HAVE_CXX11_THREADS 1" >> $(RC)
 else
-	echo "#define MODULE_MULTITHREAD 1" >> $(RC)
+	echo "//#define HAVE_CXX11_THREADS 1" >> $(RC)
 endif
 
 	echo "// end" >> $(RC)
