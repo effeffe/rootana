@@ -6,12 +6,15 @@
 #include <string>
 #include <vector>
 #include <deque>
+#include <thread>
+#include <mutex>
 
 #include "rootana_config.h"
 #include "midasio.h"
 #include "VirtualOdb.h"
 
 class TARootHelper;
+class TAMultithreadHelper;
 class TAFlowEvent;
 
 class TARunInfo
@@ -21,6 +24,7 @@ class TARunInfo
    std::string fFileName;
    VirtualOdb* fOdb;
    TARootHelper* fRoot;
+   TAMultithreadHelper* fMtInfo;
    std::vector<std::string> fArgs;
    std::deque<TAFlowEvent*> fFlowQueue;
    
@@ -131,6 +135,7 @@ class THttpServer;
 class TARootHelper
 {
  public:
+   static std::string fOutputFileName;
    TFile* fOutputFile;
    static TDirectory*   fgDir;
    static TApplication* fgApp;
@@ -145,6 +150,22 @@ class TARootHelper
    TARootHelper() { }; // hidden default constructor
 };
 #endif
+
+#ifdef MODULE_MULTITHREAD
+class TAMultithreadHelper
+{
+  public:
+     static bool gfMultithread;
+     static uint gfMtQueueFullUSleepTime; //u seconds
+     static uint gfMtQueueEmptyUSleepTime; //u seconds
+     static uint gfMtMaxBacklog;
+     static std::mutex gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
+
+     TAMultithreadHelper();
+     ~TAMultithreadHelper();
+};
+#endif
+
 
 int manalyzer_main(int argc, char* argv[]);
 

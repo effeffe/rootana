@@ -253,6 +253,58 @@ TARootHelper data members:
 
 * TNetDirectory server (-P switch) is also available (it has no corresponding c++ object).
 
+### manalyzer multithreaded mode and TAMultithreadHelper
+
+Multithreading works by giving each module its own thread, passing flow events between these thread via queues
+
+Running with the flag --mt will enable PER-MODULE multithreading. Eg
+```bash
+./manalyzer_example_flow.exe --mt --demo
+```
+Multithreading configuration settings can be changed with the flags:
+  
+* --mtql NNN		Number of flow events to queue per module. A more events queue, the more memory will be consumed
+* --mtse NNN		The number of u seconds a thread will go to sleep for if there are not flow events in its queue.
+* --mtsf NNN		The number of u seconds a thread will go to sleep for if the next queue length is full
+
+
+####Thread locking convention:
+Each flow queue has a std::mutex lock. The queue is locked when its read, the front is popped, or data is push to the back. A thread process will be reading its own queue, and writing to the next queue.
+There is a global lock for processing TAMultithreadHelper::gfLock, to be used whenever running code that isn't thread safe (ROOT fitting libraries for example).
+
+- inside the module, AnalyzeEvent() and AnalyzeSpecialEvent() are always called in the main thread
+
+- inside the module, AnalyzeFlowEvent() is called from a worker thread and may have to lock things:
+
+ - the flow object and the flags object are "owned" by the worker thread, locking is not needed to modify them
+
+ - the runinfo object is shared by all threads, anything non-thread safe, i.e. access to TARootHelper,
+   direct manipulation of fFlowQueue, etc needs to be locked via TAMultithreadHelper::gfLock
+ - per-module data members and global variables do not need to be locked (each module is only used by one thread at a time (by it's own thread).
+ - non-thread safe libraries, i.e. ROOT, have to be locked via TAMultithreadHelper::gfLock
+
+####How to prepare your code:
+Place locks around any root fitting functions:
+
+```cpp
+{
+#ifdef MODULE_MULTITHREAD
+std::lock_guard<std::mutex> lock(TAMultithreadHelper::gfLock);
+#endif
+SomeNotThreadSafeFunctions()
+} //When lock goes out of scope, gfLock is unlocked
+```
+
+Deconstructors for data put into the flow must be setup in the flow classes, not inside your modules. Do not put local variables into the flow, I recommend creading pointers and insert those.
+
+Remember, you are putting data into the flow, the module it came from no longer has any connection to it.
+
+
+Debugging advice:
+* Use helgrind to analyse your program http://valgrind.org/docs/manual/hg-manual.html
+
+* Note that you will see false race track condition warnings if you are using cout. cout is a global object so multiple print commands will collide, you probably dont care, the user side afect is text written to the screen at that line gets mashed into another print statement, maybe just reduce the verbosity of your modules...
+
 ### Module registration
 
 TBW
