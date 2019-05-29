@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <signal.h>
 #include <string.h>
+#include <stdlib.h> // exit()
 
 #include "TMidasOnline.h"
 #include "TMidasFile.h"
