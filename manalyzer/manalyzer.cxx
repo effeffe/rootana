@@ -4,6 +4,8 @@
 // K.Olchanski
 //
 
+#error PR12 merge in progress
+
 #include <stdio.h>
 #include <assert.h>
 
