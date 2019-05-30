@@ -7,12 +7,13 @@
 #include <vector>
 #include <deque>
 
+#include "rootana_config.h"
+
 #ifdef HAVE_CXX11_THREADS
 #include <thread>
 #include <mutex>
 #endif
 
-#include "rootana_config.h"
 #include "midasio.h"
 #include "VirtualOdb.h"
 
