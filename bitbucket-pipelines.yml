@@ -90,7 +90,7 @@ pipelines:
           
     - step:
         name: Build on CERN Centos7 with MIDAS
-        image: rootproject/root-cc7
+        image: jmckenna/midas-docker
         script:
           - cat /etc/*release
           - echo $ROOTSYS
@@ -99,15 +99,7 @@ pipelines:
           - root-config --libs
           - root-config --glibs
           - gcc -v
-          - echo "Get MIDAS"
-          - git clone https://bitbucket.org/tmidas/midas
-          - git clone https://bitbucket.org/tmidas/mxml
-          - git clone https://bitbucket.org/tmidas/mscb
-          - cd midas
-          - make
-          - ls -l linux/bin/odbedit
-          - export MIDASSYS=`pwd`
-          - cd ..
+          - echo $MIDASSYS
           - make
           - . thisrootana.sh
           - echo $ROOTANASYS
