@@ -212,7 +212,7 @@ TARootHelper::TARootHelper(const TARunInfo* runinfo) // ctor
    //Get the last 5 charaters of the output file name
    std::string extension="";
    if (TARootHelper::fOutputFileName.size()>5)
-      TARootHelper::fOutputFileName.substr(TARootHelper::fOutputFileName.size()-5,5);
+      extension=TARootHelper::fOutputFileName.substr(TARootHelper::fOutputFileName.size()-5,5);
    //If .root wasn't specified, add it
    if (extension.compare(".root")!=0)
       TARootHelper::fOutputFileName+=".root";
