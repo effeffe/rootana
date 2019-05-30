@@ -429,7 +429,7 @@ public:
                std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i+1]);
                NextQueueSize=fMtFlowQueue[i+1].size();
                //Check flag at front of queue (ie has Quit been called?)
-               TAFlags* f=fMtFlagQueue[i].front();
+               TAFlags* f=fMtFlagQueue[i].front(); // FIXME: this is wrong: we locked queue [i+1] then probe queue [i]. K.O.
                if ((*f) & TAFlag_QUIT) data_processing=false;
             }
             if (NextQueueSize>fMtQueueDepth) //Events queue up in next module too large... wait...

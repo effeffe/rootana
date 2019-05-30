@@ -65,7 +65,7 @@ endif
 ifneq ($(MIDASSYS),)
 
 HAVE_MIDAS=1
-MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil -lrt
+MIDASLIBS = $(MIDASSYS)/lib/libmidas.a -lutil -lrt
 CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 USER_CFLAGS += -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 
