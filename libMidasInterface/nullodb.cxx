@@ -35,6 +35,11 @@ public:
    {
       return fPrintError;
    }
+
+   bool IsReadOnly() const
+   {
+      return true;
+   }
    
    MVOdb* Chdir(const char* subdir, bool create, MVOdbError* error)
    {

@@ -34,6 +34,7 @@ USER_CFLAGS += $(ROOTCFLAGS)
 USER_LIBS   += $(ROOTGLIBS)
 HAVE_ROOT_HTTP := $(findstring http,$(ROOTFEATURES))
 HAVE_ROOT_XML  := $(findstring xml,$(ROOTFEATURES))
+HAVE_CXX11_THREADS := $(findstring cxx11,$(ROOTFEATURES))
 
 ifdef HAVE_ROOT_XML
 CXXFLAGS += -DHAVE_ROOT_XML
@@ -219,7 +220,10 @@ OBJS += obj/nullodb.o
 ifdef HAVE_MIDAS
 OBJS += obj/midasodb.o
 endif
+OBJS += obj/mxml.o
 OBJS += obj/mxmlodb.o
+OBJS += obj/mjson.o
+OBJS += obj/mjsonodb.o
 
 # manalyzer
 
@@ -285,10 +289,10 @@ ifdef HAVE_LIBNETDIRECTORY
 else
 	echo "//#define HAVE_LIBNETDIRECTORY 1" >> $(RC)
 endif
-ifdef NO_MODULE_MULTITHREAD
-	echo "//#define MODULE_MULTITHREAD 1" >> $(RC)
+ifdef HAVE_CXX11_THREADS
+	echo "#define HAVE_CXX11_THREADS 1" >> $(RC)
 else
-	echo "#define MODULE_MULTITHREAD 1" >> $(RC)
+	echo "//#define HAVE_CXX11_THREADS 1" >> $(RC)
 endif
 
 	echo "// end" >> $(RC)

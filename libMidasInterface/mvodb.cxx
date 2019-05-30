@@ -47,7 +47,7 @@ void SetMidasStatus(MVOdbError* error, bool print, const std::string& path, cons
          error->fErrorString += "MIDAS ";
          error->fErrorString += midas_func_name;
          error->fErrorString += "()";
-         error->fErrorString += " for ODB path \"";
+         error->fErrorString += " at ODB path \"";
          error->fErrorString += path;
          error->fErrorString += "\" returned status ";
          error->fErrorString += toString(status);
@@ -57,7 +57,7 @@ void SetMidasStatus(MVOdbError* error, bool print, const std::string& path, cons
       }
    } else {
       if (print) {
-         fprintf(stderr, "MVOdb::SetMidasStatus: Error: MIDAS %s() for ODB path \"%s\" returned status %d\n", midas_func_name, path.c_str(), status);
+         fprintf(stderr, "MVOdb::SetMidasStatus: Error: MIDAS %s() at ODB path \"%s\" returned status %d\n", midas_func_name, path.c_str(), status);
       }
    }
 }
@@ -70,7 +70,7 @@ void SetError(MVOdbError* error, bool print, const std::string& path, const std:
       error->fError = true;
       error->fErrorString = "";
       error->fErrorString += message;
-      error->fErrorString += " for ODB path \"";
+      error->fErrorString += " at ODB path \"";
       error->fErrorString += path;
       error->fErrorString += "\"";
       if (print) {
@@ -78,8 +78,32 @@ void SetError(MVOdbError* error, bool print, const std::string& path, const std:
       }
    } else {
       if (print) {
-         fprintf(stderr, "MVOdb::SetError: Error: %s for ODB path \"%s\"\n", message.c_str(), path.c_str());
+         fprintf(stderr, "MVOdb::SetError: Error: %s at ODB path \"%s\"\n", message.c_str(), path.c_str());
       }
+   }
+}
+
+MVOdb* MakeFileDumpOdb(const char* buf, int bufsize, MVOdbError* error)
+{
+   //printf("MakeFileDumpOdb: odb dump size %d, first char \'%c\'\n", bufsize, buf[0]);
+   if (buf[0] == '[') {
+      // ODB format
+      char str[256];
+      sprintf(str, "MakeFileDumpOdb: old ODB dump format is not supported, sorry");
+      SetError(error, false, "buffer", str);
+      return MakeNullOdb();
+   } else if (buf[0] == '<') {
+      // XML format
+      return MakeXmlBufferOdb(buf, bufsize, error);
+   } else if (buf[0] == '{') {
+      // JSON format
+      return MakeJsonBufferOdb(buf, bufsize, error);
+   } else {
+      // unknown format
+      char str[256];
+      sprintf(str, "MakeFileDumpOdb: unknown ODB dump format, first char is \'%c\' (%d), dump size %d", buf[0], buf[0], bufsize);
+      SetError(error, false, "buffer", str);
+      return MakeNullOdb();
    }
 }
 

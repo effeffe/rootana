@@ -20,9 +20,14 @@ class MVOdbError;
 class MVOdb
 {
 public:
+   // check if this ODB interface allows writing
+   virtual bool IsReadOnly() const = 0;
+   
    // navigate into subdirectory.
    //
    // returns NULL is subdirname does not exist and "create" is false.
+   // returns NULL is subdirname is not a subdirectory and "create" is false
+   // never returns NULL if "create" is true - returns a subdirectory or NullOdb if there was an error
    
    virtual MVOdb* Chdir(const char* subdirname, bool create = false, MVOdbError* error = NULL) = 0;
    
@@ -161,10 +166,16 @@ public:
 
 MVOdb* MakeNullOdb();
 MVOdb* MakeMidasOdb(int hDB, MVOdbError* error = NULL);
+
 MVOdb* MakeXmlFileOdb(const char* filename, MVOdbError* error = NULL);
 MVOdb* MakeXmlBufferOdb(const char* buf, int bufsize, MVOdbError* error = NULL);
-//MVOdb* MakeJsonOdb(???);
+
+MVOdb* MakeJsonFileOdb(const char* filename, MVOdbError* error = NULL);
+MVOdb* MakeJsonBufferOdb(const char* buf, int bufsize, MVOdbError* error = NULL);
 //MVOdb* MakeJsonRpcOdb(???);
+
+/// Access ODB from a midas file dump. FOrmat could be .xml, .json or .odb
+MVOdb* MakeFileDumpOdb(const char* buf, int bufsize, MVOdbError* error = NULL);
 
 class MVOdbError
 {

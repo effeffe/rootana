@@ -6,10 +6,14 @@
 #include <string>
 #include <vector>
 #include <deque>
-#include <thread>
-#include <mutex>
 
 #include "rootana_config.h"
+
+#ifdef HAVE_CXX11_THREADS
+#include <thread>
+#include <mutex>
+#endif
+
 #include "midasio.h"
 #include "VirtualOdb.h"
 
@@ -151,18 +155,19 @@ class TARootHelper
 };
 #endif
 
-#ifdef MODULE_MULTITHREAD
+#ifdef HAVE_CXX11_THREADS
 class TAMultithreadHelper
 {
-  public:
-     static bool gfMultithread;
-     static uint gfMtQueueFullUSleepTime; //u seconds
-     static uint gfMtQueueEmptyUSleepTime; //u seconds
-     static uint gfMtMaxBacklog;
-     static std::mutex gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
+public:
+   static bool gfMultithread;
+   static int  gfMtQueueFullUSleepTime; //u seconds
+   static int  gfMtQueueEmptyUSleepTime; //u seconds
+   static int  gfMtMaxBacklog;
+   static std::mutex gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
 
-     TAMultithreadHelper();
-     ~TAMultithreadHelper();
+public:
+   TAMultithreadHelper(); // ctor
+   ~TAMultithreadHelper(); // dtor
 };
 #endif
 
