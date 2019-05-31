@@ -168,6 +168,12 @@ void TARunObject::AnalyzeSpecialEvent(TARunInfo* runinfo, TMEvent* event)
 //
 //////////////////////////////////////////////////////////
 
+void TAFactory::Usage()
+{
+   if (gTrace)
+      printf("TAFactory::Usage!\n");
+}
+
 void TAFactory::Init(const std::vector<std::string> &args)
 {
    if (gTrace)
@@ -1731,6 +1737,10 @@ static void help()
 #endif
   printf("\t--: All following arguments are passed to the analyzer modules Init() method\n");
   printf("\n");
+  printf("Analyzer modules usage:\n");
+  if (gModules)
+     for (unsigned i=0; i<(*gModules).size(); i++)
+        (*gModules)[i]->Usage();
   printf("Example1: analyze online data: ./analyzer.exe -P9091\n");
   printf("Example2: analyze existing data: ./analyzer.exe /data/alpha/current/run00500.mid\n");
   exit(1);

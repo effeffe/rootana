@@ -112,6 +112,7 @@ class TAFactory
    virtual TARunObject* NewRunObject(TARunInfo* runinfo) = 0; // factory for Run objects
 
  public:
+   virtual void Usage(); // Display usage (flags to pass to init etc)
    virtual void Init(const std::vector<std::string> &args); // start of analysis
    virtual void Finish(); // end of analysis
 };
