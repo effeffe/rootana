@@ -64,10 +64,12 @@ TARunInfo::~TARunInfo()
    if (gTrace) {
       printf("TARunInfo::dtor: deleted %d queued flow events!\n", count);
    }
+#ifdef HAVE_CXX11_THREADS
    if (fMtInfo) {
       delete fMtInfo;
       fMtInfo = NULL;
    }
+#endif
 }
 
 //////////////////////////////////////////////////////////
@@ -310,9 +312,9 @@ TAMultithreadHelper::~TAMultithreadHelper() // dtor
    int nmodules = fMtFlowQueueMutex.size();
 
    // just for kicks, check that all queues have correct size
-   assert(nmodules == fMtFlowQueue.size());
-   assert(nmodules == fMtFlagQueue.size());
-   assert(nmodules == fMtFlowQueueMutex.size());
+   assert(nmodules == (int)fMtFlowQueue.size());
+   assert(nmodules == (int)fMtFlagQueue.size());
+   assert(nmodules == (int)fMtFlowQueueMutex.size());
 
    // should not come to the destructor while threads are still running
    assert(fMtShutdown == true);
@@ -359,7 +361,7 @@ static void MtQueueFlowEvent(TAMultithreadHelper* mt, int i, TAFlags* flag, TAFl
          //Lock and queue events
          std::lock_guard<std::mutex> lock(mt->fMtFlowQueueMutex[i]);
          
-         if ((mt->fMtFlowQueue[i].size() < mt->fMtQueueDepth) || mt->fMtShutdown) {
+         if ((((int)mt->fMtFlowQueue[i].size()) < mt->fMtQueueDepth) || mt->fMtShutdown) {
             mt->fMtFlowQueue[i].push_back(flow);
             mt->fMtFlagQueue[i].push_back(flag);
             return;
@@ -381,6 +383,12 @@ void PrintMtQueueLength(TAMultithreadHelper* mt)
    }
 }
 
+#else
+static void MtQueueFlowEvent(TAMultithreadHelper* mt, int i, TAFlags* flag, TAFlowEvent* flow)
+{
+   fprintf(stderr, "MtQueueFlowEvent() should not have been called when compiled without C++11 thread support\n");
+   abort();
+}
 #endif
 
 //////////////////////////////////////////////////////////
@@ -457,9 +465,9 @@ public:
 
       TAMultithreadHelper* mt = fRunInfo->fMtInfo;
 
-      assert(nModules == mt->fMtFlowQueueMutex.size());
-      assert(nModules == mt->fMtFlowQueue.size());
-      assert(nModules == mt->fMtFlagQueue.size());
+      assert(nModules == (int)mt->fMtFlowQueueMutex.size());
+      assert(nModules == (int)mt->fMtFlowQueue.size());
+      assert(nModules == (int)mt->fMtFlagQueue.size());
 
       while (data_processing) {
          if (mt->fMtShutdown) {
@@ -543,7 +551,7 @@ public:
 
       int nModules = (*gModules).size();
 
-      for (unsigned i=0; i<nModules; i++)
+      for (int i=0; i<nModules; i++)
          fRunRun.push_back((*gModules)[i]->NewRunObject(fRunInfo));
 
 #ifdef HAVE_CXX11_THREADS
