@@ -19,6 +19,7 @@ pipelines:
           - echo $ROOTSYS
           - echo "Root version"
           - root-config --version
+          - root-config --features
           - root-config --libs
           - root-config --glibs
           - gcc -v
@@ -34,6 +35,7 @@ pipelines:
           - echo $ROOTSYS
           - echo "Root version"
           - root-config --version
+          - root-config --features
           - root-config --libs
           - root-config --glibs
           - gcc -v
@@ -49,6 +51,7 @@ pipelines:
           - echo $ROOTSYS
           - echo "Root version"
           - root-config --version
+          - root-config --features
           - root-config --libs
           - root-config --glibs
           - gcc -v
@@ -81,6 +84,7 @@ pipelines:
           - cat /etc/*release
           - echo $ROOTSYS
           - root-config --version
+          - root-config --features
           - root-config --libs
           - root-config --glibs
           - gcc -v
@@ -96,6 +100,7 @@ pipelines:
           - echo $ROOTSYS
           - echo "Root version"
           - root-config --version
+          - root-config --features
           - root-config --libs
           - root-config --glibs
           - gcc -v
