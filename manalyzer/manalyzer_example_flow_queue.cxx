@@ -59,7 +59,7 @@ public:
          PhysicsEvent* e = new PhysicsEvent(NULL);
 
          // push physics events into the event queue
-         runinfo->fFlowQueue.push_back(e);
+         runinfo->AddToFlowQueue(e);
 
          // analysis of the PhysicsEvent should be done
          // in AnalyzeFlowEvent()
@@ -68,7 +68,7 @@ public:
       return flow; // normal flow mechanism is not used here
    }
 
-   void PreEndRun(TARunInfo* runinfo, std::deque<TAFlowEvent*>* flow_queue)
+   void PreEndRun(TARunInfo* runinfo)
    {
       printf("Module1::PreEndRun, run %d\n", runinfo->fRunNo);
 
@@ -85,7 +85,7 @@ public:
          PhysicsEvent* e = new PhysicsEvent(NULL);
 
          // push physics events into the event queue
-         flow_queue->push_back(e);
+         runinfo->AddToFlowQueue(e);
       }
    }
 

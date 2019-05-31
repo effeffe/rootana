@@ -30,6 +30,8 @@ TARunInfo::TARunInfo(int runno, const char* filename, const std::vector<std::str
    fOdb = NULL;
 #ifdef HAVE_ROOT
    fRoot = new TARootHelper(this);
+#else
+   fRoot = NULL;
 #endif
    fMtInfo = NULL;
    fArgs = args;
@@ -52,9 +54,10 @@ TARunInfo::~TARunInfo()
    }
 #endif
    int count = 0;
-   while (!fFlowQueue.empty()) {
-      TAFlowEvent* flow = fFlowQueue.front();
-      fFlowQueue.pop_front();
+   while (1) {
+      TAFlowEvent* flow = ReadFlowQueue();
+      if (!flow)
+         break;
       delete flow;
       count++;
    }
@@ -62,7 +65,7 @@ TARunInfo::~TARunInfo()
       printf("TARunInfo::dtor: deleted %d queued flow events!\n", count);
    }
    if (fMtInfo) {
-      // FIXME: who deleted fMtInfo? K.O.
+      delete fMtInfo;
       fMtInfo = NULL;
    }
 }
@@ -131,7 +134,7 @@ void TARunObject::ResumeRun(TARunInfo* runinfo)
       printf("TARunObject::ResumeRun, run %d\n", runinfo->fRunNo);
 }
 
-void TARunObject::PreEndRun(TARunInfo* runinfo, std::deque<TAFlowEvent*>* flow_queue)
+void TARunObject::PreEndRun(TARunInfo* runinfo)
 {
    if (gTrace)
       printf("TARunObject::PreEndRun, run %d\n", runinfo->fRunNo);
@@ -278,21 +281,106 @@ TARootHelper::~TARootHelper() // dtor
 //////////////////////////////////////////////////////////
 
 #ifdef HAVE_CXX11_THREADS
-TAMultithreadHelper::TAMultithreadHelper()
+
+static int gDefaultMultithreadQueueLength = 100;
+static int gDefaultMultithreadWaitEmpty = 100; // microseconds
+static int gDefaultMultithreadWaitFull = 100; // microseconds
+
+TAMultithreadHelper::TAMultithreadHelper() // ctor
 {
-   //ctor
+   // default max queue size
+   fMtQueueDepth = gDefaultMultithreadQueueLength;
+   // special end-of-run marker event
+   fMtLastItemInQueue = new TAFlowEvent(NULL);
+   // flag to shutdown the threads
+   fMtShutdown = false;
+   // quit flag from AnalyzeFlowEvent()
+   fMtQuit = false;
+   // queue settings
+   fMtQueueFullUSleepTime  = gDefaultMultithreadWaitFull; //u seconds
+   fMtQueueEmptyUSleepTime = gDefaultMultithreadWaitEmpty; //u seconds
 }
 
-TAMultithreadHelper::~TAMultithreadHelper()
+TAMultithreadHelper::~TAMultithreadHelper() // dtor
 {
-   //dtor
+   if (fMtLastItemInQueue) {
+      delete fMtLastItemInQueue;
+      fMtLastItemInQueue = NULL;
+   }
+   int nmodules = fMtFlowQueueMutex.size();
+
+   // just for kicks, check that all queues have correct size
+   assert(nmodules == fMtFlowQueue.size());
+   assert(nmodules == fMtFlagQueue.size());
+   assert(nmodules == fMtFlowQueueMutex.size());
+
+   // should not come to the destructor while threads are still running
+   assert(fMtShutdown == true);
+
+   int count = 0;
+   for (int i=0; i<nmodules; i++) {
+      // check that the thread is stopped
+      //assert(!fMtThread[i].joinable());
+      // empty the thread queue
+      std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i]);
+      while (!fMtFlowQueue[i].empty()) {
+         TAFlowEvent* flow = fMtFlowQueue[i].front();
+         TAFlags* flag = fMtFlagQueue[i].front();
+         fMtFlowQueue[i].pop_front();
+         fMtFlagQueue[i].pop_front();
+         delete flow;
+         delete flag;
+         count++;
+      }
+      // implicit unlock of mutex
+   }
+   if (gTrace) {
+      printf("TAMultithreadInfo::dtor: deleted %d queued flow events!\n", count);
+   }
 }
 
 bool TAMultithreadHelper::gfMultithread           = false;
-int TAMultithreadHelper::gfMtQueueFullUSleepTime  = 100; //u seconds
-int TAMultithreadHelper::gfMtQueueEmptyUSleepTime = 100; //u seconds
 int TAMultithreadHelper::gfMtMaxBacklog           = 100;
 std::mutex TAMultithreadHelper::gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
+
+static void MtQueueFlowEvent(TAMultithreadHelper* mt, int i, TAFlags* flag, TAFlowEvent* flow)
+{
+   assert(mt);
+
+   if (flag == NULL) {
+      flag = new TAFlags;
+      *flag = 0;
+   }
+
+   //PrintQueueLength();
+
+   while (1) {
+      {
+         //Lock and queue events
+         std::lock_guard<std::mutex> lock(mt->fMtFlowQueueMutex[i]);
+         
+         if ((mt->fMtFlowQueue[i].size() < mt->fMtQueueDepth) || mt->fMtShutdown) {
+            mt->fMtFlowQueue[i].push_back(flow);
+            mt->fMtFlagQueue[i].push_back(flag);
+            return;
+         }
+         // Unlock when we go out of scope
+      }
+      
+      usleep(mt->fMtQueueFullUSleepTime);
+   }
+}
+
+//Function to print the length of the flow queue when in multithread mode
+//Maybe make root update a graphical window?
+void PrintMtQueueLength(TAMultithreadHelper* mt)
+{
+   printf("Multithread queue lengths:\n");
+   for (unsigned i=0; i<mt->fMtFlowQueue.size(); i++) {
+      printf("%d:\t%zu\n",i,mt->fMtFlowQueue[i].size());
+   }
+}
+
 #endif
 
 //////////////////////////////////////////////////////////
@@ -338,36 +426,19 @@ static double GetTimeSec()
 }
 #endif
 
-typedef std::deque<TAFlowEvent*> EventQueue;
-typedef std::deque<TAFlags*> FlagsQueue;
-
 class RunHandler
 {
 public:
    TARunInfo* fRunInfo;
    std::vector<TARunObject*> fRunRun;
    std::vector<std::string>  fArgs;
+   bool fMultithreadMode;
 
-#ifdef HAVE_CXX11_THREADS
-   //Items for multithreaded mode
-   std::vector<EventQueue>   fMtFlowQueue;
-   std::vector<FlagsQueue>   fMtFlagQueue;
-   std::vector<std::mutex>   fMtFlowQueueMutex; // multithread lock when moving flow between queues
-   std::vector<std::thread*> fMtThreads; // Processing threads (one per TARunObject)
-   int                       fMtQueueDepth = 100; //Maximum depth for flow_queue (limit memory consumption)
-   TAFlowEvent*              fMtLastItemInQueue; // special end-of-run marker event
-#endif
-   
-   RunHandler(const std::vector<std::string>& args) // ctor
+   RunHandler(const std::vector<std::string>& args, bool multithread) // ctor
    {
       fRunInfo = NULL;
       fArgs = args;
-#ifdef HAVE_CXX11_THREADS
-      if (TAMultithreadHelper::gfMultithread) {
-         //Dummy pointer to safely mark the end of flow
-         fMtLastItemInQueue = new TAFlowEvent(NULL);
-      }
-#endif
+      fMultithreadMode = multithread;
    }
 
    ~RunHandler() // dtor
@@ -376,116 +447,88 @@ public:
          delete fRunInfo;
          fRunInfo = NULL;
       }
-      // FIXME: do we need to delete fMtLastItemInQueue? K.O.
    }
 
 #ifdef HAVE_CXX11_THREADS
-   //Multithreaded process with queue of flow events
-   void MultithreadQueueItem(TAFlags* flags, TAFlowEvent* flow)
-   {
-      // FIXME: during analyzer shutdown, we need to have a way to break this infinite loop. K.O.
-      while (1) {
-         {
-            //Lock and queue events
-            std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[0]);
-            
-            if (fMtFlowQueue[0].size() < fMtQueueDepth) {
-               fMtFlowQueue[0].push_back(flow);
-               fMtFlagQueue[0].push_back(flags);
-               return;
-            }
-            // Unlock when we go out of scope
-         }
-
-         usleep(100);
-      }
-   }
-
    void PerModuleThread(int i)
    {
       bool data_processing=true;
       int nModules=(*gModules).size();
-      if (!TAMultithreadHelper::gfMultithread) {
-         printf("PerModuleThread function should only be called in multithead mode!\n");
-         exit(1);
-      }
 
-      while (data_processing)
-      {  
-         bool is_empty=true;
-         {
-            std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i]);
-            is_empty=fMtFlowQueue[i].empty();
+      TAMultithreadHelper* mt = fRunInfo->fMtInfo;
+
+      assert(nModules == mt->fMtFlowQueueMutex.size());
+      assert(nModules == mt->fMtFlowQueue.size());
+      assert(nModules == mt->fMtFlagQueue.size());
+
+      while (data_processing) {
+         if (mt->fMtShutdown) {
+            // shut down the thread
+            return;
          }
-         if (is_empty)
-         {
-            usleep(TAMultithreadHelper::gfMtQueueEmptyUSleepTime);
-            continue;
-         }
-         size_t NextQueueSize=0;
-         if (i<nModules-1) // If not the last module
-         {
-            { //Lock guard scope
-               std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i+1]);
-               NextQueueSize=fMtFlowQueue[i+1].size();
-               //Check flag at front of queue (ie has Quit been called?)
-               TAFlags* f=fMtFlagQueue[i].front(); // FIXME: this is wrong: we locked queue [i+1] then probe queue [i]. K.O.
-               if ((*f) & TAFlag_QUIT) data_processing=false;
-            }
-            if (NextQueueSize>fMtQueueDepth) //Events queue up in next module too large... wait...
-            { 
-               //printf("Sleep for %d\n",TAMultithreadHelper::gfMtQueueFullUSleepTime);
-               usleep(TAMultithreadHelper::gfMtQueueFullUSleepTime);
-               //printf("Thread %d waiting as next module has %d jobs to do...it is %d \n",i,fMtFlagQueue[i+1].size(),fMtFlagQueue[i+1].empty());
-               continue;
-            }
-         }
-         TAFlowEvent* flow=NULL;
-         TAFlags* flag=NULL;
+
+         TAFlowEvent* flow = NULL;
+         TAFlags* flag = NULL;
+
          { //Lock scope
-            std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i]);
-            flow=fMtFlowQueue[i].front();
-            flag=fMtFlagQueue[i].front();
-            fMtFlowQueue[i].pop_front();
-            fMtFlagQueue[i].pop_front();
+            std::lock_guard<std::mutex> lock(mt->fMtFlowQueueMutex[i]);
+            if (!mt->fMtFlowQueue[i].empty()) {
+               flow=mt->fMtFlowQueue[i].front();
+               flag=mt->fMtFlagQueue[i].front();
+               mt->fMtFlowQueue[i].pop_front();
+               mt->fMtFlagQueue[i].pop_front();
+            }
+            // implicit unlock of mutex
          }
-         if ((*flag) & TAFlag_QUIT) data_processing=false;
-         if ((*flag) & TAFlag_SKIP)
-         {
-            delete flow;
-            delete flag;
+
+         if (flow == NULL) { // wait until queue not empty
+            usleep(mt->fMtQueueEmptyUSleepTime);
             continue;
          }
 
          //If the flow has the last item, stop this thread
-         if (flow==fMtLastItemInQueue)
-         {
-            data_processing=false;
-         }
-         else
-         {
-            flow=fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flag, flow);
-            if (!data_processing)
-            {
-               //Stop all other threads (tell all threads before this 
-               //one, ones after will get the quit through the flow)
-               for (int j=0; j<i; j++)
-               {
-                  std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[j]);
-                  fMtFlagQueue[j].push_front(flag);
-               }
+         if (flow == mt->fMtLastItemInQueue) {
+            // this is the last event, stop the thread after processing it
+            data_processing = false;
+         } else {
+            flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flag, flow);
+
+            if ((*flag) & TAFlag_QUIT) { // shut down the analyzer
+               data_processing=false;
+               delete flow;
+               delete flag;
+               flow = NULL;
+               flag = NULL;
+               mt->fMtQuit = true;
+               continue;
+            }
+
+            if ((*flag) & TAFlag_SKIP) { // stop processing this event
+               delete flow;
+               delete flag;
+               flow = NULL;
+               flag = NULL;
+               continue;
             }
          }
+
          if (i==nModules-1) //If I am the last module... free memory, else queue up for next module to process
          {
+            if (flow == mt->fMtLastItemInQueue) {
+               // we are deleting the end-of-run marker,
+               // tell the destructor that it does not need to delete it, too
+               mt->fMtLastItemInQueue = NULL;
+            }
             delete flow;
             delete flag;
+            flow = NULL;
+            flag = NULL;
          }
          else 
          {
-            std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[i+1]);
-            fMtFlowQueue[i+1].push_back(flow);
-            fMtFlagQueue[i+1].push_back(flag);
+            MtQueueFlowEvent(mt, i+1, flag, flow);
+            flow = NULL;
+            flag = NULL;
          }
       }
    }
@@ -498,29 +541,26 @@ public:
       
       fRunInfo = new TARunInfo(run_number, file_name, fArgs);
 
-      bool push = true;
-      
+      int nModules = (*gModules).size();
+
+      for (unsigned i=0; i<nModules; i++)
+         fRunRun.push_back((*gModules)[i]->NewRunObject(fRunInfo));
+
 #ifdef HAVE_CXX11_THREADS
-      fRunInfo->fMtInfo=new TAMultithreadHelper();
-      if (TAMultithreadHelper::gfMultithread) {
-         int nModules=(*gModules).size();
-         fMtFlowQueue.resize(nModules);
-         fMtFlagQueue.resize(nModules);
+      if (fMultithreadMode) {
+         TAMultithreadHelper* mt = new TAMultithreadHelper();
+         fRunInfo->fMtInfo = mt;
+         mt->fMtFlowQueue.resize(nModules);
+         mt->fMtFlagQueue.resize(nModules);
          std::vector<std::mutex> mutsize(nModules);
-         fMtFlowQueueMutex.swap(mutsize);
-         fMtThreads.resize(nModules);
+         mt->fMtFlowQueueMutex.swap(mutsize);
+         mt->fMtThreads.resize(nModules);
          for (int i=0; i<nModules; i++) {
             printf("Create fMtFlowQueue thread %d\n",i);
-            fRunRun.push_back((*gModules)[i]->NewRunObject(fRunInfo));
-            fMtThreads[i]=new std::thread(&RunHandler::PerModuleThread,this,i);
+            mt->fMtThreads[i]=new std::thread(&RunHandler::PerModuleThread,this,i);
          }
-         push = false;
       }
 #endif
-      if (push) {
-         for (unsigned i=0; i<(*gModules).size(); i++)
-            fRunRun.push_back((*gModules)[i]->NewRunObject(fRunInfo));
-      }
    }
 
    void BeginRun()
@@ -531,36 +571,50 @@ public:
          fRunRun[i]->BeginRun(fRunInfo);
    }
 
-   void EndRun()
+   void EndRun(TAFlags* flags)
    {
       assert(fRunInfo);
+
+      // make sure the shutdown sequence matches the description in the README file!
+
+      // first, call PreEndRun() to tell analysis modules that there will be no more
+      // MIDAS events, no more calls to Analyze(). PreEndRun() may generate more
+      // flow events, they to into the flow queue or into the multithread queue
    
-      // FIXME: flags may be set to TAFlag_QUIT, which should
-      // be propagated to the called of EndRun() who should
-      // detect it and cause the analyzer to shutdown.
-      TAFlags flags = 0;
-      AnalyzeFlowQueue(&flags);
+      for (unsigned i=0; i<fRunRun.size(); i++)
+         fRunRun[i]->PreEndRun(fRunInfo);
+
+      // if in single threaded mode, analyze all queued flow events - call AnalyzeFlowEvent()
+      // this can generate additional flow events that will be queued in the queue.
+
+      AnalyzeFlowQueue(flags);
 
 #ifdef HAVE_CXX11_THREADS
-      if (TAMultithreadHelper::gfMultithread) {
-         TAFlags* last_flags = new TAFlags;
-         *last_flags = 0;
-         { //lock scope
-            std::lock_guard<std::mutex> lock(fMtFlowQueueMutex[0]);
-            fMtFlowQueue[0].push_back(fMtLastItemInQueue);
-            fMtFlagQueue[0].push_back(last_flags);
-            fMtLastItemInQueue = NULL; // ownership is transferred to the queue
-         }
+      // if in multithreaded mode, queue the special end-of-run marker event
+      // then wait for the threads to complete.
+      // FIXME: AnalyzeFlowEvent() can generate additional flow events, they will
+      // be queued after the special end-of-run marker and will not be analyzed.
+      // perhaps instead of the special end-of-run marker, we should wait
+      // for the queues to empty naturally, then set fMtShutdown to tell the threads
+      // to stop, then to thread join to wait until they actually shutdown. K.O.
+      
+      if (fRunInfo->fMtInfo) {
+         MtQueueFlowEvent(fRunInfo->fMtInfo, 0, NULL, fRunInfo->fMtInfo->fMtLastItemInQueue);
          for (unsigned i=0; i<fRunRun.size(); i++) {
             printf("Waiting for thread %d to finish...\n", i);
-            fMtThreads[i]->join();
+            fRunInfo->fMtInfo->fMtThreads[i]->join();
          }
+
+         if (fRunInfo->fMtInfo->fMtQuit) {
+            (*flags) |= TAFlag_QUIT;
+         }
+
+         fRunInfo->fMtInfo->fMtShutdown = true; // FIXME: this tells the destructor that threads are shutdown
       }
 #endif
-      
-      for (unsigned i=0; i<fRunRun.size(); i++)
-         fRunRun[i]->PreEndRun(fRunInfo, &fRunInfo->fFlowQueue);
 
+      // all data analysis is complete
+      
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->EndRun(fRunInfo);
    }
@@ -595,54 +649,34 @@ public:
          fRunRun[i]->AnalyzeSpecialEvent(fRunInfo, event);
    }
 
-#ifdef HAVE_CXX11_THREADS
-   //Function to print the length of the flow queue when in multithread mode
-   //Maybe make root update a graphical window?
-   void PrintMtQueueLength()
-   {
-     printf("Multithread queue lengths:\n");
-     for (unsigned i=0; i<fRunRun.size(); i++) {
-       printf("%d:\t%zu\n",i,fMtFlowQueue[i].size());
-     }
-   }
-#endif
-
    TAFlowEvent* AnalyzeFlowEvent(TAFlags* flags, TAFlowEvent* flow)
    {
-#ifdef HAVE_CXX11_THREADS
-      if (TAMultithreadHelper::gfMultithread) {
-         MultithreadQueueItem(flags, flow); // FIXME: "flags" is a pointer to a local variable. K.O.
-         //PrintQueueLength();
-         return NULL;
+      for (unsigned i=0; i<fRunRun.size(); i++) {
+         flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
+         if (!flow)
+            break;
+         if ((*flags) & TAFlag_SKIP)
+               break;
+         if ((*flags) & TAFlag_QUIT)
+            break;
       }
-      else
-#endif
-      {
-         for (unsigned i=0; i<fRunRun.size(); i++) {
-            flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
-            if (!flow)
-               break;
-            if ((*flags) & TAFlag_SKIP)
-               break;
-            if ((*flags) & TAFlag_QUIT)
-               break;
-         }
-         return flow;
-      }
+      return flow;
    }
 
    void AnalyzeFlowQueue(TAFlags* ana_flags)
    {
-      while (!fRunInfo->fFlowQueue.empty()) {
-         TAFlowEvent* flow = fRunInfo->fFlowQueue.front();
-         fRunInfo->fFlowQueue.pop_front();
-         if (flow) {
-            int flags = 0;
-            flow = AnalyzeFlowEvent(&flags, flow);
-            if (flow)
-               delete flow;
-            if (flags & TAFlag_QUIT)
-               *ana_flags |= TAFlag_QUIT;
+      while (1) {
+         TAFlowEvent* flow = fRunInfo->ReadFlowQueue();
+         if (!flow)
+            break;
+
+         int flags = 0;
+         flow = AnalyzeFlowEvent(&flags, flow);
+         if (flow)
+            delete flow;
+         if (flags & TAFlag_QUIT) {
+            *ana_flags |= TAFlag_QUIT;
+            break;
          }
       }
    }
@@ -658,10 +692,20 @@ public:
          flow = fRunRun[i]->Analyze(fRunInfo, event, flags, flow);
          if (*flags & TAFlag_SKIP)
             break;
+         if (*flags & TAFlag_QUIT)
+            break;
       }
 
-      if (flow && !(*flags & TAFlag_SKIP)) {
-         flow = AnalyzeFlowEvent(flags, flow);
+      if (flow) {
+         if ((*flags & TAFlag_SKIP)||(*flags & TAFlag_QUIT)) {
+            // skip further processing of this event
+         } else {
+            if (fRunInfo->fMtInfo) {
+               MtQueueFlowEvent(fRunInfo->fMtInfo, 0, NULL, flow);
+            } else {
+               flow = AnalyzeFlowEvent(flags, flow);
+            }
+         }
       }
       
       if (*flags & TAFlag_WRITE)
@@ -671,9 +715,31 @@ public:
       if (flow)
          delete flow;
 
+      if (*flags & TAFlag_QUIT)
+         return;
+
       AnalyzeFlowQueue(flags);
    }
 };
+
+TAFlowEvent* TARunInfo::ReadFlowQueue()
+{
+   if (fFlowQueue.empty())
+      return NULL;
+
+   TAFlowEvent* flow = fFlowQueue.front();
+   fFlowQueue.pop_front();
+   return flow;
+}
+
+void TARunInfo::AddToFlowQueue(TAFlowEvent* flow)
+{
+   if (fMtInfo) {
+      MtQueueFlowEvent(fMtInfo, 0, NULL, flow);
+   } else {
+      fFlowQueue.push_back(flow);
+   }
+}
 
 #ifdef HAVE_MIDAS
 
@@ -691,8 +757,8 @@ public:
    TMWriterInterface* fWriter;
    bool fQuit;
 
-   OnlineHandler(int num_analyze, TMWriterInterface* writer, const std::vector<std::string>& args) // ctor
-      : fRun(args)
+   OnlineHandler(int num_analyze, TMWriterInterface* writer, const std::vector<std::string>& args, bool multithread) // ctor
+      : fRun(args, multithread)
    {
       fQuit = false;
       fNumAnalyze = num_analyze;
@@ -717,7 +783,10 @@ public:
       
       if (transition == TR_START) {
          if (fRun.fRunInfo) {
-            fRun.EndRun();
+            TAFlags flags = 0;
+            fRun.EndRun(&flags);
+            if (flags & TAFlag_QUIT)
+               fQuit = true;
             fRun.fRunInfo->fOdb = NULL;
             fRun.DeleteRun();
          }
@@ -726,7 +795,10 @@ public:
          StartRun(run_number);
          printf("Begin run: %d\n", run_number);
       } else if (transition == TR_STOP) {
-         fRun.EndRun();
+         TAFlags flags = 0;
+         fRun.EndRun(&flags);
+         if (flags & TAFlag_QUIT)
+            fQuit = true;
          fRun.fRunInfo->fOdb = NULL;
          fRun.DeleteRun();
          printf("End of run %d\n", run_number);
@@ -763,7 +835,7 @@ public:
    }
 };
 
-static int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostname, const char* exptname, int num_analyze, TMWriterInterface* writer)
+static int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostname, const char* exptname, int num_analyze, TMWriterInterface* writer, bool multithread)
 {
    TMidasOnline *midas = TMidasOnline::instance();
 
@@ -773,7 +845,7 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
       return -1;
    }
 
-   OnlineHandler* h = new OnlineHandler(num_analyze, writer, args);
+   OnlineHandler* h = new OnlineHandler(num_analyze, writer, args, multithread);
 
    midas->RegisterHandler(h);
    midas->registerTransitions();
@@ -808,7 +880,8 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
    }
 
    if (h->fRun.fRunInfo) {
-      h->fRun.EndRun();
+      TAFlags flags = 0;
+      h->fRun.EndRun(&flags);
       h->fRun.fRunInfo->fOdb = NULL;
       h->fRun.DeleteRun();
    }
@@ -824,12 +897,12 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
 
 #endif
 
-static int ProcessMidasFiles(const std::vector<std::string>& files, const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer)
+static int ProcessMidasFiles(const std::vector<std::string>& files, const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer, bool multithread)
 {
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Init(args);
 
-   RunHandler run(args);
+   RunHandler run(args, multithread);
 
    bool done = false;
 
@@ -866,7 +939,11 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
                      run.NextSubrun();
                   } else {
                      // file with a different run number
-                     run.EndRun();
+                     TAFlags flags = 0;
+                     run.EndRun(&flags);
+                     if (flags & TAFlag_QUIT) {
+                        done = true;
+                     }
                      run.DeleteRun();
                   }
                }
@@ -959,7 +1036,10 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
    }
 
    if (run.fRunInfo) {
-      run.EndRun();
+      TAFlags flags = 0;
+      run.EndRun(&flags);
+      if (flags & TAFlag_QUIT)
+         done = true;
       run.DeleteRun();
    }
    
@@ -969,12 +1049,12 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
    return 0;
 }
 
-static int ProcessDemoMode(const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer)
+static int ProcessDemoMode(const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer, bool multithread)
 {
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Init(args);
 
-   RunHandler run(args);
+   RunHandler run(args, multithread);
 
    bool done = false;
 
@@ -1040,7 +1120,8 @@ static int ProcessDemoMode(const std::vector<std::string>& args, int num_skip, i
    }
 
    if (run.fRunInfo) {
-      run.EndRun();
+      TAFlags flags = 0;
+      run.EndRun(&flags);
       run.DeleteRun();
    }
    
@@ -1631,9 +1712,9 @@ static void help()
   printf("\t-i: Enable intractive mode\n");
 #ifdef HAVE_CXX11_THREADS
   printf("\t--mt: Enable multithreaded mode. Extra multithread config settings:\n");
-  printf("\t\t--mtqlNNN: Module thread queue length (buffer).              Default: %d\n",TAMultithreadHelper::gfMtMaxBacklog);
-  printf("\t\t--mtseNNN: Module thread sleep time with empty queue.        Default: %d\n",TAMultithreadHelper::gfMtQueueEmptyUSleepTime );
-  printf("\t\t--mtsfNNN: Module thread sleep time when next queue is full. Default: %d\n",TAMultithreadHelper::gfMtQueueFullUSleepTime );
+  printf("\t\t--mtqlNNN: Module thread queue length (buffer).              Default: %d\n", gDefaultMultithreadQueueLength);
+  printf("\t\t--mtseNNN: Module thread sleep time with empty queue (usec). Default: %d\n", gDefaultMultithreadWaitEmpty);
+  printf("\t\t--mtsfNNN: Module thread sleep time when next queue is full (usec). Default: %d\n", gDefaultMultithreadWaitFull);
 #else
   printf("\t--mt: Enable multithreaded mode is not available: no C++11 threads\n");
 #endif
@@ -1684,12 +1765,7 @@ int manalyzer_main(int argc, char* argv[])
    bool root_graphics = false;
    bool interactive = false;
 
-#ifdef HAVE_CXX11_THREADS
    bool multithread = false;
-   int  multithreadQueueLength = 0;
-   int  multithreadWaitEmpty   = 0;
-   int  multithreadWaitFull    = 0;
-#endif
 
    std::vector<std::string> files;
    std::vector<std::string> modargs;
@@ -1736,11 +1812,11 @@ int manalyzer_main(int argc, char* argv[])
 #endif
 #ifdef HAVE_CXX11_THREADS
       } else if (strncmp(arg,"--mtql",6)==0) {
-         multithreadQueueLength = atoi(arg+6);
+         gDefaultMultithreadQueueLength = atoi(arg+6);
       } else if (strncmp(arg,"--mtse",6)==0) {
-         multithreadWaitEmpty = atoi(arg+6);
+         gDefaultMultithreadWaitEmpty = atoi(arg+6);
       } else if (strncmp(arg,"--mtsf",6)==0) {
-         multithreadWaitFull = atoi(arg+6);
+         gDefaultMultithreadWaitFull = atoi(arg+6);
       } else if (strncmp(arg,"--mt",4)==0) {
          multithread=true;
 #endif
@@ -1779,21 +1855,6 @@ int manalyzer_main(int argc, char* argv[])
 
    TARootHelper::fgDir = new TDirectory("manalyzer", "location of histograms");
    TARootHelper::fgDir->cd();
-#endif
-#ifdef HAVE_CXX11_THREADS
-   TAMultithreadHelper::gfMultithread = multithread;
-   if (multithreadQueueLength) {
-      TAMultithreadHelper::gfMtMaxBacklog=multithreadQueueLength;
-      printf("Setting Multithread Queue length to %d\n",TAMultithreadHelper::gfMtMaxBacklog);
-  }
-   if (multithreadWaitEmpty) {
-      TAMultithreadHelper::gfMtQueueEmptyUSleepTime=multithreadWaitEmpty;
-      printf("Setting Sleep time when multithread queue is empty to %d\n",TAMultithreadHelper::gfMtQueueEmptyUSleepTime);
-  }
-   if (multithreadWaitFull) {
-      TAMultithreadHelper::gfMtQueueFullUSleepTime=multithreadWaitFull;
-      printf("Setting Sleep time when next multithread queue is full to %d\n",TAMultithreadHelper::gfMtQueueFullUSleepTime);
-  }
 #endif
 #ifdef XHAVE_LIBNETDIRECTORY
    if (tcpPort) {
@@ -1836,12 +1897,12 @@ int manalyzer_main(int argc, char* argv[])
    }
 
    if (demo_mode) {
-      ProcessDemoMode(modargs, num_skip, num_analyze, writer);
+      ProcessDemoMode(modargs, num_skip, num_analyze, writer, multithread);
    } else if (files.size() > 0) {
-      ProcessMidasFiles(files, modargs, num_skip, num_analyze, writer);
+      ProcessMidasFiles(files, modargs, num_skip, num_analyze, writer, multithread);
    } else {
 #ifdef HAVE_MIDAS
-      ProcessMidasOnline(modargs, hostname, exptname, num_analyze, writer);
+      ProcessMidasOnline(modargs, hostname, exptname, num_analyze, writer, multithread);
 #endif
    }
 

@@ -30,14 +30,20 @@ class TARunInfo
    TARootHelper* fRoot;
    TAMultithreadHelper* fMtInfo;
    std::vector<std::string> fArgs;
-   std::deque<TAFlowEvent*> fFlowQueue;
    
  public:
    TARunInfo(int runno, const char* filename, const std::vector<std::string>& args);
    ~TARunInfo();
 
+ public:
+   void AddToFlowQueue(TAFlowEvent*);
+   TAFlowEvent* ReadFlowQueue();
+
  private:
    TARunInfo() {}; // hidden default constructor
+
+ private:
+   std::deque<TAFlowEvent*> fFlowQueue;
 };
 
 class TAFlowEvent
@@ -86,7 +92,7 @@ class TARunObject
    virtual void PauseRun(TARunInfo* runinfo); // pause of run (if online)
    virtual void ResumeRun(TARunInfo* runinfo); // resume of run (if online)
 
-   virtual void PreEndRun(TARunInfo* runinfo, std::deque<TAFlowEvent*>* flow_queue); // generate flow events before end of run
+   virtual void PreEndRun(TARunInfo* runinfo); // generate flow events before end of run
 
    virtual TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow);
    virtual TAFlowEvent* AnalyzeFlowEvent(TARunInfo* runinfo, TAFlags* flags, TAFlowEvent* flow);
@@ -156,12 +162,33 @@ class TARootHelper
 #endif
 
 #ifdef HAVE_CXX11_THREADS
+
+typedef std::deque<TAFlowEvent*> TAFlowEventQueue;
+typedef std::deque<TAFlags*>     TAFlagsQueue;
+
 class TAMultithreadHelper
 {
 public:
+   // per-module queues
+   std::vector<TAFlowEventQueue> fMtFlowQueue;
+   std::vector<TAFlagsQueue>     fMtFlagQueue;
+   // lock for the queues
+   std::vector<std::mutex>       fMtFlowQueueMutex;
+   // per-module threads
+   std::vector<std::thread*> fMtThreads;
+   // maximum number of flow events to queue
+   int fMtQueueDepth;
+   // end-of-run event marker
+   TAFlowEvent* fMtLastItemInQueue;
+   // flag to shutdown all threads
+   bool fMtShutdown;
+   // quit flag from AnalyzeFlowEvent()
+   bool fMtQuit;
+   // queue settings
+   int  fMtQueueFullUSleepTime;  // u seconds
+   int  fMtQueueEmptyUSleepTime; // u seconds
+   
    static bool gfMultithread;
-   static int  gfMtQueueFullUSleepTime; //u seconds
-   static int  gfMtQueueEmptyUSleepTime; //u seconds
    static int  gfMtMaxBacklog;
    static std::mutex gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
 

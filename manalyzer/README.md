@@ -113,13 +113,15 @@ analysis module).
 
 ### The flow event queue
 
-Non-trivial experiments may have multiple physics events contained inside a single MIDAS
-event. In this situation one can unpack each physics event into it's own separate flow event
-and ask manalyzer to process each of these flow events separately, as if there were multiple
-midas events.
+Some experiments may have multiple physics events stored inside a single MIDAS event.
 
-This is done in the Analyze() method by placing the individual flow events
-into the flow queue: TAFlowEvent*e = unpack_event(midas_event); runinfo->fFlowQueue.push_back(e);
+To handle this situation in the manalyzer, one would implement each physics
+event as a flow event. Then one would have the data unpacker module process
+the MIDAS event (in the Analyze() method), unpack all the multiple physics events
+into flow events and queue the flow events for further analysis by calling
+the runinfo->AddToFlowQueue() method. For example, like this:
+
+In the data unpacker Analyze() method: while (1) { TAFlowEvent*e = unpack_next_physics_event(midas_event); runinfo->AddToFlowQueue(e); }
 
 After manalyzer finishes processing the current midas event, it will proceed
 with processing the queued flow events. Each queued flow event is processed the same way
@@ -131,28 +133,39 @@ very end, the flow event is automatically deleted.
 After all queued flow events are processed, manalyzer will continue with processing
 the next midas event.
 
-The flow event queue can also be used to finish processing any events remaining buffered
-or queued at the EndRun() time as described in the next section.
+In the multithreaded mode, the flow event queue works slightly differently:
+instead of using a special flow event queue, flow events are passed directly
+to the multithreading system.
+
+The flow event queue can also be used to process any events remaining
+buffered or queued after the last MIDAS event was processed by using
+the PreEndRun() method as described in the next section.
 
 ### The PreEndRun method
 
 Sometimes physics events need to be generated and processed at the end of a run after all
-midas events have already been processed, after the last Analyze() call, but before
-the final EndRun() call.
+midas events have already been processed (after the last call to Analyze()), but it is too
+late to do this in the final EndRun() call.
 
-This happens when MIDAS midas events contain a continuous stream of data
+This happens when MIDAS events contain a continuous stream of data
 and the stream unpacker has to maintain a buffer of incomplete data between Analyze() calls.
 
 This also happens when the analyzer contains an event builder component which may contain
 a buffer for incomplete or pending physics events.
 
 To ensure that all of this buffered data is analyzed and no unprocessed data is left behind,
-use the method PreEndRun().
+use the PreEndRun() method.
 
-It is called before the final EndRun() and it gives the analysis module an opportunuty to generate
-any number of flow events (via push_back() into an std::deque). After calling PreEndRun()
-for all modules, the accumulated flow events are processed by calling AnalyzeFlowEvent()
-similar to processing normal flow events.
+The PreEndRun() method is called after all MIDAS events have been processed
+but before the final EndRun().
+
+It gives the data unpacker or the event builder module an opportunity
+to unpack the remaining physics events into flow events and queue them for analysis
+by calling runinfo->AddToFlowQueue().
+
+After calling the PreEndRun() method for all modules, the accumulated flow events
+are processed by calling the AnalyzeFlowEvent() method of each module, as described
+in the section about the flow event queue.
 
 ### Event analysis flags
 
@@ -224,7 +237,15 @@ TARunInfo data members:
 
 * fOdb - pointer to a VirtualOdb object. When online, it is connected to the live online ODB. When processing data files, it is connected to the last seen ODB dump event (evid 0x8000 and 0x8001). If none available, it is connected to the special EmptyOdb object (all "odb get" methods return the default values).
 
-* fRoot - pointer to the ROOT helper object (TARootHelper, see the next section). This member only exists if manalyzer is built with HAVE_ROOT.
+* fRoot - pointer to the ROOT helper object (TARootHelper, see the next section). Set to NULL if built without ROOT.
+
+* fArgs - manalyzer command line arguments (argc, argv[])
+
+* fMtInfo - multithreading system queues and locks, set to NULL if in single-thread mode.
+
+TARunInfo methods:
+
+* AddToFlowQueue(TAFlowEvent*e) - queue a flow event for processing, see section about the flow event queue
 
 ### The ROOT helper class TARootHelper
 

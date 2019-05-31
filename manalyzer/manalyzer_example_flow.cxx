@@ -92,7 +92,7 @@ public:
       printf("Example2::dtor!\n");
    }
   
-   void PreEndRun(TARunInfo* runinfo, std::deque<TAFlowEvent*>* flow_queue)
+   void PreEndRun(TARunInfo* runinfo)
    {
       TAFlowEvent* flow = NULL;
       
@@ -103,7 +103,7 @@ public:
       
       flow = new Object3(flow, dptr);
 
-      flow_queue->push_back(flow);
+      runinfo->AddToFlowQueue(flow);
    }
       
    TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
