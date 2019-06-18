@@ -78,11 +78,6 @@ typedef struct mxml_struct {
 
 /*------------------------------------------------------------------*/
 
-/* make functions callable from a C++ program */
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef EXPRT
 #if defined(EXPORT_DLL)
 #define EXPRT __declspec(dllexport)
@@ -147,10 +142,6 @@ void mxml_free_tree(PMXML_NODE tree);
 
 void mxml_dirname(char* path);
 void mxml_basename(char *path);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* _MXML_H_ */
 /*------------------------------------------------------------------*/
