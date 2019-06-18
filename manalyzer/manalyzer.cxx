@@ -716,6 +716,7 @@ public:
          } else {
             if (fRunInfo->fMtInfo) {
                MtQueueFlowEvent(fRunInfo->fMtInfo, 0, NULL, flow);
+               flow = NULL; // ownership passed to the multithread event queue
             } else {
                flow = AnalyzeFlowEvent(flags, flow);
             }
