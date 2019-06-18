@@ -30,6 +30,8 @@ class TARunInfo
    TARootHelper* fRoot;
    TAMultithreadHelper* fMtInfo;
    std::vector<std::string> fArgs;
+   static std::vector<std::string> fgFileList;
+   static int fgCurrentFileIndex;
    
  public:
    TARunInfo(int runno, const char* filename, const std::vector<std::string>& args);

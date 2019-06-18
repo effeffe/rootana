@@ -911,8 +911,16 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
 
 #endif
 
+std::vector<std::string> TARunInfo::fgFileList;
+int TARunInfo::fgCurrentFileIndex = 0;
+
 static int ProcessMidasFiles(const std::vector<std::string>& files, const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer, bool multithread)
 {
+   TARunInfo::fgFileList.clear();
+
+   for (unsigned i=0; i<files.size(); i++)
+      TARunInfo::fgFileList.push_back(files[i]);
+   
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Init(args);
 
@@ -920,8 +928,10 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
 
    bool done = false;
 
-   for (unsigned i=0; i<files.size(); i++) {
-      std::string filename = files[i];
+   for (TARunInfo::fgCurrentFileIndex = 0;
+        TARunInfo::fgCurrentFileIndex < (int)TARunInfo::fgFileList.size();
+        TARunInfo::fgCurrentFileIndex++) {
+      std::string filename = files[TARunInfo::fgCurrentFileIndex];
 
       TMReaderInterface *reader = TMNewReader(filename.c_str());
 
