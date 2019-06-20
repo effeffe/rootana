@@ -932,7 +932,7 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
    for (TARunInfo::fgCurrentFileIndex = 0;
         TARunInfo::fgCurrentFileIndex < (int)TARunInfo::fgFileList.size();
         TARunInfo::fgCurrentFileIndex++) {
-      std::string filename = files[TARunInfo::fgCurrentFileIndex];
+      std::string filename = TARunInfo::fgFileList[TARunInfo::fgCurrentFileIndex];
 
       TMReaderInterface *reader = TMNewReader(filename.c_str());
 
