@@ -192,10 +192,10 @@ ifdef HAVE_ROOT
 ALL  += libMidasServer/test_midasServer.o libMidasServer/test_midasServer.exe
 ifdef HAVE_MIDAS
 ALL  += libMidasInterface/tests/testODB.o libMidasInterface/tests/testODB.exe
+endif
+endif
 ALL  += libMidasInterface/tests/test_mvodb.o
 ALL  += libMidasInterface/tests/test_mvodb.exe
-endif
-endif
 
 # libMidasInterface
 

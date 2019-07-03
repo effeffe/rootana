@@ -12,7 +12,9 @@
 #include <string.h>
 #include <stdlib.h> // exit()
 
+#ifdef HAVE_MIDAS
 #include "TMidasOnline.h"
+#endif
 #include "TMidasFile.h"
 #include "TMidasEvent.h"
 #include "mvodb.h"
@@ -67,14 +69,15 @@ int main(int argc, char *argv[])
    signal(SIGBUS,  SIG_DFL);
    signal(SIGSEGV, SIG_DFL);
    signal(SIGPIPE, SIG_DFL);
- 
+
+#ifdef HAVE_MIDAS
    const char* hostname = NULL;
    const char* exptname = NULL;
+#endif
    const char* filename = argv[1];
    bool online  = false;
    bool xmlfile = false;
    bool jsonfile = false;
-   bool httpfile = false;
    bool nullodb = false;
 
    if (!filename)
@@ -86,9 +89,11 @@ int main(int argc, char *argv[])
    else if (strstr(filename, "null")!=0)
      nullodb = true;
    else
-     httpfile = true;
+     nullodb = true;
 
+#ifdef HAVE_MIDAS
    TMidasOnline *midas = NULL;
+#endif
    
    MVOdb* odb = NULL;
    MVOdbError odberror;
@@ -100,6 +105,7 @@ int main(int argc, char *argv[])
      }
    else if (online)
      {
+#ifdef HAVE_MIDAS
        printf("Using MidasOdb\n");
        midas = TMidasOnline::instance();
 
@@ -111,6 +117,10 @@ int main(int argc, char *argv[])
          }
 
        odb = MakeMidasOdb(midas->fDB, &odberror);
+#else
+       printf("Using MidasOdb: MIDAS support not available, sorry.\n");
+       exit(1);
+#endif
      }
    else if (xmlfile)
      {
@@ -664,8 +674,10 @@ int main(int argc, char *argv[])
      }
    }
 
+#ifdef HAVE_MIDAS
    if (midas)
      midas->disconnect();
+#endif
 
    printf("\n");
    printf("Number of FAILED tests: %d\n", gCountFail);
