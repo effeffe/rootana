@@ -187,13 +187,7 @@ bool TMidasOnline::sleep(int mdelay)
   if (checkTransitions())
     return true;
   
-  //ss_suspend_set_dispatch(CH_IPC, 0, (int (*)(void)) cm_dispatch_ipc);
-  #ifdef CH_IPC
-  ss_suspend_set_dispatch(CH_IPC, 0, NULL);
-  #else
-  ss_suspend_set_dispatch_ipc(NULL);
-  #endif
- int status = ss_suspend(mdelay, 0);
+  int status = ss_suspend(mdelay, MSG_BM);
   if (status == SS_SUCCESS)
     return true;
   if (status == SS_TIMEOUT)
@@ -205,7 +199,7 @@ bool TMidasOnline::sleep(int mdelay)
     return true;
   }
 #endif
-  printf("ss_suspend status %d\n", status);
+  fprintf(stderr, "TMidasOnline::sleep(): Unexpected ss_suspend() status %d\n", status);
 #if 0
   if (status == RPC_SHUTDOWN || status == SS_ABORT)
     {
