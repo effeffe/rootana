@@ -11,6 +11,7 @@
 #include <iostream>
 #include <assert.h>
 #include <signal.h>
+#include <string.h>
 
 #include "TMidasOnline.h"
 #include "TMidasFile.h"
