@@ -164,3 +164,20 @@ pipelines:
           - make
           - . thisrootana.sh
           - echo $ROOTANASYS
+    - step:
+        name: Build with clang++ on CERN Centos
+        image: rootproject/root-cc7
+        script:
+          - yum install clang
+          - cat /etc/*release
+          - echo $ROOTSYS
+          - echo "Root version"
+          - root-config --version
+          - root-config --features
+          - root-config --libs
+          - root-config --glibs
+          - root-config --cflags
+          - gcc -v
+          - make CXX=clang++
+          - . thisrootana.sh
+          - echo $ROOTANASYS
