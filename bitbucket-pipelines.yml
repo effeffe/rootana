@@ -168,7 +168,7 @@ pipelines:
         name: Build with clang++ on CERN Centos
         image: rootproject/root-cc7
         script:
-          - yum install clang
+          - yum install clang -y
           - cat /etc/*release
           - echo $ROOTSYS
           - echo "Root version"
