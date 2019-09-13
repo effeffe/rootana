@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 #include <deque>
-
+#include <typeinfo>
 #include "rootana_config.h"
 
 #ifdef HAVE_CXX11_THREADS
