@@ -141,7 +141,7 @@ class TARegister
        * typeid(*m).name() is implementation dependant... 
        * https://en.cppreference.com/w/cpp/types/type_info/name
        * this means I could potentially be empty. 
-       */ printf("%s\n",typeid(*m).name()); /*
+       * printf("%s\n",typeid(*m).name());
        * gcc 4.8 and clang 3.2 returns a 14ExampleFactory where 14 is the 
        * number of characters in the class name.
        * The exact implementation does not matter so much since I 
