@@ -130,7 +130,25 @@ template<class T> class TAFactoryTemplate: public TAFactory
 class TARegister
 {
  public:
-   TARegister(TAFactory* m);
+   //Record a name for the TAFactory
+   TARegister(TAFactory* m, const char* n);
+   
+   //If no name given, make one from class name (backwards compatible with older modules)
+   template <typename T>
+   TARegister(T* m)
+   {
+      /* 
+       * typeid(*m).name() is implementation dependant... 
+       * https://en.cppreference.com/w/cpp/types/type_info/name
+       * this means I could potentially be empty. 
+       */ printf("%s\n",typeid(*m).name()); /*
+       * gcc 4.8 and clang 3.2 returns a 14ExampleFactory where 14 is the 
+       * number of characters in the class name.
+       * The exact implementation does not matter so much since I 
+       * only use these names for logging purposes
+       */
+      TARegister((TAFactory*)m,typeid(*m).name());
+   }
    //static void Register(TAModuleInterface* m);
    //static std::vector<TAModuleInterface*>* fgModules;
    //static std::vector<TAModuleInterface*>* Get() const;

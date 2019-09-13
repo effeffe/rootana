@@ -404,12 +404,17 @@ static void MtQueueFlowEvent(TAMultithreadHelper* mt, int i, TAFlags* flag, TAFl
 //////////////////////////////////////////////////////////
 
 std::vector<TAFactory*> *gModules = NULL;
+std::vector<std::string> *gModuleNames = NULL;
 
-TARegister::TARegister(TAFactory* m)
+//TARegister::TARegister(TAFactory* m) compatible version in header...
+TARegister::TARegister(TAFactory* m, const char* n)
 {
    if (!gModules)
       gModules = new std::vector<TAFactory*>;
+   if (!gModuleNames)
+      gModuleNames = new std::vector<std::string>;
    gModules->push_back(m);
+   gModuleNames->push_back(n);
 }
 
 //////////////////////////////////////////////////////////
@@ -440,6 +445,48 @@ static double GetTimeSec()
 }
 #endif
 
+//////////////////////////////////////////////////////////
+//
+// Local Methods to log Rootana Variables into root output file
+//
+//////////////////////////////////////////////////////////
+
+#if HAVE_ROOT
+
+#include "TTree.h"
+template <typename T>
+void VectorToTree(const char* TreeName, const char* TreeDescription, const char* BranchName, std::vector<T>* data)
+{
+   TTree* t   = new TTree(TreeName,TreeDescription,16000);
+   TString* s = new TString();
+   t->Branch(BranchName,&s);
+   for (size_t i=0; i<data->size(); i++)
+   {
+      *s=data->at(i);
+      //printf("%s(%s)\t%s:%s\n",TreeName,TreeDescription,BranchName,s->Data());
+      t->Fill();
+   }
+   t->Write();
+   delete s;
+   delete t;
+   return;
+}
+template <typename T>
+void ItemToTree(const char* TreeName, const char* TreeDescription, const char* BranchName, T data)
+{
+   TTree* t   = new TTree(TreeName,TreeDescription,16000);
+   TBranch* b=t->GetBranch(BranchName);
+   if (!b)
+      t->Branch(BranchName,&data);
+   else
+      t->SetBranchAddress(BranchName,&data);
+   t->Fill();
+   t->Write();
+   delete b;
+   delete t;
+   return;
+}
+#endif
 class RunHandler
 {
 public:
@@ -631,6 +678,18 @@ public:
       
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->EndRun(fRunInfo);
+#ifdef HAVE_ROOT
+      // Log key analysis settings, which modules were used and which files
+      fRunInfo->fRoot->fOutputFile->cd();
+      gDirectory->cd("rootana");
+      ItemToTree("AnalysisHostname","Hostname data processed on","HostName",TString(gSystem->HostName()));
+      VectorToTree("RootanaModules","Rootana Module List","ModuleName",gModuleNames);
+      VectorToTree("MidasFiles","Rootana Midas File List","FileName",&fRunInfo->fgFileList);
+      VectorToTree("RootanaModuleArgs","List of Arguments given to modules","args",&fRunInfo->fArgs);
+      ItemToTree("RunNumber","Run Number acording to fRunInfo","RunNumber",fRunInfo->fRunNo);
+      ItemToTree("RootanaMultithread","Rootana Multithreading mode","MtIsOn",fMultithreadMode);
+      ItemToTree("AnalysisFinishTime","TDatime object created when analysing end run","ProcessingEndTime",TDatime());
+#endif
    }
 
    void NextSubrun()
@@ -861,7 +920,10 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
    }
 
    OnlineHandler* h = new OnlineHandler(num_analyze, writer, args, multithread);
-
+#if HAVE_ROOT
+   int log_num_analyze=num_analyze;
+   TDatime startTime;
+#endif
    midas->RegisterHandler(h);
    midas->registerTransitions();
 
@@ -893,6 +955,16 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
       if (!TMidasOnline::instance()->poll(10))
          break;
    }
+
+#if HAVE_ROOT
+   //Log in root file how many events skipped
+   run.fRunInfo->fRoot->fOutputFile->cd();
+   gDirectory->mkdir("rootana")->cd();
+   ItemToTree("MIDAShostname","MIDAS host name","HostName",TString(hostname));
+   ItemToTree("MIDASexptname","MIDAS experiment name","HostName",TString(exptname));
+   ItemToTree("num_analyze","Number of events user asked to analyse","num_analyze",log_num_analyze);
+   ItemToTree("AnalysisStartTime","TDatime object created when analysis started","ProcessingStartTime",startTime);
+#endif
 
    if (h->fRun.fRunInfo) {
       TAFlags flags = 0;
@@ -926,7 +998,11 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
       (*gModules)[i]->Init(args);
 
    RunHandler run(args, multithread);
-
+#if HAVE_ROOT
+   int log_num_skip=num_skip;
+   int log_num_analyze=num_analyze;
+   TDatime startTime;
+#endif
    bool done = false;
 
    for (TARunInfo::fgCurrentFileIndex = 0;
@@ -1059,6 +1135,14 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
       if (done)
          break;
    }
+#if HAVE_ROOT
+   //Log in root file how many events skipped
+   run.fRunInfo->fRoot->fOutputFile->cd();
+   gDirectory->mkdir("rootana")->cd();
+   ItemToTree("num_skip","Number of events skipped at the begging on the run","num_skip",log_num_skip);
+   ItemToTree("num_analyze","Number of events user asked to analyse","num_analyze",log_num_analyze);
+   ItemToTree("AnalysisStartTime","TDatime object created when analysis started","ProcessingStartTime",startTime);
+#endif
 
    if (run.fRunInfo) {
       TAFlags flags = 0;
