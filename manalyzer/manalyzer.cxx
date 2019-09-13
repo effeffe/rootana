@@ -958,7 +958,7 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
 
 #if HAVE_ROOT
    //Log in root file how many events skipped
-   run.fRunInfo->fRoot->fOutputFile->cd();
+   fRun.fRunInfo->fRoot->fOutputFile->cd();
    gDirectory->mkdir("rootana")->cd();
    ItemToTree("MIDAShostname","MIDAS host name","HostName",TString(hostname));
    ItemToTree("MIDASexptname","MIDAS experiment name","HostName",TString(exptname));
