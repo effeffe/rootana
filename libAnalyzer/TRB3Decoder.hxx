@@ -73,7 +73,8 @@ public:
   // semi calibrated time in picoseconds
   double GetFinalTime() const { 
     if(Trb3Calib::getInstance().LinearCalib()){ // use linear calibration, if requested
-      return ((double) GetCoarseTime()) * 5000.0
+      return ((double)GetEpochCounter()) * 10240026.0
+        + ((double) GetCoarseTime()) * 5000.0
         - ((((double)GetFineTime())-Trb3Calib::getInstance().LinearCalibLowEnd())
            /(Trb3Calib::getInstance().LinearCalibHighEnd() - Trb3Calib::getInstance().LinearCalibLowEnd())) *5000.0;
     }
