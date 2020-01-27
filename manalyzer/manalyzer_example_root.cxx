@@ -30,7 +30,9 @@ struct ExampleRoot: public TARunObject
    void BeginRun(TARunInfo* runinfo)
    {
       printf("BeginRun, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
-      time_t run_start_time = runinfo->fOdb->odbReadUint32("/Runinfo/Start time binary", 0, 0);
+      uint32_t run_start_time_binary = 0;
+      runinfo->fOdb->RU32("/Runinfo/Start time binary", &run_start_time_binary);
+      time_t run_start_time = run_start_time_binary;
       printf("ODB Run start time: %d: %s", (int)run_start_time, ctime(&run_start_time));
       fCounter = 0;
       runinfo->fRoot->fOutputFile->cd(); // select correct ROOT directory
@@ -40,7 +42,9 @@ struct ExampleRoot: public TARunObject
    void EndRun(TARunInfo* runinfo)
    {
       printf("EndRun, run %d, events %d\n", runinfo->fRunNo, fCounter);
-      time_t run_stop_time = runinfo->fOdb->odbReadUint32("/Runinfo/Stop time binary", 0, 0);
+      uint32_t run_stop_time_binary = 0;
+      runinfo->fOdb->RU32("/Runinfo/Stop time binary", &run_stop_time_binary);
+      time_t run_stop_time = run_stop_time_binary;
       printf("ODB Run stop time: %d: %s", (int)run_stop_time, ctime(&run_stop_time));
       hperrun->SaveAs("hperrun.root");
       hperrun->SaveAs("hperrun.pdf");

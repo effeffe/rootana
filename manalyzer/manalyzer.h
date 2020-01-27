@@ -15,7 +15,7 @@
 #endif
 
 #include "midasio.h"
-#include "VirtualOdb.h"
+#include "mvodb.h"
 
 class TARootHelper;
 class TAMultithreadHelper;
@@ -26,7 +26,7 @@ class TARunInfo
  public:
    int fRunNo;
    std::string fFileName;
-   VirtualOdb* fOdb;
+   MVOdb* fOdb;
    TARootHelper* fRoot;
    TAMultithreadHelper* fMtInfo;
    std::vector<std::string> fArgs;

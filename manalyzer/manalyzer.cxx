@@ -270,10 +270,6 @@ TARootHelper::~TARootHelper() // dtor
 #include "manalyzer.h"
 #include "midasio.h"
 
-#ifdef HAVE_ROOT_XML
-#include "XmlOdb.h"
-#endif
-
 #ifdef HAVE_THTTP_SERVER
 #include "THttpServer.h"
 #endif
@@ -411,25 +407,6 @@ TARegister::TARegister(TAFactory* m)
       gModules = new std::vector<TAFactory*>;
    gModules->push_back(m);
 }
-
-//////////////////////////////////////////////////////////
-//
-// Methods of EmptyOdb
-//
-//////////////////////////////////////////////////////////
-
-class EmptyOdb: public VirtualOdb
-{
-public:
-   int      odbReadArraySize(const char*name) { return 0; }
-   int      odbReadAny(   const char*name, int index, int tid,void* buf, int bufsize = 0) { return 0; };
-   int      odbReadInt(   const char*name, int index = 0, int      defaultValue = 0) { return defaultValue; }
-   uint32_t odbReadUint32(const char*name, int index = 0, uint32_t defaultValue = 0) { return defaultValue; }
-   float     odbReadFloat(const char*name, int index = 0, float   defaultValue = 0) { return defaultValue; }
-   double   odbReadDouble(const char*name, int index = 0, double   defaultValue = 0) { return defaultValue; }
-   bool     odbReadBool(  const char*name, int index = 0, bool     defaultValue = false) { return defaultValue; }
-   const char* odbReadString(const char*name, int index = 0,const char* defaultValue = NULL) { return defaultValue; }
-};
 
 #if 0
 static double GetTimeSec()
@@ -975,11 +952,7 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
 
                if (!run.fRunInfo) {
                   run.CreateRun(runno, filename.c_str());
-#ifdef HAVE_ROOT_XML
-                  run.fRunInfo->fOdb = new XmlOdb(event->GetEventData(), event->data_size);
-#else
-                  run.fRunInfo->fOdb = new EmptyOdb();
-#endif
+                  run.fRunInfo->fOdb = MakeFileDumpOdb(event->GetEventData(), event->data_size);
                   run.BeginRun();
                }
 
@@ -1002,11 +975,7 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
                   run.fRunInfo->fOdb = NULL;
                }
                
-#ifdef HAVE_ROOT_XML
-               run.fRunInfo->fOdb = new XmlOdb(event->GetEventData(), event->data_size);
-#else
-               run.fRunInfo->fOdb = new EmptyOdb();
-#endif
+               run.fRunInfo->fOdb = MakeFileDumpOdb(event->GetEventData(), event->data_size);
             }
          else if (event->event_id == 0x8002) // message event
             {
@@ -1019,7 +988,7 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
                if (!run.fRunInfo) {
                   // create a fake begin of run
                   run.CreateRun(0, filename.c_str());
-                  run.fRunInfo->fOdb = new EmptyOdb();
+                  run.fRunInfo->fOdb = MakeNullOdb();
                   run.BeginRun();
                }
 
@@ -1092,7 +1061,7 @@ static int ProcessDemoMode(const std::vector<std::string>& args, int num_skip, i
 
       if (!run.fRunInfo) {
          run.CreateRun(runno, filename.c_str());
-         run.fRunInfo->fOdb = new EmptyOdb();
+         run.fRunInfo->fOdb = MakeNullOdb();
          run.BeginRun();
       }
 
