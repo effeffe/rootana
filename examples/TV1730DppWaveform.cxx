@@ -7,7 +7,9 @@
 /// Reset the histogram for this canvas
 TV1730DppWaveform::TV1730DppWaveform(){
 
-	SetNumSamples(64);     
+  SetSubTabName("V1730 DPP");
+  SetUpdateOnlyWhenPlotted(true);
+  SetNumSamples(64);     
   SetNanosecsPerSample(2); //ADC clock runs at 500Mhz on the v1730 = units of 2 nsecs
 
   CreateHistograms();

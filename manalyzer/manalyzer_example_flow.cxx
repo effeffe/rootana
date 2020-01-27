@@ -92,7 +92,7 @@ public:
       printf("Example2::dtor!\n");
    }
   
-   void PreEndRun(TARunInfo* runinfo, std::deque<TAFlowEvent*>* flow_queue)
+   void PreEndRun(TARunInfo* runinfo)
    {
       TAFlowEvent* flow = NULL;
       
@@ -103,7 +103,7 @@ public:
       
       flow = new Object3(flow, dptr);
 
-      flow_queue->push_back(flow);
+      runinfo->AddToFlowQueue(flow);
    }
       
    TAFlowEvent* Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
@@ -161,6 +161,20 @@ public:
 
          if (o3)
             printf("find object3 pointer to double value: %f\n", *o3->fPtrValue);
+      }
+
+      // example of locking threads to execute code that isnt thread safe across modules
+      // At time of writing root (v6.16) fitting tools are not thread safe...
+      
+      if (flow) {
+          Object1* o1 = flow->Find<Object1>();
+          if (o1) {
+             //Lock while in the scope of these brackets
+#ifdef HAVE_CXX11_THREADS
+             std::lock_guard<std::mutex> lock(runinfo->fMtInfo->gfLock);
+#endif
+             printf("Do some function here... maybe some fitting function from root that isn't threadsafe\n");
+          }
       }
 
       return flow;

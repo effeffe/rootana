@@ -61,6 +61,7 @@ A typical analyzer module may perform several duties:
 * extract data from a MIDAS event data bank, perform some computations, fill histograms: this is done in the module's Analyze() method.
 * perform final computations, save results: this is done in the module's EndRun() method.
 * prepare to start analyzes, create histogram objects, initialize data structures, load calibrations: in the module's BeginRun() method.
+* Print usage guide/ help (for flags passed to the module): in the module's Usage() method.
 
 An analyzer may be used to process just one data file, a sequence of data files from the same run (subrun files) or several
 different runs.
@@ -113,13 +114,15 @@ analysis module).
 
 ### The flow event queue
 
-Non-trivial experiments may have multiple physics events contained inside a single MIDAS
-event. In this situation one can unpack each physics event into it's own separate flow event
-and ask manalyzer to process each of these flow events separately, as if there were multiple
-midas events.
+Some experiments may have multiple physics events stored inside a single MIDAS event.
 
-This is done in the Analyze() method by placing the individual flow events
-into the flow queue: TAFlowEvent*e = unpack_event(midas_event); runinfo->fFlowQueue.push_back(e);
+To handle this situation in the manalyzer, one would implement each physics
+event as a flow event. Then one would have the data unpacker module process
+the MIDAS event (in the Analyze() method), unpack all the multiple physics events
+into flow events and queue the flow events for further analysis by calling
+the runinfo->AddToFlowQueue() method. For example, like this:
+
+In the data unpacker Analyze() method: while (1) { TAFlowEvent*e = unpack_next_physics_event(midas_event); runinfo->AddToFlowQueue(e); }
 
 After manalyzer finishes processing the current midas event, it will proceed
 with processing the queued flow events. Each queued flow event is processed the same way
@@ -131,28 +134,39 @@ very end, the flow event is automatically deleted.
 After all queued flow events are processed, manalyzer will continue with processing
 the next midas event.
 
-The flow event queue can also be used to finish processing any events remaining buffered
-or queued at the EndRun() time as described in the next section.
+In the multithreaded mode, the flow event queue works slightly differently:
+instead of using a special flow event queue, flow events are passed directly
+to the multithreading system.
+
+The flow event queue can also be used to process any events remaining
+buffered or queued after the last MIDAS event was processed by using
+the PreEndRun() method as described in the next section.
 
 ### The PreEndRun method
 
 Sometimes physics events need to be generated and processed at the end of a run after all
-midas events have already been processed, after the last Analyze() call, but before
-the final EndRun() call.
+midas events have already been processed (after the last call to Analyze()), but it is too
+late to do this in the final EndRun() call.
 
-This happens when MIDAS midas events contain a continuous stream of data
+This happens when MIDAS events contain a continuous stream of data
 and the stream unpacker has to maintain a buffer of incomplete data between Analyze() calls.
 
 This also happens when the analyzer contains an event builder component which may contain
 a buffer for incomplete or pending physics events.
 
 To ensure that all of this buffered data is analyzed and no unprocessed data is left behind,
-use the method PreEndRun().
+use the PreEndRun() method.
 
-It is called before the final EndRun() and it gives the analysis module an opportunuty to generate
-any number of flow events (via push_back() into an std::deque). After calling PreEndRun()
-for all modules, the accumulated flow events are processed by calling AnalyzeFlowEvent()
-similar to processing normal flow events.
+The PreEndRun() method is called after all MIDAS events have been processed
+but before the final EndRun().
+
+It gives the data unpacker or the event builder module an opportunity
+to unpack the remaining physics events into flow events and queue them for analysis
+by calling runinfo->AddToFlowQueue().
+
+After calling the PreEndRun() method for all modules, the accumulated flow events
+are processed by calling the AnalyzeFlowEvent() method of each module, as described
+in the section about the flow event queue.
 
 ### Event analysis flags
 
@@ -224,7 +238,15 @@ TARunInfo data members:
 
 * fOdb - pointer to a VirtualOdb object. When online, it is connected to the live online ODB. When processing data files, it is connected to the last seen ODB dump event (evid 0x8000 and 0x8001). If none available, it is connected to the special EmptyOdb object (all "odb get" methods return the default values).
 
-* fRoot - pointer to the ROOT helper object (TARootHelper, see the next section). This member only exists if manalyzer is built with HAVE_ROOT.
+* fRoot - pointer to the ROOT helper object (TARootHelper, see the next section). Set to NULL if built without ROOT.
+
+* fArgs - manalyzer command line arguments (argc, argv[])
+
+* fMtInfo - multithreading system queues and locks, set to NULL if in single-thread mode.
+
+TARunInfo methods:
+
+* AddToFlowQueue(TAFlowEvent*e) - queue a flow event for processing, see section about the flow event queue
 
 ### The ROOT helper class TARootHelper
 
@@ -252,6 +274,58 @@ TARootHelper data members:
 * XmlServer*    fgXmlServer - pointer to the old XML Web server for use with the roody application (-X switch).
 
 * TNetDirectory server (-P switch) is also available (it has no corresponding c++ object).
+
+### manalyzer multithreaded mode and TAMultithreadHelper
+
+Multithreading works by giving each module its own thread, passing flow events between these thread via queues
+
+Running with the flag --mt will enable PER-MODULE multithreading. Eg
+```bash
+./manalyzer_example_flow.exe --mt --demo
+```
+Multithreading configuration settings can be changed with the flags:
+  
+* --mtql NNN		Number of flow events to queue per module. A more events queue, the more memory will be consumed
+* --mtse NNN		The number of u seconds a thread will go to sleep for if there are not flow events in its queue.
+* --mtsf NNN		The number of u seconds a thread will go to sleep for if the next queue length is full
+
+
+####Thread locking convention:
+Each flow queue has a std::mutex lock. The queue is locked when its read, the front is popped, or data is push to the back. A thread process will be reading its own queue, and writing to the next queue.
+There is a global lock for processing TAMultithreadHelper::gfLock, to be used whenever running code that isn't thread safe (ROOT fitting libraries for example).
+
+- inside the module, AnalyzeEvent() and AnalyzeSpecialEvent() are always called in the main thread
+
+- inside the module, AnalyzeFlowEvent() is called from a worker thread and may have to lock things:
+
+ - the flow object and the flags object are "owned" by the worker thread, locking is not needed to modify them
+
+ - the runinfo object is shared by all threads, anything non-thread safe, i.e. access to TARootHelper,
+   direct manipulation of fFlowQueue, etc needs to be locked via TAMultithreadHelper::gfLock
+ - per-module data members and global variables do not need to be locked (each module is only used by one thread at a time (by it's own thread).
+ - non-thread safe libraries, i.e. ROOT, have to be locked via TAMultithreadHelper::gfLock
+
+####How to prepare your code:
+Place locks around any root fitting functions:
+
+```cpp
+{
+#ifdef MODULE_MULTITHREAD
+std::lock_guard<std::mutex> lock(TAMultithreadHelper::gfLock);
+#endif
+SomeNotThreadSafeFunctions()
+} //When lock goes out of scope, gfLock is unlocked
+```
+
+Deconstructors for data put into the flow must be setup in the flow classes, not inside your modules. Do not put local variables into the flow, I recommend creading pointers and insert those.
+
+Remember, you are putting data into the flow, the module it came from no longer has any connection to it.
+
+
+Debugging advice:
+* Use helgrind to analyse your program http://valgrind.org/docs/manual/hg-manual.html
+
+* Note that you will see false race track condition warnings if you are using cout. cout is a global object so multiple print commands will collide, you probably dont care, the user side afect is text written to the screen at that line gets mashed into another print statement, maybe just reduce the verbosity of your modules...
 
 ### Module registration
 

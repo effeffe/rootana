@@ -42,6 +42,7 @@ Access to optional components is controlled by these Makefile and C++ symbols:
 * git clone https://bitbucket.org/tmidas/rootana.git
 * cd rootana
 * make
+* Create an environment variable ROOTANASYS that points to where you have ROOTANA installed.
 * examine simple examples: more event_dump.cxx, more analyzer.cxx
 * examine more complex examples: cd examples; make; more README.txt; more TAnaManager.cxx, etc
 * if desired, run "make dox" to generate the Doxygen code reference documentation for the ROOTANA. This may take some time, at the end, open html/index.html.

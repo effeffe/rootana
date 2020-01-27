@@ -34,6 +34,7 @@ USER_CFLAGS += $(ROOTCFLAGS)
 USER_LIBS   += $(ROOTGLIBS)
 HAVE_ROOT_HTTP := $(findstring http,$(ROOTFEATURES))
 HAVE_ROOT_XML  := $(findstring xml,$(ROOTFEATURES))
+HAVE_CXX11_THREADS := $(findstring cxx1,$(ROOTFEATURES))
 
 ifdef HAVE_ROOT_XML
 CXXFLAGS += -DHAVE_ROOT_XML
@@ -64,7 +65,7 @@ endif
 ifneq ($(MIDASSYS),)
 
 HAVE_MIDAS=1
-MIDASLIBS = $(MIDASSYS)/linux/lib/libmidas.a -lutil -lrt
+MIDASLIBS = $(MIDASSYS)/lib/libmidas.a -lutil -lrt
 CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 USER_CFLAGS += -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 
@@ -73,7 +74,7 @@ ifeq ($(UNAME),Darwin)
 CXXFLAGS += -DOS_LINUX -DOS_DARWIN
 USER_CFLAGS += -DOS_LINUX -DOS_DARWIN
 CXXFLAGS_ROOTCINT += -DOS_LINUX -DOS_DARWIN
-MIDASLIBS = $(MIDASSYS)/darwin/lib/libmidas.a
+MIDASLIBS = $(MIDASSYS)/lib/libmidas.a
 RPATH=
 endif
 
@@ -132,6 +133,7 @@ OBJS += obj/TCamacADCData.o
 
 OBJS += obj/TRootanaDisplay.o
 OBJS += obj/TMainDisplayWindow.o
+OBJS += obj/THistogramArrayBase.o
 OBJS += obj/TSimpleExampleCanvas.o
 OBJS += obj/TComplicatedExampleCanvas.o
 OBJS += obj/TInterestingEventManager.o
@@ -192,6 +194,8 @@ ifdef HAVE_MIDAS
 ALL  += libMidasInterface/tests/testODB.o libMidasInterface/tests/testODB.exe
 endif
 endif
+ALL  += libMidasInterface/tests/test_mvodb.o
+ALL  += libMidasInterface/tests/test_mvodb.exe
 
 # libMidasInterface
 
@@ -211,6 +215,18 @@ OBJS += obj/lz4.o
 OBJS += obj/lz4hc.o
 OBJS += obj/xxhash.o
 OBJS += obj/lz4frame.o
+OBJS += obj/mvodb.o
+OBJS += obj/nullodb.o
+ifdef HAVE_MIDAS
+OBJS += obj/midasodb.o
+endif
+OBJS += obj/mxml.o
+OBJS += obj/mxmlodb.o
+OBJS += obj/mjson.o
+OBJS += obj/mjsonodb.o
+
+# manalyzer
+
 OBJS += obj/manalyzer.o
 
 all: $(ALL)
@@ -273,6 +289,12 @@ ifdef HAVE_LIBNETDIRECTORY
 else
 	echo "//#define HAVE_LIBNETDIRECTORY 1" >> $(RC)
 endif
+ifdef HAVE_CXX11_THREADS
+	echo "#define HAVE_CXX11_THREADS 1" >> $(RC)
+else
+	echo "//#define HAVE_CXX11_THREADS 1" >> $(RC)
+endif
+
 	echo "// end" >> $(RC)
 	-rm -f $(RF)
 	touch $(RF)
@@ -341,7 +363,7 @@ obj/%.o: manalyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 manalyzer/manalyzer.exe: lib/librootana.a
-	make -C manalyzer ROOTANASYS=.. $(MAKEFLAGS)
+	make -C manalyzer ROOTANASYS=.. $(MFLAGS)
 
 html/index.html:
 	-mkdir html

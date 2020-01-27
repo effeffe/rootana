@@ -8,6 +8,7 @@ const int Nchannels = 4;
 /// Reset the histograms for this canvas
 TL2249Histograms::TL2249Histograms(){  
   
+  SetSubTabName("L2249");
   CreateHistograms();
 
 }

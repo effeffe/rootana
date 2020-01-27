@@ -35,44 +35,17 @@ public:
   void AddAllCanvases(){
 
     // Set up tabbed canvases
+
+    // Set up all the listed canvases from the AnaManager list of THistogramArrayBases
+    std::vector<THistogramArrayBase*> histos = anaManager->GetHistograms();
+    
+    for (unsigned int i = 0; i < histos.size(); i++) {
+      TCanvasHandleBase* canvas = histos[i]->CreateCanvas();
+      if (canvas) {
+        AddSingleCanvas(canvas, histos[i]->GetTabName());
+      }
+    }
         
-    if(anaManager->HaveV792Histograms()) 
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetV792Histograms(),"V792"));
-    
-    if(anaManager->HaveV1190Histograms()) 
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetV1190Histograms(),"V1190"));
-    
-    if(anaManager->HaveL2249Histograms()) 
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetL2249Histograms(),"L2249"));
-    
-    if(anaManager->HaveAgilentistograms()) 
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetAgilentistograms(),"AGILENT"));
-    
-    if(anaManager->HaveV1720Histograms()) 
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetV1720Histograms(),"V1720 Waveforms"));
-
-    if(anaManager->HaveV1720Correlations()) 
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetV1720Correlations(),"V1720 Correlations"));
-    
-    if(anaManager->HaveV1730DPPistograms()) 
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetV1730DPPistograms(),"V1730 Waveforms"));
-    
-    if(anaManager->HaveV1730Rawistograms()) 
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetV1730Rawistograms(),"V1730 Waveforms"));
-    
-    if(anaManager->HaveDT724Histograms()) 
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetDT724Histograms(),"DT724 Waveforms"));
-    
-    if(anaManager->HaveTRB3Histograms()){
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetTRB3Histograms(),"TRB3"));
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetTRB3FineHistograms(),"TRB3 Fine"));
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetTRB3DiffHistograms(),"TRB3 Diff"));
-    }
-
-    if(anaManager->HaveCamacADCHistograms()){
-      AddSingleCanvas(new TFancyHistogramCanvas(anaManager->GetCamacADCHistograms(),"CAMAC ADC"));
-    }
-    
     SetDisplayName("Example Display");
   };
 
@@ -81,6 +54,7 @@ public:
   void BeginRun(int transition,int run,int time) {
     std::cout << "User BOR method" << std::endl;
     anaManager->BeginRun(transition, run, time);
+    std::cout << "End User BOR method" << std::endl;
   }
 
   void EndRun(int transition,int run,int time) {
@@ -91,12 +65,16 @@ public:
   void ResetHistograms(){}
 
   void UpdateHistograms(TDataContainer& dataContainer){
+    // Update the cumulative histograms here
     anaManager->ProcessMidasEvent(dataContainer);
   }
 
-  void PlotCanvas(TDataContainer& dataContainer){}
-
-
+  void PlotCanvas(TDataContainer& dataContainer){
+    // Update the transient (per-event) histograms here.
+    // saves CPU to not update them always when not being used.
+    anaManager->UpdateTransientPlots(dataContainer);
+  }
+  
 }; 
 
 

@@ -43,7 +43,8 @@ public:
     if (gVerbose)
       printf("Request [%s]\n", req);
     int s = fSocket->Send(req);
-    //printf("Request sent %d\n", s);
+    if (gVerbose)
+      printf("Request sent %d\n", s);
   }
 
   TObject* ReadObject(TClass* type)

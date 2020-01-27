@@ -73,6 +73,11 @@ public:
 class ExampleCxxFactory: public TAFactory
 {
 public:
+   void Usage()
+   {
+      printf("\tExample TAFactory Usage!\n");
+      printf("\tPrint valid arguements for this modules here!");
+   }
    void Init(const std::vector<std::string> &args)
    {
       printf("Init!\n");

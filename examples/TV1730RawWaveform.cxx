@@ -6,7 +6,9 @@
 /// Reset the histogram for this canvas
 TV1730RawWaveform::TV1730RawWaveform(){
 
-	SetNumSamples(64);     
+  SetSubTabName("V1730 Waveforms");
+  SetUpdateOnlyWhenPlotted(true);
+  SetNumSamples(64);     
   SetNanosecsPerSample(2); //ADC clock runs at 500Mhz on the v1730 = units of 2 nsecs
 
   CreateHistograms();

@@ -162,6 +162,14 @@ void TRootanaEventLoop::SetTHttpServerReadWrite(bool readwrite){
 #endif
 }
 
+#ifdef HAVE_THTTP_SERVER
+THttpServer* TRootanaEventLoop::GetTHttpServer(){
+  return gRoot_http_serv;
+}
+#endif
+
+
+
 void TRootanaEventLoop::PrintHelp(){
 
   printf("\nUsage:\n");
@@ -194,7 +202,8 @@ void TRootanaEventLoop::PrintHelp(){
 // copied almost completely from MIDAS system.c
 int ss_daemon_init(){
 
-  bool keep_stdout = false;
+  //Unused:
+  //bool keep_stdout = false;
 #ifdef OS_LINUX
 
    /* only implemented for UNIX */
@@ -256,7 +265,7 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
   }
     
   if(gROOT->IsBatch() && !fUseBatchMode) {
-    printf("Cannot run in batch mode\n");
+    printf("Cannot run without X-window support; this program is not setup to run in batch mode\n");
     return 1;
   }
 
@@ -266,9 +275,10 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
 #ifdef HAVE_THTTP_SERVER
   int  rhttpdPort = 0; // ROOT THttpServer port
 #endif
+#ifdef HAVE_MIDAS
   const char* hostname = NULL;
   const char* exptname = NULL;
-  
+#endif  
   for (unsigned int i=1; i<args.size(); i++) // loop over the commandline options
     {
       const char* arg = args[i].c_str();
@@ -288,10 +298,12 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
 	testMode = true;
       else if (strcmp(arg,"-D")==0)
 	daemonMode = true;
+	#ifdef HAVE_MIDAS
       else if (strncmp(arg,"-H",2)==0)
 	hostname = strdup(arg+2);
       else if (strncmp(arg,"-E",2)==0)
 	exptname = strdup(arg+2);
+	#endif
       else if (strncmp(arg,"-b",2)==0){
 	fBufferName = std::string(arg+2);        
       }else if (strcmp(arg,"-h")==0)
@@ -566,6 +578,7 @@ struct timeval lastTimeProcessed;
 void onlineEventHandler(const void*pheader,const void*pdata,int size)
 {
 
+
   // If we are already processing a previous event, then just dump this one.
   // !!!!!!!!!!! This is adding a potential dangerous race condition!!!!!
   // !!!!!!!!!!! Need to think hard if this is safe!!!!!!!!!!!!!!!!!!!!!!
@@ -577,6 +590,7 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
   // events after the end of the run.  Trying to fill a histogram will result in
   // seg-faults, since the histograms will have been deleted when the last ROOT file
   // was closed.
+  
   if(TRootanaEventLoop::Get().IsRootOutputEnabled() 
      && !TRootanaEventLoop::Get().IsRootFileValid()){
 
@@ -620,6 +634,7 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
     }
   }
 
+
   // Make a MIDAS event.
   TMidasEvent event;
   memcpy(event.GetEventHeader(), pheader, sizeof(TMidas_EVENT_HEADER));
@@ -647,7 +662,6 @@ void onlineEventHandler(const void*pheader,const void*pdata,int size)
 
   // Cleanup the information for this event.
   TRootanaEventLoop::Get().GetDataContainer()->CleanupEvent();
-
 
   // Do another check.  If the event timestamp is more than 10 sec older than the current timestamp,
   // then the analyzer is probably falling behind the data taking.  Warn user.
@@ -741,12 +755,13 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    //}else{
    midas->eventRequest(fBufferName.c_str(),-1,-1,(1<<1)); 
    //}
+
    
    if(gUseOnlyRecent){
      std::cout << "Using 'Only Recent Data' mode; all events more than 1 second old will be discarded." << std::endl;
    }
    
-   // printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
+   //printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
    
    TPeriodicClass tm(100,MidasPollHandlerLocal);
 

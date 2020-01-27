@@ -8,6 +8,7 @@ const int Nchannels = 12;
 /// Reset the histograms for this canvas
 TCamacADCHistograms::TCamacADCHistograms(){  
   
+  SetSubTabName("Camac");
   CreateHistograms();
 }
 
