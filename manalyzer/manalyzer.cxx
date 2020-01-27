@@ -765,7 +765,7 @@ public:
    void StartRun(int run_number)
    {
       fRun.CreateRun(run_number, NULL);
-      fRun.fRunInfo->fOdb = TMidasOnline::instance();
+      fRun.fRunInfo->fOdb = MakeMidasOdb(TMidasOnline::instance()->fDB);
       fRun.BeginRun();
    }
 
