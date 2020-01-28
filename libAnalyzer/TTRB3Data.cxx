@@ -5,7 +5,7 @@
 
 
 TTRB3Data::TTRB3Data(int bklen, int bktype, const char* name, void *pdata):
-  TGenericData(bklen, bktype, name, pdata), decoder(bklen,pdata,std::string(name))
+  TGenericData(bklen, bktype, name, pdata), decoder(bklen,pdata,std::string(name),bktype)
 {
   
 

@@ -19,7 +19,7 @@ void Trb3Calib::SetTRB3LinearCalibrationConstants(float low_value, float high_va
 
 // See figure 23 of TRB3 manual for description of TRB3 packet
 
-TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
+TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname, int type){
   
   fPacketSize = 0;
   fDecoding = 0;
@@ -33,6 +33,10 @@ TrbDecoder::TrbDecoder(int bklen, void *pdata, std::string bankname){
   if(bankname != std::string("TRB0")){
     uint32_t* fData = reinterpret_cast<uint32_t*>(pdata);
 
+    // Bklen should be for 32-bit words.  If type is 1 (char type),
+    // then need to fix the bklen
+    if(type == 1) bklen /= 4;
+    
     // check for correct endian-ness; if wrong, flip.
     // fourth word is endian encoding check word
     if(!((fData[3] & 0x1) == 1 && (fData[3] & 0x80000000) == 0)){
