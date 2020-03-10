@@ -16,8 +16,6 @@
 #include "mvodb.h"
 #include "mjson.h"
 
-#include "rootana_stdint.h"
-
 static std::string toString(int i)
 {
    char buf[256];
@@ -568,11 +566,10 @@ MVOdb* MakeJsonFileOdb(const char* filename, MVOdbError* error)
 
 MVOdb* MakeJsonBufferOdb(const char* buf, int bufsize, MVOdbError* error)
 {
-   return MakeNullOdb();
-#if 0
-   SetOk(error);
-   return new XmlOdb(NULL, NULL, error);
-#endif
+   MJsonNode* root = MJsonNode::Parse(buf);
+   root->Dump();
+   return new JsonOdb(root, root, error);
+   //return MakeNullOdb();
 }
 
 /* emacs
