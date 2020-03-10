@@ -16,8 +16,6 @@
 #include "mvodb.h"
 #include "mxml.h"
 
-#include "rootana_stdint.h"
-
 static std::string toString(int i)
 {
    char buf[256];
