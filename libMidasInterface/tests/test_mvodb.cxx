@@ -338,41 +338,58 @@ int main(int argc, char *argv[])
       test->RIA("createia10", NULL, true, 10);
    }
 
-   std::vector<double> da;
-   da.push_back(1.1);
-   da.push_back(1.2);
-   da.push_back(1.3);
-   da.push_back(1.4);
-   test->RDA("da", &da, true, 0);
+   {
+      std::vector<uint32_t> u32a;
+      u32a.push_back(0x11110000);
+      u32a.push_back(0x22220000);
+      u32a.push_back(0x33330000);
+      u32a.push_back(0x44440000);
+      test->RU32A("dwa", &u32a, true);
+   }
 
-   std::vector<float> fa;
-   fa.push_back(2.1);
-   fa.push_back(2.2);
-   fa.push_back(2.3);
-   fa.push_back(20.3);
-   fa.push_back(21.3);
-   test->RFA("fa", &fa, true, 0);
+   {
+      std::vector<double> da;
+      da.push_back(1.1);
+      da.push_back(1.2);
+      da.push_back(1.3);
+      da.push_back(1.4);
+      test->RDA("da", &da, true, 0);
+   }
 
-   std::vector<bool> ba;
-   ba.push_back(true);
-   ba.push_back(false);
-   ba.push_back(true);
-   test->RBA("ba", &ba, true, 0);
+   {
+      std::vector<float> fa;
+      fa.push_back(2.1);
+      fa.push_back(2.2);
+      fa.push_back(2.3);
+      fa.push_back(20.3);
+      fa.push_back(21.3);
+      test->RFA("fa", &fa, true, 0);
+   }
 
-   std::vector<std::string> sa;
-   sa.push_back("line1");
-   sa.push_back("line2");
-   sa.push_back("line3");
-   sa.push_back("line4");
-   test->RSA("sa", &sa, true, 0, 32);
+   {
+      std::vector<bool> ba;
+      ba.push_back(true);
+      ba.push_back(false);
+      ba.push_back(true);
+      test->RBA("ba", &ba, true, 0);
+   }
 
-   // create 10 element array, init from ia
-   sa.clear();
-   sa.push_back("xx1");
-   sa.push_back("xx2");
-   test->RSA("sa10", &sa, true, 10, 32);
-   // create 10 element array, init to zero (passed NULL instead of &sa)
-   test->RSA("createsa10", NULL, true, 10, 32);
+   {
+      std::vector<std::string> sa;
+      sa.push_back("line1");
+      sa.push_back("line2");
+      sa.push_back("line3");
+      sa.push_back("line4");
+      test->RSA("sa", &sa, true, 0, 32);
+
+      // create 10 element array, init from ia
+      sa.clear();
+      sa.push_back("xx1");
+      sa.push_back("xx2");
+      test->RSA("sa10", &sa, true, 10, 32);
+      // create 10 element array, init to zero (passed NULL instead of &sa)
+      test->RSA("createsa10", NULL, true, 10, 32);
+   }
 
    printf("\n");
    printf("Test string sizes:\n");
@@ -555,6 +572,7 @@ int main(int argc, char *argv[])
      printf("\n");
 
      {
+       std::vector<double> da;
        printf("test RDA() of integer array:\n");
        // wrong data type: ODB is INT, we ask for DOUBLE
        test->RDA("ia10", &da, false, 0);
