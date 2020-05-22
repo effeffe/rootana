@@ -16,14 +16,9 @@
 #include "TMidasOnline.h"
 #include "TMidasFile.h"
 #include "TMidasEvent.h"
-#ifdef HAVE_ROOT
-#ifdef HAVE_ROOT_XML
-#include "XmlOdb.h"
-#endif
-#include "HttpOdb.h"
-#endif
+#include "mvodb.h"
 
-VirtualOdb* gOdb = NULL;
+MVOdb* gOdb = NULL;
 
 // Main function call
 
@@ -42,51 +37,32 @@ int main(int argc, char *argv[])
    const char* filename = argv[1];
    bool online  = false;
    bool xmlfile = false;
-   bool httpfile = false;
+   bool jsonfile = false;
 
    if (!filename)
      online = true;
    else if (strstr(filename, ".xml")!=0)
      xmlfile = true;
-   else
-     httpfile = true;
+   else if (strstr(filename, ".json")!=0)
+     jsonfile = true;
 
-   if (online)
-     {
-       TMidasOnline *midas = TMidasOnline::instance();
+   if (online) {
+      TMidasOnline *midas = TMidasOnline::instance();
 
-       int err = midas->connect(hostname, exptname, "rootana");
-       if (err != 0)
-         {
-           fprintf(stderr,"Cannot connect to MIDAS, error %d\n", err);
-           return -1;
-         }
+      int err = midas->connect(hostname, exptname, "rootana");
+      if (err != 0) {
+         fprintf(stderr,"Cannot connect to MIDAS, error %d\n", err);
+         return -1;
+      }
 
-       gOdb = midas;
-     }
-   else if (xmlfile)
-     {
-#ifdef HAVE_ROOT_XML
-       XmlOdb* odb = new XmlOdb(filename);
-       //odb->DumpTree();
-       gOdb = odb;
-#else
-       printf("This program is compiled without support for XML ODB access\n");
-       return -1;
-#endif
-     }
-   else if (httpfile)
-     {
-#ifdef HAVE_ROOT
-       HttpOdb* odb = new HttpOdb(filename);
-       //odb->DumpTree();
-       gOdb = odb;
-#else
-       printf("This program is compiled without support for HTTP ODB access\n");
-       return -1;
-#endif
-     }
-   else
+      gOdb = MakeMidasOdb(midas->fDB);
+   } else if (xmlfile) {
+      gOdb = MakeXmlFileOdb(filename);
+      //odb->DumpTree();
+   } else if (jsonfile) {
+      gOdb = MakeJsonFileOdb(filename);
+      //odb->DumpTree();
+   } else
      {
 #ifdef HAVE_ROOT
        TMidasFile f;
@@ -119,11 +95,7 @@ int main(int argc, char *argv[])
                  delete gOdb;
                  gOdb = NULL;
                }
-#ifdef HAVE_ROOT_XML
-               gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
-#else
-               printf("This program is compiled without support for XML ODB access\n");
-#endif
+               gOdb = MakeFileDumpOdb(event.GetData(),event.GetDataSize());
                break;
              }
          }
@@ -139,6 +111,7 @@ int main(int argc, char *argv[])
 #endif
      }
 
+#if 0
    printf("read run number (odbReadInt): %d\n", gOdb->odbReadInt("/runinfo/Run number"));
    printf("read array size of /test: %d\n", gOdb->odbReadArraySize("/test"));
    printf("read array size of /runinfo/run number: %d\n", gOdb->odbReadArraySize("/runinfo/Run number"));
@@ -173,6 +146,7 @@ int main(int argc, char *argv[])
    printf("try invalid index -1: %d\n", gOdb->odbReadInt("/test/intarr", -1, -9999));
    printf("try invalid index 999: %d\n", gOdb->odbReadInt("/test/intarr", 999, -9999));
    printf("try invalid index 1 for double value: %f\n", gOdb->odbReadDouble("/test/dblvalue", 1, -9999));
+#endif
    
    return 0;
 }

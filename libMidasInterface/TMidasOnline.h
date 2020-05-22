@@ -16,8 +16,6 @@
 
 #include "midas.h"
 
-#include "VirtualOdb.h"
-
 /// Request events from online shared memory data buffer
 
 struct EventRequest
@@ -42,7 +40,7 @@ class TMHandlerInterface
   virtual void Event(const void* data, int data_size) = 0;
 };
 
-class TMidasOnline : public VirtualOdb
+class TMidasOnline
 {
 public:
 

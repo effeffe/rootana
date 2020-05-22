@@ -726,11 +726,12 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
        return -1;
      }
 
-   fODB = midas;
+   fODB = MakeMidasOdb(midas->fDB);
 
    /* fill present run parameters */
 
-   fCurrentRunNumber = fODB->odbReadInt("/runinfo/Run number");
+   fCurrentRunNumber = 0;
+   fODB->RI("/runinfo/Run number", &fCurrentRunNumber);
 
    //   if ((fODB->odbReadInt("/runinfo/State") == 3))
    //startRun(0,gRunNumber,0);

@@ -157,7 +157,7 @@ int ProcessMidasOnline(const char* hostname, const char* exptname)
        return -1;
      }
 
-   gOdb = midas;
+   gOdb = MakeMidasOdb(midas->fDB);
 
    midas->setTransitionHandlers(startRun,endRun,NULL,NULL);
    midas->registerTransitions();

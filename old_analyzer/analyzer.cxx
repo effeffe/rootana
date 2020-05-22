@@ -364,7 +364,7 @@ int ProcessMidasOnline(TApplication*app, const char* hostname, const char* exptn
        return -1;
      }
 
-   gOdb = midas;
+   gOdb = MakeMidasOdb(midas->fDB);
 
    midas->setTransitionHandlers(startRun,endRun,NULL,NULL);
    midas->registerTransitions();
@@ -376,9 +376,12 @@ int ProcessMidasOnline(TApplication*app, const char* hostname, const char* exptn
 
    /* fill present run parameters */
 
-   gRunNumber = gOdb->odbReadInt("/runinfo/Run number");
+   gRunNumber = 0;
+   gOdb->RI("runinfo/Run number", &gRunNumber);
 
-   if ((gOdb->odbReadInt("/runinfo/State") == 3))
+   int runstate = 0;
+   gOdb->RI("runinfo/State", &runstate);
+   if (runstate == 3)
      startRun(0,gRunNumber,0);
 
    printf("Startup: run %d, is running: %d, is pedestals run: %d\n",gRunNumber,gIsRunning,gIsPedestalsRun);
