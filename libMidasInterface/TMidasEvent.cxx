@@ -611,4 +611,69 @@ int TMidasEvent::SwapBytes(bool force)
   return 1;
 }
 
+#include "midasio.h"
+
+// read and write functions
+bool TMReadEvent(TMReaderInterface* reader, TMidasEvent* event)
+{
+  static uint32_t endian = 0x12345678;
+  static bool once = true;
+  static bool gDoByteSwap = false;
+  if (once) {
+    once = false;
+    gDoByteSwap = *(char*)(&endian) != 0x78;
+  }
+
+  event->Clear();
+
+  int rd = reader->Read((char*)event->GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
+
+  if (rd == 0)
+    {
+      return false;
+    }
+  else if (rd != sizeof(TMidas_EVENT_HEADER))
+    {
+      return false;
+    }
+
+  if (gDoByteSwap)
+    event->SwapBytesEventHeader();
+
+  if (!event->IsGoodSize())
+    {
+      return false;
+    }
+
+  rd = reader->Read((char*)event->GetData(), event->GetDataSize());
+
+  if (rd != (int)event->GetDataSize())
+    {
+      return false;
+    }
+
+  event->SwapBytes(false);
+
+  return true;
+}
+
+bool TMWriteEvent(TMWriterInterface* writer, TMidasEvent* event)
+{
+  int wr = writer->Write((char*)event->GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
+  
+  if (wr != sizeof(TMidas_EVENT_HEADER)) {
+    printf("TMidasFile: error on write event header, return %d, size requested %d\n", wr, (int)sizeof(TMidas_EVENT_HEADER));
+    return false;
+  }
+  
+  wr = writer->Write((char*)event->GetData(), event->GetDataSize());
+  
+  if (wr != event->GetDataSize()) {
+    printf("TMidasFile: error on write event header, return %d, size requested %d\n", wr, (int)event->GetDataSize());
+    return false;
+  }
+
+  return true;
+}
+
 // end

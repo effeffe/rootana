@@ -147,18 +147,9 @@ int ProcessMidasFile(const char* fname, TMWriterInterface* writer)
       
       // Output all events
       if (writer) {
-	int wr = writer->Write((char*)event.GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
-
-	if (wr != sizeof(TMidas_EVENT_HEADER)) {
-	  printf("TMidasFile: error on write event header, return %d, size requested %d\n", wr, (int)sizeof(TMidas_EVENT_HEADER));
-	  return false;
-	}
-
-	wr = writer->Write((char*)event.GetData(), event.GetDataSize());
-
-      	if (wr != event.GetDataSize()) {
-	  printf("TMidasFile: error on write event header, return %d, size requested %d\n", wr, (int)event.GetDataSize());
-	  return false;
+	bool ok = TMWriteEvent(writer, &event);
+	if (!ok) {
+	  return -1;
 	}
       }
     }

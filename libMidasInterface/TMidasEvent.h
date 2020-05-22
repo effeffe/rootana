@@ -73,4 +73,11 @@ protected:
   bool fAllocatedByUs; ///< "true" if we own the data buffer
 };
 
+class TMReaderInterface;
+class TMWriterInterface;
+
+// read and write functions
+bool TMReadEvent(TMReaderInterface* reader, TMidasEvent* event);
+bool TMWriteEvent(TMWriterInterface* writer, TMidasEvent* event);
+
 #endif // TMidasEvent.h
