@@ -323,10 +323,10 @@ lib/librootana.a: $(OBJS)
 	$(CXX) -o $@ $(CXXFLAGS) -c -I. $<
 
 obj/TMainDisplayWindowDict.cxx obj/TRootanaDisplayDict.cxx obj/TFancyHistogramCanvasDict.cxx: obj/%Dict.cxx:
-	rootcint -f $@ -c -p $(CXXFLAGS_ROOTCINT) -I./include include/$*.hxx include/$*_LinkDef.h
+	rootcint -f $@ $(CXXFLAGS_ROOTCINT) -I./include include/$*.hxx include/$*_LinkDef.h
 
 obj/TNetDirectoryDict.cxx: obj/%Dict.cxx:
-	rootcint -f $@ -c -p $(CXXFLAGS_ROOTCINT) -I./include include/$*.h include/$*_LinkDef.h
+	rootcint -f $@ $(CXXFLAGS_ROOTCINT) -I./include include/$*.h include/$*_LinkDef.h
 
 %.exe: %.o lib/librootana.a
 	$(CXX) -o $@ $(CXXFLAGS) $< lib/librootana.a $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
