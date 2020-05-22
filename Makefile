@@ -204,12 +204,6 @@ OBJS += obj/TMidasFile.o
 ifdef HAVE_MIDAS
 OBJS += obj/TMidasOnline.o
 endif
-ifdef HAVE_ROOT
-OBJS += obj/HttpOdb.o
-endif
-ifdef HAVE_ROOT_XML
-OBJS += obj/XmlOdb.o
-endif
 OBJS += obj/midasio.o
 OBJS += obj/lz4.o
 OBJS += obj/lz4hc.o

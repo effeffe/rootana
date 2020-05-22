@@ -12,7 +12,8 @@
 //#include "TMidasFile.h"
 //#include "TMidasOnline.h"
 //#include "TMidasEvent.h"
-#include "VirtualOdb.h"
+//#include "VirtualOdb.h"
+#include "mvodb.h"
 #include "TDataContainer.hxx"
 
 // ROOT includes
@@ -149,7 +150,7 @@ public:
   void UseBatchMode(){  fUseBatchMode = true;}
 
   /// Get pointer to ODB variables
-  VirtualOdb* GetODB(){return fODB;}
+  MVOdb* GetODB(){return fODB;}
 
 
   /// Open output ROOT file
@@ -255,7 +256,7 @@ private:
   bool fDisableRootOutput;
 
   /// Pointer to the ODB access instance
-  VirtualOdb* fODB;
+  MVOdb* fODB;
  
   /// Are we processing offline or online data?
   bool fIsOffline;

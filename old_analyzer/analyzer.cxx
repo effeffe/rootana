@@ -19,9 +19,6 @@
 #endif
 #include "TMidasEvent.h"
 #include "TMidasFile.h"
-#ifdef HAVE_ROOT_XML
-#include "XmlOdb.h"
-#endif
 #ifdef HAVE_MIDASSERVER
 #include "midasServer.h"
 #endif
@@ -58,7 +55,7 @@ TDirectory* gOnlineHistDir = NULL;
 TFile* gOutputFile = NULL;
 #endif
 
-VirtualOdb* gOdb = NULL;
+MVOdb* gOdb = NULL;
 
 //TCanvas  *gMainWindow = NULL; 	// the online histogram window
 
@@ -117,7 +114,8 @@ void startRun(int transition,int run,int time)
 {
   gIsRunning = true;
   gRunNumber = run;
-  gIsPedestalsRun = gOdb->odbReadBool("/experiment/edit on start/Pedestals run");
+  gIsPedestalsRun = false;
+  gOdb->RB("experiment/edit on start/Pedestals run", &gIsPedestalsRun);
   printf("Begin run: %d, pedestal run: %d\n", gRunNumber, gIsPedestalsRun);
 
 #ifdef HAVE_ROOT
@@ -294,9 +292,7 @@ int ProcessMidasFile(const char*fname)
 	  //
 	  if (gOdb)
 	    delete gOdb;
-#ifdef HAVE_ROOT_XML
-	  gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
-#endif
+	  gOdb = MakeFileDumpOdb(event.GetData(),event.GetDataSize());
 
 	  startRun(0,event.GetSerialNumber(),0);
 	}

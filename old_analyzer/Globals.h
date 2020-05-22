@@ -22,9 +22,9 @@ extern TDirectory* gOnlineHistDir;
 
 // ODB access
 
-#include "VirtualOdb.h"
+#include "mvodb.h"
 
-extern VirtualOdb* gOdb;
+extern MVOdb* gOdb;
 
 // end
 

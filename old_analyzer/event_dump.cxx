@@ -20,15 +20,11 @@
 #include "TMidasEvent.h"
 #include "TMidasFile.h"
 
-#ifdef HAVE_ROOT_XML
-#include "XmlOdb.h"
-#endif
-
-#include "VirtualOdb.h"
+#include "mvodb.h"
 
 #include <vector>
 
-VirtualOdb* gOdb = NULL;
+MVOdb* gOdb = NULL;
 
 int  gEventCutoff = 0;
 bool gSaveOdb = false;
@@ -100,10 +96,7 @@ int ProcessMidasFile(const char*fname)
 	  //
 	  if (gOdb)
 	    delete gOdb;
-          gOdb = NULL;
-#ifdef HAVE_ROOT_XML
-	  gOdb = new XmlOdb(event.GetData(),event.GetDataSize());
-#endif
+	  gOdb = MakeFileDumpOdb(event.GetData(),event.GetDataSize());
 	}
       else if ((eventId & 0xFFFF) == 0x8001)
 	{
