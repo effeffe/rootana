@@ -20,13 +20,8 @@ public:
   ~TMidasFile(); ///< destructor
 
   bool Open(const char* filename); ///< Open input file
-  bool OutOpen(const char* filename); ///< Open output file
-
   void Close(); ///< Close input file
-  void OutClose(); ///< Close output file
-
   bool Read(TMidasEvent *event); ///< Read one event from the file
-  bool Write(TMidasEvent *event); ///< Write one event to the output file
 
   const char* GetFilename()  const { return fFilename.c_str();  } ///< Get the name of this file
   int         GetLastErrno() const { return fLastErrno; }         ///< Get error value for the last file error
@@ -41,12 +36,6 @@ protected:
   std::string fLastError; ///< error string from last errno
 
   bool fDoByteSwap; ///< "true" if file has to be byteswapped
-
-  int         fFile; ///< open input file descriptor
-  void*       fGzFile; ///< zlib compressed input file reader
-  void*       fPoFile; ///< popen() input file reader
-  int         fOutFile; ///< open output file descriptor
-  void*       fOutGzFile; ///< zlib compressed output file reader
 
   TMReaderInterface *fReader;
 };

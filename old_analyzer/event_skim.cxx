@@ -17,6 +17,7 @@
 //#include "TMidasOnline.h"
 #include "TMidasEvent.h"
 #include "TMidasFile.h"
+#include "midasio.h"
 
 #include <vector>
 
@@ -93,24 +94,7 @@ void HandleMidasEvent(TMidasEvent& event)
 	  
 }
 
-#if 0
-int SetOutputFile(const char*foutname)
-{
-  TMidasFile f;
-  bool tryOpen = f.OutOpen(foutname);
-
-  if (!tryOpen)
-    {
-      printf("Cannot open output file \"%s\"\n",foutname);
-      printf("Last error is %d, %s\n",f.GetLastErrno(),f.GetLastError());
-      printf("Exiting program\n");
-      exit (1);
-    }
-  return 0;
-}
-#endif
-
-int ProcessMidasFile(const char* fname, const char* foutname)
+int ProcessMidasFile(const char* fname, TMWriterInterface* writer)
 {
   TMidasFile f;
   TMidasFile fout;
@@ -121,16 +105,6 @@ int ProcessMidasFile(const char* fname, const char* foutname)
     {
       printf("Cannot open input file \"%s\"\n",fname);
       return -1;
-    }
-
-  bool tryOutOpen = fout.OutOpen(foutname);
-
-  if (!tryOutOpen)
-    {
-      printf("Cannot open output file \"%s\"\n",foutname);
-      printf("Last error is %d, %s\n",f.GetLastErrno(),f.GetLastError());
-      printf("Exiting program\n");
-      exit (1);
     }
 
   int i=0;
@@ -170,17 +144,26 @@ int ProcessMidasFile(const char* fname, const char* foutname)
 	  printf("Reached event %d, exiting loop.\n", i);
 	  break;
 	}
+      
       // Output all events
-      if (!fout.Write(&event)) {
-	printf("Error writing event to output\n");
-	break;
-      }
-      printf("Event written to out\n");
+      if (writer) {
+	int wr = writer->Write((char*)event.GetEventHeader(), sizeof(TMidas_EVENT_HEADER));
 
+	if (wr != sizeof(TMidas_EVENT_HEADER)) {
+	  printf("TMidasFile: error on write event header, return %d, size requested %d\n", wr, (int)sizeof(TMidas_EVENT_HEADER));
+	  return false;
+	}
+
+	wr = writer->Write((char*)event.GetData(), event.GetDataSize());
+
+      	if (wr != event.GetDataSize()) {
+	  printf("TMidasFile: error on write event header, return %d, size requested %d\n", wr, (int)event.GetDataSize());
+	  return false;
+	}
+      }
     }
   
   f.Close();
-  fout.OutClose();
 
   return 0;
 }
@@ -238,6 +221,17 @@ int main(int argc, char *argv[])
        else if (arg[0] == '-')
 	 help(); // does not return
     }
+
+   TMWriterInterface* wr = NULL;
+
+   if (outname) {
+     wr = TMNewWriter(outname);
+
+     if (!wr) {
+       printf("Cannot open file \"%s\" for writing!\n", outname);
+       exit(1);
+     }
+   }
     	 
    for (unsigned int i=1; i<args.size(); i++)
      {
@@ -245,9 +239,11 @@ int main(int argc, char *argv[])
 
        if (arg[0] != '-')  
 	 {  
-	   ProcessMidasFile(arg, outname);
+	   ProcessMidasFile(arg, wr);
 	 }
      }
+
+   wr->Close();
    
    return 0;
 }
