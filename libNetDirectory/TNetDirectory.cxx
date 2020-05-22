@@ -150,7 +150,7 @@ void TNetDirectory::ResetTH1(const char *name)
   delete obj;
 }
 
-void        TNetDirectory::Append(TObject *obj)
+void        TNetDirectory::Append(TObject *obj, Bool_t replace)
 {
   if (gVerbose)
     printf("TNetDirectory(%s)::Append(%p, name: %s)\n", fPath.c_str(), obj, obj->GetName());
@@ -284,7 +284,7 @@ Long64_t    TNetDirectory::GetSeekKeys() const { assert(!"not implemented"); }
 const char *TNetDirectory::GetPathStatic() const { assert(!"not implemented"); }
 const char *TNetDirectory::GetPath() const { assert(!"not implemented"); }
 void        TNetDirectory::ls(Option_t *option) const { assert(!"not implemented"); }
-TDirectory *TNetDirectory::mkdir(const char *name, const char *title) { assert(!"not implemented"); }
+TDirectory *TNetDirectory::mkdir(const char *name, const char *title, Bool_t) { assert(!"not implemented"); }
 void        TNetDirectory::Paint(Option_t *option) { assert(!"not implemented"); }
 
 void        TNetDirectory::Print(Option_t *option) const
@@ -295,7 +295,7 @@ void        TNetDirectory::Print(Option_t *option) const
 void        TNetDirectory::Purge(Short_t nkeep) { assert(!"not implemented"); }
 void        TNetDirectory::pwd() const { assert(!"not implemented"); }
 void        TNetDirectory::ReadAll(Option_t *option) { assert(!"not implemented"); }
-Int_t       TNetDirectory::ReadKeys() { assert(!"not implemented"); }
+Int_t       TNetDirectory::ReadKeys(Bool_t) { assert(!"not implemented"); }
 void        TNetDirectory::RecursiveRemove(TObject *obj) { assert(!"not implemented"); }
 void        TNetDirectory::rmdir(const char *name) { assert(!"not implemented"); }
 void        TNetDirectory::Save() { assert(!"not implemented"); }
@@ -305,9 +305,9 @@ void        TNetDirectory::SetName(const char* newname) { assert(!"not implement
 Int_t       TNetDirectory::Sizeof() const { assert(!"not implemented"); }
 Int_t       TNetDirectory::Write(const char *name, Int_t opt, Int_t bufsiz) { assert(!"not implemented"); }
 Int_t       TNetDirectory::Write(const char *name, Int_t opt, Int_t bufsiz) const { assert(!"not implemented"); }
-Int_t       TNetDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *option) { assert(!"not implemented"); }
-Int_t       TNetDirectory::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option) { assert(!"not implemented"); }
-Int_t       TNetDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option) { assert(!"not implemented"); }
+Int_t       TNetDirectory::WriteTObject(const TObject *obj, const char *name, Option_t *option, Int_t) { assert(!"not implemented"); }
+Int_t       TNetDirectory::WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t) { assert(!"not implemented"); }
+Int_t       TNetDirectory::WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Int_t) { assert(!"not implemented"); }
 void        TNetDirectory::WriteDirHeader() { assert(!"not implemented"); }
 void        TNetDirectory::WriteKeys() { assert(!"not implemented"); }
 

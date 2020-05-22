@@ -55,7 +55,7 @@ public:
    // special operations for online data
    void ResetTH1(const char* name);
 
-   virtual void        Append(TObject *obj);
+   virtual void        Append(TObject *obj, Bool_t replace);
    virtual void        Browse(TBrowser *b);
    virtual void        Clear(Option_t *option="");
    virtual void        Close(Option_t *option="");
@@ -87,13 +87,13 @@ public:
    virtual const char *GetPathStatic() const;
    virtual const char *GetPath() const;
    virtual void        ls(Option_t *option="") const;
-   virtual TDirectory *mkdir(const char *name, const char *title="");
+   virtual TDirectory *mkdir(const char *name, const char *title, Bool_t returnExistingDirectory);
    virtual void        Paint(Option_t *option="");
    virtual void        Print(Option_t *option="") const;
    virtual void        Purge(Short_t nkeep=1);
    virtual void        pwd() const;
    virtual void        ReadAll(Option_t *option="");
-   virtual Int_t       ReadKeys();
+   virtual Int_t       ReadKeys(Bool_t);
    virtual void        RecursiveRemove(TObject *obj);
    virtual void        rmdir(const char *name);
    virtual void        Save();
@@ -103,9 +103,9 @@ public:
    virtual Int_t       Sizeof() const;
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
    virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const ;
-   virtual Int_t       WriteTObject(const TObject *obj, const char *name=0, Option_t *option="");
-   virtual Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="");
-   virtual Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="");
+   virtual Int_t       WriteTObject(const TObject *obj, const char *name, Option_t *option, Int_t bufsize);
+   virtual Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option, Int_t bufsize);
+   virtual Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option, Int_t bufsize);
    virtual void        WriteDirHeader();
    virtual void        WriteKeys();
 
