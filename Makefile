@@ -305,6 +305,8 @@ endif
 	cd include; ln -sfv ../lib*/*.h .
 	cd include; ln -sfv ../lib*/*.hxx .
 	cd include; ln -sfv ../manalyzer/*.h .
+	cd include; ln -sfv ../mjson/*.h .
+	cd include; ln -sfv ../mxml/*.h .
 
 lib/librootana.a: $(OBJS)
 	mkdir -p lib
