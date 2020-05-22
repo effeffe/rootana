@@ -280,6 +280,7 @@ static TObject* FollowPath(char* path)
 
 /*------------------------------------------------------------------*/
 
+#if 0
 static void ResetObject(TObject* obj)
 {
   assert(obj!=NULL);
@@ -306,6 +307,7 @@ static void ResetObject(TObject* obj)
         }
     }
 }
+#endif
 
 /*------------------------------------------------------------------*/
 
