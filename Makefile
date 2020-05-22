@@ -240,7 +240,7 @@ RC := include/rootana_config.h
 RF := include/rootana_cflags.txt
 RL := include/rootana_libs.txt
 
-include:
+include: mjson/mjson.h mxml/mxml.h
 	mkdir -p include lib obj
 	-rm -f $(RC)
 	touch $(RC)
@@ -308,6 +308,9 @@ endif
 	cd include; ln -sfv ../mjson/*.h .
 	cd include; ln -sfv ../mxml/*.h .
 
+mjson/mjson.h mxml/mxml.h:
+	git submodule update --init
+
 lib/librootana.a: $(OBJS)
 	mkdir -p lib
 	-rm -f $@
@@ -335,6 +338,12 @@ obj/TNetDirectoryDict.cxx: obj/%Dict.cxx:
 #	$(CXX) -o $@ $(CXXFLAGS) $< obj/manalyzer_main.o lib/librootana.a $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
 
 %.o: %.cxx
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+obj/%.o: mxml/%.cxx
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+obj/%.o: mjson/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: libMidasInterface/%.cxx
