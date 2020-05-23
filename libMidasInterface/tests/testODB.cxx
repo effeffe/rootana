@@ -14,8 +14,8 @@
 #include <string.h>
 
 #include "TMidasOnline.h"
-#include "TMidasFile.h"
 #include "TMidasEvent.h"
+#include "midasio.h"
 #include "mvodb.h"
 
 MVOdb* gOdb = NULL;
@@ -62,22 +62,20 @@ int main(int argc, char *argv[])
    } else if (jsonfile) {
       gOdb = MakeJsonFileOdb(filename);
       //odb->DumpTree();
-   } else
-     {
-#ifdef HAVE_ROOT
-       TMidasFile f;
-       bool tryOpen = f.Open(filename);
+   } else {
+       TMReaderInterface* reader = TMNewReader(filename);
 
-       if (!tryOpen)
+       if (reader->fError)
          {
            printf("Cannot open input file \"%s\"\n",filename);
+           delete reader;
            return -1;
          }
 
        while (1)
          {
            TMidasEvent event;
-           if (!f.Read(&event))
+           if (!TMReadEvent(reader, &event))
              break;
 
            int eventId = event.GetEventId();
@@ -100,15 +98,15 @@ int main(int argc, char *argv[])
              }
          }
 
+       reader->Close();
+       delete reader;
+       reader = NULL;
+
        if (!gOdb)
          {
            printf("Failed to load ODB from input file \"%s\"\n",filename);
            return -1;
          }
-#else
-       printf("This program is compiled without support for XML ODB access\n");
-       return -1;
-#endif
      }
 
 #if 0
