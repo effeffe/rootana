@@ -16,7 +16,6 @@
 
 //#include "TMidasOnline.h"
 #include "TMidasEvent.h"
-#include "TMidasFile.h"
 #include "midasio.h"
 
 #include <vector>
@@ -96,14 +95,12 @@ void HandleMidasEvent(TMidasEvent& event)
 
 int ProcessMidasFile(const char* fname, TMWriterInterface* writer)
 {
-  TMidasFile f;
-  TMidasFile fout;
+  TMReaderInterface* reader = TMNewReader(fname);
 
-  bool tryOpen = f.Open(fname);
-
-  if (!tryOpen)
+  if (reader->fError)
     {
       printf("Cannot open input file \"%s\"\n",fname);
+      delete reader;
       return -1;
     }
 
@@ -111,7 +108,7 @@ int ProcessMidasFile(const char* fname, TMWriterInterface* writer)
   while (1)
     {
       TMidasEvent event;
-      if (!f.Read(&event))
+      if (!TMReadEvent(reader, &event))
 	break;
 
       int eventId = event.GetEventId();
@@ -154,7 +151,8 @@ int ProcessMidasFile(const char* fname, TMWriterInterface* writer)
       }
     }
   
-  f.Close();
+  reader->Close();
+  delete reader;
 
   return 0;
 }
@@ -213,12 +211,12 @@ int main(int argc, char *argv[])
 	 help(); // does not return
     }
 
-   TMWriterInterface* wr = NULL;
+   TMWriterInterface* writer = NULL;
 
    if (outname) {
-     wr = TMNewWriter(outname);
+     writer = TMNewWriter(outname);
 
-     if (!wr) {
+     if (!writer) {
        printf("Cannot open file \"%s\" for writing!\n", outname);
        exit(1);
      }
@@ -230,11 +228,12 @@ int main(int argc, char *argv[])
 
        if (arg[0] != '-')  
 	 {  
-	   ProcessMidasFile(arg, wr);
+	   ProcessMidasFile(arg, writer);
 	 }
      }
 
-   wr->Close();
+   writer->Close();
+   delete writer;
    
    return 0;
 }

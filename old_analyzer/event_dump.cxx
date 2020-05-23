@@ -18,8 +18,8 @@
 #include "TMidasOnline.h"
 #endif
 #include "TMidasEvent.h"
-#include "TMidasFile.h"
 
+#include "midasio.h"
 #include "mvodb.h"
 
 #include <vector>
@@ -41,12 +41,12 @@ void HandleMidasEvent(TMidasEvent& event)
 
 int ProcessMidasFile(const char*fname)
 {
-  TMidasFile f;
-  bool tryOpen = f.Open(fname);
+  TMReaderInterface* reader = TMNewReader(fname);
 
-  if (!tryOpen)
+  if (reader->fError)
     {
-      printf("Cannot open input file \"%s\"\n",fname);
+      printf("Cannot open input file \"%s\"\n", fname);
+      delete reader;
       return -1;
     }
 
@@ -54,7 +54,7 @@ int ProcessMidasFile(const char*fname)
   while (1)
     {
       TMidasEvent event;
-      if (!f.Read(&event))
+      if (!TMReadEvent(reader, &event))
 	break;
 
       int eventId = event.GetEventId();
@@ -129,7 +129,8 @@ int ProcessMidasFile(const char*fname)
 	}
     }
   
-  f.Close();
+  reader->Close();
+  delete reader;
 
   return 0;
 }

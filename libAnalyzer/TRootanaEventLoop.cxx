@@ -31,7 +31,7 @@
 #include <assert.h>
 #include <signal.h>
 
-#include "TMidasFile.h"
+#include "midasio.h"
 
 #include "sys/time.h"
 /// Little function for printing the number of processed events and processing rate.
@@ -406,11 +406,11 @@ int TRootanaEventLoop::ExecuteLoop(int argc, char *argv[]){
 
 int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
 {
-  TMidasFile f;
-  bool tryOpen = f.Open(fname);
+  TMReaderInterface* reader = TMNewReader(fname);
 
-  if (!tryOpen){
+  if (reader->fError) {
     printf("Cannot open input file \"%s\"\n",fname);
+    delete reader;
     return -1;
   }
 
@@ -421,7 +421,7 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
   while (1)
     {
       TMidasEvent event;
-      if (!f.Read(&event))
+      if (!TMReadEvent(reader, &event))
 	break;
       
       /// Treat the begin run and end run events differently.
@@ -481,7 +481,9 @@ int TRootanaEventLoop::ProcessMidasFile(TApplication*app,const char*fname)
       }
     }
   
-  f.Close(); 
+  reader->Close();
+  delete reader;
+  reader = NULL;
 
   EndRunRAD(0,fCurrentRunNumber,0);
   EndRun(0,fCurrentRunNumber,0);

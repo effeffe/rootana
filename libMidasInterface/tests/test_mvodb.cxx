@@ -15,7 +15,7 @@
 #ifdef HAVE_MIDAS
 #include "TMidasOnline.h"
 #endif
-#include "TMidasFile.h"
+#include "midasio.h"
 #include "TMidasEvent.h"
 #include "mvodb.h"
 
@@ -135,17 +135,17 @@ int main(int argc, char *argv[])
    else
      {
        printf("Using FileDumpOdb\n");
-       TMidasFile f;
-       bool tryOpen = f.Open(filename);
+       TMReaderInterface* reader = TMNewReader(filename);
 
-       if (!tryOpen) {
+       if (reader->fError) {
          printf("Cannot open input file \"%s\"\n",filename);
+         delete reader;
          return -1;
        }
 
        while (1) {
          TMidasEvent event;
-         if (!f.Read(&event))
+         if (!TMReadEvent(reader, &event))
            break;
          
          int eventId = event.GetEventId();
@@ -160,6 +160,9 @@ int main(int argc, char *argv[])
          odb = MakeFileDumpOdb(event.GetData(),event.GetDataSize(), &odberror);
          break;
        }
+
+       reader->Close();
+       delete reader;
 
        if (!odb) {
          printf("Failed to load ODB from input file \"%s\"\n",filename);

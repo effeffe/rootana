@@ -200,7 +200,6 @@ ALL  += libMidasInterface/tests/test_mvodb.exe
 # libMidasInterface
 
 OBJS += obj/TMidasEvent.o
-OBJS += obj/TMidasFile.o
 ifdef HAVE_MIDAS
 OBJS += obj/TMidasOnline.o
 endif
