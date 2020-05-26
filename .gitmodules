@@ -4,3 +4,6 @@
 [submodule "mxml"]
 	path = mxml
 	url = https://bitbucket.org/tmidas/mxml.git
+[submodule "mvodb"]
+	path = mvodb
+	url = https://dd1@bitbucket.org/tmidas/mvodb.git

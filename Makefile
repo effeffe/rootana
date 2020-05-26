@@ -233,7 +233,7 @@ RC := include/rootana_config.h
 RF := include/rootana_cflags.txt
 RL := include/rootana_libs.txt
 
-include: mjson/mjson.h mxml/mxml.h
+include: mjson/mjson.h mxml/mxml.h mvodb/mvodb.h
 	mkdir -p include lib obj
 	-rm -f $(RC)
 	touch $(RC)
@@ -300,8 +300,9 @@ endif
 	cd include; ln -sfv ../manalyzer/*.h .
 	cd include; ln -sfv ../mjson/*.h .
 	cd include; ln -sfv ../mxml/*.h .
+	cd include; ln -sfv ../mvodb/*.h .
 
-mjson/mjson.h mxml/mxml.h:
+mjson/mjson.h mxml/mxml.h mvodb/mvodb.h:
 	git submodule update --init
 
 lib/librootana.a: $(OBJS)
@@ -337,6 +338,9 @@ obj/%.o: mxml/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: mjson/%.cxx
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+obj/%.o: mvodb/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 obj/%.o: libMidasInterface/%.cxx
