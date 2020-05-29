@@ -37,7 +37,7 @@ class THistogramArrayBase : public std::vector<TH1*> {
     fDisableAutoUpdate(false),fHasAutoUpdate(false),fSubTabName("DEFAULT"),fTabName(""),
     fUpdateWhenPlotted(false){};
 
-  virtual ~THistogramArrayBase(){}
+  virtual ~THistogramArrayBase();
 
   /// Update the histograms for this canvas.
   virtual void UpdateHistograms(TDataContainer& dataContainer) = 0;
