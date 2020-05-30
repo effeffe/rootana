@@ -733,10 +733,8 @@ int TRootanaEventLoop::ProcessMidasOnline(TApplication*app, const char* hostname
    /* fill present run parameters */
 
    fCurrentRunNumber = 0;
-   fODB->RI("/runinfo/Run number", &fCurrentRunNumber);
+   fODB->RI("runinfo/Run number", &fCurrentRunNumber);
 
-   //   if ((fODB->odbReadInt("/runinfo/State") == 3))
-   //startRun(0,gRunNumber,0);
    OpenRootFile(fCurrentRunNumber);
    BeginRun(0,fCurrentRunNumber,0);
    BeginRunRAD(0,fCurrentRunNumber,0);
