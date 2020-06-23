@@ -125,17 +125,6 @@ public:
   int getBufferSize();
 
   void RegisterHandler(TMHandlerInterface* h);
-
-  // ODB functions required by VirtualOdb
-
-  int      odbReadArraySize(const char*name);
-  int      odbReadAny(   const char*name, int index, int tid,void* buf, int bufsize = 0);
-  int      odbReadInt(   const char*name, int index = 0, int      defaultValue = 0);
-  uint32_t odbReadUint32(const char*name, int index = 0, uint32_t defaultValue = 0);
-  double   odbReadDouble(const char*name, int index = 0, double   defaultValue = 0);
-  float    odbReadFloat(const char*name, int index = 0, float   defaultValue = 0);
-  bool     odbReadBool(  const char*name, int index = 0, bool     defaultValue = false);
-  const char* odbReadString(const char*name, int index = 0,const char* defaultValue = NULL);
 };
 
 //end

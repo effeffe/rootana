@@ -846,8 +846,11 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
 
    midas->eventRequest("SYSTEM",-1,-1,(1<<1));
 
-   int run_number = midas->odbReadInt("/runinfo/Run number");
-   int run_state  = midas->odbReadInt("/runinfo/State");
+   int run_number = 0; // midas->odbReadInt("/runinfo/Run number");
+   int run_state  = 0; // midas->odbReadInt("/runinfo/State");
+
+   h->fRun.fRunInfo->fOdb->RI("runinfo/run number", &run_number);
+   h->fRun.fRunInfo->fOdb->RI("runinfo/state", &run_state);
 
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Init(args);
