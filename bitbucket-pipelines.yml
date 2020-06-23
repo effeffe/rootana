@@ -144,7 +144,7 @@ pipelines:
         name: Build on Ubuntu
         image: rootproject/root-ubuntu
         script:
-	  - apt-get update
+          - apt-get update
           - apt-get install git -y
           - cat /etc/*release
           - echo $ROOTSYS
