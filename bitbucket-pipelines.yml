@@ -15,7 +15,7 @@ pipelines:
           name: Build on Centos 6 with root 5 (c++98)
           image: centos:6.9
           script:
-            - yum install wget gcc gcc-c++ zlib-devel -y
+            - yum install wget gcc gcc-c++ zlib-devel git -y
             - wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
             - rpm -ivh epel-release-6-8.noarch.rpm
             #Ok root is massive... can we avoid install it? Apprently not... we need strlcpy.h, this doesn't fix it:
@@ -38,7 +38,7 @@ pipelines:
         #name: Build on Centos 6 (c++98)
         #image: centos:6.9
         script:
-          - yum install wget gcc gcc-c++ zlib-devel -y
+          - yum install wget gcc gcc-c++ zlib-devel git -y
           #Enable epel on centos:
           #- wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
           #- rpm -ivh epel-release-6-8.noarch.rpm
@@ -53,7 +53,7 @@ pipelines:
         name: Build on Centos7 base
         image: cern/cc7-base
         script:
-          - yum install wget gcc gcc-c++ zlib-devel make -y
+          - yum install wget gcc gcc-c++ zlib-devel make git -y
           - gcc -v
           - make
           - . thisrootana.sh
@@ -135,6 +135,7 @@ pipelines:
         name: Build on Ubuntu
         image: rootproject/root-ubuntu
         script:
+          - apt-get install git -y
           - cat /etc/*release
           - echo $ROOTSYS
           - root-config --version
