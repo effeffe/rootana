@@ -1,12 +1,12 @@
 [submodule "mjson"]
 	path = mjson
-	url = https://bitbucket.org/tmidas/mjson.git
+	url = ../mjson.git
 [submodule "mxml"]
 	path = mxml
-	url = https://bitbucket.org/tmidas/mxml.git
+	url = ../mxml.git
 [submodule "mvodb"]
 	path = mvodb
-	url = https://bitbucket.org/tmidas/mvodb.git
+	url = ../mvodb.git
 [submodule "midasio"]
 	path = midasio
-	url = https://bitbucket.org/tmidas/midasio.git
+	url = ../midasio.git
