@@ -303,9 +303,11 @@ endif
 	cd include; ln -sfv ../mvodb/*.h .
 	cd include; ln -sfv ../midasio/*.h .
 
-mjson/mjson.h mxml/mxml.h mvodb/mvodb.h midasio/midasio.h:
+gitinit:
 	git submodule sync
 	git submodule update --init
+
+mjson/mjson.h mxml/mxml.h mvodb/mvodb.h midasio/midasio.h: gitinit
 
 lib/librootana.a: $(OBJS)
 	mkdir -p lib
