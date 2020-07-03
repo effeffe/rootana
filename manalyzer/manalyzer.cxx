@@ -745,27 +745,29 @@ class OnlineHandler: public TMHandlerInterface
 {
 public:
    RunHandler fRun;
-   int fNumAnalyze;
-   TMWriterInterface* fWriter;
-   bool fQuit;
+   int fNumAnalyze = 0;
+   TMWriterInterface* fWriter = NULL;
+   bool fQuit = false;
+   MVOdb* fOdb = NULL;
 
-   OnlineHandler(int num_analyze, TMWriterInterface* writer, const std::vector<std::string>& args, bool multithread) // ctor
+   OnlineHandler(int num_analyze, TMWriterInterface* writer, MVOdb* odb, const std::vector<std::string>& args, bool multithread) // ctor
       : fRun(args, multithread)
    {
-      fQuit = false;
       fNumAnalyze = num_analyze;
       fWriter = writer;
+      fOdb = odb;
    }
 
    ~OnlineHandler() // dtor
    {
       fWriter = NULL;
+      fOdb = NULL;
    }
 
    void StartRun(int run_number)
    {
       fRun.CreateRun(run_number, NULL);
-      fRun.fRunInfo->fOdb = MakeMidasOdb(TMidasOnline::instance()->fDB);
+      fRun.fRunInfo->fOdb = fOdb;
       fRun.BeginRun();
    }
 
@@ -837,7 +839,9 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
       return -1;
    }
 
-   OnlineHandler* h = new OnlineHandler(num_analyze, writer, args, multithread);
+   MVOdb* odb = MakeMidasOdb(midas->fDB);
+   
+   OnlineHandler* h = new OnlineHandler(num_analyze, writer, odb, args, multithread);
 
    midas->RegisterHandler(h);
    midas->registerTransitions();
@@ -849,8 +853,8 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
    int run_number = 0; // midas->odbReadInt("/runinfo/Run number");
    int run_state  = 0; // midas->odbReadInt("/runinfo/State");
 
-   h->fRun.fRunInfo->fOdb->RI("runinfo/run number", &run_number);
-   h->fRun.fRunInfo->fOdb->RI("runinfo/state", &run_state);
+   odb->RI("runinfo/run number", &run_number);
+   odb->RI("runinfo/state", &run_state);
 
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Init(args);
@@ -883,6 +887,9 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
 
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Finish();
+
+   delete h; h = NULL;
+   delete odb; odb = NULL;
    
    /* disconnect from experiment */
    midas->disconnect();
