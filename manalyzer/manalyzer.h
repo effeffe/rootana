@@ -73,19 +73,48 @@ class TAFlowEvent
 };
 
 typedef int TAFlags;
-
 #define TAFlag_OK          0
 #define TAFlag_SKIP    (1<<0)
 #define TAFlag_QUIT    (1<<1)
 #define TAFlag_WRITE   (1<<2)
 #define TAFlag_DISPLAY (1<<3)
+#define TAFlag_SKIP_PROFILE (1<<4)
+//Can we make TAFlags a class? (keep compatability of int, but users 
+//dont need to learn bitwise operations)
+#if 0
+class TAFlags
+{
+private:
+   int flag;
+public:
+   TAFlags()
+   {
+      flag=0;
+   }
+   void SetOK()             { flag =  0; }
+   void SetSkip()           { flag |= TAFlag_SKIP; }
+   void SetQuit()           { flag |= TAFlag_QUIT; }
+   void SetWrite()          { flag |= TAFlag_WRITE; }
+   void SetDisplay()        { flag |= TAFlag_DISPLAY; }
+   void SkipProfiler()      { flag |= TAFlag_SKIP_PROFILE; }
 
+   void UnsetSkip()         { flag -= flag & TAFlag_SKIP; }
+   void UnsetQuit()         { flag -= flag & TAFlag_QUIT; }
+   void UnsetWrite()        { flag -= flag & TAFlag_WRITE; }
+   void UnsetDisplay()      { flag -= flag & TAFlag_DISPLAY; }
+   void UnsetSkipProfiler() { flag -= flag & TAFlag_SKIP_PROFILE; }
+   
+   int operator&(int rhs)  { return flag & rhs; }
+};
+#endif
 class TARunObject
 {
- public:
+   
+public:
+   std::string ModuleName;
+
    TARunObject(TARunInfo* runinfo); // ctor
    virtual ~TARunObject() {}; // dtor
-
  public:
    virtual void BeginRun(TARunInfo* runinfo); // begin of run
    virtual void EndRun(TARunInfo* runinfo); // end of run
@@ -200,6 +229,98 @@ public:
    ~TAMultithreadHelper(); // dtor
 };
 #endif
+
+/*class MiniProfilerFlow: public TAFlowEvent
+{
+
+private:
+   CLOCK_TYPE start;
+   CLOCK_TYPE stop;
+public:
+   const std::string ModuleName;
+
+   double GetTimer()
+   {
+      std::chrono::duration<double> elapsed_seconds = stop - start;
+      return  elapsed_seconds.count();
+      //return (double)(stop - start)/CLOCKS_PER_SEC;
+   }
+   //std::chrono::time_point<std::chrono::high_resolution_clock> time;
+   ProfilerFlow(TAFlowEvent* flow, const char* _name, CLOCK_TYPE _start) : TAFlowEvent(flow), ModuleName(_name)
+   {
+      start=_start;
+      stop=CLOCK_NOW
+   }
+   ~ProfilerFlow() // dtor
+   {
+   }
+
+};
+
+class ProfilerFlow2D: public TAFlowEvent
+{
+  public:
+   std::vector<const char*> ModuleName;
+   std::vector<double> SecondAxis;
+  private:
+   CLOCK_TYPE start;
+   CLOCK_TYPE stop;
+  public:
+   double GetTimer()
+   {
+      std::chrono::duration<double> elapsed_seconds = stop - start;
+      return  elapsed_seconds.count();
+      //return (double)(stop - start)/CLOCKS_PER_SEC;
+   }
+
+  ProfilerFlow2D(TAFlowEvent* flow, std::vector<const char*> _name, std::vector<double> second_axis, CLOCK_TYPE _start) : TAFlowEvent(flow)
+  {
+     ModuleName=_name;
+     start=_start;
+     stop=CLOCK_NOW;
+     SecondAxis=second_axis;
+  }
+
+  ~ProfilerFlow2D() // dtor
+   {
+      ModuleName.clear();
+   }
+};
+*/
+
+#include "TH1D.h"
+
+#define CLOCK_TYPE std::chrono::time_point<std::chrono::system_clock>
+#define CLOCK_NOW std::chrono::high_resolution_clock::now();
+#define START_TIMER auto timer_start=CLOCK_NOW
+
+class Profiler
+{
+private:
+   std::string binary_name;
+   std::string binary_path;
+   clock_t tStart_cpu;
+   time_t tStart_user;
+   time_t midas_start_time;
+   time_t midas_stop_time;
+
+   //Track Analyse TMEvent time per module (main thread)
+   std::vector<TH1D*>  UnpackTimeHistograms;
+   std::vector<double> MaxUnpackTime;
+   std::vector<double> TotalUnpackTime;
+   //Track Analyse flow event time per module (can be multiple threads)
+   std::vector<TH1D*>  ModuleTimeHistograms;
+   std::vector<double> MaxModuleTime;
+   std::vector<double> TotalModuleTime;
+
+public:
+   bool TimeModules;
+   Profiler();
+   void begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun );
+   void log(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start);
+   void log_unpack_time(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start);
+   void end();
+};
 
 
 int manalyzer_main(int argc, char* argv[]);

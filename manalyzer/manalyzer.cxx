@@ -108,6 +108,10 @@ TARunObject::TARunObject(TARunInfo* runinfo)
 
 void TARunObject::BeginRun(TARunInfo* runinfo)
 {
+   //If modulename isn't defined in the users contructor. Make an automatic name
+   //Issue: This breaks down if mutiple modules are the same class...
+   //if (!ModuleName.size())
+   //   ModuleName=typeid(*this).name();
    if (gTrace)
       printf("TARunObject::BeginRun, run %d\n", runinfo->fRunNo);
 }
@@ -144,6 +148,8 @@ void TARunObject::PreEndRun(TARunInfo* runinfo)
 
 TAFlowEvent* TARunObject::Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* flags, TAFlowEvent* flow)
 {
+   //Nothing happened, skip profiling
+   (*flags)|=TAFlag_SKIP_PROFILE;
    if (gTrace)
       printf("TARunObject::Analyze!\n");
    return flow;
@@ -151,6 +157,8 @@ TAFlowEvent* TARunObject::Analyze(TARunInfo* runinfo, TMEvent* event, TAFlags* f
 
 TAFlowEvent* TARunObject::AnalyzeFlowEvent(TARunInfo* runinfo, TAFlags* flags, TAFlowEvent* flow)
 {
+   //Nothing happened, skip profiling
+   (*flags)|=TAFlag_SKIP_PROFILE;
    if (gTrace)
       printf("TARunObject::Analyze!\n");
    return flow;
@@ -424,6 +432,7 @@ public:
    std::vector<TARunObject*> fRunRun;
    std::vector<std::string>  fArgs;
    bool fMultithreadMode;
+   Profiler manaprofiler;
 
    RunHandler(const std::vector<std::string>& args, bool multithread) // ctor
    {
@@ -482,8 +491,9 @@ public:
             // this is the last event, stop the thread after processing it
             data_processing = false;
          } else {
+            START_TIMER
             flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flag, flow);
-
+            manaprofiler.log(flag, flow, i,fRunRun[i]->ModuleName.c_str(),timer_start);
             if ((*flag) & TAFlag_QUIT) { // shut down the analyzer
                data_processing=false;
                delete flow;
@@ -560,6 +570,7 @@ public:
       assert(fRunInfo->fOdb != NULL);
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->BeginRun(fRunInfo);
+      manaprofiler.begin(fRunInfo,fRunRun);
    }
 
    void EndRun(TAFlags* flags)
@@ -608,6 +619,7 @@ public:
       
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->EndRun(fRunInfo);
+      manaprofiler.end();
    }
 
    void NextSubrun()
@@ -643,7 +655,9 @@ public:
    TAFlowEvent* AnalyzeFlowEvent(TAFlags* flags, TAFlowEvent* flow)
    {
       for (unsigned i=0; i<fRunRun.size(); i++) {
+         START_TIMER;
          flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
+         manaprofiler.log(flags, flow,i,fRunRun[i]->ModuleName.c_str(),timer_start);
          if (!flow)
             break;
          if ((*flags) & TAFlag_SKIP)
@@ -680,7 +694,9 @@ public:
       TAFlowEvent* flow = NULL;
                   
       for (unsigned i=0; i<fRunRun.size(); i++) {
+         START_TIMER;
          flow = fRunRun[i]->Analyze(fRunInfo, event, flags, flow);
+         manaprofiler.log_unpack_time(flags,flow,i,fRunRun[i]->ModuleName.c_str(),timer_start);
          if (*flags & TAFlag_SKIP)
             break;
          if (*flags & TAFlag_QUIT)
@@ -1694,6 +1710,157 @@ public:
    }
 };
 
+
+Profiler::Profiler()
+{
+   //By default the profiler is on
+   TimeModules=true;
+   midas_start_time=0;
+   midas_stop_time=0;
+   tStart_cpu = clock();
+   tStart_user = time(NULL);
+}
+
+
+void Profiler::begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun )
+{
+#ifdef INCLUDE_VirtualOdb_H
+   midas_start_time = runinfo->fOdb->odbReadUint32("/Runinfo/Start time binary", 0, 0);
+#endif
+#ifdef INCLUDE_MVODB_H
+   runinfo->fOdb->RU32("/Runinfo/Start time binary",(uint32_t*) &midas_start_time);
+#endif
+
+   runinfo->fRoot->fOutputFile->cd(); // select correct ROOT directory
+   gDirectory->mkdir("ProfilerReport")->cd();
+
+   char result[ 200 ]={0};
+   readlink( "/proc/self/exe", result, 200 );
+   std::string binary_path_full=result;
+   std::size_t found = binary_path_full.find_last_of("/\\");
+   //std::cout << " path: " << binary_path_full.substr(0,found).c_str() << '\n';
+   //std::cout << " file: " << binary_path_full.substr(found+1).c_str() << '\n';
+
+   binary_path=binary_path_full.substr(0,found);
+   binary_name=binary_path_full.substr(found+1);
+
+   //Setup module histograms
+   Int_t Nbins=100;
+   Double_t bins[Nbins+1];
+   Double_t TimeRange=10; //seconds
+   //Set uneven binning to better sample fast modules with accuracy
+   for (int i=0; i<Nbins+1; i++)
+   {
+      bins[i]=TimeRange*pow(1.1,i)/pow(1.1,Nbins);
+   }
+
+   const int nmodules=fRunRun.size();
+   for (int i=0;i<nmodules; i++)
+   {
+      TString ModuleName;
+      if (!fRunRun.at(i)->ModuleName.size())
+         ModuleName="Unnamed Module " + std::to_string(i);
+      else
+         ModuleName=fRunRun.at(i)->ModuleName;
+         
+      MaxUnpackTime.push_back(0);
+      TotalUnpackTime.push_back(0);
+      TH1D* UnpackHisto=new TH1D(ModuleName+"_TMEvent",ModuleName,Nbins,bins);
+      UnpackTimeHistograms.push_back(UnpackHisto);
+
+      MaxModuleTime.push_back(0);
+      TotalModuleTime.push_back(0);
+      TH1D* Histo=new TH1D(ModuleName,ModuleName,Nbins,bins);
+      ModuleTimeHistograms.push_back(Histo);
+   }
+}
+
+void Profiler::log(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start)
+{
+   if (!TimeModules) return;
+   CLOCK_TYPE stop=CLOCK_NOW;
+   if ((*flag) & TAFlag_SKIP_PROFILE)
+   {
+      //Unset bit
+      *flag -= TAFlag_SKIP_PROFILE;
+      return;
+   }
+   std::chrono::duration<double> elapsed_seconds = stop - start;
+   double dt=elapsed_seconds.count();
+   TotalModuleTime[i]+=dt;
+   if (dt>MaxModuleTime[i])
+      MaxModuleTime[i]=dt;
+   ModuleTimeHistograms.at(i)->Fill(dt);
+}
+
+void Profiler::log_unpack_time(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start)
+{
+   if (!TimeModules) return;
+   CLOCK_TYPE stop=CLOCK_NOW;
+   if ((*flag) & TAFlag_SKIP_PROFILE)
+   {
+      //Unset bit
+      *flag -= TAFlag_SKIP_PROFILE;
+      return;
+   }
+   std::chrono::duration<double> elapsed_seconds = stop - start;
+   double dt=elapsed_seconds.count();
+   TotalUnpackTime[i]+=dt;
+   if (dt>MaxUnpackTime[i])
+      MaxUnpackTime[i]=dt;
+   UnpackTimeHistograms.at(i)->Fill(dt);
+}
+void Profiler::end()
+{
+   if (ModuleTimeHistograms.size()>0)
+   {
+      double AllModuleTime=0;
+      for (auto& n : TotalModuleTime)
+         AllModuleTime += n;
+      double AllUnpackTime=0;
+      for (auto& n : TotalUnpackTime)
+         AllUnpackTime += n;
+      double max_unpack_time=*std::max_element(TotalUnpackTime.begin(),TotalUnpackTime.end());
+      printf("Module average processing time\n");
+      printf("      \t\t\t\tUnpack (one thread)                \tFlow (multithreadable)\n");
+      printf("Module\t\t\t\tEntries\tMean(ms)RMS(ms)\tMax(ms)\tSum(s)\tEntries\tMean(ms)RMS(ms)\tMax(ms)\tSum(s)\n");
+      double max_total_time=*std::max_element(TotalModuleTime.begin(),TotalModuleTime.end());
+      printf("----------------------------------------------------------------------------------------------------------------\n");
+      for (uint i=0; i<ModuleTimeHistograms.size(); i++)
+      {
+         //std::cout<<ModuleHistograms.at(i)->GetTitle()<<"\t\t";
+         printf("%-25s", ModuleTimeHistograms.at(i)->GetTitle());
+         if ((int)UnpackTimeHistograms.at(i)->GetEntries())
+            printf("\t%d\t%.1f\t%.1f\t%.1f\t%.3f",
+               (int)UnpackTimeHistograms.at(i)->GetEntries(),
+               UnpackTimeHistograms.at(i)->GetMean()*1000., //ms
+               UnpackTimeHistograms.at(i)->GetRMS()*1000., //ms
+               MaxUnpackTime.at(i)*1000., //ms
+               TotalUnpackTime.at(i)); //s
+         else
+            printf("\t-\t-\t-\t-\t-");
+         
+         if ((int)ModuleTimeHistograms.at(i)->GetEntries())
+            printf("\t%d\t%.1f\t%.1f\t%.1f\t%.3f",
+               (int)ModuleTimeHistograms.at(i)->GetEntries(),
+               ModuleTimeHistograms.at(i)->GetMean()*1000., //ms
+               ModuleTimeHistograms.at(i)->GetRMS()*1000., //ms
+               MaxModuleTime.at(i)*1000., //ms
+               TotalModuleTime.at(i)); //s
+         else
+            printf("\t-\t-\t-\t-\t-");
+         //printf("\t%.1f%%\t",100.*TotalModuleTime.at(i)/AllModuleTime);
+         //printf("\t%.0f%%",100.*TotalModuleTime.at(i)/max_total_time);
+         printf("\n");
+         
+      }
+      printf("----------------------------------------------------------------------------------------------------------------\n");
+      printf("                                   Analyse TMEvent total time   %f\n",AllUnpackTime);
+      printf("                                                                           Analyse FlowEvent total time %f\n",AllModuleTime);
+      printf("----------------------------------------------------------------------------------------------------------------\n");
+   }
+}
+
 static void help()
 {
   printf("\nUsage:\n");
@@ -1735,7 +1902,6 @@ static void help()
   printf("Example2: analyze existing data: ./analyzer.exe /data/alpha/current/run00500.mid\n");
   exit(1);
 }
-
 
 // Main function call
 
