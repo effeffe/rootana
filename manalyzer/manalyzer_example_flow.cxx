@@ -59,6 +59,7 @@ public:
    Example1(TARunInfo* runinfo)
       : TARunObject(runinfo)
    {
+      ModuleName="Example1";
       printf("Example1::ctor, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
    }
 
@@ -84,6 +85,7 @@ public:
    Example2(TARunInfo* runinfo)
       : TARunObject(runinfo)
    {
+      ModuleName="Example2";
       printf("Example2::ctor, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
    }
 

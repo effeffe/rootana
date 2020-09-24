@@ -15,6 +15,7 @@ public:
    ExampleCxx(TARunInfo* runinfo)
       : TARunObject(runinfo)
    {
+      ModuleName="ExampleCxx";
       printf("ctor, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
       fRunEventCounter = 0;
    }

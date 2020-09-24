@@ -24,6 +24,7 @@ struct ExampleGRoot: public TARunObject
    ExampleGRoot(TARunInfo* runinfo)
       : TARunObject(runinfo)
    {
+      ModuleName="ExamlpeGRoot";
       printf("ExampleGRoot::ctor!\n");
       fCanvas = new TCanvas("example", "example", 500, 500);
       fRndm = new TRandom3(); // recommended random number generator
