@@ -230,10 +230,19 @@ public:
 };
 #endif
 
-#include <chrono>
-#define CLOCK_TYPE std::chrono::time_point<std::chrono::system_clock>
-#define CLOCK_NOW std::chrono::high_resolution_clock::now();
-#define START_TIMER auto timer_start=CLOCK_NOW
+#if __cplusplus >= 201103L 
+   //C++11 or above is needed for chrono... therefor the profiler needs c++11 for any functionality
+   #include <chrono>
+   #define CLOCK_TYPE std::chrono::time_point<std::chrono::system_clock>
+   #define CLOCK_NOW std::chrono::high_resolution_clock::now();
+   #define DURATION std::chrono::duration<double>
+   #define START_TIMER auto timer_start=CLOCK_NOW
+#else
+   #define CLOCK_TYPE int
+   #define CLOCK_NOW 1;
+   #define DURATION int
+   #define START_TIMER int timer_start;
+#endif
 class UserProfilerFlow: public TAFlowEvent
 {
 private:
@@ -244,9 +253,13 @@ public:
 
    double GetTimer()
    {
-      std::chrono::duration<double> elapsed_seconds = stop - start;
+      DURATION elapsed_seconds = stop - start;
+#if __cplusplus >= 201103L 
+      //C++11 or above is needed for chrono... therefor the profiler needs c++11 for any functionality
       return  elapsed_seconds.count();
-      //return (double)(stop - start)/CLOCKS_PER_SEC;
+#else
+      return 0.;
+#endif
    }
    //std::chrono::time_point<std::chrono::high_resolution_clock> time;
    UserProfilerFlow(TAFlowEvent* flow, const char* _name, CLOCK_TYPE _start) : TAFlowEvent(flow), ModuleName(_name)
@@ -258,7 +271,7 @@ public:
    {
    }
 };
-
+#if __cplusplus >= 201103L 
 #ifdef HAVE_ROOT
 #include "TH1D.h"
 #endif
@@ -327,7 +340,22 @@ public:
    void log_mt_queue_length(TARunInfo* runinfo);
    void end();
 };
+#else
+//When no C++11 available... do nothing!
 
+class Profiler {
+public:
+   Profiler() {};
+   ~Profiler() {};
+   void begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun ) {};
+   void log(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start) {};
+   void log_unpack_time(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start) {};
+   void log_user_profiling(TAFlags* flag, TAFlowEvent* flow) {};
+   void AddModuleMap( const char* UserProfileName, unsigned long hash) {};
+   void log_mt_queue_length(TARunInfo* runinfo) {};
+   void end() {};
+};
+#endif
 
 int manalyzer_main(int argc, char* argv[]);
 

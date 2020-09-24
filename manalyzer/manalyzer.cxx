@@ -432,6 +432,7 @@ public:
    std::vector<TARunObject*> fRunRun;
    std::vector<std::string>  fArgs;
    bool fMultithreadMode;
+
    Profiler* manaprofiler;
 
    RunHandler(const std::vector<std::string>& args, bool multithread, Profiler* profiler) // ctor
@@ -1712,6 +1713,8 @@ public:
       return new InteractiveModule(runinfo);
    }
 };
+#if __cplusplus >= 201103L 
+//C++11 or above is needed for chrono... therefor the profiler needs c++11 for any functionality
 
 Profiler::Profiler()
 {
@@ -2055,7 +2058,7 @@ void Profiler::end()
       usertime.count(),
       100.*cputime/usertime.count());
 }
-
+#endif
 static void help()
 {
   printf("\nUsage:\n");
@@ -2137,9 +2140,8 @@ int manalyzer_main(int argc, char* argv[])
    bool interactive = false;
 
    bool multithread = false;
-   
-   Profiler* performance_profiler=new Profiler();
 
+   Profiler* performance_profiler=new Profiler();
    std::vector<std::string> files;
    std::vector<std::string> modargs;
 
@@ -2193,10 +2195,13 @@ int manalyzer_main(int argc, char* argv[])
       } else if (strncmp(arg,"--mt",4)==0) {
          multithread=true;
 #endif
+#if __cplusplus >= 201103L 
+//C++11 or above is needed for chrono... therefor the profiler needs c++11 for any functionality
       } else if (strncmp(arg,"--no-profiler",13)==0) {
          performance_profiler->TimeModules=false;
       } else if (strncmp(arg,"--pqi",13)==0) {
          performance_profiler->QueueInterval=atoi(arg+5);
+#endif
 #ifdef HAVE_ROOT
       } else if (strncmp(arg,"-O",2)==0) {
           TARootHelper::fOutputFileName = strdup(arg+2);
