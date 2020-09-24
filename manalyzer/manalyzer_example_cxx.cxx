@@ -57,9 +57,10 @@ public:
       printf("Analyze, run %d, event serno %d, id 0x%04x, data size %d\n", runinfo->fRunNo, event->serial_number, (int)event->event_id, event->data_size);
       //event->old_event.SetBankList();
       //event->old_event.Print();
+      START_TIMER;
 
       fRunEventCounter++;
-
+      flow = new UserProfilerFlow(flow,"custom profiling",timer_start);
       return flow;
    }
 
