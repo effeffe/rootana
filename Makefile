@@ -380,7 +380,7 @@ obj/%.o: libUnpack/%.cxx
 obj/%.o: old_analyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-obj/%.o: manalyzer/%.cxx
+obj/%.o: manalyzer/%.cxx $(GIT_SUBMODULES)
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 manalyzer/manalyzer.exe: lib/librootana.a
