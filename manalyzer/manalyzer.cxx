@@ -1713,20 +1713,29 @@ public:
    }
 };
 
-
 Profiler::Profiler()
 {
+   if (gTrace)
+      printf("Profiler::ctor\n");
    //By default the profiler is on
    TimeModules=true;
    midas_start_time=0;
    midas_stop_time=0;
    tStart_cpu = clock();
-   tStart_user = time(NULL);
+   tStart_user =  std::chrono::system_clock::now();
 }
 
+Profiler::~Profiler()
+{
+   if (gTrace)
+      printf("Profiler::dtor\n");
+}
 
 void Profiler::begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun )
 {
+   if (gTrace)
+      printf("Profiler::begin\n");
+
 #ifdef INCLUDE_VirtualOdb_H
    midas_start_time = runinfo->fOdb->odbReadUint32("/Runinfo/Start time binary", 0, 0);
 #endif
@@ -1747,18 +1756,7 @@ void Profiler::begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun 
    {
       bins[i]=TimeRange*pow(1.1,i)/pow(1.1,Nbins);
    }
-
 #endif
-   char result[ 200 ]={0};
-   readlink( "/proc/self/exe", result, 200 );
-   std::string binary_path_full=result;
-   std::size_t found = binary_path_full.find_last_of("/\\");
-   //std::cout << " path: " << binary_path_full.substr(0,found).c_str() << '\n';
-   //std::cout << " file: " << binary_path_full.substr(found+1).c_str() << '\n';
-
-   binary_path=binary_path_full.substr(0,found);
-   binary_name=binary_path_full.substr(found+1);
-
 
    const int nmodules=fRunRun.size();
    for (int i=0;i<nmodules; i++)
@@ -1779,9 +1777,9 @@ void Profiler::begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun 
       else
          ModuleNames.push_back(fRunRun.at(i)->ModuleName);
       //We dont have root, so can't use thier histograms
-      unpack_mean   =0;
-      unpack_rms    =0;
-      unpack_entries=0;
+      unpack_mean.push_back(0);
+      unpack_rms.push_back(0);
+      unpack_entries.push_back(0);
 #endif
       MaxModuleTime.push_back(0);
       TotalModuleTime.push_back(0);
@@ -1789,15 +1787,17 @@ void Profiler::begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun 
       TH1D* Histo=new TH1D(ModuleName,ModuleName,Nbins,bins);
       ModuleTimeHistograms.push_back(Histo);
 #else
-      module_mean   =0;
-      module_rms    =0;
-      module_entries=0;
+      module_mean.push_back(0);
+      module_rms.push_back(0);
+      module_entries.push_back(0);
 #endif
    }
 }
 
 void Profiler::log(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start)
 {
+   if (gTrace)
+      printf("Profiler::log\n");
    if (!TimeModules) return;
    CLOCK_TYPE stop=CLOCK_NOW;
    if ((*flag) & TAFlag_SKIP_PROFILE)
@@ -1814,15 +1814,18 @@ void Profiler::log(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_nam
 #ifdef HAVE_ROOT
    ModuleTimeHistograms.at(i)->Fill(dt);
 #else
-   module_mean  +=dt;
-   module_rms   +=dt*dt;
-   module_entries++;
+   module_mean[i]  +=dt;
+   module_rms[i]   +=dt*dt;
+   module_entries[i]++;
 #endif
 }
 
 void Profiler::log_unpack_time(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start)
 {
-   if (!TimeModules) return;
+   if (gTrace)
+      printf("Profiler::log_unpack_time\n");
+   if (!TimeModules)
+      return;
    CLOCK_TYPE stop=CLOCK_NOW;
    if ((*flag) & TAFlag_SKIP_PROFILE)
    {
@@ -1839,16 +1842,18 @@ void Profiler::log_unpack_time(TAFlags* flag, TAFlowEvent* flow,int i,const char
    UnpackTimeHistograms.at(i)->Fill(dt);
 #else
    //We dont have root, so can't use thier histograms
-   unpack_mean   +=dt;
-   unpack_rms    +=dt*dt;
-   unpack_entries++;
+   unpack_mean[i]   +=dt;
+   unpack_rms[i]    +=dt*dt;
+   unpack_entries[i]++;
 #endif
 }
 
 void Profiler::log_mt_queue_length(TARunInfo* runinfo)
 {
+   if (gTrace)
+      printf("Profiler::log_mt_queue_length\n");
 #ifdef HAVE_CXX11_THREADS
-#ifdef HAVE_CXX11_THREADS
+#ifdef HAVE_ROOT
    QueueIntervalCounter++;
    if (runinfo->fMtInfo && (QueueIntervalCounter%QueueInterval==0))
    {
@@ -1869,9 +1874,9 @@ void Profiler::log_mt_queue_length(TARunInfo* runinfo)
 
 void Profiler::log_user_profiling(TAFlags* flag, TAFlowEvent* flow)
 {
-   //Capture multithread queue lengths:
-
-
+   if (gTrace)
+      printf("Profiler::log_user_profiling\n");
+#ifdef HAVE_ROOT
    //Clocks unfold backwards... 
    std::vector<TAFlowEvent*> flowArray;
    int FlowEvents=0;
@@ -1901,20 +1906,56 @@ void Profiler::log_user_profiling(TAFlags* flag, TAFlowEvent* flow)
          UserHistograms.at(i)->Fill(dt);
       }
    }
+#else
+   printf("root required for user profiling tools\n");
+#endif
+}
+void Profiler::AddModuleMap( const char* UserProfileName, unsigned long hash)
+{
+   if (gTrace)
+     printf("Profiler::AddModuleMap\n");
+#ifdef HAVE_CXX11_THREADS
+   std::lock_guard<std::mutex> lock(TAMultithreadHelper::gfLock);
+#endif
+#ifdef HAVE_ROOT
+   gDirectory->cd("/ProfilerReport");
+   UserMap[hash]= UserHistograms.size();
+   Int_t Nbins=100;
+   Double_t bins[Nbins+1];
+   Double_t TimeRange=10; //seconds
+   for (int i=0; i<Nbins+1; i++)
+   {
+      bins[i]=TimeRange*pow(1.1,i)/pow(1.1,Nbins);
+      //std::cout <<"BIN:"<<bins[i]<<std::endl;
+   }
+   TH1D* Histo=new TH1D(UserProfileName,UserProfileName,Nbins,bins);
+   UserHistograms.push_back(Histo);
+   TotalUserTime.push_back(0.);
+   MaxUserTime.push_back(0.);
+#endif
+   return;
 }
 
 void Profiler::end()
 {
-#ifndef HAVE_ROOT
-   unpack_mean=unpack_mean/unpack_entries;
-   unpack_rms = unpack_rms / unpack_entries - ( unpack_mean / unpack_entries ) * ( unpack_mean / unpack_entries );
-
-   module_mean=module_mean/module_entries;
-   module_rms = module_rms / module_entries - ( module_mean / module_entries ) * ( module_mean / module_entries );
-
-   if (module_entries>0)
-#else
+  if (gTrace)
+     printf("Profiler::end\n");
+#ifdef HAVE_ROOT
    if (ModuleTimeHistograms.size()>0)
+#else
+   for (size_t i=0; i<unpack_mean.size(); i++)
+   {
+      unpack_mean.at(i)=unpack_mean.at(i)/unpack_entries.at(i);
+      unpack_rms.at(i) = unpack_rms.at(i) / unpack_entries.at(i) - 
+         ( unpack_mean.at(i) / unpack_entries.at(i) ) * ( unpack_mean.at(i) / unpack_entries.at(i) );
+   }
+   for (size_t i=0; i<module_mean.size(); i++)
+   {
+      module_mean.at(i)=module_mean.at(i)/module_entries.at(i);
+      module_rms.at(i) = module_rms.at(i) / module_entries.at(i) - 
+         ( module_mean.at(i) / module_entries.at(i) ) * ( module_mean.at(i) / module_entries.at(i) );
+   }
+   if (unpack_entries.size()>0)
 #endif
    {
       double AllModuleTime=0;
@@ -1923,23 +1964,14 @@ void Profiler::end()
       double AllUnpackTime=0;
       for (auto& n : TotalUnpackTime)
          AllUnpackTime += n;
-      double max_unpack_time=*std::max_element(TotalUnpackTime.begin(),TotalUnpackTime.end());
+      //double max_unpack_time=*std::max_element(TotalUnpackTime.begin(),TotalUnpackTime.end());
       printf("Module average processing time\n");
       printf("      \t\t\t\tUnpack (one thread)                \tFlow (multithreadable)\n");
       printf("Module\t\t\t\tEntries\tMean(ms)RMS(ms)\tMax(ms)\tSum(s)\tEntries\tMean(ms)RMS(ms)\tMax(ms)\tSum(s)\n");
-      double max_total_time=*std::max_element(TotalModuleTime.begin(),TotalModuleTime.end());
+      //double max_total_time=*std::max_element(TotalModuleTime.begin(),TotalModuleTime.end());
       printf("----------------------------------------------------------------------------------------------------------------\n");
-#ifndef HAVE_ROOT
-      for (uint i=0; i<module_entries; i++)
-      {
-           printf("%-25s", ModuleNames[i].c_str());
-         if (unpack_entries)
-            printf("\t%d\t%.1f\t%.1f\t%.1f\t%.3f",
-               unpack_entries,
-               unpack_mean*1000.,
-               unpack_rms*1000.,
-#else
-      for (uint i=0; i<ModuleTimeHistograms.size(); i++)
+#ifdef HAVE_ROOT
+      for (size_t i=0; i<ModuleTimeHistograms.size(); i++)
       {
          printf("%-25s", ModuleTimeHistograms.at(i)->GetTitle());
          if ((int)UnpackTimeHistograms.at(i)->GetEntries())
@@ -1947,6 +1979,15 @@ void Profiler::end()
                (int)UnpackTimeHistograms.at(i)->GetEntries(),
                UnpackTimeHistograms.at(i)->GetMean()*1000., //ms
                UnpackTimeHistograms.at(i)->GetRMS()*1000., //ms
+#else
+      for (size_t i=0; i<ModuleNames.size(); i++)
+      {
+         printf("%-25s", ModuleNames.at(i).c_str());
+         if (unpack_entries.at(i))
+            printf("\t%d\t%.1f\t%.1f\t%.1f\t%.3f",
+               unpack_entries.at(i),
+               unpack_mean.at(i)*1000.,
+               unpack_rms.at(i)*1000.,
 #endif
                MaxUnpackTime.at(i)*1000., //ms
                TotalUnpackTime.at(i)); //s
@@ -1960,11 +2001,11 @@ void Profiler::end()
                ModuleTimeHistograms.at(i)->GetMean()*1000., //ms
                ModuleTimeHistograms.at(i)->GetRMS()*1000., //ms
 #else
-         if (module_entries)
+         if (module_entries.at(i))
             printf("\t%d\t%.1f\t%.1f\t%.1f\t%.3f",
-               module_entries,
-               module_mean*1000.,
-               module_rms*1000.,
+               module_entries.at(i),
+               module_mean.at(i)*1000.,
+               module_rms.at(i)*1000.,
 #endif
                MaxModuleTime.at(i)*1000., //ms
                TotalModuleTime.at(i)); //s
@@ -1999,15 +2040,20 @@ void Profiler::end()
       {
          printf("----------------------------------------------------------------------------------------------------------------\n");
       }
-      
-   }
 #else
-   printf("To use custom profile windows, please build rootana with root\n");
+      printf("To use custom profile windows, please build rootana with root\n");
 #endif
+   }
    //CPU and Wall clock time:
+   
    double cputime = (double)(clock() - tStart_cpu)/CLOCKS_PER_SEC;
-   double usertime = difftime(time(NULL),tStart_user);
-   printf("%s\tCPU time: %.2fs\tUser time: %.0fs\tAverage CPU Usage: ~%.1f%%\n",getenv("_") ,cputime, usertime,100.*cputime/usertime);
+   //double usertime = difftime(time(NULL),tStart_user);
+   std::chrono::duration<double> usertime = std::chrono::system_clock::now() - tStart_user;
+   printf("%s\tCPU time: %.2fs\tUser time: %.2fs\tAverage CPU Usage: ~%.1f%%\n",
+      getenv("_"),
+      cputime,
+      usertime.count(),
+      100.*cputime/usertime.count());
 }
 
 static void help()
@@ -2039,6 +2085,7 @@ static void help()
   printf("\t--mt: Enable multithreaded mode is not available: no C++11 threads\n");
 #endif
   printf("\t--no-profiler: Turn off manalyzer module profiler\n");
+  printf("\t--pqiNNN: Profile multithread queue lengths every NNN events \n");
 #ifdef HAVE_ROOT
   printf("\t-OXXX.root: Specify output root file filename (.root extension optional)\n");
 #endif
@@ -2148,6 +2195,8 @@ int manalyzer_main(int argc, char* argv[])
 #endif
       } else if (strncmp(arg,"--no-profiler",13)==0) {
          performance_profiler->TimeModules=false;
+      } else if (strncmp(arg,"--pqi",13)==0) {
+         performance_profiler->QueueInterval=atoi(arg+5);
 #ifdef HAVE_ROOT
       } else if (strncmp(arg,"-O",2)==0) {
           TARootHelper::fOutputFileName = strdup(arg+2);
@@ -2239,6 +2288,7 @@ int manalyzer_main(int argc, char* argv[])
       delete writer;
       writer = NULL;
    }
+   delete performance_profiler;
 
    return 0;
 }

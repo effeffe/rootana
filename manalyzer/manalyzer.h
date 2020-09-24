@@ -230,14 +230,12 @@ public:
 };
 #endif
 
-
-
+#include <chrono>
 #define CLOCK_TYPE std::chrono::time_point<std::chrono::system_clock>
 #define CLOCK_NOW std::chrono::high_resolution_clock::now();
 #define START_TIMER auto timer_start=CLOCK_NOW
 class UserProfilerFlow: public TAFlowEvent
 {
-
 private:
    CLOCK_TYPE start;
    CLOCK_TYPE stop;
@@ -264,9 +262,7 @@ public:
 #ifdef HAVE_ROOT
 #include "TH1D.h"
 #endif
-#include <chrono>
-#include <unistd.h>  //readlink
-#include <algorithm> //std::max_element
+#include <map>
 
 class Profiler
 {
@@ -274,7 +270,7 @@ private:
    std::string binary_name;
    std::string binary_path;
    clock_t tStart_cpu;
-   time_t tStart_user;
+   std::chrono::system_clock::time_point tStart_user;
    time_t midas_start_time;
    time_t midas_stop_time;
 
@@ -283,9 +279,11 @@ private:
    int NQueues=0;
    std::vector<TH1D*> AnalysisQueue;
    int QueueIntervalCounter=0;
+#endif
+public:
    //Number of events between samples
    int QueueInterval=100;
-#endif
+private:
 
 
    //Track Analyse TMEvent time per module (main thread)
@@ -293,60 +291,39 @@ private:
    std::vector<TH1D*>  UnpackTimeHistograms;
 #else
    std::vector<std::string> ModuleNames;
-   double unpack_mean;
-   double unpack_rms;
-   int    unpack_entries;
+   std::vector<double> unpack_mean;
+   std::vector<double> unpack_rms;
+   std::vector<int>    unpack_entries;
 #endif
    std::vector<double> MaxUnpackTime;
    std::vector<double> TotalUnpackTime;
+
    //Track Analyse flow event time per module (can be multiple threads)
 #ifdef HAVE_ROOT
    std::vector<TH1D*>  ModuleTimeHistograms;
 #else
-   double module_mean;
-   double module_rms;
-   int    module_entries;
+   std::vector<double> module_mean;
+   std::vector<double> module_rms;
+   std::vector<int>    module_entries;
 #endif
    std::vector<double> MaxModuleTime;
    std::vector<double> TotalModuleTime;
-   
+#ifdef HAVE_ROOT
    //Track user profiling
    std::map<unsigned int,int> UserMap;
    std::vector<TH1D*> UserHistograms;
    std::vector<double> TotalUserTime;
    std::vector<double> MaxUserTime;
-
-
+#endif
 public:
    bool TimeModules;
    Profiler();
-
-   void AddModuleMap( const char* UserProfileName, unsigned long hash)
-   {
-      #ifdef HAVE_CXX11_THREADS
-      std::lock_guard<std::mutex> lock(TAMultithreadHelper::gfLock);
-      #endif
-      gDirectory->cd("/AnalysisReport");
-      UserMap[hash]= UserHistograms.size();
-      Int_t Nbins=100;
-      Double_t bins[Nbins+1];
-      Double_t TimeRange=10; //seconds
-      for (int i=0; i<Nbins+1; i++)
-      {
-         bins[i]=TimeRange*pow(1.1,i)/pow(1.1,Nbins);
-         //std::cout <<"BIN:"<<bins[i]<<std::endl;
-      }
-      TH1D* Histo=new TH1D(UserProfileName,UserProfileName,Nbins,bins);
-      UserHistograms.push_back(Histo);
-      TotalUserTime.push_back(0.);
-      MaxUserTime.push_back(0.);
-      return;
-   }
-   
+   ~Profiler();
    void begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun );
    void log(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start);
    void log_unpack_time(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start);
    void log_user_profiling(TAFlags* flag, TAFlowEvent* flow);
+   void AddModuleMap( const char* UserProfileName, unsigned long hash);
    void log_mt_queue_length(TARunInfo* runinfo);
    void end();
 };
