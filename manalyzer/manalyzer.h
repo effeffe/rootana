@@ -287,9 +287,12 @@ class ProfilerFlow2D: public TAFlowEvent
    }
 };
 */
-
+#ifdef HAVE_ROOT
 #include "TH1D.h"
-
+#endif
+#include <chrono>
+#include <unistd.h>  //readlink
+#include <algorithm> //std::max_element
 #define CLOCK_TYPE std::chrono::time_point<std::chrono::system_clock>
 #define CLOCK_NOW std::chrono::high_resolution_clock::now();
 #define START_TIMER auto timer_start=CLOCK_NOW
@@ -305,11 +308,24 @@ private:
    time_t midas_stop_time;
 
    //Track Analyse TMEvent time per module (main thread)
+#ifdef HAVE_ROOT
    std::vector<TH1D*>  UnpackTimeHistograms;
+#else
+   std::vector<std::string> ModuleNames;
+   double unpack_mean;
+   double unpack_rms;
+   int    unpack_entries;
+#endif
    std::vector<double> MaxUnpackTime;
    std::vector<double> TotalUnpackTime;
    //Track Analyse flow event time per module (can be multiple threads)
+#ifdef HAVE_ROOT
    std::vector<TH1D*>  ModuleTimeHistograms;
+#else
+   double module_mean;
+   double module_rms;
+   int    module_entries;
+#endif
    std::vector<double> MaxModuleTime;
    std::vector<double> TotalModuleTime;
 
