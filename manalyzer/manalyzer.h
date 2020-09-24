@@ -230,7 +230,12 @@ public:
 };
 #endif
 
-/*class MiniProfilerFlow: public TAFlowEvent
+
+
+#define CLOCK_TYPE std::chrono::time_point<std::chrono::system_clock>
+#define CLOCK_NOW std::chrono::high_resolution_clock::now();
+#define START_TIMER auto timer_start=CLOCK_NOW
+class UserProfilerFlow: public TAFlowEvent
 {
 
 private:
@@ -246,56 +251,22 @@ public:
       //return (double)(stop - start)/CLOCKS_PER_SEC;
    }
    //std::chrono::time_point<std::chrono::high_resolution_clock> time;
-   ProfilerFlow(TAFlowEvent* flow, const char* _name, CLOCK_TYPE _start) : TAFlowEvent(flow), ModuleName(_name)
+   UserProfilerFlow(TAFlowEvent* flow, const char* _name, CLOCK_TYPE _start) : TAFlowEvent(flow), ModuleName(_name)
    {
       start=_start;
       stop=CLOCK_NOW
    }
-   ~ProfilerFlow() // dtor
+   ~UserProfilerFlow() // dtor
    {
    }
-
 };
 
-class ProfilerFlow2D: public TAFlowEvent
-{
-  public:
-   std::vector<const char*> ModuleName;
-   std::vector<double> SecondAxis;
-  private:
-   CLOCK_TYPE start;
-   CLOCK_TYPE stop;
-  public:
-   double GetTimer()
-   {
-      std::chrono::duration<double> elapsed_seconds = stop - start;
-      return  elapsed_seconds.count();
-      //return (double)(stop - start)/CLOCKS_PER_SEC;
-   }
-
-  ProfilerFlow2D(TAFlowEvent* flow, std::vector<const char*> _name, std::vector<double> second_axis, CLOCK_TYPE _start) : TAFlowEvent(flow)
-  {
-     ModuleName=_name;
-     start=_start;
-     stop=CLOCK_NOW;
-     SecondAxis=second_axis;
-  }
-
-  ~ProfilerFlow2D() // dtor
-   {
-      ModuleName.clear();
-   }
-};
-*/
 #ifdef HAVE_ROOT
 #include "TH1D.h"
 #endif
 #include <chrono>
 #include <unistd.h>  //readlink
 #include <algorithm> //std::max_element
-#define CLOCK_TYPE std::chrono::time_point<std::chrono::system_clock>
-#define CLOCK_NOW std::chrono::high_resolution_clock::now();
-#define START_TIMER auto timer_start=CLOCK_NOW
 
 class Profiler
 {
@@ -306,6 +277,16 @@ private:
    time_t tStart_user;
    time_t midas_start_time;
    time_t midas_stop_time;
+
+   //Track Queue lengths when multithreading
+#ifdef HAVE_ROOT
+   int NQueues=0;
+   std::vector<TH1D*> AnalysisQueue;
+   int QueueIntervalCounter=0;
+   //Number of events between samples
+   int QueueInterval=100;
+#endif
+
 
    //Track Analyse TMEvent time per module (main thread)
 #ifdef HAVE_ROOT
@@ -328,13 +309,45 @@ private:
 #endif
    std::vector<double> MaxModuleTime;
    std::vector<double> TotalModuleTime;
+   
+   //Track user profiling
+   std::map<unsigned int,int> UserMap;
+   std::vector<TH1D*> UserHistograms;
+   std::vector<double> TotalUserTime;
+   std::vector<double> MaxUserTime;
+
 
 public:
    bool TimeModules;
    Profiler();
+
+   void AddModuleMap( const char* UserProfileName, unsigned long hash)
+   {
+      #ifdef HAVE_CXX11_THREADS
+      std::lock_guard<std::mutex> lock(TAMultithreadHelper::gfLock);
+      #endif
+      gDirectory->cd("/AnalysisReport");
+      UserMap[hash]= UserHistograms.size();
+      Int_t Nbins=100;
+      Double_t bins[Nbins+1];
+      Double_t TimeRange=10; //seconds
+      for (int i=0; i<Nbins+1; i++)
+      {
+         bins[i]=TimeRange*pow(1.1,i)/pow(1.1,Nbins);
+         //std::cout <<"BIN:"<<bins[i]<<std::endl;
+      }
+      TH1D* Histo=new TH1D(UserProfileName,UserProfileName,Nbins,bins);
+      UserHistograms.push_back(Histo);
+      TotalUserTime.push_back(0.);
+      MaxUserTime.push_back(0.);
+      return;
+   }
+   
    void begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun );
    void log(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start);
    void log_unpack_time(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start);
+   void log_user_profiling(TAFlags* flag, TAFlowEvent* flow);
+   void log_mt_queue_length(TARunInfo* runinfo);
    void end();
 };
 

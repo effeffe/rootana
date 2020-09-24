@@ -432,13 +432,14 @@ public:
    std::vector<TARunObject*> fRunRun;
    std::vector<std::string>  fArgs;
    bool fMultithreadMode;
-   Profiler manaprofiler;
+   Profiler* manaprofiler;
 
-   RunHandler(const std::vector<std::string>& args, bool multithread) // ctor
+   RunHandler(const std::vector<std::string>& args, bool multithread, Profiler* profiler) // ctor
    {
       fRunInfo = NULL;
       fArgs = args;
       fMultithreadMode = multithread;
+      manaprofiler=profiler;
    }
 
    ~RunHandler() // dtor
@@ -493,7 +494,7 @@ public:
          } else {
             START_TIMER
             flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flag, flow);
-            manaprofiler.log(flag, flow, i,fRunRun[i]->ModuleName.c_str(),timer_start);
+            manaprofiler->log(flag, flow, i,fRunRun[i]->ModuleName.c_str(),timer_start);
             if ((*flag) & TAFlag_QUIT) { // shut down the analyzer
                data_processing=false;
                delete flow;
@@ -570,7 +571,7 @@ public:
       assert(fRunInfo->fOdb != NULL);
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->BeginRun(fRunInfo);
-      manaprofiler.begin(fRunInfo,fRunRun);
+      manaprofiler->begin(fRunInfo,fRunRun);
    }
 
    void EndRun(TAFlags* flags)
@@ -619,7 +620,7 @@ public:
       
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->EndRun(fRunInfo);
-      manaprofiler.end();
+      manaprofiler->end();
    }
 
    void NextSubrun()
@@ -657,7 +658,7 @@ public:
       for (unsigned i=0; i<fRunRun.size(); i++) {
          START_TIMER;
          flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
-         manaprofiler.log(flags, flow,i,fRunRun[i]->ModuleName.c_str(),timer_start);
+         manaprofiler->log(flags, flow,i,fRunRun[i]->ModuleName.c_str(),timer_start);
          if (!flow)
             break;
          if ((*flags) & TAFlag_SKIP)
@@ -696,7 +697,7 @@ public:
       for (unsigned i=0; i<fRunRun.size(); i++) {
          START_TIMER;
          flow = fRunRun[i]->Analyze(fRunInfo, event, flags, flow);
-         manaprofiler.log_unpack_time(flags,flow,i,fRunRun[i]->ModuleName.c_str(),timer_start);
+         manaprofiler->log_unpack_time(flags,flow,i,fRunRun[i]->ModuleName.c_str(),timer_start);
          if (*flags & TAFlag_SKIP)
             break;
          if (*flags & TAFlag_QUIT)
@@ -715,7 +716,9 @@ public:
             }
          }
       }
-      
+      if (fMultithreadMode)
+         manaprofiler->log_mt_queue_length(fRunInfo);
+      manaprofiler->log_user_profiling(flags, flow);
       if (*flags & TAFlag_WRITE)
          if (writer)
             TMWriteEvent(writer, event);
@@ -845,7 +848,7 @@ public:
    }
 };
 
-static int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostname, const char* exptname, int num_analyze, TMWriterInterface* writer, bool multithread)
+static int ProcessMidasOnline(const std::vector<std::string>& args, const char* hostname, const char* exptname, int num_analyze, TMWriterInterface* writer, bool multithread,Profiler* profile)
 {
    TMidasOnline *midas = TMidasOnline::instance();
 
@@ -857,7 +860,7 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
 
    MVOdb* odb = MakeMidasOdb(midas->fDB);
    
-   OnlineHandler* h = new OnlineHandler(num_analyze, writer, odb, args, multithread);
+   OnlineHandler* h = new OnlineHandler(num_analyze, writer, odb, args, multithread, profile);
 
    midas->RegisterHandler(h);
    midas->registerTransitions();
@@ -918,7 +921,7 @@ static int ProcessMidasOnline(const std::vector<std::string>& args, const char* 
 std::vector<std::string> TARunInfo::fgFileList;
 int TARunInfo::fgCurrentFileIndex = 0;
 
-static int ProcessMidasFiles(const std::vector<std::string>& files, const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer, bool multithread)
+static int ProcessMidasFiles(const std::vector<std::string>& files, const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer, bool multithread, Profiler* profile)
 {
    TARunInfo::fgFileList.clear();
 
@@ -928,7 +931,7 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Init(args);
 
-   RunHandler run(args, multithread);
+   RunHandler run(args, multithread, profile);
 
    bool done = false;
 
@@ -1069,12 +1072,12 @@ static int ProcessMidasFiles(const std::vector<std::string>& files, const std::v
    return 0;
 }
 
-static int ProcessDemoMode(const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer, bool multithread)
+static int ProcessDemoMode(const std::vector<std::string>& args, int num_skip, int num_analyze, TMWriterInterface* writer, bool multithread, Profiler* profile)
 {
    for (unsigned i=0; i<(*gModules).size(); i++)
       (*gModules)[i]->Init(args);
 
-   RunHandler run(args, multithread);
+   RunHandler run(args, multithread, profile);
 
    bool done = false;
 
@@ -1841,6 +1844,65 @@ void Profiler::log_unpack_time(TAFlags* flag, TAFlowEvent* flow,int i,const char
    unpack_entries++;
 #endif
 }
+
+void Profiler::log_mt_queue_length(TARunInfo* runinfo)
+{
+#ifdef HAVE_CXX11_THREADS
+#ifdef HAVE_CXX11_THREADS
+   QueueIntervalCounter++;
+   if (runinfo->fMtInfo && (QueueIntervalCounter%QueueInterval==0))
+   {
+      for (int i=0; i<NQueues; i++)
+      {
+         int j=0;
+         {
+            std::lock_guard<std::mutex> lock(runinfo->fMtInfo->fMtFlowQueueMutex[i]);
+            j=runinfo->fMtInfo->fMtFlowQueue[i].size();
+         }
+         AnalysisQueue.at(i)->Fill(j);
+      }
+   }
+#endif
+#endif
+}
+
+
+void Profiler::log_user_profiling(TAFlags* flag, TAFlowEvent* flow)
+{
+   //Capture multithread queue lengths:
+
+
+   //Clocks unfold backwards... 
+   std::vector<TAFlowEvent*> flowArray;
+   int FlowEvents=0;
+   TAFlowEvent* f = flow;
+   while (f) 
+   {
+      flowArray.push_back(f);
+      f=f->fNext;
+      FlowEvents++;
+   }
+   for (int ii=FlowEvents-1; ii>=0; ii--)
+   {
+      f=flowArray[ii];
+      UserProfilerFlow* timer=dynamic_cast<UserProfilerFlow*>(f);
+      if (timer)
+      {
+         const char* name=timer->ModuleName.c_str();
+         unsigned int hash=std::hash<std::string>{}(timer->ModuleName);
+         if (!UserMap.count(hash))
+            AddModuleMap(name,hash);
+         double dt=999.;
+         dt=timer->GetTimer();
+         int i=UserMap[hash];
+         TotalModuleTime[i]+=dt;
+         if (dt>MaxModuleTime[i])
+            MaxModuleTime.at(i)=dt;
+         UserHistograms.at(i)->Fill(dt);
+      }
+   }
+}
+
 void Profiler::end()
 {
 #ifndef HAVE_ROOT
@@ -1916,8 +1978,36 @@ void Profiler::end()
       printf("----------------------------------------------------------------------------------------------------------------\n");
       printf("                                   Analyse TMEvent total time   %f\n",AllUnpackTime);
       printf("                                                                           Analyse FlowEvent total time %f\n",AllModuleTime);
-      printf("----------------------------------------------------------------------------------------------------------------\n");
+#ifdef HAVE_ROOT
+      if (UserHistograms.size())
+      {
+         printf("Custom profiling windows\tEntries\tMean(ms)RMS(ms)\tMax(ms)\tSum(s)\n");
+         printf("----------------------------------------------------------------------\n");
+         for (uint i=0; i<UserHistograms.size(); i++)
+         {
+            //std::cout<<ModuleHistograms.at(i)->GetTitle()<<"\t\t";
+            printf("%-25s\t%d\t%.1f\t%.1f\t%.1f\t%.3f\t\n",UserHistograms.at(i)->GetTitle(),
+            (int)UserHistograms.at(i)->GetEntries(),
+            UserHistograms.at(i)->GetMean()*1000., //ms
+            UserHistograms.at(i)->GetRMS()*1000., //ms
+            MaxUserTime.at(i)*1000., //ms
+            TotalUserTime.at(i)); //s
+         }
+         printf("----------------------------------------------------------------------\n");
+      }
+      else
+      {
+         printf("----------------------------------------------------------------------------------------------------------------\n");
+      }
+      
    }
+#else
+   printf("To use custom profile windows, please build rootana with root\n");
+#endif
+   //CPU and Wall clock time:
+   double cputime = (double)(clock() - tStart_cpu)/CLOCKS_PER_SEC;
+   double usertime = difftime(time(NULL),tStart_user);
+   printf("%s\tCPU time: %.2fs\tUser time: %.0fs\tAverage CPU Usage: ~%.1f%%\n",getenv("_") ,cputime, usertime,100.*cputime/usertime);
 }
 
 static void help()
@@ -1948,6 +2038,7 @@ static void help()
 #else
   printf("\t--mt: Enable multithreaded mode is not available: no C++11 threads\n");
 #endif
+  printf("\t--no-profiler: Turn off manalyzer module profiler\n");
 #ifdef HAVE_ROOT
   printf("\t-OXXX.root: Specify output root file filename (.root extension optional)\n");
 #endif
@@ -1999,6 +2090,8 @@ int manalyzer_main(int argc, char* argv[])
    bool interactive = false;
 
    bool multithread = false;
+   
+   Profiler* performance_profiler=new Profiler();
 
    std::vector<std::string> files;
    std::vector<std::string> modargs;
@@ -2053,6 +2146,8 @@ int manalyzer_main(int argc, char* argv[])
       } else if (strncmp(arg,"--mt",4)==0) {
          multithread=true;
 #endif
+      } else if (strncmp(arg,"--no-profiler",13)==0) {
+         performance_profiler->TimeModules=false;
 #ifdef HAVE_ROOT
       } else if (strncmp(arg,"-O",2)==0) {
           TARootHelper::fOutputFileName = strdup(arg+2);
@@ -2130,12 +2225,12 @@ int manalyzer_main(int argc, char* argv[])
    }
 
    if (demo_mode) {
-      ProcessDemoMode(modargs, num_skip, num_analyze, writer, multithread);
+      ProcessDemoMode(modargs, num_skip, num_analyze, writer, multithread, performance_profiler);
    } else if (files.size() > 0) {
-      ProcessMidasFiles(files, modargs, num_skip, num_analyze, writer, multithread);
+      ProcessMidasFiles(files, modargs, num_skip, num_analyze, writer, multithread, performance_profiler);
    } else {
 #ifdef HAVE_MIDAS
-      ProcessMidasOnline(modargs, hostname, exptname, num_analyze, writer, multithread);
+      ProcessMidasOnline(modargs, hostname, exptname, num_analyze, writer, multithread, performance_profiler);
 #endif
    }
 
