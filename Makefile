@@ -38,7 +38,7 @@ USER_CFLAGS += $(ROOTCFLAGS)
 USER_LIBS   += $(ROOTGLIBS)
 HAVE_ROOT_HTTP := $(findstring http,$(ROOTFEATURES))
 HAVE_ROOT_XML  := $(findstring xml,$(ROOTFEATURES))
-HAVE_CXX11_THREADS := $(findstring cxx1,$(ROOTFEATURES))
+HAVE_CXX11_THREADS := $(findstring cxx1,$(ROOTFEATURES)) $(findstring cxx2,$(ROOTFEATURES))
 
 ifdef HAVE_ROOT_XML
 CXXFLAGS += -DHAVE_ROOT_XML
