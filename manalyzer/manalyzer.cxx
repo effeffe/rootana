@@ -522,6 +522,7 @@ public:
                // tell the destructor that it does not need to delete it, too
                mt->fMtLastItemInQueue = NULL;
             }
+            manaprofiler->log_user_profiling(flag, flow);
             delete flow;
             delete flag;
             flow = NULL;
@@ -679,6 +680,7 @@ public:
 
          int flags = 0;
          flow = AnalyzeFlowEvent(&flags, flow);
+         
          if (flow)
             delete flow;
          if (flags & TAFlag_QUIT) {
@@ -717,9 +719,10 @@ public:
             }
          }
       }
+      manaprofiler->log_user_profiling(flags, flow);
       if (fMultithreadMode)
          manaprofiler->log_mt_queue_length(fRunInfo);
-      manaprofiler->log_user_profiling(flags, flow);
+
       if (*flags & TAFlag_WRITE)
          if (writer)
             TMWriteEvent(writer, event);
