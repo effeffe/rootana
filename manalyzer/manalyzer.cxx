@@ -2030,7 +2030,7 @@ void Profiler::end()
       {
          printf("Custom profiling windows\tEntries\tMean(ms)RMS(ms)\tMax(ms)\tSum(s)\n");
          printf("----------------------------------------------------------------------\n");
-         for (uint i=0; i<UserHistograms.size(); i++)
+         for (size_t i=0; i<UserHistograms.size(); i++)
          {
             //std::cout<<ModuleHistograms.at(i)->GetTitle()<<"\t\t";
             printf("%-25s\t%d\t%.1f\t%.1f\t%.1f\t%.3f\t\n",UserHistograms.at(i)->GetTitle(),
