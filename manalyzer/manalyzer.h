@@ -233,7 +233,7 @@ public:
 #if __cplusplus >= 201103L 
    //C++11 or above is needed for chrono... therefor the profiler needs c++11 for any functionality
    #include <chrono>
-   #define CLOCK_TYPE std::chrono::time_point<std::chrono::system_clock>
+   #define CLOCK_TYPE std::chrono::high_resolution_clock::time_point
    #define CLOCK_NOW std::chrono::high_resolution_clock::now();
    #define DURATION std::chrono::duration<double>
    #define START_TIMER auto timer_start=CLOCK_NOW
