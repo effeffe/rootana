@@ -773,8 +773,8 @@ public:
    bool fQuit = false;
    MVOdb* fOdb = NULL;
 
-   OnlineHandler(int num_analyze, TMWriterInterface* writer, MVOdb* odb, const std::vector<std::string>& args, bool multithread) // ctor
-      : fRun(args, multithread)
+   OnlineHandler(int num_analyze, TMWriterInterface* writer, MVOdb* odb, const std::vector<std::string>& args, bool multithread, Profiler* prof) // ctor
+      : fRun(args, multithread, prof)
    {
       fNumAnalyze = num_analyze;
       fWriter = writer;
