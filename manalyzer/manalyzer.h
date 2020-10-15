@@ -302,23 +302,23 @@ private:
    //Track Analyse TMEvent time per module (main thread)
 #ifdef HAVE_ROOT
    std::vector<TH1D*>  UnpackTimeHistograms;
-#else
+#endif
    std::vector<std::string> ModuleNames;
    std::vector<double> unpack_mean;
    std::vector<double> unpack_rms;
    std::vector<int>    unpack_entries;
-#endif
+
    std::vector<double> MaxUnpackTime;
    std::vector<double> TotalUnpackTime;
 
    //Track Analyse flow event time per module (can be multiple threads)
 #ifdef HAVE_ROOT
    std::vector<TH1D*>  ModuleTimeHistograms;
-#else
+#endif
    std::vector<double> module_mean;
    std::vector<double> module_rms;
    std::vector<int>    module_entries;
-#endif
+
    std::vector<double> MaxModuleTime;
    std::vector<double> TotalModuleTime;
 #ifdef HAVE_ROOT
