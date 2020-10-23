@@ -1754,7 +1754,7 @@ void Profiler::begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun 
    gDirectory->mkdir("ProfilerReport")->cd();
 
    //Setup module histograms
-   Int_t Nbins=100;
+   Int_t Nbins=1000;
    Double_t bins[Nbins+1];
    Double_t TimeRange=10; //seconds
    //Set uneven binning to better sample fast modules with accuracy
@@ -1769,34 +1769,30 @@ void Profiler::begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun 
    {
       MaxUnpackTime.push_back(0);
       TotalUnpackTime.push_back(0);
-#ifdef HAVE_ROOT
-      TString ModuleName;
-      if (!fRunRun.at(i)->ModuleName.size())
-         ModuleName="Unnamed Module " + std::to_string(i);
-      else
-         ModuleName=fRunRun.at(i)->ModuleName;
-      TH1D* UnpackHisto=new TH1D(ModuleName+"_TMEvent",ModuleName,Nbins,bins);
-      UnpackTimeHistograms.push_back(UnpackHisto);
-#else
       if (!fRunRun.at(i)->ModuleName.size())
          ModuleNames.push_back("Unnamed Module " + std::to_string(i));
       else
          ModuleNames.push_back(fRunRun.at(i)->ModuleName);
+#ifdef HAVE_ROOT
+      TH1D* UnpackHisto=new TH1D(TString(ModuleNames.at(i) + "_TMEvent"), ModuleNames.at(i).c_str(), Nbins, bins);
+      UnpackTimeHistograms.push_back(UnpackHisto);
+#endif
+
       //We dont have root, so can't use thier histograms
       unpack_mean.push_back(0);
       unpack_rms.push_back(0);
       unpack_entries.push_back(0);
-#endif
+
       MaxModuleTime.push_back(0);
       TotalModuleTime.push_back(0);
 #ifdef HAVE_ROOT
-      TH1D* Histo=new TH1D(ModuleName,ModuleName,Nbins,bins);
+      TH1D* Histo=new TH1D(ModuleNames.at(i).c_str(), ModuleNames.at(i).c_str(), Nbins, bins);
       ModuleTimeHistograms.push_back(Histo);
-#else
+#endif
       module_mean.push_back(0);
       module_rms.push_back(0);
       module_entries.push_back(0);
-#endif
+
    }
 }
 
@@ -1819,11 +1815,11 @@ void Profiler::log(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_nam
       MaxModuleTime[i]=dt;
 #ifdef HAVE_ROOT
    ModuleTimeHistograms.at(i)->Fill(dt);
-#else
+#endif
    module_mean[i]  +=dt;
    module_rms[i]   +=dt*dt;
    module_entries[i]++;
-#endif
+
 }
 
 void Profiler::log_unpack_time(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start)
@@ -1846,12 +1842,12 @@ void Profiler::log_unpack_time(TAFlags* flag, TAFlowEvent* flow,int i,const char
       MaxUnpackTime[i]=dt;
 #ifdef HAVE_ROOT
    UnpackTimeHistograms.at(i)->Fill(dt);
-#else
+#endif
    //We dont have root, so can't use thier histograms
    unpack_mean[i]   +=dt;
    unpack_rms[i]    +=dt*dt;
    unpack_entries[i]++;
-#endif
+
 }
 
 void Profiler::log_mt_queue_length(TARunInfo* runinfo)
@@ -1906,9 +1902,9 @@ void Profiler::log_user_profiling(TAFlags* flag, TAFlowEvent* flow)
          double dt=999.;
          dt=timer->GetTimer();
          int i=UserMap[hash];
-         TotalModuleTime[i]+=dt;
-         if (dt>MaxModuleTime[i])
-            MaxModuleTime.at(i)=dt;
+         TotalUserTime[i]+=dt;
+         if (dt>MaxUserTime[i])
+            MaxUserTime.at(i)=dt;
          UserHistograms.at(i)->Fill(dt);
       }
    }
@@ -1946,9 +1942,6 @@ void Profiler::end()
 {
   if (gTrace)
      printf("Profiler::end\n");
-#ifdef HAVE_ROOT
-   if (ModuleTimeHistograms.size()>0)
-#else
    for (size_t i=0; i<unpack_mean.size(); i++)
    {
       unpack_mean.at(i)=unpack_mean.at(i)/unpack_entries.at(i);
@@ -1961,6 +1954,9 @@ void Profiler::end()
       module_rms.at(i) = module_rms.at(i) / module_entries.at(i) - 
          ( module_mean.at(i) / module_entries.at(i) ) * ( module_mean.at(i) / module_entries.at(i) );
    }
+#ifdef HAVE_ROOT
+   if (ModuleTimeHistograms.size()>0)
+#else
    if (unpack_entries.size()>0)
 #endif
    {
@@ -1976,16 +1972,6 @@ void Profiler::end()
       printf("Module\t\t\t\tEntries\tMean(ms)RMS(ms)\tMax(ms)\tSum(s)\tEntries\tMean(ms)RMS(ms)\tMax(ms)\tSum(s)\n");
       //double max_total_time=*std::max_element(TotalModuleTime.begin(),TotalModuleTime.end());
       printf("----------------------------------------------------------------------------------------------------------------\n");
-#ifdef HAVE_ROOT
-      for (size_t i=0; i<ModuleTimeHistograms.size(); i++)
-      {
-         printf("%-25s", ModuleTimeHistograms.at(i)->GetTitle());
-         if ((int)UnpackTimeHistograms.at(i)->GetEntries())
-            printf("\t%d\t%.1f\t%.1f\t%.1f\t%.3f",
-               (int)UnpackTimeHistograms.at(i)->GetEntries(),
-               UnpackTimeHistograms.at(i)->GetMean()*1000., //ms
-               UnpackTimeHistograms.at(i)->GetRMS()*1000., //ms
-#else
       for (size_t i=0; i<ModuleNames.size(); i++)
       {
          printf("%-25s", ModuleNames.at(i).c_str());
@@ -1994,25 +1980,16 @@ void Profiler::end()
                unpack_entries.at(i),
                unpack_mean.at(i)*1000.,
                unpack_rms.at(i)*1000.,
-#endif
                MaxUnpackTime.at(i)*1000., //ms
                TotalUnpackTime.at(i)); //s
          else
             printf("\t-\t-\t-\t-\t-");
 
-#ifdef HAVE_ROOT         
-         if ((int)ModuleTimeHistograms.at(i)->GetEntries())
-            printf("\t%d\t%.1f\t%.1f\t%.1f\t%.3f",
-               (int)ModuleTimeHistograms.at(i)->GetEntries(),
-               ModuleTimeHistograms.at(i)->GetMean()*1000., //ms
-               ModuleTimeHistograms.at(i)->GetRMS()*1000., //ms
-#else
          if (module_entries.at(i))
             printf("\t%d\t%.1f\t%.1f\t%.1f\t%.3f",
                module_entries.at(i),
                module_mean.at(i)*1000.,
                module_rms.at(i)*1000.,
-#endif
                MaxModuleTime.at(i)*1000., //ms
                TotalModuleTime.at(i)); //s
          else
