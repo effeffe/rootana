@@ -1,0 +1,191 @@
+cmake_minimum_required(VERSION 3.8)
+
+project(rootana VERSION 1.0)
+
+# set default definitions
+set(HAVE_LIBZ 1)
+set(HAVE_MIDAS 0)
+set(HAVE_ROOT 0)
+set(HAVE_ROOT_HTTP 0)
+set(HAVE_ROOT_XML 0)
+set(HAVE_THTTP_SERVER 0)
+set(HAVE_XMLSERVER 0)
+set(HAVE_LIBNETDIRECTORY 0)
+set(HAVE_CXX11_THREADS 0)
+
+
+
+find_package(Git REQUIRED)
+
+# checkout git submodules
+execute_process(
+    COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    RESULT_VARIABLE GIT_SUBMOD_RESULT
+)
+
+
+
+# find MIDAS
+if(NOT "$ENV{MIDASSYS}" STREQUAL "")
+    set(HAVE_MIDAS 1)
+    set(MIDAS_INCLUDE_DIRS "$ENV{MIDASSYS}/include")
+    message("MIDAS_INCLUDE_DIRS = ${MIDAS_INCLUDE_DIRS}")
+    set(MIDAS_LIBRARIES "$ENV{MIDASSYS}/lib/libmidas.a" -lutil -lrt)
+    message("MIDAS_LIBRARIES = ${MIDAS_LIBRARIES}")
+endif()
+
+find_package(ROOT COMPONENTS
+    Gui # TG* objects
+    RHTTP # THttpServer
+    XMLIO XMLParser
+)
+# set c++ standard to one used to build ROOT
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+
+
+add_library(rootana STATIC)
+
+# use global includes
+# (root_generate_dictionary does not allow setting include dirs)
+include_directories(
+    ${MIDAS_INCLUDE_DIRS}
+    ${ROOT_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_BINARY_DIR}/include
+    libAnalyzer
+    libMidasInterface
+    libNetDirectory
+    libMidasInterface
+    libMidasServer
+    libNetDirectory
+    libUnpack
+    libXmlServer
+    midasio
+    mjson
+    mvodb
+    mxml
+)
+
+
+
+# default sources that do not require MIDAS or ROOT
+file(GLOB SOURCES
+    libMidasInterface/TMidasEvent.cxx
+    libMidasServer/midasServer.cxx
+    libUnpack/*.cxx
+    manalyzer/manalyzer.cxx
+    midasio/*.cxx midasio/*.c
+    mjson/*.cxx
+    mvodb/mjsonodb.cxx mvodb/mvodb.cxx mvodb/mvodb.cxx mvodb/mxmlodb.cxx mvodb/nullodb.cxx
+    mxml/*.cxx
+)
+
+
+
+if(${HAVE_MIDAS})
+    target_compile_definitions(rootana PUBLIC
+        -DHAVE_MIDAS -DOS_LINUX -Dextname
+    )
+    file(GLOB SOURCES
+        ${SOURCES}
+        libMidasInterface/TMidasOnline.cxx
+        mvodb/midasodb.cxx
+    )
+endif()
+
+if(${ROOT_FOUND})
+    set(HAVE_ROOT 1)
+    set(HAVE_LIBNETDIRECTORY 1)
+    set(HAVE_CXX11_THREADS 1)
+    target_compile_definitions(rootana PUBLIC
+        -DHAVE_ROOT -DHAVE_LIBNETDIRECTORY
+    )
+    file(GLOB SOURCES
+        ${SOURCES}
+        libAnalyzer/T*.cxx
+        libAnalyzerDisplay/T*.cxx
+        libNetDirectory/*.cxx
+    )
+endif()
+
+if(${ROOT_http_FOUND})
+    set(HAVE_ROOT_HTTP 1)
+    set(HAVE_THTTP_SERVER 1)
+    target_compile_definitions(rootana PUBLIC
+        -DHAVE_ROOT_HTTP -DHAVE_THTTP_SERVER
+    )
+endif()
+
+if(${ROOT_xml_FOUND})
+    set(HAVE_ROOT_XML 1)
+    set(HAVE_XMLSERVER 1)
+    file(GLOB SOURCES
+        ${SOURCES}
+        libXmlServer/*.cxx
+    )
+    target_compile_definitions(rootana PUBLIC
+        -DHAVE_ROOT_XML
+    )
+endif()
+
+message("HAVE_LIBZ = ${HAVE_LIBZ}")
+message("HAVE_MIDAS = ${HAVE_MIDAS}")
+message("HAVE_ROOT = ${HAVE_ROOT}")
+message("HAVE_ROOT_HTTP = ${HAVE_ROOT_HTTP}")
+message("HAVE_ROOT_XML = ${HAVE_ROOT_XML}")
+message("HAVE_THTTP_SERVER = ${HAVE_THTTP_SERVER}")
+message("HAVE_XMLSERVER = ${HAVE_XMLSERVER}")
+message("HAVE_LIBNETDIRECTORY = ${HAVE_LIBNETDIRECTORY}")
+message("HAVE_CXX11_THREADS = ${HAVE_CXX11_THREADS}")
+
+
+
+configure_file(rootana_config.h.in include/rootana_config.h @ONLY)
+
+# generate ROOT DICTs
+if(${ROOT_FOUND})
+    root_generate_dictionary(TFancyHistogramCanvasDict
+        ${CMAKE_CURRENT_SOURCE_DIR}/libAnalyzerDisplay/TFancyHistogramCanvas.hxx
+        LINKDEF libAnalyzerDisplay/TFancyHistogramCanvas_LinkDef.h
+    )
+    root_generate_dictionary(TMainDisplayWindowDict
+        ${CMAKE_CURRENT_SOURCE_DIR}/libAnalyzerDisplay/TMainDisplayWindow.hxx
+        LINKDEF libAnalyzerDisplay/TMainDisplayWindow_LinkDef.h
+    )
+    root_generate_dictionary(TRootanaDisplayDict
+        ${CMAKE_CURRENT_SOURCE_DIR}/libAnalyzerDisplay/TRootanaDisplay.hxx
+        LINKDEF libAnalyzerDisplay/TRootanaDisplay_LinkDef.h
+    )
+    root_generate_dictionary(TNetDirectoryDict
+        ${CMAKE_CURRENT_SOURCE_DIR}/libNetDirectory/TNetDirectory.h
+        LINKDEF libNetDirectory/TNetDirectory_LinkDef.h
+    )
+    target_sources(rootana PRIVATE
+        ${SOURCES}
+        TFancyHistogramCanvasDict.cxx
+        TMainDisplayWindowDict.cxx
+        TRootanaDisplayDict.cxx
+        TNetDirectoryDict.cxx
+    )
+endif()
+
+target_sources(rootana PRIVATE
+    ${SOURCES}
+)
+
+target_link_libraries(rootana PUBLIC
+    ${MIDAS_LIBRARIES}
+    ${ROOT_LIBRARIES}
+    -lpthread
+)
+
+
+
+add_subdirectory(libAnalyzer)
+add_subdirectory(libAnalyzerDisplay)
+add_subdirectory(libMidasInterface)
+add_subdirectory(libMidasServer)
+add_subdirectory(manalyzer)
+add_subdirectory(old_analyzer)
