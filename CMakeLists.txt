@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(rootana VERSION 1.0)
+project(rootana)
 
 # set default definitions
 set(HAVE_LIBZ 1)
@@ -27,7 +27,11 @@ execute_process(
 
 
 # find MIDAS
-if(NOT "$ENV{MIDASSYS}" STREQUAL "")
+set(MIDASSYS "" CACHE PATH "")
+if("${MIDASSYS}" STREQUAL "")
+    set(MIDASSYS "$ENV{MIDASSYS}")
+endif()
+if(NOT "${MIDASSYS}" STREQUAL "")
     set(HAVE_MIDAS 1)
     set(MIDAS_INCLUDE_DIRS "$ENV{MIDASSYS}/include")
     message("MIDAS_INCLUDE_DIRS = ${MIDAS_INCLUDE_DIRS}")
@@ -40,21 +44,20 @@ find_package(ROOT COMPONENTS
     RHTTP # THttpServer
     XMLIO XMLParser
 )
-# set c++ standard to one used to build ROOT
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+if(${ROOT_FOUND})
+    set(CMAKE_CXX_FLGAGS ${ROOT_CXX_FLAGS})
+endif()
 
 
 
 add_library(rootana STATIC)
 
-# use global includes
-# (root_generate_dictionary does not allow setting include dirs)
-include_directories(
+set(ROOTANA_INCLUDE_DIRS
     ${MIDAS_INCLUDE_DIRS}
     ${ROOT_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}/include
     libAnalyzer
+    libAnalyzerDisplay
     libMidasInterface
     libNetDirectory
     libMidasInterface
@@ -146,6 +149,10 @@ configure_file(rootana_config.h.in include/rootana_config.h @ONLY)
 
 # generate ROOT DICTs
 if(${ROOT_FOUND})
+    # root_generate_dictionary does not allow setting include dirs
+    include_directories(
+        ${ROOTANA_INCLUDE_DIRS}
+    )
     root_generate_dictionary(TFancyHistogramCanvasDict
         ${CMAKE_CURRENT_SOURCE_DIR}/libAnalyzerDisplay/TFancyHistogramCanvas.hxx
         LINKDEF libAnalyzerDisplay/TFancyHistogramCanvas_LinkDef.h
@@ -163,7 +170,6 @@ if(${ROOT_FOUND})
         LINKDEF libNetDirectory/TNetDirectory_LinkDef.h
     )
     target_sources(rootana PRIVATE
-        ${SOURCES}
         TFancyHistogramCanvasDict.cxx
         TMainDisplayWindowDict.cxx
         TRootanaDisplayDict.cxx
@@ -174,7 +180,9 @@ endif()
 target_sources(rootana PRIVATE
     ${SOURCES}
 )
-
+target_include_directories(rootana PUBLIC
+    ${ROOTANA_INCLUDE_DIRS}
+)
 target_link_libraries(rootana PUBLIC
     ${MIDAS_LIBRARIES}
     ${ROOT_LIBRARIES}
@@ -183,9 +191,12 @@ target_link_libraries(rootana PUBLIC
 
 
 
-add_subdirectory(libAnalyzer)
-add_subdirectory(libAnalyzerDisplay)
-add_subdirectory(libMidasInterface)
-add_subdirectory(libMidasServer)
-add_subdirectory(manalyzer)
-add_subdirectory(old_analyzer)
+get_directory_property(PARENT_DIRECTORY PARENT_DIRECTORY)
+if(${PARENT_DIRECTORY})
+    add_subdirectory(libAnalyzer)
+    add_subdirectory(libAnalyzerDisplay)
+    add_subdirectory(libMidasInterface)
+    add_subdirectory(libMidasServer)
+    add_subdirectory(manalyzer)
+    add_subdirectory(old_analyzer)
+endif()
