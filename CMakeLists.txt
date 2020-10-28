@@ -26,16 +26,23 @@ execute_process(
 
 
 
-# find MIDAS
+# Find MIDAS. Priority:
+# - local cmake config: `cmake -DMIDASSYS=...`
+# - global MIDAS: `export MIDASSYS=...`
+# - provided by find_package
 set(MIDASSYS "" CACHE PATH "")
 if("${MIDASSYS}" STREQUAL "")
     set(MIDASSYS "$ENV{MIDASSYS}")
 endif()
-if(NOT "${MIDASSYS}" STREQUAL "")
-    set(HAVE_MIDAS 1)
+if("${MIDASSYS}" STREQUAL "")
+    find_package(Midas QUIET)
+else()
+    set(MIDAS_FOUND TRUE)
     set(MIDAS_INCLUDE_DIRS "$ENV{MIDASSYS}/include")
-    message("MIDAS_INCLUDE_DIRS = ${MIDAS_INCLUDE_DIRS}")
     set(MIDAS_LIBRARIES "$ENV{MIDASSYS}/lib/libmidas.a" -lutil -lrt)
+endif()
+if(${MIDAS_FOUND})
+    message("MIDAS_INCLUDE_DIRS = ${MIDAS_INCLUDE_DIRS}")
     message("MIDAS_LIBRARIES = ${MIDAS_LIBRARIES}")
 endif()
 
@@ -87,7 +94,8 @@ file(GLOB SOURCES
 
 
 
-if(${HAVE_MIDAS})
+if(${MIDAS_FOUND})
+    set(HAVE_MIDAS 1)
     target_compile_definitions(rootana PUBLIC
         -DHAVE_MIDAS -DOS_LINUX -Dextname
     )
