@@ -42,8 +42,8 @@ else()
     set(MIDAS_LIBRARIES "$ENV{MIDASSYS}/lib/libmidas.a" -lutil -lrt)
 endif()
 if(${MIDAS_FOUND})
-    message("MIDAS_INCLUDE_DIRS = ${MIDAS_INCLUDE_DIRS}")
-    message("MIDAS_LIBRARIES = ${MIDAS_LIBRARIES}")
+    message(DEBUG "[${PROJECT_NAME}] MIDAS_INCLUDE_DIRS = ${MIDAS_INCLUDE_DIRS}")
+    message(DEBUG "[${PROJECT_NAME}] MIDAS_LIBRARIES = ${MIDAS_LIBRARIES}")
 endif()
 
 find_package(ROOT COMPONENTS
@@ -141,19 +141,21 @@ if(${ROOT_xml_FOUND})
     )
 endif()
 
-message("HAVE_LIBZ = ${HAVE_LIBZ}")
-message("HAVE_MIDAS = ${HAVE_MIDAS}")
-message("HAVE_ROOT = ${HAVE_ROOT}")
-message("HAVE_ROOT_HTTP = ${HAVE_ROOT_HTTP}")
-message("HAVE_ROOT_XML = ${HAVE_ROOT_XML}")
-message("HAVE_THTTP_SERVER = ${HAVE_THTTP_SERVER}")
-message("HAVE_XMLSERVER = ${HAVE_XMLSERVER}")
-message("HAVE_LIBNETDIRECTORY = ${HAVE_LIBNETDIRECTORY}")
-message("HAVE_CXX11_THREADS = ${HAVE_CXX11_THREADS}")
+message(DEBUG "[${PROJECT_NAME}] HAVE_LIBZ = ${HAVE_LIBZ}")
+message(DEBUG "[${PROJECT_NAME}] HAVE_MIDAS = ${HAVE_MIDAS}")
+message(DEBUG "[${PROJECT_NAME}] HAVE_ROOT = ${HAVE_ROOT}")
+message(DEBUG "[${PROJECT_NAME}] HAVE_ROOT_HTTP = ${HAVE_ROOT_HTTP}")
+message(DEBUG "[${PROJECT_NAME}] HAVE_ROOT_XML = ${HAVE_ROOT_XML}")
+message(DEBUG "[${PROJECT_NAME}] HAVE_THTTP_SERVER = ${HAVE_THTTP_SERVER}")
+message(DEBUG "[${PROJECT_NAME}] HAVE_XMLSERVER = ${HAVE_XMLSERVER}")
+message(DEBUG "[${PROJECT_NAME}] HAVE_LIBNETDIRECTORY = ${HAVE_LIBNETDIRECTORY}")
+message(DEBUG "[${PROJECT_NAME}] HAVE_CXX11_THREADS = ${HAVE_CXX11_THREADS}")
 
 
 
 configure_file(rootana_config.h.in include/rootana_config.h @ONLY)
+
+
 
 # generate ROOT DICTs
 if(${ROOT_FOUND})
