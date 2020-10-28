@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.8)
 project(rootana)
 
 # set default definitions
-set(HAVE_LIBZ 1)
+set(HAVE_LIBZ 0)
 set(HAVE_MIDAS 0)
 set(HAVE_ROOT 0)
 set(HAVE_ROOT_HTTP 0)
@@ -26,33 +26,42 @@ execute_process(
 
 
 
+find_package(ZLIB QUIET)
+if(ZLIB_FOUND)
+    # TODO: rename HAVE_LIBZ to HAVE_ZLIB
+    # (original rename was introduced in midasio commit f185f999
+    # for compatibility with autotools which is not used)
+    set(HAVE_LIBZ 1)
+endif()
+
 # Find MIDAS. Priority:
 # - local cmake config: `cmake -DMIDASSYS=...`
 # - global MIDAS: `export MIDASSYS=...`
 # - provided by find_package
 set(MIDASSYS "" CACHE PATH "")
-if("${MIDASSYS}" STREQUAL "")
+if(MIDASSYS STREQUAL "")
     set(MIDASSYS "$ENV{MIDASSYS}")
 endif()
-if("${MIDASSYS}" STREQUAL "")
+if(MIDASSYS STREQUAL "")
     find_package(Midas QUIET)
 else()
     set(MIDAS_FOUND TRUE)
     set(MIDAS_INCLUDE_DIRS "$ENV{MIDASSYS}/include")
     set(MIDAS_LIBRARIES "$ENV{MIDASSYS}/lib/libmidas.a" -lutil -lrt)
 endif()
-if(${MIDAS_FOUND})
+if(MIDAS_FOUND)
     message(DEBUG "[${PROJECT_NAME}] MIDAS_INCLUDE_DIRS = ${MIDAS_INCLUDE_DIRS}")
     message(DEBUG "[${PROJECT_NAME}] MIDAS_LIBRARIES = ${MIDAS_LIBRARIES}")
 endif()
 
-find_package(ROOT COMPONENTS
+find_package(ROOT QUIET COMPONENTS
     Gui # TG* objects
     RHTTP # THttpServer
     XMLIO XMLParser
 )
-if(${ROOT_FOUND})
-    set(CMAKE_CXX_FLGAGS ${ROOT_CXX_FLAGS})
+if(ROOT_FOUND)
+    # set c++ standard to one used by ROOT
+    set(CMAKE_CXX_FLGAGS "${CMAKE_CXX_FLGAGS} ${ROOT_CXX_FLAGS}")
 endif()
 
 
@@ -94,7 +103,7 @@ file(GLOB SOURCES
 
 
 
-if(${MIDAS_FOUND})
+if(MIDAS_FOUND)
     set(HAVE_MIDAS 1)
     target_compile_definitions(rootana PUBLIC
         -DHAVE_MIDAS -DOS_LINUX -Dextname
@@ -106,7 +115,7 @@ if(${MIDAS_FOUND})
     )
 endif()
 
-if(${ROOT_FOUND})
+if(ROOT_FOUND)
     set(HAVE_ROOT 1)
     set(HAVE_LIBNETDIRECTORY 1)
     set(HAVE_CXX11_THREADS 1)
@@ -121,7 +130,7 @@ if(${ROOT_FOUND})
     )
 endif()
 
-if(${ROOT_http_FOUND})
+if(ROOT_http_FOUND)
     set(HAVE_ROOT_HTTP 1)
     set(HAVE_THTTP_SERVER 1)
     target_compile_definitions(rootana PUBLIC
@@ -129,7 +138,7 @@ if(${ROOT_http_FOUND})
     )
 endif()
 
-if(${ROOT_xml_FOUND})
+if(ROOT_xml_FOUND)
     set(HAVE_ROOT_XML 1)
     set(HAVE_XMLSERVER 1)
     file(GLOB SOURCES
@@ -158,7 +167,7 @@ configure_file(rootana_config.h.in include/rootana_config.h @ONLY)
 
 
 # generate ROOT DICTs
-if(${ROOT_FOUND})
+if(ROOT_FOUND)
     # root_generate_dictionary does not allow setting include dirs
     include_directories(
         ${ROOTANA_INCLUDE_DIRS}
@@ -202,7 +211,7 @@ target_link_libraries(rootana PUBLIC
 
 
 get_directory_property(PARENT_DIRECTORY PARENT_DIRECTORY)
-if(${PARENT_DIRECTORY})
+if(PARENT_DIRECTORY)
     add_subdirectory(libAnalyzer)
     add_subdirectory(libAnalyzerDisplay)
     add_subdirectory(libMidasInterface)
