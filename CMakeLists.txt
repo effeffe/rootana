@@ -92,7 +92,6 @@ set(ROOTANA_INCLUDE_DIRS
 # default sources that do not require MIDAS or ROOT
 file(GLOB SOURCES
     libMidasInterface/TMidasEvent.cxx
-    libMidasServer/midasServer.cxx
     libUnpack/*.cxx
     manalyzer/manalyzer.cxx
     midasio/*.cxx midasio/*.c
@@ -126,6 +125,7 @@ if(ROOT_FOUND)
         ${SOURCES}
         libAnalyzer/T*.cxx
         libAnalyzerDisplay/T*.cxx
+        libMidasServer/midasServer.cxx
         libNetDirectory/*.cxx
     )
 endif()
@@ -173,19 +173,19 @@ if(ROOT_FOUND)
         ${ROOTANA_INCLUDE_DIRS}
     )
     root_generate_dictionary(TFancyHistogramCanvasDict
-        ${CMAKE_CURRENT_SOURCE_DIR}/libAnalyzerDisplay/TFancyHistogramCanvas.hxx
+        TFancyHistogramCanvas.hxx
         LINKDEF libAnalyzerDisplay/TFancyHistogramCanvas_LinkDef.h
     )
     root_generate_dictionary(TMainDisplayWindowDict
-        ${CMAKE_CURRENT_SOURCE_DIR}/libAnalyzerDisplay/TMainDisplayWindow.hxx
+        TMainDisplayWindow.hxx
         LINKDEF libAnalyzerDisplay/TMainDisplayWindow_LinkDef.h
     )
     root_generate_dictionary(TRootanaDisplayDict
-        ${CMAKE_CURRENT_SOURCE_DIR}/libAnalyzerDisplay/TRootanaDisplay.hxx
+        TRootanaDisplay.hxx
         LINKDEF libAnalyzerDisplay/TRootanaDisplay_LinkDef.h
     )
     root_generate_dictionary(TNetDirectoryDict
-        ${CMAKE_CURRENT_SOURCE_DIR}/libNetDirectory/TNetDirectory.h
+        TNetDirectory.h
         LINKDEF libNetDirectory/TNetDirectory_LinkDef.h
     )
     target_sources(rootana PRIVATE
