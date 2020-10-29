@@ -211,7 +211,7 @@ target_link_libraries(rootana PUBLIC
 
 
 get_directory_property(PARENT_DIRECTORY PARENT_DIRECTORY)
-if(PARENT_DIRECTORY)
+if(NOT PARENT_DIRECTORY)
     add_subdirectory(libAnalyzer)
     add_subdirectory(libAnalyzerDisplay)
     add_subdirectory(libMidasInterface)
