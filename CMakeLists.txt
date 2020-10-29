@@ -27,12 +27,6 @@ execute_process(
 
 
 find_package(ZLIB QUIET)
-if(ZLIB_FOUND)
-    # TODO: rename HAVE_LIBZ to HAVE_ZLIB
-    # (original rename was introduced in midasio commit f185f999
-    # for compatibility with autotools which is not used)
-    set(HAVE_LIBZ 1)
-endif()
 
 # Find MIDAS. Priority:
 # - local cmake config: `cmake -DMIDASSYS=...`
@@ -101,6 +95,16 @@ file(GLOB SOURCES
 )
 
 
+
+if(ZLIB_FOUND)
+    # TODO: rename HAVE_LIBZ to HAVE_ZLIB
+    # (original rename was introduced in midasio commit f185f999
+    # for compatibility with autotools which is not used)
+    set(HAVE_LIBZ 1)
+    target_compile_definitions(rootana PUBLIC
+        -DHAVE_LIBZ
+    )
+endif()
 
 if(MIDAS_FOUND)
     set(HAVE_MIDAS 1)
@@ -205,6 +209,7 @@ target_include_directories(rootana PUBLIC
 target_link_libraries(rootana PUBLIC
     ${MIDAS_LIBRARIES}
     ${ROOT_LIBRARIES}
+    ${ZLIB_LIBRARIES}
     -lpthread
 )
 
