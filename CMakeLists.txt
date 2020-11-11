@@ -55,14 +55,11 @@ find_package(ROOT QUIET COMPONENTS
 )
 if(ROOT_FOUND)
     # set c++ standard to one used by ROOT
-    set(CMAKE_CXX_FLGAGS "${CMAKE_CXX_FLGAGS} ${ROOT_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
 endif()
 if(ROOT_FOUND AND NOT COMMAND root_generate_dictionary)
-    message(WARN "[${PROJECT_NAME}] root_generate_dictionary not found, find and include RootNewMacros or RootMacros")
-    get_filename_component(ROOT_USE_FILE_PATH "${ROOT_USE_FILE}" PATH)
-    find_file(ROOT_NEW_MACROS NAMES "RootNewMacros.cmake" "RootMacros.cmake" PATHS "${ROOT_USE_FILE_PATH}" REQUIRED)
-    message(INFO "[${PROJECT_NAME}] found ${ROOT_NEW_MACROS}")
-    include("${ROOT_NEW_MACROS}")
+    message(WARN "[${PROJECT_NAME}] root_generate_dictionary not found, try to include ROOTUseFile.cmake")
+    include("${ROOT_USE_FILE}")
 endif()
 
 
