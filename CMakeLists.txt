@@ -73,19 +73,20 @@ set(ROOTANA_INCLUDE_DIRS
     ${MIDAS_INCLUDE_DIRS}
     ${ROOT_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}/include
-    libAnalyzer
-    libAnalyzerDisplay
-    libMidasInterface
-    libNetDirectory
-    libMidasInterface
-    libMidasServer
-    libNetDirectory
-    libUnpack
-    libXmlServer
-    midasio
-    mjson
-    mvodb
-    mxml
+    ${CMAKE_CURRENT_SOURCE_DIR}/libAnalyzer
+    ${CMAKE_CURRENT_SOURCE_DIR}/libAnalyzerDisplay
+    ${CMAKE_CURRENT_SOURCE_DIR}/libMidasInterface
+    ${CMAKE_CURRENT_SOURCE_DIR}/libNetDirectory
+    ${CMAKE_CURRENT_SOURCE_DIR}/libMidasInterface
+    ${CMAKE_CURRENT_SOURCE_DIR}/libMidasServer
+    ${CMAKE_CURRENT_SOURCE_DIR}/libNetDirectory
+    ${CMAKE_CURRENT_SOURCE_DIR}/libUnpack
+    ${CMAKE_CURRENT_SOURCE_DIR}/libXmlServer
+    ${CMAKE_CURRENT_SOURCE_DIR}/midasio
+    ${CMAKE_CURRENT_SOURCE_DIR}/mjson
+    ${CMAKE_CURRENT_SOURCE_DIR}/mvodb
+    ${CMAKE_CURRENT_SOURCE_DIR}/mxml
+    ${CMAKE_CURRENT_SOURCE_DIR}/manalyzer
 )
 
 
@@ -174,6 +175,11 @@ message(DEBUG "[${PROJECT_NAME}] HAVE_CXX11_THREADS = ${HAVE_CXX11_THREADS}")
 
 
 configure_file(rootana_config.h.in include/rootana_config.h @ONLY)
+
+configure_file(
+    ${PROJECT_SOURCE_DIR}/rootana-config.cmake.in
+    ${PROJECT_SOURCE_DIR}/rootana-config.cmake
+)
 
 
 
