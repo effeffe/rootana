@@ -83,7 +83,7 @@ typedef int TAFlags;
 //dont need to learn bitwise operations)
 
 //Set precompiler definition that states this manalyzer 
-//contains performance profiling tools:
+//contains performance profiling tools (set to 0 to disable):
 #define MANALYZER_PROFILER 1
 
 #if 0

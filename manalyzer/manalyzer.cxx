@@ -495,7 +495,9 @@ public:
          } else {
             START_TIMER
             flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flag, flow);
+            #if MANALYZER_PROFILER
             manaprofiler->log(flag, flow, i,fRunRun[i]->ModuleName.c_str(),timer_start);
+            #endif
             if ((*flag) & TAFlag_QUIT) { // shut down the analyzer
                data_processing=false;
                delete flow;
@@ -522,7 +524,9 @@ public:
                // tell the destructor that it does not need to delete it, too
                mt->fMtLastItemInQueue = NULL;
             }
+            #if MANALYZER_PROFILER
             manaprofiler->log_user_profiling(flag, flow);
+            #endif
             delete flow;
             delete flag;
             flow = NULL;
@@ -573,7 +577,9 @@ public:
       assert(fRunInfo->fOdb != NULL);
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->BeginRun(fRunInfo);
+#if MANALYZER_PROFILER
       manaprofiler->begin(fRunInfo,fRunRun);
+#endif
    }
 
    void EndRun(TAFlags* flags)
@@ -622,7 +628,9 @@ public:
       
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->EndRun(fRunInfo);
+#if MANALYZER_PROFILER
       manaprofiler->end();
+#endif
    }
 
    void NextSubrun()
@@ -660,7 +668,9 @@ public:
       for (unsigned i=0; i<fRunRun.size(); i++) {
          START_TIMER;
          flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flags, flow);
+#if MANALYZER_PROFILER
          manaprofiler->log(flags, flow,i,fRunRun[i]->ModuleName.c_str(),timer_start);
+#endif
          if (!flow)
             break;
          if ((*flags) & TAFlag_SKIP)
@@ -700,7 +710,9 @@ public:
       for (unsigned i=0; i<fRunRun.size(); i++) {
          START_TIMER;
          flow = fRunRun[i]->Analyze(fRunInfo, event, flags, flow);
+#if MANALYZER_PROFILER
          manaprofiler->log_unpack_time(flags,flow,i,fRunRun[i]->ModuleName.c_str(),timer_start);
+#endif
          if (*flags & TAFlag_SKIP)
             break;
          if (*flags & TAFlag_QUIT)
@@ -719,9 +731,11 @@ public:
             }
          }
       }
+#if MANALYZER_PROFILER
       manaprofiler->log_user_profiling(flags, flow);
       if (fMultithreadMode)
          manaprofiler->log_mt_queue_length(fRunInfo);
+#endif
 
       if (*flags & TAFlag_WRITE)
          if (writer)
