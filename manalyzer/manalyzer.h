@@ -81,6 +81,11 @@ typedef int TAFlags;
 #define TAFlag_SKIP_PROFILE (1<<4)
 //Can we make TAFlags a class? (keep compatability of int, but users 
 //dont need to learn bitwise operations)
+
+//Set precompiler definition that states this manalyzer 
+//contains performance profiling tools:
+#define MANALYZER_PROFILER 1
+
 #if 0
 class TAFlags
 {
