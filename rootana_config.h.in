@@ -1,0 +1,36 @@
+
+#if @HAVE_MIDAS@
+#define HAVE_MIDAS 1
+#endif
+
+#if @HAVE_LIBZ@
+#define HAVE_LIBZ 1
+#endif
+
+#if @HAVE_ROOT@
+#define HAVE_ROOT 1
+#endif
+
+#if @HAVE_ROOT_HTTP@
+#define HAVE_ROOT_HTTP 1
+#endif
+
+#if @HAVE_ROOT_XML@
+#define HAVE_ROOT_XML 1
+#endif
+
+#if @HAVE_THTTP_SERVER@
+#define HAVE_THTTP_SERVER 1
+#endif
+
+#if @HAVE_XMLSERVER@
+#define HAVE_XMLSERVER 1
+#endif
+
+#if @HAVE_LIBNETDIRECTORY@
+#define HAVE_LIBNETDIRECTORY 1
+#endif
+
+#if @HAVE_CXX11_THREADS@
+#define HAVE_CXX11_THREADS 1
+#endif
