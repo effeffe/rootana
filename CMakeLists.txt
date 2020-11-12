@@ -79,11 +79,11 @@ set(ROOTANA_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/libNetDirectory
     ${CMAKE_CURRENT_SOURCE_DIR}/libUnpack
     ${CMAKE_CURRENT_SOURCE_DIR}/libXmlServer
+    ${CMAKE_CURRENT_SOURCE_DIR}/manalyzer
     ${CMAKE_CURRENT_SOURCE_DIR}/midasio
     ${CMAKE_CURRENT_SOURCE_DIR}/mjson
     ${CMAKE_CURRENT_SOURCE_DIR}/mvodb
     ${CMAKE_CURRENT_SOURCE_DIR}/mxml
-    ${CMAKE_CURRENT_SOURCE_DIR}/manalyzer
 )
 
 
@@ -234,3 +234,35 @@ if(NOT PARENT_DIRECTORY)
     add_subdirectory(manalyzer)
     add_subdirectory(old_analyzer)
 endif()
+
+
+
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND DEFINED ENV{ROOTANASYS})
+    set(CMAKE_INSTALL_PREFIX "$ENV{MIDASSYS}" CACHE PATH "" FORCE)
+endif()
+install(
+    TARGETS rootana
+    DESTINATION lib
+)
+file(GLOB HEADERS
+    LIST_DIRECTORIES false
+    ${CMAKE_CURRENT_BINARY_DIR}/include/rootana_config.h
+    libAnalyzer/*.h*
+    libAnalyzerDisplay/*.h*
+    libMidasInterface/*.h*
+    libNetDirectory/*.h*
+    libMidasInterface/*.h*
+    libMidasServer/*.h*
+    libNetDirectory/*.h*
+    libUnpack/*.h*
+    libXmlServer/*.h*
+    manalyzer/*.h
+    midasio/*.h
+    mjson/*.h
+    mvodb/*.h
+    mxml/*.h
+)
+install(
+    FILES ${HEADERS}
+    DESTINATION include
+)
