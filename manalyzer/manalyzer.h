@@ -224,6 +224,9 @@ public:
    // queue settings
    int  fMtQueueFullUSleepTime;  // u seconds
    int  fMtQueueEmptyUSleepTime; // u seconds
+   int  fMtZerothEntryTimeout; // Maximum number of times the zeroth
+   // entry of a queue must wait before forcing itself onto the queue
+   // (potentially growing beyond fMtQueueDepth)... avoids queue deadlock
    
    static bool gfMultithread;
    static int  gfMtMaxBacklog;

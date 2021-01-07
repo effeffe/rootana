@@ -297,6 +297,7 @@ TARootHelper::~TARootHelper() // dtor
 static int gDefaultMultithreadQueueLength = 100;
 static int gDefaultMultithreadWaitEmpty = 100; // microseconds
 static int gDefaultMultithreadWaitFull = 100; // microseconds
+static int gDefaultZerothEntryTimeout = 10; // wait N x gDefaultMultithreadWaitFull before forcing entry to 0th queue
 
 TAMultithreadHelper::TAMultithreadHelper() // ctor
 {
@@ -311,6 +312,7 @@ TAMultithreadHelper::TAMultithreadHelper() // ctor
    // queue settings
    fMtQueueFullUSleepTime  = gDefaultMultithreadWaitFull; //u seconds
    fMtQueueEmptyUSleepTime = gDefaultMultithreadWaitEmpty; //u seconds
+   fMtZerothEntryTimeout   = gDefaultZerothEntryTimeout;
 }
 
 TAMultithreadHelper::~TAMultithreadHelper() // dtor
@@ -365,20 +367,24 @@ static void MtQueueFlowEvent(TAMultithreadHelper* mt, int i, TAFlags* flag, TAFl
    }
 
    //PrintQueueLength();
-
+   int sleepCounter = 0;
    while (1) {
       {
          //Lock and queue events
          std::lock_guard<std::mutex> lock(mt->fMtFlowQueueMutex[i]);
          
-         if ((((int)mt->fMtFlowQueue[i].size()) < mt->fMtQueueDepth) || mt->fMtShutdown) {
+         if (  (((int)mt->fMtFlowQueue[i].size()) < mt->fMtQueueDepth) || 
+               mt->fMtShutdown ||
+               (sleepCounter > mt->fMtZerothEntryTimeout && i==0)
+            ) 
+         {
             mt->fMtFlowQueue[i].push_back(flow);
             mt->fMtFlagQueue[i].push_back(flag);
             return;
          }
          // Unlock when we go out of scope
       }
-      
+      sleepCounter++;
       usleep(mt->fMtQueueFullUSleepTime);
    }
 }
@@ -477,8 +483,12 @@ public:
             if (!mt->fMtFlowQueue[i].empty()) {
                flow=mt->fMtFlowQueue[i].front();
                flag=mt->fMtFlagQueue[i].front();
-               mt->fMtFlowQueue[i].pop_front();
-               mt->fMtFlagQueue[i].pop_front();
+               if (!flow)
+               {
+                  // Keep item in queue if its going to get processed
+                  mt->fMtFlowQueue[i].pop_front();
+                  mt->fMtFlagQueue[i].pop_front();
+               }
             }
             // implicit unlock of mutex
          }
@@ -538,6 +548,12 @@ public:
             flow = NULL;
             flag = NULL;
          }
+         // We have finished processing the flow and added it to the queue (or deleted it)
+         // I delay the pop to have the queue empty only when no processing is done
+         std::lock_guard<std::mutex> lock(mt->fMtFlowQueueMutex[i]);
+         mt->fMtFlowQueue[i].pop_front();
+         mt->fMtFlagQueue[i].pop_front();
+         // implicit unlock of mutex
       }
    }
 #endif
@@ -575,10 +591,22 @@ public:
    {
       assert(fRunInfo != NULL);
       assert(fRunInfo->fOdb != NULL);
+#ifdef HAVE_CXX11_THREADS
+      // Not all ROOT constructors are thread safe and users dont notice.
+      // Lets hold the side threads in BeginRun
+      if (fRunInfo->fMtInfo)
+         for(unsigned i=0; i<fRunInfo->fMtInfo->fMtFlowQueue.size(); i++)
+            fRunInfo->fMtInfo->fMtFlowQueueMutex[i].lock();
+#endif
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->BeginRun(fRunInfo);
 #if MANALYZER_PROFILER
       manaprofiler->begin(fRunInfo,fRunRun);
+#endif
+#ifdef HAVE_CXX11_THREADS
+      if (fRunInfo->fMtInfo)
+         for(unsigned i=0; i<fRunInfo->fMtInfo->fMtFlowQueue.size(); i++)
+            fRunInfo->fMtInfo->fMtFlowQueueMutex[i].unlock();
 #endif
    }
 
@@ -595,21 +623,46 @@ public:
       for (unsigned i=0; i<fRunRun.size(); i++)
          fRunRun[i]->PreEndRun(fRunInfo);
 
-      // if in single threaded mode, analyze all queued flow events - call AnalyzeFlowEvent()
-      // this can generate additional flow events that will be queued in the queue.
-
-      AnalyzeFlowQueue(flags);
-
 #ifdef HAVE_CXX11_THREADS
-      // if in multithreaded mode, queue the special end-of-run marker event
-      // then wait for the threads to complete.
-      // FIXME: AnalyzeFlowEvent() can generate additional flow events, they will
-      // be queued after the special end-of-run marker and will not be analyzed.
-      // perhaps instead of the special end-of-run marker, we should wait
-      // for the queues to empty naturally, then set fMtShutdown to tell the threads
-      // to stop, then to thread join to wait until they actually shutdown. K.O.
+
       
       if (fRunInfo->fMtInfo) {
+         // if in multithreaded mode, queue the special end-of-run marker event
+         // then wait for the threads to complete.
+         // AnalyzeFlowEvent() can generate additional flow events, they will
+         // be queued after the special end-of-run marker and will not be analyzed.
+         // perhaps instead of the special end-of-run marker, we should wait
+         // for the queues to empty naturally, then set fMtShutdown to tell the threads
+         // to stop, then to thread join to wait until they actually shutdown. 
+         //Issue raised by K.O., Resolved by L. Golino and JTKM
+
+         bool queueEmpty = false;
+         while(!queueEmpty)
+         {
+            size_t i;
+            for(i=0; i<fRunInfo->fMtInfo->fMtFlowQueue.size(); i++)
+            {
+               fRunInfo->fMtInfo->fMtFlowQueueMutex[i].lock();
+               if(!fRunInfo->fMtInfo->fMtFlowQueue[i].empty() )
+               {
+                  break;
+               }
+               else if(i == fRunInfo->fMtInfo->fMtFlowQueue.size() - 1) 
+               {
+                  queueEmpty = true;
+                  break;
+               }
+            }
+            //printf("DEBUG: Unlocking all threads up to i = %d\n",i);
+            for(size_t j=0; j<=i; j++)
+            {
+               //printf("Unlock as there are %d items in queue\n",fRunInfo->fMtInfo->fMtFlowQueue[i].size());
+               fRunInfo->fMtInfo->fMtFlowQueueMutex[j].unlock();
+            }
+            sleep(1);//fRunInfo->fMtInfo->fMtQueueEmptyUSleepTime);
+         }
+
+         //Inject magic end of run marker:
          MtQueueFlowEvent(fRunInfo->fMtInfo, 0, NULL, fRunInfo->fMtInfo->fMtLastItemInQueue);
          for (unsigned i=0; i<fRunRun.size(); i++) {
             printf("Waiting for thread %d to finish...\n", i);
@@ -622,7 +675,13 @@ public:
 
          fRunInfo->fMtInfo->fMtShutdown = true; // FIXME: this tells the destructor that threads are shutdown
       }
+      else
 #endif
+      {
+         // if in single threaded mode, analyze all queued flow events - call AnalyzeFlowEvent()
+         // this can generate additional flow events that will be queued in the queue.
+         AnalyzeFlowQueue(flags);
+      }
 
       // all data analysis is complete
       
@@ -2078,6 +2137,8 @@ static void help()
   printf("\t\t--mtqlNNN: Module thread queue length (buffer).              Default: %d\n", gDefaultMultithreadQueueLength);
   printf("\t\t--mtseNNN: Module thread sleep time with empty queue (usec). Default: %d\n", gDefaultMultithreadWaitEmpty);
   printf("\t\t--mtsfNNN: Module thread sleep time when next queue is full (usec). Default: %d\n", gDefaultMultithreadWaitFull);
+  printf("\t\t--mtzqNNN: Number of times a analysis thread can try queueing an item when ");
+  printf("the buffer is full before forcing entry (breaking deadlock but exceeding the max queue length. Default %d\n", gDefaultZerothEntryTimeout);
 #else
   printf("\t--mt: Enable multithreaded mode is not available: no C++11 threads\n");
 #endif
@@ -2096,6 +2157,7 @@ static void help()
   printf("Example2: analyze existing data: ./analyzer.exe /data/alpha/current/run00500.mid\n");
   exit(1);
 }
+
 
 // Main function call
 
@@ -2186,6 +2248,8 @@ int manalyzer_main(int argc, char* argv[])
          gDefaultMultithreadWaitEmpty = atoi(arg+6);
       } else if (strncmp(arg,"--mtsf",6)==0) {
          gDefaultMultithreadWaitFull = atoi(arg+6);
+      } else if (strncmp(arg,"--mtzq",6)==0) {
+         gDefaultZerothEntryTimeout = atoi(arg+6);
       } else if (strncmp(arg,"--mt",4)==0) {
          multithread=true;
 #endif
