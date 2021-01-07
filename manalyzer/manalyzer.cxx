@@ -289,6 +289,7 @@ TARootHelper::~TARootHelper() // dtor
 static int gDefaultMultithreadQueueLength = 100;
 static int gDefaultMultithreadWaitEmpty = 100; // microseconds
 static int gDefaultMultithreadWaitFull = 100; // microseconds
+static int gDefaultZerothEntryTimeout = 10; // wait N x gDefaultMultithreadWaitFull before forcing entry to 0th queue
 
 TAMultithreadHelper::TAMultithreadHelper() // ctor
 {
@@ -303,6 +304,7 @@ TAMultithreadHelper::TAMultithreadHelper() // ctor
    // queue settings
    fMtQueueFullUSleepTime  = gDefaultMultithreadWaitFull; //u seconds
    fMtQueueEmptyUSleepTime = gDefaultMultithreadWaitEmpty; //u seconds
+   fMtZerothEntryTimeout   = gDefaultZerothEntryTimeout;
 }
 
 TAMultithreadHelper::~TAMultithreadHelper() // dtor
@@ -357,20 +359,24 @@ static void MtQueueFlowEvent(TAMultithreadHelper* mt, int i, TAFlags* flag, TAFl
    }
 
    //PrintQueueLength();
-
+   int sleepCounter = 0;
    while (1) {
       {
          //Lock and queue events
          std::lock_guard<std::mutex> lock(mt->fMtFlowQueueMutex[i]);
          
-         if ((((int)mt->fMtFlowQueue[i].size()) < mt->fMtQueueDepth) || mt->fMtShutdown) {
+         if (  (((int)mt->fMtFlowQueue[i].size()) < mt->fMtQueueDepth) || 
+               mt->fMtShutdown ||
+               (sleepCounter > mt->fMtZerothEntryTimeout && i==0)
+            ) 
+         {
             mt->fMtFlowQueue[i].push_back(flow);
             mt->fMtFlagQueue[i].push_back(flag);
             return;
          }
          // Unlock when we go out of scope
       }
-      
+      sleepCounter++;
       usleep(mt->fMtQueueFullUSleepTime);
    }
 }
@@ -1775,6 +1781,8 @@ static void help()
   printf("\t\t--mtqlNNN: Module thread queue length (buffer).              Default: %d\n", gDefaultMultithreadQueueLength);
   printf("\t\t--mtseNNN: Module thread sleep time with empty queue (usec). Default: %d\n", gDefaultMultithreadWaitEmpty);
   printf("\t\t--mtsfNNN: Module thread sleep time when next queue is full (usec). Default: %d\n", gDefaultMultithreadWaitFull);
+  printf("\t\t--mtzqNNN: Number of times a analysis thread can try queueing an item when ");
+  printf("the buffer is full before forcing entry (breaking deadlock but exceeding the max queue length. Default %d\n", gDefaultZerothEntryTimeout);
 #else
   printf("\t--mt: Enable multithreaded mode is not available: no C++11 threads\n");
 #endif
@@ -1881,6 +1889,8 @@ int manalyzer_main(int argc, char* argv[])
          gDefaultMultithreadWaitEmpty = atoi(arg+6);
       } else if (strncmp(arg,"--mtsf",6)==0) {
          gDefaultMultithreadWaitFull = atoi(arg+6);
+      } else if (strncmp(arg,"--mtzq",6)==0) {
+         gDefaultZerothEntryTimeout = atoi(arg+6);
       } else if (strncmp(arg,"--mt",4)==0) {
          multithread=true;
 #endif
