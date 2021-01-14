@@ -24,8 +24,6 @@ execute_process(
     RESULT_VARIABLE GIT_SUBMOD_RESULT
 )
 
-
-
 find_package(ZLIB QUIET)
 
 # Find MIDAS. Priority:
@@ -236,8 +234,9 @@ if(NOT PARENT_DIRECTORY)
 endif()
 
 
-
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND DEFINED ENV{ROOTANASYS})
+# Only set install path to environment variable ROOTANASYS if is default, ROOTANASYS is set AND 
+# you are exclusively building rootana (ie rootana isn't submodule to something else)
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND DEFINED ENV{ROOTANASYS} AND ${CMAKE_PROJECT_NAME} MATCHES rootana)
     set(CMAKE_INSTALL_PREFIX "$ENV{ROOTANASYS}" CACHE PATH "" FORCE)
 endif()
 install(
