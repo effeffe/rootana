@@ -357,7 +357,7 @@ bool TAMultithreadHelper::gfMultithread           = false;
 int TAMultithreadHelper::gfMtMaxBacklog           = 100;
 std::mutex TAMultithreadHelper::gfLock; //Lock for modules to execute code that is not thread safe (many root fitting libraries)
 
-static void MtQueueFlowEvent(TAMultithreadHelper* mt, int i, TAFlags* flag, TAFlowEvent* flow)
+static void MtQueueFlowEvent(TAMultithreadHelper* mt, int i, TAFlags* flag, TAFlowEvent* flow, bool AllowTimeout)
 {
    assert(mt);
 
@@ -372,15 +372,24 @@ static void MtQueueFlowEvent(TAMultithreadHelper* mt, int i, TAFlags* flag, TAFl
       {
          //Lock and queue events
          std::lock_guard<std::mutex> lock(mt->fMtFlowQueueMutex[i]);
-         
          if (  (((int)mt->fMtFlowQueue[i].size()) < mt->fMtQueueDepth) || 
-               mt->fMtShutdown ||
-               (sleepCounter > mt->fMtZerothEntryTimeout && i==0)
+               mt->fMtShutdown 
             ) 
          {
             mt->fMtFlowQueue[i].push_back(flow);
             mt->fMtFlagQueue[i].push_back(flag);
             return;
+         }
+         // If timeout, force add into queue no matter the length 
+         // (main thread should never do this... side threads may do this to prevent deadlock)
+         else if (AllowTimeout)
+         {
+            if (sleepCounter > mt->fMtZerothEntryTimeout && i==0)
+            {
+               mt->fMtFlowQueue[i].push_back(flow);
+               mt->fMtFlagQueue[i].push_back(flag);
+               return;
+            }
          }
          // Unlock when we go out of scope
       }
@@ -400,7 +409,7 @@ void PrintMtQueueLength(TAMultithreadHelper* mt)
 }
 
 #else
-static void MtQueueFlowEvent(TAMultithreadHelper* mt, int i, TAFlags* flag, TAFlowEvent* flow)
+static void MtQueueFlowEvent(TAMultithreadHelper* mt, int i, TAFlags* flag, TAFlowEvent* flow, bool AllowTimeout)
 {
    fprintf(stderr, "MtQueueFlowEvent() should not have been called when compiled without C++11 thread support\n");
    abort();
@@ -544,7 +553,7 @@ public:
          }
          else 
          {
-            MtQueueFlowEvent(mt, i+1, flag, flow);
+            MtQueueFlowEvent(mt, i+1, flag, flow, false);
             flow = NULL;
             flag = NULL;
          }
@@ -663,7 +672,7 @@ public:
          }
 
          //Inject magic end of run marker:
-         MtQueueFlowEvent(fRunInfo->fMtInfo, 0, NULL, fRunInfo->fMtInfo->fMtLastItemInQueue);
+         MtQueueFlowEvent(fRunInfo->fMtInfo, 0, NULL, fRunInfo->fMtInfo->fMtLastItemInQueue, true);
          for (unsigned i=0; i<fRunRun.size(); i++) {
             printf("Waiting for thread %d to finish...\n", i);
             fRunInfo->fMtInfo->fMtThreads[i]->join();
@@ -783,7 +792,7 @@ public:
             // skip further processing of this event
          } else {
             if (fRunInfo->fMtInfo) {
-               MtQueueFlowEvent(fRunInfo->fMtInfo, 0, NULL, flow);
+               MtQueueFlowEvent(fRunInfo->fMtInfo, 0, NULL, flow, false /* wait for space in the queue*/);
                flow = NULL; // ownership passed to the multithread event queue
             } else {
                flow = AnalyzeFlowEvent(flags, flow);
@@ -823,7 +832,7 @@ TAFlowEvent* TARunInfo::ReadFlowQueue()
 void TARunInfo::AddToFlowQueue(TAFlowEvent* flow)
 {
    if (fMtInfo) {
-      MtQueueFlowEvent(fMtInfo, 0, NULL, flow);
+      MtQueueFlowEvent(fMtInfo, 0, NULL, flow, true /*prevent dead lock force add to queue after timeout*/);
    } else {
       fFlowQueue.push_back(flow);
    }
