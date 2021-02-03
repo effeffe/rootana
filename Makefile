@@ -6,6 +6,10 @@
 # make NO_ROOT=1 # build without ROOT support
 #
 
+#Insure submodules are cloned
+GIT=git
+GIT_SUBMODULES=$(shell sed -nE 's/path = +(.+)/\1\/.git/ p' .gitmodules | paste -s -)
+
 CXXFLAGS = -g -O2 -Wall -Wuninitialized -I./include
 
 # required/non-optional libz package for GZIP decompression
@@ -222,7 +226,7 @@ OBJS += obj/mjsonodb.o
 
 OBJS += obj/manalyzer.o
 
-all: $(ALL)
+all: $(GIT_SUBMODULES) $(ALL)
 
 $(ALL): include
 $(OBJS): include
@@ -233,7 +237,7 @@ RC := include/rootana_config.h
 RF := include/rootana_cflags.txt
 RL := include/rootana_libs.txt
 
-include: mjson/mjson.h mxml/mxml.h mvodb/mvodb.h midasio/midasio.h
+include: mjson/mjson.h mxml/mxml.h mvodb/mvodb.h midasio/midasio.h 
 	mkdir -p include lib obj
 	-rm -f $(RC)
 	touch $(RC)
@@ -303,11 +307,10 @@ endif
 	cd include; ln -sfv ../mvodb/*.h .
 	cd include; ln -sfv ../midasio/*.h .
 
-gitinit:
-	git submodule sync
-	git submodule update --init
-
-mjson/mjson.h mxml/mxml.h mvodb/mvodb.h midasio/midasio.h: gitinit
+$(GIT_SUBMODULES): %/.git: .gitmodules
+	$(GIT) submodule init
+	$(GIT) submodule update $*
+	@touch $@
 
 lib/librootana.a: $(OBJS)
 	mkdir -p lib
@@ -377,7 +380,7 @@ obj/%.o: libUnpack/%.cxx
 obj/%.o: old_analyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-obj/%.o: manalyzer/%.cxx
+obj/%.o: manalyzer/%.cxx $(GIT_SUBMODULES)
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 manalyzer/manalyzer.exe: lib/librootana.a
