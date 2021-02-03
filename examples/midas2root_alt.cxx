@@ -80,7 +80,6 @@ public:
 	int index = i/2;
 	if(i%2==0){
 	  current_readings[index] = data->GetFloat()[i];
-	  std::cout << "Current " << index << " " << current_readings[index] << std::endl;
 	}else{
 	  voltage_readings[index] = data->GetFloat()[i];
 	}
