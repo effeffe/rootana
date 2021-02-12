@@ -363,6 +363,17 @@ function updatePlots(deleteDygraph){
          }          
          plotAllHistograms("overlay",["graphdiv"],histograms,deleteDygraph); 
          break;
+      case "OverlayChoice":
+         var numberChoice = Number(document.getElementById("overlay_choice_number").value);
+
+         var histograms = [];
+         histograms.push(currentHistogramInfo["WebserverName"]+getNumericString(channel));
+         if(numberChoice < currentHistogramInfo["MaxChannels"]){
+           histograms.push(currentHistogramInfo["WebserverName"]+getNumericString(numberChoice));
+         }		       
+         plotAllHistograms("overlay",["graphdiv"],histograms,deleteDygraph); 
+         break;
+
       case "Multiple":
          var histograms = []; var divnames = [];
          histograms.push(currentHistogramInfo["WebserverName"]+getNumericString(channel)); divnames.push("graphdiv21")
@@ -383,6 +394,7 @@ function ShowParams() {
    switch (scan_type) {
       case "Single":
          document.getElementById("OverlayParams").style.display = "none";
+         document.getElementById("OverlayChoiceParams").style.display = "none";
          document.getElementById("MultipleParams").style.display ="none";
          document.getElementById("graphdiv").style.display ="block";
          document.getElementById("graphdiv21").style.display ="none";
@@ -390,6 +402,15 @@ function ShowParams() {
          break;
       case "Overlay":
          document.getElementById("OverlayParams").style.display = "block";
+         document.getElementById("OverlayChoiceParams").style.display = "none";
+         document.getElementById("MultipleParams").style.display ="none";
+         document.getElementById("graphdiv").style.display ="block";
+         document.getElementById("graphdiv21").style.display ="none";
+         document.getElementById("graphdiv22").style.display ="none";
+         break;
+      case "OverlayChoice":
+         document.getElementById("OverlayParams").style.display = "none";
+         document.getElementById("OverlayChoiceParams").style.display = "block";
          document.getElementById("MultipleParams").style.display ="none";
          document.getElementById("graphdiv").style.display ="block";
          document.getElementById("graphdiv21").style.display ="none";
@@ -397,6 +418,7 @@ function ShowParams() {
          break;
       case "Multiple":
          document.getElementById("OverlayParams").style.display = "none";
+         document.getElementById("OverlayChoiceParams").style.display = "none";
          document.getElementById("MultipleParams").style.display ="block";
          document.getElementById("graphdiv").style.display ="none";
          document.getElementById("graphdiv21").style.display ="block";
@@ -485,12 +507,18 @@ function changeUpdateTime() {
                   <select  class="displayControlEl" id="HistoDisplay" onchange="cleanDivs();ShowParams()">
                     <option value="Single">Single</option>
                     <option value="Overlay">Overlay </option>
+                    <option value="OverlayChoice">Overlay (Choice)  </option>
                     <option value="Multiple">Multiple </option>
                   </select><p>
                     
                     <div id="OverlayParams" style="display:none"> 
                       Overlay N histos (2-8):
                       <input  class="displayControlEl" type="number" id="overlay_number" min="2" max="8" value="2" onchange="updatePlots(true);"><p>
+                        <br>
+                    </div>
+                    <div id="OverlayChoiceParams" style="display:none"> 
+                      Other histogram:
+                      <input  class="displayControlEl" type="number" id="overlay_choice_number" min="0" max="40" value="0" onchange="updatePlots(true);"><p>
                         <br>
                     </div>
                     <div id="MultipleParams" style="display:none"> 
