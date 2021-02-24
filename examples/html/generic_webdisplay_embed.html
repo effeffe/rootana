@@ -234,6 +234,11 @@ function selectHistogramsFromJSON(){
          console.log("Making display style buttons invisible");
       }
    }
+   <!-- Set the update period, if set --> 
+   if(hasSettings && "UpdatePeriod" in histogramsSetupInfo["DisplaySettings"]){
+     changeUpdateTime(histogramsSetupInfo["DisplaySettings"]["UpdatePeriod"]);
+   }
+
    
    if(!styleSet){
       console.log("Making display style buttons visible");
@@ -281,6 +286,7 @@ function selectHistogramsFromJSON(){
       updatePlots(true);
    });
    
+
 
 }
 
@@ -432,12 +438,19 @@ function ShowParams() {
 var gIntervalID = 0; 
 gIntervalID = setInterval(updatePlots,5000);
 setInterval(midasStatus,5000);   
-function changeUpdateTime() {
+function changeUpdateTime(period) {
    <!-- Delete old update interval -->
    clearInterval(gIntervalID);
 
-   <!-- set new interval -->   
-   var currentUpdateTime = Number(document.getElementById("updatePeriod").value);
+   <!-- set new interval ; use value from input variable if non-zero; otherwise use the value from updatePeriod -->
+   var currentUpdateTime;
+   if(period > 0){
+     currentUpdateTime = period; 
+     document.getElementById("updatePeriod").value = period;
+   }else{
+     currentUpdateTime = Number(document.getElementById("updatePeriod").value);
+   }
+   console.log("Setting update period to " + currentUpdateTime);
    gIntervalID = setInterval(updatePlots,currentUpdateTime);
 }
 
@@ -490,7 +503,7 @@ function changeUpdateTime() {
             <button class="styleControlEl select_buttons" id="plotly_style" > Plot-ly style </button> <br>
 
             <p> Refresh period (ms):
-              <input  class="displayControlEl" type="number" id="updatePeriod" min="100" max="100000" value="5000" onchange="changeUpdateTime();"><p>
+              <input  class="displayControlEl" type="number" id="updatePeriod" min="100" max="100000" value="5000" onchange="changeUpdateTime(0);"><p>
 
 
                 <div id="ModuleSelectionDiv" style="display:none"> 
