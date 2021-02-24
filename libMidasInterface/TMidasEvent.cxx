@@ -154,7 +154,7 @@ int TMidasEvent::LocateBank(const void *unused, const char *name, void **pdata) 
   return bklen;
 }
 
-static const unsigned TID_SIZE[] = {0, 1, 1, 1, 2, 2, 4, 4, 4, 4, 8, 1, 0, 0, 0, 0, 0};
+static const unsigned TID_SIZE[] = {0, 1, 1, 1, 2, 2, 4, 4, 4, 4, 8, 1, 0, 0, 0, 0, 0, 8, 8};
 static const unsigned TID_MAX = (sizeof(TID_SIZE)/sizeof(TID_SIZE[0]));
 
 int TMidasEvent::FindBank(const char* name, int *bklen, int *bktype, void **pdata) const
