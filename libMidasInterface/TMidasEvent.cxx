@@ -134,7 +134,12 @@ bool TMidasEvent::IsGoodSize() const
 
 bool TMidasEvent::IsBank32() const
 {
-  return ((TMidas_BANK_HEADER *)fData)->fFlags & (1<<4);
+  return (((TMidas_BANK_HEADER *)fData)->fFlags & (3<<4)) == 0x10;
+}
+
+bool TMidasEvent::IsBank32a() const
+{
+  return (((TMidas_BANK_HEADER *)fData)->fFlags & (3<<4)) == 0x30;
 }
 
 int TMidasEvent::LocateBank(const void *unused, const char *name, void **pdata) const
@@ -171,7 +176,50 @@ int TMidasEvent::FindBank(const char* name, int *bklen, int *bktype, void **pdat
   TMidas_BANK *pbk;
   //uint32_t dname;
 
-  if (((pbkh->fFlags & (1<<4)) > 0)) {
+  if (((pbkh->fFlags & (1<<5)) > 0)) {
+#if 0
+    TMidas_BANK32 *pbk32;
+    pbk32 = (TMidas_BANK32 *) (pbkh + 1);
+    memcpy(&dname, name, 4);
+    do {
+      if (*((uint32_t *) pbk32->fName) == dname) {
+        *pdata = pbk32 + 1;
+        if (TID_SIZE[pbk32->fType & 0xFF] == 0)
+          *bklen = pbk32->fDataSize;
+        else
+          *bklen = pbk32->fDataSize / TID_SIZE[pbk32->fType & 0xFF];
+
+        *bktype = pbk32->fType;
+        return 1;
+      }
+      pbk32 = (TMidas_BANK32 *) ((char*) (pbk32 + 1) +
+                          (((pbk32->fDataSize)+7) & ~7));
+    } while ((char*) pbk32 < (char*) pbkh + pbkh->fDataSize + sizeof(TMidas_BANK_HEADER));
+#endif
+
+    TMidas_BANK32a *pbk32a = NULL;
+
+    while (1) {
+      IterateBank32a(&pbk32a, (char**)pdata);
+      //printf("looking for [%s] got [%s]\n", name, pbk32->fName);
+      if (pbk32a == NULL)
+	break;
+
+      if (name[0]==pbk32a->fName[0] &&
+	  name[1]==pbk32a->fName[1] &&
+	  name[2]==pbk32a->fName[2] &&
+	  name[3]==pbk32a->fName[3]) {
+	
+	if (TID_SIZE[pbk32a->fType & 0xFF] == 0)
+	  *bklen = pbk32a->fDataSize;
+	else
+	  *bklen = pbk32a->fDataSize / TID_SIZE[pbk32a->fType & 0xFF];
+	
+	*bktype = pbk32a->fType;
+	return 1;
+      }
+    }
+  } else if (((pbkh->fFlags & (1<<4)) > 0)) {
 #if 0
     TMidas_BANK32 *pbk32;
     pbk32 = (TMidas_BANK32 *) (pbkh + 1);
@@ -353,6 +401,7 @@ int TMidasEvent::SetBankList()
 
   fBanksN = 0;
 
+  TMidas_BANK32a *pmbk32a = NULL;
   TMidas_BANK32 *pmbk32 = NULL;
   TMidas_BANK *pmbk = NULL;
   char *pdata = NULL;
@@ -365,7 +414,15 @@ int TMidasEvent::SetBankList()
 	  fBankList = (char*)realloc(fBankList, listSize);
 	}
 
-      if (IsBank32())
+      if (IsBank32a())
+	{
+	  IterateBank32a(&pmbk32a, &pdata);
+	  if (pmbk32a == NULL)
+	    break;
+	  memcpy(fBankList+fBanksN*4, pmbk32a->fName, 4);
+	  fBanksN++;
+	}
+      else if (IsBank32())
 	{
 	  IterateBank32(&pmbk32, &pdata);
 	  if (pmbk32 == NULL)
@@ -431,6 +488,53 @@ int TMidasEvent::IterateBank32(TMidas_BANK32 **pbk, char **pdata) const
   }
 
   TMidas_BANK32 *bk4 = (TMidas_BANK32*)(((char*) *pbk) + 4);
+
+  //printf("iterate bank32: pbk 0x%p, align %d, type %d %d, name [%s], next [%s], TID_MAX %d\n", *pbk, (int)( ((uint64_t)(*pbk))&7), (*pbk)->fType, bk4->fType, (*pbk)->fName, bk4->fName, TID_MAX);
+
+  if ((*pbk)->fType > TID_MAX) // bad - unknown bank type - it's invalid MIDAS file?
+    {
+      if (bk4->fType <= TID_MAX) // okey, this is a malformed T2K/ND280 data file
+	{
+	  *pbk = bk4;
+
+	  //printf("iterate bank32: pbk 0x%p, align %d, type %d, name [%s]\n", *pbk, (int)(((uint64_t)(*pbk))&7), (*pbk)->fType, (*pbk)->fName);
+	}
+      else
+	{
+	  // truncate invalid data
+	  *pbk = NULL;
+	  *pdata = NULL;
+	  return 0;
+	}
+    }
+
+  *pdata = (char*)((*pbk) + 1);
+
+  if ((char*) *pbk >= (char*)event  + event->fDataSize + sizeof(TMidas_BANK_HEADER))
+    {
+      *pbk = NULL;
+      *pdata = NULL;
+      return 0;
+    }
+
+  return (*pbk)->fDataSize;
+}
+
+int TMidasEvent::IterateBank32a(TMidas_BANK32a **pbk, char **pdata) const
+{
+  /// See IterateBank()
+
+  const TMidas_BANK_HEADER* event = (const TMidas_BANK_HEADER*)fData;
+  if (*pbk == NULL)
+    *pbk = (TMidas_BANK32a *) (event + 1);
+  else {
+    uint32_t length = (*pbk)->fDataSize;
+    uint32_t length_adjusted = (length+7) & ~7;
+    //printf("length %6d 0x%08x, 0x%08x\n", length, length, length_adjusted);
+    *pbk = (TMidas_BANK32a *) ((char*) (*pbk + 1) + length_adjusted);
+  }
+
+  TMidas_BANK32a *bk4 = (TMidas_BANK32a*)(((char*) *pbk) + 4);
 
   //printf("iterate bank32: pbk 0x%p, align %d, type %d %d, name [%s], next [%s], TID_MAX %d\n", *pbk, (int)( ((uint64_t)(*pbk))&7), (*pbk)->fType, bk4->fType, (*pbk)->fName, bk4->fName, TID_MAX);
 
@@ -548,6 +652,12 @@ int TMidasEvent::SwapBytes(bool force)
   // check for 32-bit banks
   //
   bool b32 = IsBank32();
+  bool b32a = IsBank32a();
+
+  if (b32a) {
+    fprintf(stderr, "TMidasEvent::SwapBytes() cannot swap bk_init32a data, sorry. bye!\n");
+    abort();
+  }
 
   pbk = (TMidas_BANK *) (pbh + 1);
   pbk32 = (TMidas_BANK32 *) pbk;
@@ -600,7 +710,14 @@ int TMidasEvent::SwapBytes(bool force)
         pdata = ((char*)pdata) + 4;
       }
       break;
-    case 10:
+    case 10: // TID_DOUBLE
+      while (pdata < pbk) {
+        QWORD_SWAP(pdata);
+        pdata = ((char*)pdata) + 8;
+      }
+      break;
+    case 17: // TID_INT64
+    case 18: // TID_UINT64
       while (pdata < pbk) {
         QWORD_SWAP(pdata);
         pdata = ((char*)pdata) + 8;
