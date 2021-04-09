@@ -116,7 +116,7 @@ class TARunObject
 {
    
 public:
-   std::string ModuleName;
+   std::string fName;
 
    TARunObject(TARunInfo* runinfo); // ctor
    virtual ~TARunObject() {}; // dtor
@@ -212,7 +212,7 @@ public:
    // lock for the queues
    std::vector<std::mutex>       fMtFlowQueueMutex;
    // per-module threads
-   std::vector<std::thread*> fMtThreads;
+   std::vector<std::thread*>     fMtThreads;
    // maximum number of flow events to queue
    int fMtQueueDepth;
    // end-of-run event marker
@@ -238,48 +238,11 @@ public:
 };
 #endif
 
-#if __cplusplus >= 201103L 
-   //C++11 or above is needed for chrono... therefor the profiler needs c++11 for any functionality
-   #include <chrono>
-   #define CLOCK_TYPE std::chrono::high_resolution_clock::time_point
-   #define CLOCK_NOW std::chrono::high_resolution_clock::now();
-   #define DURATION std::chrono::duration<double>
-   #define START_TIMER auto timer_start=CLOCK_NOW
-#else
-   #define CLOCK_TYPE int
-   #define CLOCK_NOW 1;
-   #define DURATION int
-   #define START_TIMER int timer_start;
-#endif
-class UserProfilerFlow: public TAFlowEvent
-{
-private:
-   CLOCK_TYPE start;
-   CLOCK_TYPE stop;
-public:
-   const std::string ModuleName;
 
-   double GetTimer()
-   {
-      DURATION elapsed_seconds = stop - start;
-#if __cplusplus >= 201103L 
-      //C++11 or above is needed for chrono... therefor the profiler needs c++11 for any functionality
-      return  elapsed_seconds.count();
-#else
-      return 0.;
-#endif
-   }
-   //std::chrono::time_point<std::chrono::high_resolution_clock> time;
-   UserProfilerFlow(TAFlowEvent* flow, const char* _name, CLOCK_TYPE _start) : TAFlowEvent(flow), ModuleName(_name)
-   {
-      start=_start;
-      stop=CLOCK_NOW
-   }
-   ~UserProfilerFlow() // dtor
-   {
-   }
-};
-#if __cplusplus >= 201103L 
+#include <sys/time.h>
+#include <stdio.h>
+
+
 #ifdef HAVE_ROOT
 #include "TH1D.h"
 #endif
@@ -288,18 +251,18 @@ public:
 class Profiler
 {
 private:
-   std::string binary_name;
-   std::string binary_path;
-   clock_t tStart_cpu;
-   std::chrono::system_clock::time_point tStart_user;
-   time_t midas_start_time;
-   time_t midas_stop_time;
+   std::string fBinaryName;
+   std::string fBinaryPath;
+   clock_t tStartCPU;
+   double tStartUSER;
+   time_t fMidasStartTime;
+   time_t fMidasStopTime;
 
    //Track Queue lengths when multithreading
 #ifdef HAVE_ROOT
-   int NQueues=0;
-   std::vector<TH1D*> AnalysisQueue;
-   int QueueIntervalCounter=0;
+   int fNQueues=0;
+   std::vector<TH1D*> fAnalysisQueue;
+   int fQueueIntervalCounter=0;
 #endif
 public:
    //Number of events between samples
@@ -311,59 +274,76 @@ private:
 #ifdef HAVE_ROOT
    std::vector<TH1D*>  UnpackTimeHistograms;
 #endif
-   std::vector<std::string> ModuleNames;
-   std::vector<double> unpack_mean;
-   std::vector<double> unpack_rms;
-   std::vector<int>    unpack_entries;
+   std::vector<std::string> fNames;
+   std::vector<double> fUnpackMean;
+   std::vector<double> fUnpackRMS;
+   std::vector<int>    fUnpackEntries;
 
-   std::vector<double> MaxUnpackTime;
-   std::vector<double> TotalUnpackTime;
+   std::vector<double> fMaxUnpackTime;
+   std::vector<double> fTotalUnpackTime;
 
    //Track Analyse flow event time per module (can be multiple threads)
 #ifdef HAVE_ROOT
-   std::vector<TH1D*>  ModuleTimeHistograms;
+   std::vector<TH1D*>  fModuleTimeHistograms;
 #endif
-   std::vector<double> module_mean;
-   std::vector<double> module_rms;
-   std::vector<int>    module_entries;
+   std::vector<double> fModuleMean;
+   std::vector<double> fModuleRMS;
+   std::vector<int>    fModuleEntries;
 
-   std::vector<double> MaxModuleTime;
+   std::vector<double> fMaxModuleTime;
    std::vector<double> TotalModuleTime;
 #ifdef HAVE_ROOT
    //Track user profiling
-   std::map<unsigned int,int> UserMap;
-   std::vector<TH1D*> UserHistograms;
-   std::vector<double> TotalUserTime;
-   std::vector<double> MaxUserTime;
+   std::map<unsigned int,int> fUserMap;
+   std::vector<TH1D*> fUserHistograms;
+   std::vector<double> fTotalUserTime;
+   std::vector<double> fMaxUserTime;
 #endif
 public:
-   bool TimeModules;
+   bool fTimeModules;
    Profiler();
    ~Profiler();
-   void begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun );
-   void log(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start);
-   void log_unpack_time(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start);
-   void log_user_profiling(TAFlags* flag, TAFlowEvent* flow);
+   static double GetTime()
+   {
+      struct timeval tv;
+      gettimeofday(&tv, NULL);
+      return tv.tv_sec*1.0 + tv.tv_usec/1000000.0;
+   }
+   void Begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun );
+   void Log(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name, double start);
+   void LogUnpackTime(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name, double start);
+   void LogUserProfiling(TAFlags* flag, TAFlowEvent* flow);
    void AddModuleMap( const char* UserProfileName, unsigned long hash);
-   void log_mt_queue_length(TARunInfo* runinfo);
-   void end();
+   void LogMTQueueLength(TARunInfo* runinfo);
+   void End();
 };
-#else
-//When no C++11 available... do nothing!
 
-class Profiler {
+//Macros that can be used in users modules (and we can upgrade the underlying timing methods without pain)
+#define CLOCK_NOW Profiler::GetTime();
+#define START_TIMER auto timer_start=CLOCK_NOW
+
+class UserProfilerFlow: public TAFlowEvent
+{
+private:
+   double fStart;
+   double fStop;
 public:
-   Profiler() {};
-   ~Profiler() {};
-   void begin(TARunInfo* runinfo,const std::vector<TARunObject*> fRunRun ) {};
-   void log(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start) {};
-   void log_unpack_time(TAFlags* flag, TAFlowEvent* flow,int i,const char* module_name,CLOCK_TYPE start) {};
-   void log_user_profiling(TAFlags* flag, TAFlowEvent* flow) {};
-   void AddModuleMap( const char* UserProfileName, unsigned long hash) {};
-   void log_mt_queue_length(TARunInfo* runinfo) {};
-   void end() {};
+   const std::string fName;
+   double GetTimer() const
+   {
+      return fStop - fStart;
+   }
+   UserProfilerFlow(TAFlowEvent* flow, const char* _name, double _start) : TAFlowEvent(flow), fName(_name)
+   {
+      fStart=_start;
+      fStop=CLOCK_NOW
+   }
+   ~UserProfilerFlow() // dtor
+   {
+   }
 };
-#endif
+
+
 
 int manalyzer_main(int argc, char* argv[]);
 

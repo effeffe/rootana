@@ -36,7 +36,7 @@ public:
    Module1(TARunInfo* runinfo)
       : TARunObject(runinfo)
    {
-      ModuleName="Module1";
+      fName="Module1";
       printf("Module1::ctor, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
    }
 
@@ -118,7 +118,7 @@ public:
    Module2(TARunInfo* runinfo)
       : TARunObject(runinfo)
    {
-      ModuleName="Module2";
+      fName="Module2";
       printf("Module2::ctor, run %d, file %s\n", runinfo->fRunNo, runinfo->fFileName.c_str());
    }
 

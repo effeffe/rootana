@@ -19,7 +19,7 @@ struct ExampleRoot: public TARunObject
    ExampleRoot(TARunInfo* runinfo)
       : TARunObject(runinfo)
    {
-      ModuleName="ExampleRoot";
+      fName="ExampleRoot";
       printf("ExampleRoot::ctor!\n");
    }
 
