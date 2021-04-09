@@ -320,7 +320,7 @@ public:
 
 //Macros that can be used in users modules (and we can upgrade the underlying timing methods without pain)
 #define CLOCK_NOW Profiler::GetTime();
-#define START_TIMER auto timer_start=CLOCK_NOW
+#define START_TIMER double timer_start=CLOCK_NOW
 
 class UserProfilerFlow: public TAFlowEvent
 {
