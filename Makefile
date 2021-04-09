@@ -58,6 +58,8 @@ endif
 #xhere: ; @echo Have ROOT: features: $(ROOTFEATURES), libdir: $(ROOTLIBDIR), libs: $(ROOTLIBS) cflags: $(CXXFLAGS)
 else
 #xnoroot: ; @echo ROOT not available, please run: make minimal
+#We usually get the c++ standard from root, C++11 is the minium supported standard
+CXXFLAGS += -std=c++11
 endif
 
 # optional MIDAS libraries
