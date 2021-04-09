@@ -510,9 +510,9 @@ public:
          } else {
             START_TIMER
             flow = fRunRun[i]->AnalyzeFlowEvent(fRunInfo, flag, flow);
-            #if MANALYZER_PROFILER
+#if MANALYZER_PROFILER
             fmAnalyzerProfiler->Log(flag, flow, i,fRunRun[i]->fName.c_str(),timer_start);
-            #endif
+#endif
             if ((*flag) & TAFlag_QUIT) { // shut down the analyzer
                data_processing=false;
                delete flow;
@@ -539,9 +539,9 @@ public:
                // tell the destructor that it does not need to delete it, too
                mt->fMtLastItemInQueue = NULL;
             }
-            #if MANALYZER_PROFILER
+#if MANALYZER_PROFILER
             fmAnalyzerProfiler->LogUserProfiling(flag, flow);
-            #endif
+#endif
             delete flow;
             delete flag;
             flow = NULL;
