@@ -44,5 +44,12 @@ struct TMidas_BANK32 {
   uint32_t fDataSize;
 };
 
+struct TMidas_BANK32a {
+  char fName[4];      ///< bank name
+  uint32_t fType;     ///< type of data (see midas.h TID_xxx)
+  uint32_t fDataSize;
+  uint32_t fReserved;
+};
+
 #endif
 //end

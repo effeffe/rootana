@@ -234,6 +234,11 @@ function selectHistogramsFromJSON(){
          console.log("Making display style buttons invisible");
       }
    }
+   <!-- Set the update period, if set --> 
+   if(hasSettings && "UpdatePeriod" in histogramsSetupInfo["DisplaySettings"]){
+     changeUpdateTime(histogramsSetupInfo["DisplaySettings"]["UpdatePeriod"]);
+   }
+
    
    if(!styleSet){
       console.log("Making display style buttons visible");
@@ -281,6 +286,7 @@ function selectHistogramsFromJSON(){
       updatePlots(true);
    });
    
+
 
 }
 
@@ -363,6 +369,17 @@ function updatePlots(deleteDygraph){
          }          
          plotAllHistograms("overlay",["graphdiv"],histograms,deleteDygraph); 
          break;
+      case "OverlayChoice":
+         var numberChoice = Number(document.getElementById("overlay_choice_number").value);
+
+         var histograms = [];
+         histograms.push(currentHistogramInfo["WebserverName"]+getNumericString(channel));
+         if(numberChoice < currentHistogramInfo["MaxChannels"]){
+           histograms.push(currentHistogramInfo["WebserverName"]+getNumericString(numberChoice));
+         }		       
+         plotAllHistograms("overlay",["graphdiv"],histograms,deleteDygraph); 
+         break;
+
       case "Multiple":
          var histograms = []; var divnames = [];
          histograms.push(currentHistogramInfo["WebserverName"]+getNumericString(channel)); divnames.push("graphdiv21")
@@ -383,6 +400,7 @@ function ShowParams() {
    switch (scan_type) {
       case "Single":
          document.getElementById("OverlayParams").style.display = "none";
+         document.getElementById("OverlayChoiceParams").style.display = "none";
          document.getElementById("MultipleParams").style.display ="none";
          document.getElementById("graphdiv").style.display ="block";
          document.getElementById("graphdiv21").style.display ="none";
@@ -390,6 +408,15 @@ function ShowParams() {
          break;
       case "Overlay":
          document.getElementById("OverlayParams").style.display = "block";
+         document.getElementById("OverlayChoiceParams").style.display = "none";
+         document.getElementById("MultipleParams").style.display ="none";
+         document.getElementById("graphdiv").style.display ="block";
+         document.getElementById("graphdiv21").style.display ="none";
+         document.getElementById("graphdiv22").style.display ="none";
+         break;
+      case "OverlayChoice":
+         document.getElementById("OverlayParams").style.display = "none";
+         document.getElementById("OverlayChoiceParams").style.display = "block";
          document.getElementById("MultipleParams").style.display ="none";
          document.getElementById("graphdiv").style.display ="block";
          document.getElementById("graphdiv21").style.display ="none";
@@ -397,6 +424,7 @@ function ShowParams() {
          break;
       case "Multiple":
          document.getElementById("OverlayParams").style.display = "none";
+         document.getElementById("OverlayChoiceParams").style.display = "none";
          document.getElementById("MultipleParams").style.display ="block";
          document.getElementById("graphdiv").style.display ="none";
          document.getElementById("graphdiv21").style.display ="block";
@@ -410,12 +438,19 @@ function ShowParams() {
 var gIntervalID = 0; 
 gIntervalID = setInterval(updatePlots,5000);
 setInterval(midasStatus,5000);   
-function changeUpdateTime() {
+function changeUpdateTime(period) {
    <!-- Delete old update interval -->
    clearInterval(gIntervalID);
 
-   <!-- set new interval -->   
-   var currentUpdateTime = Number(document.getElementById("updatePeriod").value);
+   <!-- set new interval ; use value from input variable if non-zero; otherwise use the value from updatePeriod -->
+   var currentUpdateTime;
+   if(period > 0){
+     currentUpdateTime = period; 
+     document.getElementById("updatePeriod").value = period;
+   }else{
+     currentUpdateTime = Number(document.getElementById("updatePeriod").value);
+   }
+   console.log("Setting update period to " + currentUpdateTime);
    gIntervalID = setInterval(updatePlots,currentUpdateTime);
 }
 
@@ -468,7 +503,7 @@ function changeUpdateTime() {
             <button class="styleControlEl select_buttons" id="plotly_style" > Plot-ly style </button> <br>
 
             <p> Refresh period (ms):
-              <input  class="displayControlEl" type="number" id="updatePeriod" min="100" max="100000" value="5000" onchange="changeUpdateTime();"><p>
+              <input  class="displayControlEl" type="number" id="updatePeriod" min="100" max="100000" value="5000" onchange="changeUpdateTime(0);"><p>
 
 
                 <div id="ModuleSelectionDiv" style="display:none"> 
@@ -485,12 +520,18 @@ function changeUpdateTime() {
                   <select  class="displayControlEl" id="HistoDisplay" onchange="cleanDivs();ShowParams()">
                     <option value="Single">Single</option>
                     <option value="Overlay">Overlay </option>
+                    <option value="OverlayChoice">Overlay (Choice)  </option>
                     <option value="Multiple">Multiple </option>
                   </select><p>
                     
                     <div id="OverlayParams" style="display:none"> 
                       Overlay N histos (2-8):
                       <input  class="displayControlEl" type="number" id="overlay_number" min="2" max="8" value="2" onchange="updatePlots(true);"><p>
+                        <br>
+                    </div>
+                    <div id="OverlayChoiceParams" style="display:none"> 
+                      Other histogram:
+                      <input  class="displayControlEl" type="number" id="overlay_choice_number" min="0" max="40" value="0" onchange="updatePlots(true);"><p>
                         <br>
                     </div>
                     <div id="MultipleParams" style="display:none"> 

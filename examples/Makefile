@@ -66,7 +66,7 @@ OBJS += TV1720Correlations.o TTRB3Histogram.o
 OBJS += TCamacADCHistogram.o
 OBJS += TAnaManager.o
 
-all: $(OBJS) ana.exe anaDisplay.exe midas2root.exe root_server.exe
+all: $(OBJS) ana.exe anaDisplay.exe midas2root.exe midas2root_alt.exe root_server.exe
 
 ana.exe: ana.cxx $(OBJS) 
 	$(CXX) -o $@ $(CXXFLAGS) $^ $(LIBS) $(ROOTGLIBS) -lm -lz -lpthread -lssl -lutil
@@ -75,6 +75,9 @@ anaDisplay.exe: anaDisplay.cxx $(OBJS)
 	$(CXX) -o $@ $(CXXFLAGS) $^ $(LIBS) $(ROOTGLIBS) -lm -lz -lpthread -lssl -lutil
 
 midas2root.exe: midas2root.cxx $(OBJS) 
+	$(CXX) -o $@ $(CXXFLAGS) $^ $(LIBS) $(ROOTGLIBS) -lm -lz -lpthread -lssl -lutil
+
+midas2root_alt.exe: midas2root_alt.cxx $(OBJS)
 	$(CXX) -o $@ $(CXXFLAGS) $^ $(LIBS) $(ROOTGLIBS) -lm -lz -lpthread -lssl -lutil
 
 

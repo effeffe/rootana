@@ -46,9 +46,11 @@ class TMidasEvent
   int FindBank(const char* bankName, int* bankLength, int* bankType, void **bankPtr) const;
   int LocateBank(const void *unused, const char* bankName, void **bankPtr) const;
 
-  bool IsBank32() const; ///< returns "true" if event uses 32-bit banks
+  bool IsBank32() const; ///< returns "true" if event uses bk_init32() banks
+  bool IsBank32a() const; ///< returns "true" if event uses bk_init32a() banks
   int IterateBank(TMidas_BANK **, char **pdata) const; ///< iterate through 16-bit data banks
   int IterateBank32(TMidas_BANK32 **, char **pdata) const; ///< iterate through 32-bit data banks
+  int IterateBank32a(TMidas_BANK32a **, char **pdata) const; ///< iterate through 32-bit data banks
 
   // helpers for event creation
 
