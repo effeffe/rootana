@@ -10,3 +10,6 @@
 [submodule "midasio"]
 	path = midasio
 	url = https://bitbucket.org/tmidas/midasio.git
+[submodule "manalyzer"]
+	path = manalyzer
+	url = https://bitbucket.org/tmidas/manalyzer.git
