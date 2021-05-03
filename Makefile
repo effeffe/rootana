@@ -181,14 +181,15 @@ DALL += old_analyzer/analyzer.o
 
 ALL  += obj/manalyzer_main.o
 ALL  += manalyzer/manalyzer.exe
-#MALL  += manalyzer/manalyzer.exe
-#MALL  += manalyzer/manalyzer_example_cxx.exe
-#ifdef HAVE_ROOT
-#MALL  += manalyzer/manalyzer_example_root.exe
-#MALL  += manalyzer/manalyzer_example_flow.exe
-#MALL  += manalyzer/manalyzer_example_root_graphics.exe
-#endif
-#ALL   += $(MALL)
+MALL  += manalyzer/manalyzer.exe
+MALL  += manalyzer/manalyzer_example_cxx.exe
+MALL  += manalyzer/manalyzer_example_flow.exe
+MALL  += manalyzer/manalyzer_example_flow_queue.exe
+ifdef HAVE_ROOT
+MALL  += manalyzer/manalyzer_example_root.exe
+MALL  += manalyzer/manalyzer_example_root_graphics.exe
+endif
+ALL   += $(MALL)
 
 ALL  += lib/libmanalyzer_main.a
 
@@ -232,7 +233,7 @@ all: $(GIT_SUBMODULES) $(ALL)
 
 $(ALL): include
 $(OBJS): include
-#$(MALL): include
+$(MALL): include
 $(DALL): include
 
 RC := include/rootana_config.h
@@ -342,8 +343,8 @@ obj/TNetDirectoryDict.cxx: obj/%Dict.cxx:
 %.exe: obj/%.o lib/librootana.a
 	$(CXX) -o $@ $(CXXFLAGS) $< lib/librootana.a $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
 
-#$(MALL): %.exe: %.o obj/manalyzer_main.o lib/librootana.a
-#	$(CXX) -o $@ $(CXXFLAGS) $< obj/manalyzer_main.o lib/librootana.a $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
+$(MALL): %.exe: %.o lib/libmanalyzer_main.a lib/librootana.a
+	$(CXX) -o $@ $(CXXFLAGS) $< lib/libmanalyzer_main.a lib/librootana.a $(MIDASLIBS) $(ROOTGLIBS) -lm -lz -lpthread $(RPATH)
 
 %.o: %.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
@@ -390,8 +391,8 @@ obj/%.o: old_analyzer/%.cxx
 obj/%.o: manalyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-manalyzer/manalyzer.exe: lib/librootana.a
-	make -C manalyzer ROOTANASYS=.. $(MFLAGS)
+#manalyzer/manalyzer.exe: lib/librootana.a
+#	make -C manalyzer ROOTANASYS=.. $(MFLAGS)
 
 html/index.html:
 	-mkdir html
@@ -409,8 +410,8 @@ clean::
 	-rm -rf include
 	-rm -rf obj
 
-clean::
-	make -C manalyzer clean
+#clean::
+#	$(MAKE) -C manalyzer clean
 
 clean::
 	-rm -f */*.o
