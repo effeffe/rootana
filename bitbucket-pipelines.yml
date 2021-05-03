@@ -57,8 +57,9 @@ pipelines:
             - cat /etc/*release
             - gcc -v
             - make -v
-            - make NO_ROOT=1 NO_MIDAS=1
-            - make NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
+            - make -k -i NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
+            - make -k -i NO_ROOT=1 NO_MIDAS=1
+            - make -k -i NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
             - . thisrootana.sh
             - echo $ROOTANASYS
 
@@ -69,7 +70,9 @@ pipelines:
             - yum install wget gcc gcc-c++ zlib-devel make git -y
             - cat /etc/*release
             - gcc -v
-            - make NO_ROOT=1 NO_MIDAS=1
+            - make -k -i NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
+            - make -k -i NO_ROOT=1 NO_MIDAS=1
+            - make -k -i NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
             - . thisrootana.sh
             - echo $ROOTANASYS
 
