@@ -10,7 +10,7 @@
 GIT=git
 GIT_SUBMODULES=$(shell sed -nE 's/path = +(.+)/\1\/.git/ p' .gitmodules | paste -s -)
 
-CXXFLAGS = -std=c++11 -O2 -Wall -Wuninitialized -I./include
+CXXFLAGS = -std=c++11 -O2 -g -Wall -Wuninitialized -I./include
 
 # required/non-optional libz package for GZIP decompression
 
