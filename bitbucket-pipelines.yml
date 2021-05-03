@@ -202,6 +202,7 @@ pipelines:
           name: ROOT latest
           image: rootproject/root:latest
           script:
+          - apt install -y git
           - cat /etc/*release
           - gcc -v
           - make -v
