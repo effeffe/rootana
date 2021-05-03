@@ -202,8 +202,6 @@ pipelines:
           name: ROOT latest
           image: rootproject/root:latest
           script:
-          - apt-get update
-          - apt-get -y install gcc g++ cmake git
           - cat /etc/*release
           - gcc -v
           - make -v
