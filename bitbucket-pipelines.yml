@@ -57,6 +57,7 @@ pipelines:
             - cat /etc/*release
             - gcc -v
             - make -v
+            - git submodule update --init --recursive
             - make -k -i NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
             - make -k -i NO_ROOT=1 NO_MIDAS=1
             - make -k -i NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
@@ -70,6 +71,7 @@ pipelines:
             - yum install wget gcc gcc-c++ zlib-devel make git -y
             - cat /etc/*release
             - gcc -v
+            - git submodule update --init --recursive
             - make -k -i NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
             - make -k -i NO_ROOT=1 NO_MIDAS=1
             - make -k -i NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
@@ -89,6 +91,7 @@ pipelines:
       #      - root-config --glibs
       #      - root-config --cflags
       #      - gcc -v
+      #      - git submodule update --init --recursive
       #      - make
       #      - . thisrootana.sh
       #      - echo $ROOTANASYS
@@ -107,6 +110,7 @@ pipelines:
       #      - root-config --glibs
       #      - root-config --cflags
       #      - gcc -v
+      #      - git submodule update --init --recursive
       #      - make
       #      - . thisrootana.sh
       #      - echo $ROOTANASYS
@@ -125,6 +129,7 @@ pipelines:
       #      - root-config --glibs
       #      - root-config --cflags
       #      - gcc -v
+      #      - git submodule update --init --recursive
       #      - make
       #      - . thisrootana.sh
       #      - echo $ROOTANASYS
@@ -147,6 +152,7 @@ pipelines:
       #      - root-config --glibs
       #      - root-config --cflags
       #      - gcc -v
+      #      - git submodule update --init --recursive
       #      - make
       #      - . thisrootana.sh
       #      - echo $ROOTANASYS
@@ -166,6 +172,7 @@ pipelines:
       #      - root-config --glibs
       #      - root-config --cflags
       #      - gcc -v
+      #      - git submodule update --init --recursive
       #      - make
       #      - . thisrootana.sh
       #      - echo $ROOTANASYS
@@ -185,6 +192,7 @@ pipelines:
       #      - root-config --cflags
       #      - gcc -v
       #      - echo $MIDASSYS
+      #      - git submodule update --init --recursive
       #      - make
       #      - . thisrootana.sh
       #      - echo $ROOTANASYS
@@ -204,3 +212,5 @@ pipelines:
           - cd build
           - cmake ..
           - make
+
+#end
