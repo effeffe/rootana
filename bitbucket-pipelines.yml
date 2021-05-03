@@ -54,8 +54,11 @@ pipelines:
           image: cern/cc7-base
           script:
             - yum install wget gcc gcc-c++ zlib-devel make git -y
+            - cat /etc/*release
             - gcc -v
+	    - make -v
             - make NO_ROOT=1 NO_MIDAS=1
+            - make NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
             - . thisrootana.sh
             - echo $ROOTANASYS
 
@@ -64,6 +67,7 @@ pipelines:
           image: cern/c8-base
           script:
             - yum install wget gcc gcc-c++ zlib-devel make git -y
+            - cat /etc/*release
             - gcc -v
             - make NO_ROOT=1 NO_MIDAS=1
             - . thisrootana.sh
@@ -86,105 +90,112 @@ pipelines:
       #      - . thisrootana.sh
       #      - echo $ROOTANASYS
 
-      - step:
-          name: Build on CERN Centos
-          image: rootproject/root-cc7
-          script:
-            - cat /etc/*release
-            - echo $ROOTSYS
-            - echo "Root version"
-            - root-config --version
-            - root-config --features
-            - root-config --libs
-            - root-config --glibs
-            - root-config --cflags
-            - gcc -v
-            - make
-            - . thisrootana.sh
-            - echo $ROOTANASYS
+      # deprecated by rootproject https://hub.docker.com/u/rootproject
+      #- step:
+      #    name: Build on CERN Centos
+      #    image: rootproject/root-cc7
+      #    script:
+      #      - cat /etc/*release
+      #      - echo $ROOTSYS
+      #      - echo "Root version"
+      #      - root-config --version
+      #      - root-config --features
+      #      - root-config --libs
+      #      - root-config --glibs
+      #      - root-config --cflags
+      #      - gcc -v
+      #      - make
+      #      - . thisrootana.sh
+      #      - echo $ROOTANASYS
 
-      - step:
-          name: Build on CentOS 7
-          image: rootproject/root-centos
-          script:
-            - cat /etc/*release
-            - echo $ROOTSYS
-            - echo "Root version"
-            - root-config --version
-            - root-config --features
-            - root-config --libs
-            - root-config --glibs
-            - root-config --cflags
-            - gcc -v
-            - make
-            - . thisrootana.sh
-            - echo $ROOTANASYS
+      # deprecated by rootproject https://hub.docker.com/u/rootproject
+      #- step:
+      #    name: Build on CentOS 7
+      #    image: rootproject/root-centos
+      #    script:
+      #      - cat /etc/*release
+      #      - echo $ROOTSYS
+      #      - echo "Root version"
+      #      - root-config --version
+      #      - root-config --features
+      #      - root-config --libs
+      #      - root-config --glibs
+      #      - root-config --cflags
+      #      - gcc -v
+      #      - make
+      #      - . thisrootana.sh
+      #      - echo $ROOTANASYS
 
-    #This docker image is missing:
-    #/usr/bin/ld: cannot find -lROOTDataFrame
-    #/usr/bin/ld: cannot find -lROOTVecOps
-    #despite root-config --glibs showing them
-    #We have to yum install root-vecops root-tree-dataframe to get build to work
-      - step:
-          name: Build on Fedora (c++14)
-          image: rootproject/root-fedora
-          script:
-            - echo $ROOTSYS
-            - yum install root-vecops root-tree-dataframe -y
-            - echo "Root version"
-            - root-config --version
-            - root-config --libs
-            - root-config --glibs
-            - root-config --cflags
-            - gcc -v
-            - make
-            - . thisrootana.sh
-            - echo $ROOTANASYS
+      # deprecated by rootproject https://hub.docker.com/u/rootproject
+      #This docker image is missing:
+      #/usr/bin/ld: cannot find -lROOTDataFrame
+      #/usr/bin/ld: cannot find -lROOTVecOps
+      #despite root-config --glibs showing them
+      #We have to yum install root-vecops root-tree-dataframe to get build to work
+      #- step:
+      #    name: Build on Fedora (c++14)
+      #    image: rootproject/root-fedora
+      #    script:
+      #      - echo $ROOTSYS
+      #      - yum install root-vecops root-tree-dataframe -y
+      #      - echo "Root version"
+      #      - root-config --version
+      #      - root-config --libs
+      #      - root-config --glibs
+      #      - root-config --cflags
+      #      - gcc -v
+      #      - make
+      #      - . thisrootana.sh
+      #      - echo $ROOTANASYS
 
-      - step:
-          name: Build on Ubuntu
-          image: rootproject/root-ubuntu
-          script:
-            - apt-get update
-            - apt-get install git -y
-            - cat /etc/*release
-            - echo $ROOTSYS
-            - root-config --version
-            - root-config --features
-            - root-config --libs
-            - root-config --glibs
-            - root-config --cflags
-            - gcc -v
-            - make
-            - . thisrootana.sh
-            - echo $ROOTANASYS
+      # deprecated by rootproject https://hub.docker.com/u/rootproject
+      #- step:
+      #    name: Build on Ubuntu
+      #    image: rootproject/root-ubuntu
+      #    script:
+      #      - apt-get update
+      #      - apt-get install git -y
+      #      - cat /etc/*release
+      #      - echo $ROOTSYS
+      #      - root-config --version
+      #      - root-config --features
+      #      - root-config --libs
+      #      - root-config --glibs
+      #      - root-config --cflags
+      #      - gcc -v
+      #      - make
+      #      - . thisrootana.sh
+      #      - echo $ROOTANASYS
           
-      - step:
-          name: Build on CERN Centos7 with MIDAS
-          image: jmckenna/midas-docker
-          script:
-            - cat /etc/*release
-            - echo $ROOTSYS
-            - echo "Root version"
-            - root-config --version
-            - root-config --features
-            - root-config --libs
-            - root-config --glibs
-            - root-config --cflags
-            - gcc -v
-            - echo $MIDASSYS
-            - make
-            - . thisrootana.sh
-            - echo $ROOTANASYS
+      # this image is very out of date
+      #- step:
+      #    name: Build on CERN Centos7 with MIDAS
+      #    image: jmckenna/midas-docker
+      #    script:
+      #      - cat /etc/*release
+      #      - echo $ROOTSYS
+      #      - echo "Root version"
+      #      - root-config --version
+      #      - root-config --features
+      #      - root-config --libs
+      #      - root-config --glibs
+      #      - root-config --cflags
+      #      - gcc -v
+      #      - echo $MIDASSYS
+      #      - make
+      #      - . thisrootana.sh
+      #      - echo $ROOTANASYS
 
       - step:
-          name: Build on Ubuntu LTS 20.04
+          name: cmake on Ubuntu LTS 20.04
           image: rootproject/root:6.22.06-ubuntu20.04
           script:
           - apt-get update
           - apt-get -y install gcc g++ cmake git libssl-dev libz-dev libcurl4-gnutls-dev sqlite3 libsqlite3-dev
+          - cat /etc/*release
           - gcc -v
           - cmake --version
+          - root-config --version
           - git submodule update --init --recursive
           - mkdir build
           - cd build
