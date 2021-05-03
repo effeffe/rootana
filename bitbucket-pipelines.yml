@@ -58,11 +58,12 @@ pipelines:
             - gcc -v
             - make -v
             - git submodule update --init --recursive
-            - make -k -i NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
-            - make -k -i NO_ROOT=1 NO_MIDAS=1
-            - make -k -i NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
+            - make NO_ROOT=1 NO_MIDAS=1
             - . thisrootana.sh
             - echo $ROOTANASYS
+            - cat include/rootana_config.h
+            - cat include/rootana_*.txt
+
 
       - step:
           name: Build on Centos8 base
@@ -72,11 +73,11 @@ pipelines:
             - cat /etc/*release
             - gcc -v
             - git submodule update --init --recursive
-            - make -k -i NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
-            - make -k -i NO_ROOT=1 NO_MIDAS=1
-            - make -k -i NO_ROOT=1 NO_MIDAS=1 -d obj/manalyzer.o
+            - make NO_ROOT=1 NO_MIDAS=1
             - . thisrootana.sh
             - echo $ROOTANASYS
+            - cat include/rootana_config.h
+            - cat include/rootana_*.txt
 
       #- step:
       #    name: Build on Ubuntu 16
@@ -196,6 +197,22 @@ pipelines:
       #      - make
       #      - . thisrootana.sh
       #      - echo $ROOTANASYS
+
+      - step:
+          name: ROOT latest
+          image: rootproject/root:latest
+          script:
+          - apt-get update
+          - apt-get -y install gcc g++ cmake git
+          - cat /etc/*release
+          - gcc -v
+          - make -v
+          - cmake --version
+          - root-config --version
+          - git submodule update --init --recursive
+          - make
+          - cat include/rootana_config.h
+          - cat include/rootana_*.txt
 
       - step:
           name: cmake on Ubuntu LTS 20.04
