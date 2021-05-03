@@ -180,7 +180,6 @@ DALL += old_analyzer/analyzer.o
 # new midas analyzer
 
 ALL  += obj/manalyzer_main.o
-ALL  += manalyzer/manalyzer.exe
 MALL  += manalyzer/manalyzer.exe
 MALL  += manalyzer/manalyzer_example_cxx.exe
 MALL  += manalyzer/manalyzer_example_flow.exe
