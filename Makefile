@@ -10,7 +10,7 @@
 GIT=git
 GIT_SUBMODULES=$(shell sed -nE 's/path = +(.+)/\1\/.git/ p' .gitmodules | paste -s -)
 
-CXXFLAGS = -g -O2 -Wall -Wuninitialized -I./include
+CXXFLAGS = -std=c++11 -O2 -Wall -Wuninitialized -I./include
 
 # required/non-optional libz package for GZIP decompression
 
@@ -190,6 +190,8 @@ ALL  += manalyzer/manalyzer.exe
 #endif
 #ALL   += $(MALL)
 
+ALL  += lib/libmanalyzer_main.a
+
 # test programs
 
 ifdef HAVE_ROOT
@@ -317,6 +319,11 @@ lib/librootana.a: $(OBJS)
 	-rm -f $@
 	ar -rv $@ $(OBJS)
 
+lib/libmanalyzer_main.a: obj/manalyzer_main.o
+	mkdir -p lib
+	-rm -f $@
+	ar -rv $@ obj/manalyzer_main.o
+
 #include/%.h: include
 #	@true
 
@@ -380,7 +387,7 @@ obj/%.o: libUnpack/%.cxx
 obj/%.o: old_analyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
-obj/%.o: manalyzer/%.cxx $(GIT_SUBMODULES)
+obj/%.o: manalyzer/%.cxx
 	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 manalyzer/manalyzer.exe: lib/librootana.a
