@@ -9,169 +9,184 @@
 # Only use spaces to indent your .yml configuration.
 
 pipelines:
-  default:
-  - parallel:
-    # el6 is too old
-    #- step:
-    #      name: Build on Centos 6 with root 5 (c++98)
-    #      image: centos:6.9
-    #      script:
-    #        - yum install wget gcc gcc-c++ zlib-devel git -y
-    #        - wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-    #        - rpm -ivh epel-release-6-8.noarch.rpm
-    #        #Ok root is massive... can we avoid install it? Apprently not... we need strlcpy.h, this doesn't fix it:
-    #        #- yum install libbsd-devel -y
-    #        - yum install root root-net-http libXpm-devel libxml2-devel root-io-xml root-io-xmlparser -y
-    #        - echo "Root version"
-    #        - root-config --version
-    #        - root-config --libs
-    #        - root-config --glibs
-    #        - root-config --cflags
-    #        - gcc -v
-    #        - make
-    #        - . thisrootana.sh
-    #        - echo $ROOTANASYS
-    #
-    #- step:
-    #    name: Build on SL6 (c++98)
-    #    image: cern/slc6-base
-    #    #name: Build on Centos 6 (c++98)
-    #    #image: centos:6.9
-    #    script:
-    #      - yum install wget gcc gcc-c++ zlib-devel git -y
-    #      #Enable epel on centos:
-    #      #- wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
-    #      #- rpm -ivh epel-release-6-8.noarch.rpm
-    #      - yum install libbsd-devel -y #<- we need strlcpy.h (for mxml), this doesn't fix it...
-    #      - gcc -v
-    #      - make
-    #      - . thisrootana.sh
-    #      - echo $ROOTANASYS
+  custom:
+    all:
+    - parallel:
+      # el6 is too old
+      #- step:
+      #      name: Build on Centos 6 with root 5 (c++98)
+      #      image: centos:6.9
+      #      script:
+      #        - yum install wget gcc gcc-c++ zlib-devel git -y
+      #        - wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+      #        - rpm -ivh epel-release-6-8.noarch.rpm
+      #        #Ok root is massive... can we avoid install it? Apprently not... we need strlcpy.h, this doesn't fix it:
+      #        #- yum install libbsd-devel -y
+      #        - yum install root root-net-http libXpm-devel libxml2-devel root-io-xml root-io-xmlparser -y
+      #        - echo "Root version"
+      #        - root-config --version
+      #        - root-config --libs
+      #        - root-config --glibs
+      #        - root-config --cflags
+      #        - gcc -v
+      #        - make
+      #        - . thisrootana.sh
+      #        - echo $ROOTANASYS
+      #
+      #- step:
+      #    name: Build on SL6 (c++98)
+      #    image: cern/slc6-base
+      #    #name: Build on Centos 6 (c++98)
+      #    #image: centos:6.9
+      #    script:
+      #      - yum install wget gcc gcc-c++ zlib-devel git -y
+      #      #Enable epel on centos:
+      #      #- wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+      #      #- rpm -ivh epel-release-6-8.noarch.rpm
+      #      - yum install libbsd-devel -y #<- we need strlcpy.h (for mxml), this doesn't fix it...
+      #      - gcc -v
+      #      - make
+      #      - . thisrootana.sh
+      #      - echo $ROOTANASYS
 
-    - step:
-        name: Build on Centos7 base
-        image: cern/cc7-base
-        script:
-          - yum install wget gcc gcc-c++ zlib-devel make git -y
-          - gcc -v
-          - make NO_ROOT=1 NO_MIDAS=1
-          - . thisrootana.sh
-          - echo $ROOTANASYS
+      - step:
+          name: Build on Centos7 base
+          image: cern/cc7-base
+          script:
+            - yum install wget gcc gcc-c++ zlib-devel make git -y
+            - gcc -v
+            - make NO_ROOT=1 NO_MIDAS=1
+            - . thisrootana.sh
+            - echo $ROOTANASYS
 
-    - step:
-        name: Build on Centos8 base
-        image: cern/c8-base
-        script:
-          - yum install wget gcc gcc-c++ zlib-devel make git -y
-          - gcc -v
-          - make NO_ROOT=1 NO_MIDAS=1
-          - . thisrootana.sh
-          - echo $ROOTANASYS
+      - step:
+          name: Build on Centos8 base
+          image: cern/c8-base
+          script:
+            - yum install wget gcc gcc-c++ zlib-devel make git -y
+            - gcc -v
+            - make NO_ROOT=1 NO_MIDAS=1
+            - . thisrootana.sh
+            - echo $ROOTANASYS
 
-    - step:
-        name: Build on Ubuntu 16
-        image: rootproject/root-ubuntu16
-        script:
-          - cat /etc/*release
-          - echo $ROOTSYS
-          - echo "Root version"
-          - root-config --version
-          - root-config --features
-          - root-config --libs
-          - root-config --glibs
-          - root-config --cflags
-          - gcc -v
-          - make
-          - . thisrootana.sh
-          - echo $ROOTANASYS
+      #- step:
+      #    name: Build on Ubuntu 16
+      #    image: rootproject/root-ubuntu16
+      #    script:
+      #      - cat /etc/*release
+      #      - echo $ROOTSYS
+      #      - echo "Root version"
+      #      - root-config --version
+      #      - root-config --features
+      #      - root-config --libs
+      #      - root-config --glibs
+      #      - root-config --cflags
+      #      - gcc -v
+      #      - make
+      #      - . thisrootana.sh
+      #      - echo $ROOTANASYS
 
-    - step:
-        name: Build on CERN Centos
-        image: rootproject/root-cc7
-        script:
-          - cat /etc/*release
-          - echo $ROOTSYS
-          - echo "Root version"
-          - root-config --version
-          - root-config --features
-          - root-config --libs
-          - root-config --glibs
-          - root-config --cflags
-          - gcc -v
-          - make
-          - . thisrootana.sh
-          - echo $ROOTANASYS
+      - step:
+          name: Build on CERN Centos
+          image: rootproject/root-cc7
+          script:
+            - cat /etc/*release
+            - echo $ROOTSYS
+            - echo "Root version"
+            - root-config --version
+            - root-config --features
+            - root-config --libs
+            - root-config --glibs
+            - root-config --cflags
+            - gcc -v
+            - make
+            - . thisrootana.sh
+            - echo $ROOTANASYS
 
-    - step:
-        name: Build on CentOS 7
-        image: rootproject/root-centos
-        script:
-          - cat /etc/*release
-          - echo $ROOTSYS
-          - echo "Root version"
-          - root-config --version
-          - root-config --features
-          - root-config --libs
-          - root-config --glibs
-          - root-config --cflags
-          - gcc -v
-          - make
-          - . thisrootana.sh
-          - echo $ROOTANASYS
+      - step:
+          name: Build on CentOS 7
+          image: rootproject/root-centos
+          script:
+            - cat /etc/*release
+            - echo $ROOTSYS
+            - echo "Root version"
+            - root-config --version
+            - root-config --features
+            - root-config --libs
+            - root-config --glibs
+            - root-config --cflags
+            - gcc -v
+            - make
+            - . thisrootana.sh
+            - echo $ROOTANASYS
 
     #This docker image is missing:
     #/usr/bin/ld: cannot find -lROOTDataFrame
     #/usr/bin/ld: cannot find -lROOTVecOps
     #despite root-config --glibs showing them
     #We have to yum install root-vecops root-tree-dataframe to get build to work
-    - step:
-        name: Build on Fedora (c++14)
-        image: rootproject/root-fedora
-        script:
-          - echo $ROOTSYS
-          - yum install root-vecops root-tree-dataframe -y
-          - echo "Root version"
-          - root-config --version
-          - root-config --libs
-          - root-config --glibs
-          - root-config --cflags
-          - gcc -v
-          - make
-          - . thisrootana.sh
-          - echo $ROOTANASYS
+      - step:
+          name: Build on Fedora (c++14)
+          image: rootproject/root-fedora
+          script:
+            - echo $ROOTSYS
+            - yum install root-vecops root-tree-dataframe -y
+            - echo "Root version"
+            - root-config --version
+            - root-config --libs
+            - root-config --glibs
+            - root-config --cflags
+            - gcc -v
+            - make
+            - . thisrootana.sh
+            - echo $ROOTANASYS
 
-    - step:
-        name: Build on Ubuntu
-        image: rootproject/root-ubuntu
-        script:
-          - apt-get update
-          - apt-get install git -y
-          - cat /etc/*release
-          - echo $ROOTSYS
-          - root-config --version
-          - root-config --features
-          - root-config --libs
-          - root-config --glibs
-          - root-config --cflags
-          - gcc -v
-          - make
-          - . thisrootana.sh
-          - echo $ROOTANASYS
+      - step:
+          name: Build on Ubuntu
+          image: rootproject/root-ubuntu
+          script:
+            - apt-get update
+            - apt-get install git -y
+            - cat /etc/*release
+            - echo $ROOTSYS
+            - root-config --version
+            - root-config --features
+            - root-config --libs
+            - root-config --glibs
+            - root-config --cflags
+            - gcc -v
+            - make
+            - . thisrootana.sh
+            - echo $ROOTANASYS
           
-    - step:
-        name: Build on CERN Centos7 with MIDAS
-        image: jmckenna/midas-docker
-        script:
-          - cat /etc/*release
-          - echo $ROOTSYS
-          - echo "Root version"
-          - root-config --version
-          - root-config --features
-          - root-config --libs
-          - root-config --glibs
-          - root-config --cflags
+      - step:
+          name: Build on CERN Centos7 with MIDAS
+          image: jmckenna/midas-docker
+          script:
+            - cat /etc/*release
+            - echo $ROOTSYS
+            - echo "Root version"
+            - root-config --version
+            - root-config --features
+            - root-config --libs
+            - root-config --glibs
+            - root-config --cflags
+            - gcc -v
+            - echo $MIDASSYS
+            - make
+            - . thisrootana.sh
+            - echo $ROOTANASYS
+
+      - step:
+          name: Build on Ubuntu LTS 20.04
+          image: rootproject/root:6.22.06-ubuntu20.04
+          script:
+          - apt-get update
+          - apt-get -y install gcc g++ cmake git libssl-dev libz-dev libcurl4-gnutls-dev sqlite3 libsqlite3-dev
           - gcc -v
-          - echo $MIDASSYS
+          - cmake --version
+          - git submodule update --init --recursive
+          - mkdir build
+          - cd build
+          - cmake ..
           - make
-          - . thisrootana.sh
-          - echo $ROOTANASYS
