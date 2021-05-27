@@ -4,6 +4,7 @@
 *.a
 *Dict.h
 *Dict.cxx
+bin
 include
 obj
 html

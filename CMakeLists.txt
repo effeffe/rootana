@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(rootana)
+project("rootana"
+        VERSION 1
+        DESCRIPTION "ROOT analyzer for MIDAS data"
+        HOMEPAGE_URL "https://midas.triumf.ca")
 
 # set default definitions
 set(HAVE_LIBZ 0)
@@ -13,7 +16,15 @@ set(HAVE_XMLSERVER 0)
 set(HAVE_LIBNETDIRECTORY 0)
 set(HAVE_CXX11_THREADS 0)
 
-
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+   # in standalone mode, install under <midas>/bin
+   set(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR} CACHE PATH "" FORCE)
+else()
+   # there is an user choice or a higher level project
+   # specifying the install path - keep that
+   set(CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
+endif()
+message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 
 find_package(Git REQUIRED)
 
@@ -24,7 +35,7 @@ execute_process(
     RESULT_VARIABLE GIT_SUBMOD_RESULT
 )
 
-find_package(ZLIB QUIET)
+find_package(ZLIB)
 
 # Find MIDAS. Priority:
 # - local cmake config: `cmake -DMIDASSYS=...`
@@ -35,25 +46,24 @@ if(MIDASSYS STREQUAL "")
     set(MIDASSYS "$ENV{MIDASSYS}")
 endif()
 if(MIDASSYS STREQUAL "")
-    find_package(Midas QUIET)
+    find_package(Midas)
 else()
     set(MIDAS_FOUND TRUE)
     set(MIDAS_INCLUDE_DIRS "$ENV{MIDASSYS}/include")
     set(MIDAS_LIBRARIES "$ENV{MIDASSYS}/lib/libmidas.a" -lutil -lrt)
 endif()
 if(MIDAS_FOUND)
-    message(DEBUG "[${PROJECT_NAME}] MIDAS_INCLUDE_DIRS = ${MIDAS_INCLUDE_DIRS}")
-    message(DEBUG "[${PROJECT_NAME}] MIDAS_LIBRARIES = ${MIDAS_LIBRARIES}")
+    message("-- Found MIDAS: ${MIDAS_INCLUDE_DIRS} and ${MIDAS_LIBRARIES}")
 endif()
 
-find_package(ROOT QUIET COMPONENTS
+find_package(ROOT COMPONENTS
     Gui # TG* objects
     RHTTP # THttpServer
     XMLIO XMLParser
 )
 if(ROOT_FOUND)
     # set c++ standard to one used by ROOT
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS} -DHAVE_ROOT")
 endif()
 if(ROOT_FOUND AND NOT COMMAND root_generate_dictionary)
     message(WARN "[${PROJECT_NAME}] root_generate_dictionary not found, try to include ROOTUseFile.cmake")
@@ -91,7 +101,8 @@ file(GLOB SOURCES
     libMidasInterface/TMidasEvent.cxx
     libUnpack/*.cxx
     manalyzer/manalyzer.cxx
-    midasio/*.cxx midasio/*.c
+    midasio/midasio.cxx
+    midasio/*.c
     mjson/*.cxx
     mvodb/mjsonodb.cxx mvodb/mvodb.cxx mvodb/mvodb.cxx mvodb/mxmlodb.cxx mvodb/nullodb.cxx
     mxml/*.cxx
@@ -221,7 +232,39 @@ target_link_libraries(rootana PUBLIC
     -lpthread
 )
 
+# library for manalyzer_main
+add_library(manalyzer_main manalyzer/manalyzer_main)
+#target_include_directories(manalyzer_main PUBLIC ${SYSINC_DIR})
+if (HAVE_ROOT)
+   #target_include_directories(manalyzer_main PUBLIC ${ROOT_INCLUDE_DIRS})
+   #target_compile_options(manalyzer_main PRIVATE -DHAVE_ROOT ${ROOT_CXX_FLAGS})
+endif(HAVE_ROOT)
 
+#target_link_libraries(manalyzer_main mjson)
+#target_link_libraries(manalyzer_main mxml)
+#target_link_libraries(manalyzer_main mvodb)
+#target_link_libraries(manalyzer_main midasio)
+#target_link_libraries(manalyzer_main manalyzer)
+
+add_executable(manalyzer manalyzer/manalyzer_main)
+target_link_libraries(manalyzer rootana manalyzer_main)
+
+add_executable(manalyzer_example_cxx manalyzer/manalyzer_example_cxx)
+target_link_libraries(manalyzer_example_cxx rootana manalyzer_main)
+
+add_executable(manalyzer_example_flow manalyzer/manalyzer_example_flow)
+target_link_libraries(manalyzer_example_flow rootana manalyzer_main)
+
+add_executable(manalyzer_example_flow_queue manalyzer/manalyzer_example_flow_queue)
+target_link_libraries(manalyzer_example_flow_queue rootana manalyzer_main)
+
+if (HAVE_ROOT)
+add_executable(manalyzer_example_root manalyzer/manalyzer_example_root)
+target_link_libraries(manalyzer_example_root rootana manalyzer_main)
+
+add_executable(manalyzer_example_root_graphics manalyzer/manalyzer_example_root_graphics)
+target_link_libraries(manalyzer_example_root_graphics rootana manalyzer_main)
+endif()
 
 get_directory_property(PARENT_DIRECTORY PARENT_DIRECTORY)
 if(NOT PARENT_DIRECTORY)
@@ -229,7 +272,7 @@ if(NOT PARENT_DIRECTORY)
     add_subdirectory(libAnalyzerDisplay)
     add_subdirectory(libMidasInterface)
     add_subdirectory(libMidasServer)
-    add_subdirectory(manalyzer)
+    #add_subdirectory(manalyzer)
     add_subdirectory(old_analyzer)
 endif()
 
@@ -240,7 +283,11 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND DEFINED ENV{ROOTANASYS} AND $
     set(CMAKE_INSTALL_PREFIX "$ENV{ROOTANASYS}" CACHE PATH "" FORCE)
 endif()
 install(
-    TARGETS rootana
+    TARGETS manalyzer manalyzer_example_cxx event_dump event_skim
+    DESTINATION bin
+)
+install(
+    TARGETS rootana manalyzer_main
     DESTINATION lib
 )
 file(GLOB HEADERS

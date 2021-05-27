@@ -238,6 +238,13 @@ OBJS += obj/manalyzer.o
 
 all: $(GIT_SUBMODULES) $(ALL)
 
+cmake: $(GIT_SUBMODULES)
+	mkdir -p build
+	cd build; cmake ..; $(MAKE); $(MAKE) install
+
+cclean:
+	-rm -rf build
+
 $(ALL): include
 $(OBJS): include
 $(MALL): include
