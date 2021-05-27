@@ -73,6 +73,14 @@ MIDASLIBS = $(MIDASSYS)/lib/libmidas.a -lutil -lrt
 CXXFLAGS += -DHAVE_MIDAS -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 USER_CFLAGS += -DOS_LINUX -Dextname -I$(MIDASSYS)/include
 
+# check that we have tmfe.h that supports TMEventBuffer
+
+ifneq (,$(wildcard $(MIDASSYS)/include/tmfe.h))
+ifneq (,$(shell grep TMEventBuffer $(MIDASSYS)/include/tmfe.h))
+CXXFLAGS += -DHAVE_TMFE
+endif
+endif
+
 UNAME=$(shell uname)
 ifeq ($(UNAME),Darwin)
 CXXFLAGS += -DOS_LINUX -DOS_DARWIN
