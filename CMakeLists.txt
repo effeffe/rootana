@@ -55,14 +55,6 @@ else()
    unset(MIDAS_FOUND)
 endif()
 
-#if(MIDASSYS STREQUAL "")
-#    find_package(Midas)
-#else()
-#    set(MIDAS_FOUND TRUE)
-#    set(MIDAS_INCLUDE_DIRS "$ENV{MIDASSYS}/include")
-#    set(MIDAS_LIBRARIES "$ENV{MIDASSYS}/lib/libmidas.a" -lutil -lrt)
-#endif()
-
 #
 # Find ROOT
 #
@@ -74,6 +66,7 @@ find_package(ROOT COMPONENTS
 )
 if(ROOT_FOUND)
     # set c++ standard to one used by ROOT
+    message(STATUS "${PROJECT_NAME}: Found ROOT version " ${ROOT_VERSION} " in " ${ROOT_INCLUDE_DIRS})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXX_FLAGS} -DHAVE_ROOT")
 endif()
 if(ROOT_FOUND AND NOT COMMAND root_generate_dictionary)
