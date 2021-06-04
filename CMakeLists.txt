@@ -98,26 +98,13 @@ set(ROOTANA_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}/libNetDirectory
     ${CMAKE_CURRENT_SOURCE_DIR}/libUnpack
     ${CMAKE_CURRENT_SOURCE_DIR}/libXmlServer
-    #${CMAKE_CURRENT_SOURCE_DIR}/midasio
-    #${CMAKE_CURRENT_SOURCE_DIR}/mjson
-    #${CMAKE_CURRENT_SOURCE_DIR}/mvodb
-    #${CMAKE_CURRENT_SOURCE_DIR}/mxml
 )
-
-
 
 # default sources that do not require MIDAS or ROOT
 file(GLOB SOURCES
     libMidasInterface/TMidasEvent.cxx
     libUnpack/*.cxx
-    #midasio/midasio.cxx
-    #midasio/*.c
-    #mjson/*.cxx
-    #mvodb/mjsonodb.cxx mvodb/mvodb.cxx mvodb/mvodb.cxx mvodb/mxmlodb.cxx mvodb/nullodb.cxx
-    #mxml/*.cxx
 )
-
-
 
 if(ZLIB_FOUND)
     # TODO: rename HAVE_LIBZ to HAVE_ZLIB
@@ -139,7 +126,23 @@ if(MIDAS_FOUND)
     )
     get_target_property(MIDAS_INCLUDE_DIRS midas INTERFACE_INCLUDE_DIRECTORIES)
     message(STATUS "${PROJECT_NAME}: MIDAS include path: ${MIDAS_INCLUDE_DIRS}")
-endif()
+else(MIDAS_FOUND)
+    file(GLOB ROOTANA_INCLUDE_DIRS
+    ${ROOTANA_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/midasio
+    ${CMAKE_CURRENT_SOURCE_DIR}/mjson
+    ${CMAKE_CURRENT_SOURCE_DIR}/mvodb
+    ${CMAKE_CURRENT_SOURCE_DIR}/mxml
+    )
+    file(GLOB SOURCES
+    ${SOURCES}
+    midasio/midasio.cxx
+    midasio/*.c
+    mjson/*.cxx
+    mvodb/mjsonodb.cxx mvodb/mvodb.cxx mvodb/mvodb.cxx mvodb/mxmlodb.cxx mvodb/nullodb.cxx
+    mxml/*.cxx
+    )
+endif(MIDAS_FOUND)
 
 if(ROOT_FOUND)
     set(HAVE_ROOT 1)
