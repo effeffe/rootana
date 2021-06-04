@@ -243,7 +243,7 @@ cmake: $(GIT_SUBMODULES)
 	cd build; cmake ..; $(MAKE); $(MAKE) install
 
 cclean:
-	-rm -rf build
+	-rm -rf build lib bin
 
 $(ALL): include
 $(OBJS): include
